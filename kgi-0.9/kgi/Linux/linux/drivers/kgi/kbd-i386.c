@@ -13,12 +13,15 @@
 ** -------------------------------------------------------------------------
 ** 
 **	$Log: kbd-i386.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:51  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
 
 #define DRIVER_NAME	"PS/2 kbd/aux driver"
-#define DRIVER_REV	"$Revision: 1.13 $"
+#define DRIVER_REV	"$Revision: 1.1.1.1 $"
 #define	DEBUG_LEVEL	1
 
 #define	KGI_SYS_NEED_IO
@@ -62,7 +65,7 @@ int aux_kbd_focus = -1;
 #define AUX_STATUS_OBF		0x02	/* outbuffer (to device) full	*/
 #define	AUX_STATUS_OBT		0x20	/* output (to device) timeout	*/
 #define	AUX_STATUS_IBT		0x40	/* input (from device) timeout	*/
-#define	AUX_STATUS_PERR		0x80	/* transmisson error		*/
+#define	AUX_STATUS_PERR		0x80	/* transmission error		*/
 
 /*
 **	mode register
@@ -253,7 +256,7 @@ static inline kii_u8_t aux_kbd_send(kii_u8_t dat)
 	return reply;
 }
 
-/*	send a datum to the device conncected to the ptr port.
+/*	send a datum to the device connected to the ptr port.
 */
 static inline kii_u8_t aux_ptr_send(kii_u8_t dat)
 {

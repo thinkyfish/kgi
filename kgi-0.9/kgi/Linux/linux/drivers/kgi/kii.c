@@ -13,6 +13,10 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: kii.c,v $
+**	Revision 1.2  2000/09/21 09:12:40  seeger_s
+**	- minor bugfixes
+**	- public symbols exported
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -1057,9 +1061,9 @@ static inline void do_modifier(kii_focus_t *f, kii_event_t *event)
 
 	/*	If a NORMAL modifier is pressed at least once, it goes into
 	**	effect and clears the effect of the corresponding LOCKED
-	**	modifier. Thus there is no effect in the EFFECTIVE modifers.
+	**	modifier. Thus there is no effect in the EFFECTIVE modifiers.
 	**	The effect of the NORMAL modifier is not cleared until the
-	**	last is released (if pressed multiple times), which cleares
+	**	last is released (if pressed multiple times), which clears
 	**	the effect of the corresponding LOCKED modifier too.
 	*/
 	if ((K_FIRST_NORMAL <= ksym) && (ksym < K_LAST_NORMAL)) {
