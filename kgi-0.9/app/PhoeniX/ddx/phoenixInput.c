@@ -1,17 +1,13 @@
 /* -----------------------------------------------------------------------------
-**	X server input handling
+**	PhoeniX server input handling
 ** -----------------------------------------------------------------------------
 **	Copyright (C)	1997		Jason McMullan
 **			1997-1998	Michael Krause
-**			1998		Steffen Seeger
+**			1998-2000	Steffen Seeger
 **
-**	$Log: xggiInput.c,v $
-**	Revision 1.2  2000/06/28 20:45:03  seeger_s
-**	- fixed headers
-**	
-**	Revision 1.1  2000/06/25 20:08:08  seeger_s
-**	- added input, output and keycode translation code.
-**	
+**	$Log: phoenixInput.c,v $
+**	Revision 1.1  2000/07/04 11:01:52  seeger_s
+**	- added PhoeniX DDX stubs and included in build system
 */
 
 #include "scrnintstr.h"
@@ -20,104 +16,23 @@
 #include "input.h"
 #include "mi/mi.h"
 
-#if 0
-
-/*	The routines from translation.c are needed only here. An extra header
-**	looks like overkill.
+/*	The routines from translation.c are needed only here.
+**	An extra header looks like overkill...
 */
 extern int x2unicode(int xkeysym);
 extern int unicode2x(int unicode);
 
-#include <gii/gii.h>
+#include "types.h"
+#include "phoenix.h"
+
+#include <X11/keysym.h>
+
+#define	APP_DEBUG	ErrorF
 
 
-static void xggiQueueEvent(gii_event *ev)
-{
-	xEvent xev;
-
-	xev.u.keyButtonPointer.time = ev->any.time;
-
-	if ((1 << ev->any.type) & GII_EM_KEYBOARD) {
-
-		xev.u.u.detail = ev->key.code;
-	
-		switch (ev->any.type) {
-
-		case GII_EV_KEY_PRESS:
-		case GII_EV_KEY_REPEAT:
-			xev.u.u.type = KeyPress;
-			break;
-	    
-		case GII_EV_KEY_RELEASE:
-			xev.u.u.type = KeyRelease;
-			break;
-	    
-		default:
-			ErrorF("unknown keyboard event type %i\n",
-				ev->any.type);
-			return;
-		}
-	
-		mieqEnqueue(&xev);
-		return;
-	}	/* if ((1 << ev->any.type) & GII_EM_KEYBOARD) ... */
-
-	if ((1 << ev->any.type) & GII_EM_POINTER) {
-
-		int dx, dy;
-		static int ptr_oldx = 0, ptr_oldy = 0;
-    
-		if (ev->any.type == GII_EV_PTR_ABSOLUTE) {
-
-			dx = ev->pmove.x - ptr_oldx;      
-			dy = ev->pmove.y - ptr_oldy;
-			ptr_oldx = ev->pmove.x;
-			ptr_oldy = ev->pmove.y;
-			miPointerDeltaCursor(dx, dy, ev->any.time);
-			return;
-		}
-
-		if (ev->any.type == GII_EV_PTR_RELATIVE) {
-
-			ptr_oldx += (dx = ev->pmove.x);
-			ptr_oldy += (dy = ev->pmove.y);
-			miPointerDeltaCursor(dx, dy, ev->any.time);
-			return;
-		}
-
-		if ((ev->any.type == GII_EV_PTR_BUTTON_PRESS) || 
-			(ev->any.type == GII_EV_PTR_BUTTON_RELEASE)) {
-
-			gii_u button = 2;
-			gii_u mask = 1 << button;
-
-			xev.u.u.type = (ev->any.type == GII_EV_PTR_BUTTON_PRESS)
-				? ButtonPress : ButtonRelease;
-
-			while (mask) {
-
-				if (ev->pbutton.button & mask) {
-
-					xev.u.u.detail = button;
-					mieqEnqueue(&xev);
-				}
-				mask >>= 1;
-				button--;
-			}
-
-			return;
-		}
-		ErrorF("unknown pointer event type %i\n", ev->any.type);
-	}	/* if ((1 << ev->any.type) & GII_EM_POINTER) ... */
-
-}
-#endif
-
-#if 0 
-static int xggiPtrProc(DeviceIntPtr device, int action)
+static int PhoenixPtrProc(DeviceIntPtr device, int action)
 {
 	DevicePtr ptr = (DevicePtr) device;
-	api_context ctx = (api_context) ptr->devicePrivate;
 
 	BYTE buttonmap[4];
 
@@ -127,50 +42,49 @@ static int xggiPtrProc(DeviceIntPtr device, int action)
 		buttonmap[1] = 1;
 		buttonmap[2] = 2;
 		buttonmap[3] = 3;
-		InitPointerDeviceStruct(ptr, buttonmap, 3,
+		if (! InitPointerDeviceStruct(ptr, buttonmap, 3,
 			miPointerGetMotionEvents,
 			(PtrCtrlProcPtr) NoopDDA,
-			miPointerGetMotionBufferSize());
+			miPointerGetMotionBufferSize())) {
+
+			APP_DEBUG("PhoenixPtrProc(): InitPointerDeviceStruct failed\n");
+			return !Success;
+		}
+		APP_DEBUG("PhoenixPtrProc(): pointer initialized "
+			"(buttons=%i)\n", 3);
 		break;
-	
+
 	case DEVICE_ON:
+		if (! phoenix.input.enabled++) {
+
+			AddEnabledDevice(kiiEventDeviceFD(phoenix.input.kii));
+		}
 		ptr->on = TRUE;
-		giiEnable(ctx, GII_DEVICE_POINTER);
+		APP_DEBUG("PhoenixPtrProc(): pointer enabled\n");
 		break;
 	
 	case DEVICE_OFF:
-		ptr->on = FALSE;
-		giiDisable(ctx, GII_DEVICE_POINTER);
-		break;
-	
 	case DEVICE_CLOSE:
-		giiDisable(ctx, GII_DEVICE_POINTER);
+		ptr->on = FALSE;
+		if (! --phoenix.input.enabled) {
+
+			RemoveEnabledDevice(kiiEventDeviceFD(phoenix.input.kii));
+		}
+		APP_DEBUG("PhoenixPtrProc(): pointer %s\n",
+			(action == DEVICE_OFF) ? "disabled" : "closed");
 		break;
 	}
 
 	return Success;
 }
-#endif
 
-
-Bool LegalModifier(unsigned int key, DevicePtr kbd)
-{
-#if 0
-	return	giiLegalModifier((api_context) kbd->devicePrivate,
-			GII_DEVICE_KEYBOARD, key) ? TRUE : FALSE;
-#endif
-	return TRUE;
-}
-
-#if 0
-int xggiKbdProc(DeviceIntPtr device, int action)
+int PhoenixKbdProc(DeviceIntPtr device, int action)
 {
 	DevicePtr kbd =	(DevicePtr) device;
-	api_context ctx = (api_context) kbd->devicePrivate;
-
 	KeySymsRec keymap;
 	CARD8 modmap[MAP_LENGTH];
-	gii_u foo, i, j, kmap[256];
+	kii_u_t foo, i, j;
+	kii_unicode_t kmap[256];
     
 	switch (action) {
 
@@ -178,150 +92,299 @@ int xggiKbdProc(DeviceIntPtr device, int action)
 		/*	first read out the 'keyboard' parameters
 		**	and allocate a local keymap
 		*/
-		giiGetuv(ctx, GII_KBD_MIN_KEYCODE, &foo, 1);
-		keymap.minKeyCode = foo;
+		kiiGetu(phoenix.input.kii, KII_KBD_MIN_KEYCODE, &foo);
+		keymap.minKeyCode = foo + 8;
 
-		giiGetuv(ctx, GII_KBD_MAX_KEYCODE, &foo, 1);
-		keymap.maxKeyCode = foo;
+		kiiGetu(phoenix.input.kii, KII_KBD_MAX_KEYCODE, &foo);
+		keymap.maxKeyCode = foo + 8;
 
-		giiGetuv(ctx, GII_KBD_MAX_MAPSIZE, &foo, 1);
+		kiiGetu(phoenix.input.kii, KII_KBD_MAX_MAPSIZE, &foo);
 		keymap.mapWidth = foo;
 
 		if ((keymap.minKeyCode > 255) || (keymap.maxKeyCode > 255)) {
 	
 			ErrorF("don't know how to handle keycodes > 255\n");
-			return -0;
+			return !Success;
 		}
 
-		foo = (keymap.maxKeyCode - keymap.minKeyCode) * keymap.mapWidth;
-		keymap.map = ALLOCATE_LOCAL(foo);
+		foo = (keymap.maxKeyCode - keymap.minKeyCode + 1) *
+			keymap.mapWidth;
+		keymap.map = ALLOCATE_LOCAL(foo*sizeof(keymap.map[0]));
 		if (NULL == keymap.map) {
 
 			ErrorF("failed to allocate temporary keymap buffer\n");
-			return -1;
+			return !Success;
 		}
 
 		/*	now read out each look-up-table and convert to XKeySyms
 		*/
-		for (i = keymap.mapWidth; --i; ) {
+		for (i = keymap.mapWidth; i--; ) {
 
-			giiGetuv(ctx, GII_KBD_KEYMAP(i), kmap, 256);
+			ErrorF("reading map %i\n", i);
 
-			for (j = keymap.minKeyCode; j < keymap.maxKeyCode;
+			if (KII_EOK != kiiGetKeymap(phoenix.input.kii, kmap,
+				i, keymap.minKeyCode-8, keymap.maxKeyCode-8)) {
+
+				ErrorF("Failed to read keymap %i\n", i);
+				exit(1);
+				DEALLOCATE_LOCAL(keymap.map);
+				return !Success;
+			}
+
+			for (j = keymap.minKeyCode; j <= keymap.maxKeyCode;
 				j++) {
 
-				keymap.map[((j-keymap.minKeyCode) * 
-					keymap.mapWidth) + i] =
-					unicode2x(kmap[j]);
+				kii_u_t index = ((j-keymap.minKeyCode) * 
+					keymap.mapWidth) + i;
+				if ((keymap.map[index] = unicode2x(kmap[j-8]))
+					== -1) {
+
+					keymap.map[index] = NoSymbol;
+				}
+				ErrorF("mapped key code %i, unicode %4x, keysym %8x\n",
+					j, kmap[j-8], keymap.map[index]);
 			}
 		}
 
 		/*	Finally build the modifier table. Only care about
 		**	normal modifiers, but clear all modifier XKeySyms.
 		*/
-		for (j = keymap.minKeyCode; j < keymap.maxKeyCode; j++) {
+		for (i = 0; i < MAP_LENGTH; i++) {
 
-			if (GII_IS_MODIFIER(kmap[j])) {
+			modmap[i] = NoSymbol;
+		}
+		for (i = keymap.minKeyCode; i < keymap.maxKeyCode; i++) {
 
-				for (i = 0; i < (unsigned) keymap.mapWidth;
-					i++) {
+			kii_u_t index = (i-keymap.minKeyCode)*keymap.mapWidth;
 
-					keymap.map[(j-keymap.minKeyCode) *
-						keymap.mapWidth + i] =
-						NoSymbol;
-				}
+			switch (keymap.map[index]) {
+
+			case XK_Shift_L:
+			case XK_Shift_R:     modmap[i] = ShiftMask; break;
+
+			case XK_Caps_Lock:   modmap[i] = LockMask; break;
+
+			case XK_Control_L:
+			case XK_Control_R:   modmap[i] = ControlMask; break;
+
+			case XK_Alt_L:
+			case XK_Alt_R:       modmap[i] = Mod1Mask; break;
+
+			case XK_Num_Lock:    modmap[i] = Mod2Mask; break;
+
+			case XK_Meta_L:
+			case XK_Meta_R:      modmap[i] = Mod3Mask; break;
+
+			case XK_Super_L:
+			case XK_Super_R:
+			case XK_Kana_Lock:
+			case XK_Kana_Shift:  modmap[i] = Mod4Mask; break;
+
+			case XK_Hyper_L:
+			case XK_Hyper_R:
+			case XK_Scroll_Lock: modmap[i] = Mod5Mask; break;
+
+			default:
+				continue;
 			}
 
-			if (GII_IS_NORMAL_MODIFIER(kmap[j])) {
+			ErrorF("modifier key: code %.3i, keysym %4x, modmap %2x\n",
+				i, keymap.map[index], modmap[i]);
 
-				if (GII_MODIFIER(kmap[j]) < 8) {
+			for (j = 0; j < (unsigned) keymap.mapWidth; j++) {
 
-					modmap[GII_MODIFIER(kmap[j])] = j;
-				} 
+				keymap.map[index+j] = keymap.map[index];
 			}
 		}
 
-		InitKeyboardDeviceStruct(kbd, &keymap, modmap,
-			(BellProcPtr) NoopDDA, (KbdCtrlProcPtr) NoopDDA);
+		if (! InitKeyboardDeviceStruct(kbd, &keymap, modmap,
+			(BellProcPtr) NoopDDA, (KbdCtrlProcPtr) NoopDDA)) {
+
+			DEALLOCATE_LOCAL(keymap.map);
+			APP_DEBUG("PhoenixKbdProc(): InitKeyboardDeviceStruct failed\n");
+			return !Success;
+		}
+
 		DEALLOCATE_LOCAL(keymap.map);
+		APP_DEBUG("PhoenixKbdProc(): keyboard initialized "
+			"(minKeyCode=%i maxKeyCode=%i mapWidth=%i)\n",
+			keymap.minKeyCode, keymap.maxKeyCode, keymap.mapWidth);
 		break;
 
 	case DEVICE_ON: 
+		if (! phoenix.input.enabled++) {
+
+			AddEnabledDevice(kiiEventDeviceFD(phoenix.input.kii));
+		}
 		kbd->on = TRUE;
-		giiEnable(ctx, GII_DEVICE_KEYBOARD);
+		APP_DEBUG("PhoenixKbdProc(): keyboard enabled\n");
 		break;
 
 	case DEVICE_OFF: 
-		kbd->on = FALSE;
-		giiDisable(ctx, GII_DEVICE_KEYBOARD);
-		break;
-
 	case DEVICE_CLOSE:
 		kbd->on = FALSE;
-		giiDisable(ctx, GII_DEVICE_KEYBOARD);
+		if (! --phoenix.input.enabled) {
+
+			RemoveEnabledDevice(kiiEventDeviceFD(phoenix.input.kii));
+		}
+		APP_DEBUG("PhoenixKbdProc(): keyboard %s\n",
+			(action == DEVICE_OFF) ? "disabled" : "closed");
 		break;
 	}
 
 	return Success;
-#undef kbd
 }
-#endif
 
-
+Bool LegalModifier(unsigned int key, DevicePtr kbd)
+{
+	return	kiiLegalModifier(phoenix.input.kii, KII_DEVICE_KEYBOARD, key)
+			? TRUE : FALSE;
+}
 
 void ProcessInputEvents()
 {
+	/* APP_DEBUG("ProcessInputEvents(): processing input events\n"); */
+	
+	while (kiiEventAvailable(phoenix.input.kii)) {
+
+		xEvent xev;
+		const kii_event_t *ev = kiiNextEvent(phoenix.input.kii);
+
+		xev.u.keyButtonPointer.time = ev->any.time;
+
+		if ((1 << ev->any.type) & KII_EM_KEYBOARD) {
+
+			APP_DEBUG("keyboard event\n");
+
+			xev.u.u.detail = ev->key.code + 8;
+	
+			switch (ev->any.type) {
+
+			case KII_EV_KEY_PRESS:
+			case KII_EV_KEY_REPEAT:
+				xev.u.u.type = KeyPress;
+				mieqEnqueue(&xev);
+				break;
+	    
+			case KII_EV_KEY_RELEASE:
+				xev.u.u.type = KeyRelease;
+				mieqEnqueue(&xev);
+				break;
+	    
+			default:
+				ErrorF("unknown keyboard event type %i\n",
+					ev->any.type);
+			}
+
+			continue;
+		}
+
+		if ((1 << ev->any.type) & KII_EM_POINTER) {
+
+			int dx, dy;
+			static int ptr_oldx = 0, ptr_oldy = 0;
+
+			APP_DEBUG("pointer event\n");
+    
+			if (ev->any.type == KII_EV_PTR_ABSOLUTE) {
+
+				dx = ev->pmove.x - ptr_oldx;      
+				dy = ev->pmove.y - ptr_oldy;
+				ptr_oldx = ev->pmove.x;
+				ptr_oldy = ev->pmove.y;
+				miPointerDeltaCursor(dx, dy, ev->any.time);
+				continue;
+			}
+
+			if (ev->any.type == KII_EV_PTR_RELATIVE) {
+
+				ptr_oldx += (dx = ev->pmove.x);
+				ptr_oldy += (dy = ev->pmove.y);
+				miPointerDeltaCursor(dx, dy, ev->any.time);
+				continue;
+			}
+
+			if ((ev->any.type == KII_EV_PTR_BUTTON_PRESS) || 
+				(ev->any.type == KII_EV_PTR_BUTTON_RELEASE)) {
+
+				kii_u_t button = 3;
+				kii_u_t mask = 1 << button;
+
+				xev.u.u.type = (ev->any.type ==
+					KII_EV_PTR_BUTTON_PRESS)
+						? ButtonPress : ButtonRelease;
+
+				while (mask) {
+
+					if (ev->pbutton.button & mask) {
+
+						xev.u.u.detail = button;
+						mieqEnqueue(&xev);
+					}
+					mask >>= 1;
+					button--;
+				}
+
+				continue;
+			}
+			ErrorF("unknown pointer event type %i\n", 
+				ev->any.type);
+		}
+	}
+
 	mieqProcessInputEvents();
 	miPointerUpdate();
 }
 
 void AbortDDX()
 {
-#if 0
-	ggiExit();
-#endif
+	ErrorF("AbordDDX(): aborting ddx\n");
 }
 
-static CARD32 xggiSnarf(OsTimerPtr timer, CARD32 time, pointer data)
-{
-#if 0
-	api_context ctx = (api_context) data;
-	gii_event *ev;
-    
-	while (giiGetEvent(ctx, &ev, GII_EM_POINTER | GII_EM_KEYBOARD)) {
-
-		xggiQueueEvent(ev);
-	}
-	return 20 /* milliseconds */;
-#endif
-}
 
 /*
 **	Initailize input handlers
 */
 void InitInput(int argc, char *argv[])
 {
-#if 0
-	api_context xggi_input = apiInit("GII", NULL);
 	DeviceIntPtr ptr, kbd;
-	static OsTimerPtr timer;
 
-	if (NULL == xggi_input) {
+	APP_DEBUG("InitInput(): initializing input\n");
 
-		FatalError("failed to initialize input API");
+	if (phoenix.flags & PHOENIX_F_INIT_INPUT_HW) {
+
+		if (kiiInit(&phoenix.input.kii) != KII_EOK) {
+
+			FatalError("kiiInit() failed.\n");
+		}
+		if (kiiMapDevice(phoenix.input.kii) != KII_EOK) {
+
+			FatalError("kiiMapDevice() failed.\n");
+		}
+		APP_DEBUG("InitInput(): kii initialized.\n");
 	}
 
-	kbd = AddInputDevice(xggiKbdProc, TRUE);
-	((DevicePtr) kbd)->devicePrivate = (pointer) xggi_input;
+	kbd = AddInputDevice(PhoenixKbdProc, TRUE);
 	RegisterKeyboardDevice(kbd);
 
-	ptr = AddInputDevice(xggiPtrProc, TRUE);
-	((DevicePtr) ptr)->devicePrivate = (pointer) xggi_input;
+	ptr = AddInputDevice(PhoenixPtrProc, TRUE);
 	RegisterPointerDevice(ptr);
+	miRegisterPointerDevice((ScreenPtr) NULL, ptr);
 
-	miRegisterPointerDevice(screenInfo.screens[0], ptr);
+	/*	initialize MI event queueing code
+	**
+	**	mieqInit() sets the input check pointers such that Dispatch()
+	**	decides if to call ProcessInputEvents() upon a comparison of
+	**	the MI event queue head and tail. These will only be altered
+	**	by a call to mieqEnqueue(), which we do from 
+	**	ProcessInputEvents() when reading the events. So, we need to
+	**	override the input check, otherwise nothing will happen. 
+	*/
 	mieqInit((DevicePtr) kbd, (DevicePtr) ptr);
+	phoenix.always_check[0] = 0;
+	phoenix.always_check[1] = 1;
+	SetInputCheck(phoenix.always_check, phoenix.always_check + 1);
 
-	timer = TimerSet(NULL, 0, 20 /* milliseconds */, xggiSnarf, xggi_input);
-#endif
+	phoenix.flags &= ~PHOENIX_F_INIT_INPUT_HW;
+	APP_DEBUG("InitInput(): done\n");
 }

@@ -6,7 +6,10 @@
 **	Copyright (C) 1997-1998	Michael Krause
 **	Copyright (C) 1999-2000	Steffen Seeger
 **
-**	$Log: xggiOutput.c,v $
+**	$Log: phoenixOutput.c,v $
+**	Revision 1.1  2000/07/04 11:01:52  seeger_s
+**	- added PhoeniX DDX stubs and included in build system
+**	
 **	Revision 1.2  2000/06/28 20:45:03  seeger_s
 **	- fixed headers
 **	
@@ -18,83 +21,308 @@
 #include "scrnintstr.h"
 #include "servermd.h"
 #include "colormapst.h"
+#include "mi/mi.h"
 #include "mi/mipointer.h"
 
-#if 0
+#include "types.h"
+#include "phoenix.h"
 
-#include "xf86.h"
+#define	APP_DEBUG	ErrorF
 
+static int phoenix_init_defaults = 1;
+phoenix_t phoenix;
 
-#define MAX_COLORS	256 /* For the PseudoColor modes.. */
-
-ggi_context xggiOutput = NULL;
-
-struct ScrnInfo xggiInfo
+static void PhoenixInitDefaults(void)
 {
-	/*
-	**	XAA
-	*/
-	"XGGI"			/* name				*/
-	{ 0, }, 		/* options			*/
+	u_t i;
 
-	8,			/* bitsPerPixel			*/
-	640, 480,		/* displayWidth, displayHeight	*/
-	640, 480,		/* virtualX, virtualY		*/
-	0,			/* videoRam (detected)		*/
+	APP_DEBUG("PhoenixInitDefaults(): initializing phoenix\n");
 
-	/*
-	**	XGGI private
-	*/
-	0,			/* displayStride		*/
-	0,			/* displayDepth			*/
+	memset(&phoenix, 0, sizeof(phoenix));
 
-	NULL			/* pfbMemory			*/
+	for (i = 0; i < MAXSCREENS; i++) {
+
+		phoenix_output_t *output = phoenix.output + i;
+
+		output->img.virt.x = 640;
+		output->img.virt.y = 400;
+
+		output->img.size.x = output->img.virt.x;
+		output->img.size.y = output->img.virt.y;
+
+		output->img.frames = 1;
+
+		output->img.iluts  = 1;
+		output->img.ilutm  = KGI_AM_COLORS;
+
+		output->img.fam    = KGI_AM_COLOR_INDEX;
+		strcpy(output->img.bpfa, KGI_AS_8);
+
+		output->dpi.x = output->dpi.y = 75;
+	}
+
+	phoenix.flags |= PHOENIX_F_INIT_OUTPUT_HW | PHOENIX_F_INIT_INPUT_HW;
+	phoenix.outputs = 1;
+}
+
+/*
+**	pointer functions
+*/
+
+static Bool PhoenixPointerCursorOffScreen(ScreenPtr *screen, int *x, int *y)
+{
+	return FALSE;
+}
+
+static void PhoenixPointerCrossScreen (ScreenPtr screen, Bool entering)
+{
+}
+
+#define	PhoenixPointerWarpCursor	miPointerWarpCursor
+#define	PhoenixPointerEnqueueEvent	mieqEnqueue
+#define	PhoenixPointerNewEventScreen	mieqSwitchScreen
+
+static const miPointerScreenFuncRec phoenix_screen_pointer =
+{
+	PhoenixPointerCursorOffScreen,
+	PhoenixPointerCrossScreen,
+	PhoenixPointerWarpCursor,
+	PhoenixPointerEnqueueEvent,
+	PhoenixPointerNewEventScreen
 };
 
-static Bool xggiPixmapDepths[33];
+/*
+**	screen helper functions
+*/
 
-
-
-
-
-void xggiOpenConsole(void)
+static Bool PhoenixSaveScreen(ScreenPtr screen, int on)
 {
-	ErrorF("xggiOpenConsole()\n");
-	if (NULL == xggiOutput) {
-
-		ErrorF("initializing GGI, ");
-		ggiInit();
-		xggiOutput = ggiAPIInit("GGI", NULL);
-		if (NULL == xggiOutput) {
-
-			FatalError("failed.\n");
-		}
-		ErrorF("succeeded\n");
-	}
+	ErrorF("PhoenixSaveScreen(screen=%i, on=%i)\n",
+		screen->myNum, on);
+	return TRUE;
 }
 
-static int xggiBitsPerPixel(int depth)
-{
-	     if (depth == 1) {	return 1;
-	else if (depth <= 8)	return 8;
-	else if (depth <= 16)	return 16;
-	else return 32;
-}
+extern void *kgiInitFramebuffer(kgi_u_t sizex, kgi_u_t sizey);
 
+static int PhoenixScreenInit(int id, ScreenPtr screen, 
+	int idx, char **argv)
+{
+	phoenix_output_t *output = phoenix.output + idx;
+
+	APP_DEBUG("PhoenixScreenInit(id=%i, screen=%p, idx=%i, ...) "
+		"serverGeneration=%i\n",
+		id, screen, idx, serverGeneration);
+
+#if 0
+	APP_ASSERT(id == screen->myNum);
+	APP_ASSERT(argv == NULL);
 #endif
+
+	if (phoenix.flags & PHOENIX_F_INIT_OUTPUT_HW) {
+
+#		warning	init output!
+
+		output->fb = kgiInitFramebuffer(output->img.virt.x,
+			output->img.virt.y);
+		if (NULL == output->fb) {
+
+			APP_DEBUG("failed to allocate frame buffer for "
+				"screen %i (index %i)\n", id, idx);
+			return FALSE;
+		}
+		APP_DEBUG("PhoenixScreenInit(): allocated %ix%i frame buffer "
+			"@%p for screen %i (index %i)\n",
+			output->img.virt.x, output->img.virt.y,
+			output->fb, id, idx);
+	}
+
+	output->x11 = screen;
+
+	screen->SaveScreen = PhoenixSaveScreen;
+
+	if (! cfbScreenInit(screen, output->fb, 
+		output->img.virt.x, output->img.virt.y,
+		output->dpi.x, output->dpi.y,
+		output->img.virt.x)) {
+
+		APP_DEBUG("cfbScreenInit() failed for screen %i "
+			"(index %i).\n", id, idx);
+		return FALSE;
+	}
+
+	if (! miInitializeBackingStore(screen)) {
+
+		APP_DEBUG("miInitializeBackingStore() failed for screen %i "
+			"(index %i).\n", id, idx);
+	}
+
+	if (! miDCInitialize(screen, &phoenix_screen_pointer)) {
+
+		APP_DEBUG("miDCIntitialize() failed for screen %i "
+			"(index %i).\n", id, idx);
+		return FALSE;
+	}
+
+	if (! cfbCreateDefColormap(screen)) {
+
+		APP_DEBUG("cfbCreateDefColormap() failed for screen %i "
+			"(index %i).\n", id, idx);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static inline u_t PhoenixRoundedBPP(const u_t bpp)
+{
+#if 0
+	APP_ASSERT(0 < bpp);
+#endif
+
+	if (bpp <= 4)	return 4;
+	if (bpp <= 8)	return 8;
+	if (bpp <= 16)	return 16;
+	if (bpp <= 24)	return 24;
+	if (bpp <= 32)	return 32;
+
+	FatalError("%i bits per pixel are too many.\n", bpp);
+}
+
+static inline void PhoenixAddPixmapFormat(ScreenInfo *screenInfo, 
+	const u_t depth, const u_t bpp, const u_t pad)
+{
+	u_t fmt;
+
+	for (fmt = 0; fmt < screenInfo->numPixmapFormats; fmt++) {
+
+		/*	use largest padding required
+		*/
+		if ((screenInfo->formats[fmt].depth == depth) &&
+			(screenInfo->formats[fmt].bitsPerPixel == bpp)) {
+
+			if (screenInfo->formats[fmt].scanlinePad < pad) {
+
+				screenInfo->formats[fmt].scanlinePad = pad;
+			}
+			return;
+		}
+	}
+
+	if (MAXFORMATS <= fmt) {
+
+		FatalError("MAXFORMATS = %i is too few for this configuration.\n",
+			MAXFORMATS);
+	}
+
+	APP_DEBUG("adding format %i: bpp=%i, depth=%i, pad=%i\n",
+		screenInfo->numPixmapFormats, bpp, depth, pad);
+
+	screenInfo->formats[fmt].depth	= depth;
+	screenInfo->formats[fmt].bitsPerPixel = bpp;
+	screenInfo->formats[fmt].scanlinePad = pad;
+
+	screenInfo->numPixmapFormats++;
+}
+
+void InitOutput(ScreenInfo *screenInfo, int argc, char *argv[])
+{
+	u_t i;
+
+	if (phoenix_init_defaults) {
+
+		PhoenixInitDefaults();
+		phoenix_init_defaults = 0;
+	}
+
+	APP_DEBUG("\nInitOutput(): initializing screens\n");
+
+	screenInfo->imageByteOrder	= IMAGE_BYTE_ORDER;
+
+	/*	bitmap format
+	*/
+	screenInfo->bitmapScanlineUnit	= BITMAP_SCANLINE_UNIT;
+	screenInfo->bitmapScanlinePad	= BITMAP_SCANLINE_PAD;
+	screenInfo->bitmapBitOrder	= BITMAP_BIT_ORDER;
+
+#if 0
+	/*	we always support the 1bpp pixmap format
+	*/
+	screenInfo->formats[0].depth		= 1;
+	screenInfo->formats[0].bitsPerPixel	= 1;
+	screenInfo->formats[0].scanlinePad	= BITMAP_SCANLINE_PAD;
+	screenInfo->numPixmapFormats = 1;
+#endif
+
+	for (i = 0; i < phoenix.outputs; i++) {
+
+		u_t	color_bpp, index_bpp, mask, attr;
+
+		/*	count index and color bits for per-frame-attributes
+		*/
+		color_bpp = 0;
+		index_bpp = 0;
+		attr = 0;
+
+		for (mask = 1; mask & KGI_AM_ALL; mask += mask) {
+
+			if (! (phoenix.output[i].img.fam & mask)) {
+
+				continue;
+			}
+
+			if (mask & KGI_AM_COLOR_INDEX) {
+
+				index_bpp += phoenix.output[i].img.bpfa[attr];
+			}
+
+			if (mask & KGI_AM_COLORS) {
+
+				color_bpp += phoenix.output[i].img.bpfa[attr];
+			}
+
+			attr++;	
+		}
+
+		/*	add pixmap format
+		*/
+		if (color_bpp) {
+
+			/*	If there are color bits per pixel, index bits
+			**	control overlay color.
+			*/
+			PhoenixAddPixmapFormat(screenInfo, color_bpp,
+				PhoenixRoundedBPP(color_bpp),
+				BITMAP_SCANLINE_PAD);
+		} else {
+
+			if (index_bpp > 0) {
+
+				PhoenixAddPixmapFormat(screenInfo, index_bpp,
+					PhoenixRoundedBPP(index_bpp),
+					BITMAP_SCANLINE_PAD);
+			} else {
+
+				FatalError("Neither color nor index bits per "
+					"pixel configured for screen %i.\n", i);
+			}
+		}
+
+		/*	add screen
+		*/
+		if (-1 == AddScreen(PhoenixScreenInit, i, NULL)) {
+
+			FatalError("Could not add screen %i\n", i);
+		}
+	}
+
+	phoenix.flags &= ~PHOENIX_F_INIT_OUTPUT_HW;
+
+	APP_DEBUG("InitOutput(): done.\n");
+}
 
 void ddxGiveUp(void)
 {
 	ErrorF("ddxGiveUp()\n");
-	/*	clean up the framebuffers
-	*/
-#if 0
-	if (xggiOutput) {
-
-	    	ggiAPIDone(xggiOutput, NULL);
-		xggiOutput = NULL;
-	}
-#endif
 }
 
 void OsVendorInit(void) 
@@ -107,39 +335,62 @@ void OsVendorFatalError(void)
 	ErrorF("OsVendorFatalError()\n");
 }
 
+
+/*	ddxProcessArgument() gets called first, so we have to initialize our
+**	global defaults here, if we want options to override the default values.
+**	Please note that argument processing is done once at startup and
+**	especially not for each server generation.
+*/
 void ddxUseMsg(void) 
 {
-	ErrorF("-ggimode WxHxD         set width, height, depth (bpp)\n");
-	ErrorF("-keymap file           set key mapping table (required)\n");
-	ErrorF("-dynkeys               enable dynamic keycode mapping\n");
+	ErrorF("-----------------------------------------------------------\n");
+	ErrorF("-mode WxH         set width, height\n");
+	ErrorF("-display <name>   ignored for compatibility\n");
 }
 
 int ddxProcessArgument (int argc, char *argv[], int i)
 {
-#if 0
-	if(!strcmp(argv[i], "-ggimode")) {
+
+/*	APP_ASSERT(((serverGeneration == 1) && phoenix_init_defaults) ||
+**		((serverGeneration > 1) && phoenix_init_defaults));
+*/
+	if (phoenix_init_defaults) {
+
+		PhoenixInitDefaults();
+		phoenix_init_defaults = 0;
+	}
+
+	if (! strcmp(argv[i], "-display")) {
+
+		return 2;
+	}
+
+	if (!strcmp(argv[i], "-mode")) {
+
+		unsigned int width, height;
 
 		if(i + 1 >= argc) {
 
 			UseMsg();
 		}
 
-		if (3 != sscanf(argv[i+1], "%dx%dx%d", &xggiScreen.width,
-			&xggiScreen.height, &xggiScreen.depth)) {
+		if (2 != sscanf(argv[i+1], "%ux%u", 
+			&width, &height)) {
 
-			xggiScreen.width  = XGGI_DEFAULT_WIDTH;
-			xggiScreen.height = XGGI_DEFAULT_HEIGHT;
-			xggiScreen.depth  = XGGI_DEFAULT_DEPTH;
-
-			ErrorF("Invalid mode spec `-ggimode %s'\n", argv[i+1]);
+			ErrorF("Invalid mode spec '-mode %s' ignored.\n",
+				argv[i+1]);
 			UseMsg();
+
+		} else {
+
+			phoenix.output[0].img.virt.x = width;
+			phoenix.output[0].img.virt.y = height;
 		}
 
 		return 2;
 	}
 
 	return 0;
-#endif
 }
 
 #ifdef DDXTIME /* from ServerOSDefines */
@@ -151,379 +402,4 @@ CARD32 GetTimeInMillis(void)
 	return (tp.tv_sec*1000) + (tp.tv_usec/1000);
 }
 #endif
-
-#if 0
-static ColormapPtr xggiInstalledMaps[MAXSCREENS];
-
-static int xggiListInstalledColormaps(ScreenPtr pScreen, Colormap *pmaps)
-{
-	/*	By the time we are processing requests, we can guarantee
-	**	that there is always a colormap installed
-	*/
-	*pmaps = xggiInstalledMaps[pScreen->myNum]->mid;
-	return 1;
-}
-
-
-static void xggiInstallColormap(ColormapPtr pmap)
-{
-	int index = pmap->pScreen->myNum;
-	ColormapPtr oldpmap = InstalledMaps[index];
-
-	if (pmap != oldpmap) {
-
-		int entries;
-		VisualPtr pVisual;
-		Pixel *     ppix;
-		xrgb *      prgb;
-		xColorItem *defs;
-		int i;
-
-		if(oldpmap != (ColormapPtr)None) {
-
-			WalkTree(pmap->pScreen, TellLostMap, 
-				(char *)&oldpmap->mid);
-		}
-
-		InstalledMaps[index] = pmap;
-		WalkTree(pmap->pScreen, TellGainedMap, (char *)&pmap->mid);
-
-		entries = pmap->pVisual->ColormapEntries;
-		pVisual = pmap->pVisual;
-
-		ppix = (Pixel *)ALLOCATE_LOCAL(entries*sizeof(Pixel));
-		prgb = (xrgb *)ALLOCATE_LOCAL(entries*sizeof(xrgb));
-		defs = (xColorItem *)ALLOCATE_LOCAL(entries*sizeof(xColorItem));
-
-		for (i = 0; i < entries; i++) {
-
-			ppix[i] = i;
-		}
-		/* XXX truecolor */
-		QueryColors(pmap, entries, ppix, prgb);
-
-		for (i = 0; i < entries; i++) { /* convert xrgbs to xColorItems */
-		    defs[i].pixel = ppix[i] & 0xff; /* change pixel to index */
-		    defs[i].red   = prgb[i].red;
-		    defs[i].green = prgb[i].green;
-		    defs[i].blue  = prgb[i].blue;
-		    defs[i].flags = DoRed|DoGreen|DoBlue;
-		}
-		(*pmap->pScreen->StoreColors)(pmap, entries, defs);
-
-		DEALLOCATE_LOCAL(ppix);
-		DEALLOCATE_LOCAL(prgb);
-		DEALLOCATE_LOCAL(defs);
-	}
-}
-
-static void xggiUninstallColormap(ColormapPtr pmap)
-{
-	ColormapPtr curpmap = InstalledMaps[pmap->pScreen->myNum];
-
-	if(pmap == curpmap) {
-
-		if (pmap->mid != pmap->pScreen->defColormap) {
-
-			curpmap = (ColormapPtr) LookupIDByType(
-				pmap->pScreen->defColormap, RT_COLORMAP);
-			(*pmap->pScreen->InstallColormap)(curpmap);
-		}
-	}
-}
-
-static void xggiStoreColors(ColormapPtr pmap, int ndef, xColorItem *pdefs)
-{
-	int i;
-	xColorItem directDefs[256];
-	ggi_color cmap[MAX_COLORS];
-
-	if (pmap != InstalledMaps[pmap->pScreen->myNum]) {
-
-		return;
-	}
-
-	if ((pmap->pVisual->class | DynamicClass) == DirectColor) {
-
-		return;
-	}
-
-	ggiGetPaletteVec(MASTER_VIS,0,MAX_COLORS,cmap);
-
-	for (i = 0; i < ndef; i++) {
-
-		if (pdefs[i].pixel >= MAX_COLORS) {
-
-			continue;
-		}
-
-		if (pdefs[i].flags & DoRed) {
-
-			cmap[pdefs[i].pixel].r=pdefs[i].red;
-		}
-		if (pdefs[i].flags & DoGreen) {
-
-			cmap[pdefs[i].pixel].g=pdefs[i].green;
-		}
-		if (pdefs[i].flags & DoBlue) {
-
-			cmap[pdefs[i].pixel].b=pdefs[i].blue;
-		}
-	}
-
-	ggiSetPaletteVec(MASTER_VIS,0,MAX_COLORS,cmap);
-}
-
-static Bool xggiSaveScreen(ScreenPtr pScreen, int on)
-{
-	return TRUE;
-}
-
-static Bool xggiCloseScreen(int index, ScreenPtr pScreen)
-{
-	if ((PixmapPtr)pScreen->devPrivate) {
-
-		return (*pScreen->DestroyPixmap)(
-			(PixmapPtr) pScreen->devPrivate);
-	}
-	return TRUE;
-}
-
-static char *xggiAllocateFramebufferMemory(void)
-{
-	int mode;
-	ggi_directbuffer_t buf = NULL;
-	ggi_pixellinearbuffer *plb;
-
-	if (xggiScreen.pfbMemory) {
-
-		return xggiScreen.pfbMemory; /* already done */
-	}
-
-	switch (xggiScreen.depth) {
-
-	case 8:
-		mode = GT_8BIT;
-		break;
-
-	case 16:
-		mode = GT_16BIT;
-		break;
-
-	case 24:
-		mode = GT_24BIT;
-		break;
-
-	case 32:
-		mode = GT_32BIT;
-		break;
-	default:
-		ErrorF("XGGI doesn't support %d depth screens.\n",
-			xggiScreen.depth);
-		return NULL;
-	}
-
-/*    ggiSetInfoFlags(MASTER_VIS, GGIFLAG_ASYNC); */
-
-	ErrorF("Setting graphics mode...");
-	if (ggiSetGraphMode(MASTER_VIS, xggiScreen.width, xggiScreen.height,
-		xggiScreen.width, xggiScreen.height, mode)) {
-
-		ErrorF("Can't set required mode.\n");
-		return NULL;
-	}
-	ErrorF("ok\n");
-
-	ErrorF("Checking direct buffers..\n");
-	while (!ggiDBGetBuffer(MASTER_VIS, &buf) && buf) {
-
-		switch(ggiDBGetLayout(buf)) {
-		case blPixelLinearBuffer: 
-			ErrorF("--> blPixelLinearBuffer\n");
-			plb = ggiDBGetPLB(buf);
-	
-			if(plb->stride < 0) {
-
-				ErrorF("    stride negative: %d\n",plb->stride);
-				break;
-			}
-	
-			if ((8 * plb->stride % plb->bpp) != 0) {
-
-				ErrorF("    stride is not a multiple of "
-					"bytes per pixel\n");
-				break;
-			}
-
-			if (plb->origin.x != 0 || plb->origin.y != 0) {
-
-				ErrorF("    origin != 0: %d/%d\n",
-					plb->origin.x, plb->origin.y);
-				break;
-			}
-	
-			if (plb->bpp != xggiScreen.depth) {
-
-				ErrorF("    bpp (%d) != depth (%d)\n",
-					plb->bpp, xggiScreen.depth);
-				break;
-			}
-
-			if (plb->swap != 0) {
-
-				ErrorF("    swap != 0: %d\n", plb->swap);
-				break;
-			}
-
-			if (plb->read != plb->write) {
-
-				ErrorF("    writebuffer != readbuffer\n");
-				break;
-			}
-
-			if (plb->page_size) {
-
-				ErrorF("    Note: paged buffer - XGGI "
-					"might not be fun!\n");
-			}
-
-			ErrorF("    ** Buffer okay.\n");
-			xggiScreen.pfbMemory = plb->read;
-			xggiScreen.stride = 8 * plb->stride / plb->bpp;
-			break;
-
-		default:
-			ErrorF("Layout: Unknown\n");
-			break;
-		}
-
-		if(! xggiScreen.pfbMemory) {
-
-			ErrorF("You might want to contact the author "
-				" so support for this mode can be added.\n\n");
-		} else {
-
-			break;
-		}
-    	}
-
-	if(!xggiScreen.pfbMemory) {
-
-		ErrorF("Sorry, I can't find a suitable frame buffer "
-			"for the specified mode.\n");
-	}
-
-	return xggiScreen.pfbMemory;
-}
-
-
-static Bool xggiCursorOffScreen (ScreenPtr ppScreen, int *x, int *y)
-{
-	return FALSE;
-}
-
-static void xggiCrossScreen (ScreenPtr pScreen, Bool entering)
-{
-}
-
-static miPointerScreenFuncRec xggiPointerCursorFuncs =
-{
-	xggiCursorOffScreen,
-	xggiCrossScreen,
-	miPointerWarpCursor
-};
-
-static Bool xggiFBInitProc(int index, ScreenPtr pScreen, int argc, char *argv[])
-{
-	const int dpix = 100, dpiy = 100;
-	int ret;
-	char *pbits;
-
-	xggiScreen.bitsPerPixel = xggiBitsPerPixel(xggiScreen.depth);
-
-	if(!(pbits = xggiAllocateFramebufferMemory())) {
-
-		return FALSE;
-	}
-
-	if (!xggiScreenInit(pScreen, pbits, xggiScreen.width, xggiScreen.height,
-		dpix, dpiy, xggiScreen.stride)) {
-
-		return FALSE;
-	}
-
-	pScreen->CloseScreen = xggiCloseScreen;
-	pScreen->SaveScreen = xggiSaveScreen;
-
-	switch(xggiScreen.depth) {
-	case 16:
-	case 24:
-	case 32:
-		pScreen->InstallColormap = cfbInstallColormap;
-		pScreen->UninstallColormap = cfbUninstallColormap;
-		pScreen->ListInstalledColormaps = cfbListInstalledColormaps;
-		pScreen->StoreColors = (void (*)())NoopDDA;
-		break;
-	default:
-		pScreen->InstallColormap = xggiInstallColormap;
-		pScreen->UninstallColormap = xggiUninstallColormap;
-		pScreen->ListInstalledColormaps = xggiListInstalledColormaps;
-		pScreen->StoreColors = xggiStoreColors;
-		break;
-	}
-
-	miDCInitialize(pScreen, &xggiPointerCursorFuncs);
-
-	return cfbCreateDefColormap(pScreen);
-} 
-
-#endif
-
-void InitOutput(ScreenInfo *screenInfo, int argc, char *argv[])
-{
-#if 0
-	int i;
-	int NumFormats = 0;
-
-	xggiOpenConsole();
-
-	for (i = 0; i <= 32; i++) {
-
-		xggiPixmapDepths[i] = FALSE;
-	}
-	xggiPixmapDepths[1] = TRUE;
-	xggiPixmapDepths[xggiScreen.depth] = TRUE;
-
-	for (i = 1; i <= 32; i++) {
-
-		if (xggiPixmapDepths[i]) {
-
-			if (screenInfo->numFormats >= MAXFORMATS) {
-
-				FatalError ("MAXFORMATS is too small "
-					"for this server\n");
-			}
-			screenInfo->formats[screenInfo->numFormats].depth = i;
-			screenInfo->formats[screenInfo->numFormats].bitsPerPixel
-				= xggiBitsPerPixel(i);
-			screenInfo->formats[screenInfo->NumFormats].scanlinePad
-				= BITMAP_SCANLINE_PAD;
-			NumFormats++;
-		}
-	}
-
-	screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
-	screenInfo->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
-	screenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
-	screenInfo->bitmapBitOrder = BITMAP_BIT_ORDER;
-	screenInfo->numPixmapFormats = NumFormats;
-
-	/*	initialize screens
-	*/
-	if (-1 == AddScreen(xggiFBInitProc, argc, argv)) {
-
-		FatalError("Couldn't add screen", i);
-	}
-#endif
-}
 
