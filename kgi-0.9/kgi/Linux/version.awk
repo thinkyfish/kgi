@@ -9,6 +9,10 @@
 #	with this software for details of these terms and conditions.
 #
 #	$Log: version.awk,v $
+#	Revision 1.3  2001/09/15 23:16:06  skids
+#	
+#	Syntax fixes + more build system changes for 2.4 series
+#	
 #	Revision 1.2  2001/09/15 21:45:13  skids
 #	
 #	Patch rules for the 2.4.7 patch
@@ -31,45 +35,27 @@
 
 END {
 
-	# 1.x.x and 2.0.x kernels are no longer supported.
+	# 1.x.x and 2.[0,1,2,3].x kernels are no longer supported.
 	if ((LINUX_MAJOR < 2) || 
-		((LINUX_MAJOR == 2) && (LINUX_MINOR <  2))) {
+		((LINUX_MAJOR == 2) && (LINUX_MINOR <  4))) {
 
 		printf "PATCH=notanylonger\n"
 		exit 0
 
 	}
 
-	# Patch 2.2.x kernels
-	if ((LINUX_MAJOR == 2) && (LINUX_MINOR == 2))
-	{
-		PATCH = "2.2.0"
-		PMAKE = "2.2.0"
-
-		if (LINUX_PATCH >=  3) {		PMAKE="2.2.3"; }
-		if (LINUX_PATCH >=  4) {		PMAKE="2.2.4"; }
-		if (LINUX_PATCH >=  7) {		PMAKE="2.2.7"; }
-		if (LINUX_PATCH >= 12) {PATCH="2.2.12";	PMAKE="2.2.12";}
-		if (LINUX_PATCH >= 13) {PATCH="2.2.13";	               }
-		if (LINUX_PATCH >= 14) {PATCH="2.2.14";	PMAKE="2.2.14";}
-
-		if (LINUX_PATCH == 8) { 
-
-			printf  "\n\n\tWARNING: linux-2.2.8 has file system corruption problems!\n" > "/dev/stderr"
-			printf	"\tconfiguration process aborted.\n\n\n" > "/dev/stderr"
-			printf  "exit 1;\n"
-		}		
-	}
-	
 	# Patch 2.4.x kernels
+	if ((LINUX_MAJOR == 2) && (LINUX_MAJOR == 4) && (LINUX_PATCH < 9)) {
+
+		printf "PATCH=notanylonger\n"
+		exit 0
+	}
 	if ((LINUX_MAJOR == 2) && (LINUX_MINOR == 4))
 	{
-		PATCH = "2.4.7"
+		PATCH = "2.4.9"
        	}
 
        	printf "LINUX_VERSION=%s.%s.%s%s;\n",
        		LINUX_MAJOR, LINUX_MINOR, LINUX_PATCH, LINUX_EXTRA
        	printf "PATCH=%s;\nPMAKE=%s;\n", PATCH, PMAKE
-
-
 }
