@@ -9,29 +9,69 @@
 **	with this software for details of these terms and conditions.
 **
 ** ----------------------------------------------------------------------------
-**	MAINTAINER	Jos_Hulzink
+**	MAINTAINER	Steffen_Seeger
 **
 **	$Log: ViRGE-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:27  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_chipset_S3_ViRGE_meta_h
 #define	_chipset_S3_ViRGE_meta_h
 
-#include "chipset/IBM/VGA-text-meta.h"
+#define MMIO_OUT32(d,r)		mem_out32(d,r+VIRGE_MMIO_BASE)		
+#define MMIO_IN32(r)		mem_in32(r+VIRGE_MMIO_BASE)
+
+#define MMIO_OUT16(d,r)		mem_out16(d,r+VIRGE_MMIO_BASE)		
+#define MMIO_IN16(r)		mem_in16(r+VIRGE_MMIO_BASE)
+
+#define MMIO_OUT8(d,r)		mem_out8(d,r+VIRGE_MMIO_BASE)		
+#define MMIO_IN8(r)		mem_in8(r+VIRGE_MMIO_BASE)
+
+#define MISC_OUT8(v,d)		v->vga.MiscOut8 (v,d)
+#define MISC_IN8(v)		v->vga.MiscIn8 (v)
+
+#define CRT_OUT8(v,d,r)		v->vga.CrtOut8 (v, d, r)
+#define CRT_IN8(v,r)		v->vga.CrtIn8  (v, r)
+
+#define SEQ_OUT8(v,d,r)		v->vga.SeqOut8 (v, d, r)
+#define SEQ_IN8(v,r)		v->vga.SeqIn8  (v, r)
+
+#define ATC_OUT8(v,d,r)		v->vga.AtcOut8 (v, d, r)
+#define ATC_IN8(v,r)		v->vga.AtcIn8  (v, r)
+
+#define GRC_OUT8(v,d,r)		v->vga.GrcOut8 (v, d, r)
+#define GRC_IN8(v,r)		v->vga.GrcIn8  (v, r)
+
+#define SPR_OUT32(v,d,r)	
+	//v->vga.SprOut32 (v, d, r)
+#define SPR_IN32(v,r)		
+	//v->vga.SprIn32  (v, r)
+
+#define IS_VIRGE(v)	 (PCI_DEVICE_ID_S3_ViRGE==v->chipset.device_id)
+#define IS_VIRGE_DXGX(v) (PCI_DEVICE_ID_S3_ViRGE_DXGX==v->chipset.device_id)
+#define IS_VIRGE_VX(v)	 (PCI_DEVICE_ID_S3_ViRGE_VX==v->chipset.device_id)
+#define IS_VIRGE_GX2(v)	 (PCI_DEVICE_ID_S3_ViRGE_GX2==v->chipset.device_id)
+#define IS_VIRGE_MX(v)	 (PCI_DEVICE_ID_S3_ViRGE_MX==v->chipset.device_id)
+#define IS_VIRGE_MXP(v)	 (PCI_DEVICE_ID_S3_ViRGE_MXP==v->chipset.device_id)
+#define IS_VIRGE_MXPMV(v) (PCI_DEVICE_ID_ViRGE_MXPMV==v->chipset.device_id)
 
 typedef enum
 {
-	VIRGE_IF_VGA_DAC	= 0x00000001
-
+	VIRGE_IF_VGA_DAC	= 0x00000001,
+	VIRGE_IF_MMIO_ENABLED   = 0x80000000
 } virge_chipset_io_flags_t;
 
+#include "chipset/IBM/VGA-text-meta.h"
+
 typedef	struct
-{
+{	
+	int			nothing;
 	vga_text_chipset_io_t       		vga;
 	virge_chipset_io_flags_t	flags;
 	mem_region_t			aperture;
 	irq_line_t			irq;
 
-#warning devide into subsystems here!
 	kgim_io_out16_fn	*mmio_out16;
 	kgim_io_in16_fn		*mmio_in16;
 	kgim_io_out32_fn	*mmio_out32;
@@ -39,6 +79,8 @@ typedef	struct
 	
 } virge_chipset_io_t;
 
+#define	VIRGE_MMIO_OUT8(ctx, val, reg)	(ctx)->mmio_out8((ctx), (val), (reg))
+#define	VIRGE_MMIO_IN8(ctx, reg)      	(ctx)->mmio_in8((ctx), (reg))
 #define	VIRGE_MMIO_OUT16(ctx, val, reg)	(ctx)->mmio_out16((ctx), (val), (reg))
 #define	VIRGE_MMIO_IN16(ctx, reg)      	(ctx)->mmio_in16((ctx), (reg))
 #define	VIRGE_MMIO_OUT32(ctx, val, reg)	(ctx)->mmio_out32((ctx), (val), (reg))
@@ -56,24 +98,61 @@ typedef union
 
 		kgim_chipset_mode_t	kgim;
 
-		kgi_u32_t		VideoControl, ScreenStride;
-		kgi_u32_t		HTotal, HgEnd, HsStart, HsEnd, HbEnd;
-		kgi_u32_t		VTotal, VsStart, VsEnd, VbEnd;
+		kgi_u8_t		Misc;
+
+		kgi_u32_t		ModeControl, ExtendedMode, Offset, 
+					ExtendedRAMDACControl;
+		kgi_u32_t		HTotal, HdEnd, HbStart, HsStart, HsEnd, HbEnd;
+		kgi_u32_t		VTotal, VdEnd, VbStart, VsStart, VsEnd, VbEnd;
 		kgi_u32_t		ScreenBase, ScreenBaseRight;
+		kgi_u8_t		InterlaceRetraceStart, UnderlineLocation;
+		kgi_u8_t	BackwardCompatability1, BackwardCompatability2,
+				BackwardCompatability3;
+		kgi_u8_t		ExtendedMiscellaneousControl1,
+					ExtendedMiscellaneousControl2,
+					Miscellaneous1;
+		kgi_u32_t		LineCompare, StartFifoFetch,
+					MaximumScanLine;	
+		kgi_u8_t		CRTCModeControl, MemoryConfiguration,
+					PresetRowScan;
+					
+		/* Sequencer registers */
+		
+		kgi_u8_t		ExtendedSequencerA, ExtendedSequencerB;
+		kgi_u8_t		ExtendedSequencerC, ExtendedSequencerD;
+		kgi_u8_t		DacClkSynControl, ClkSynControl1, ClkSynControl2;
+		kgi_u8_t		ClockingMode, EnableWritePlane,
+					CharacterFontSelect, MemoryModeControl;
 
-		kgi_u_t		pp[3];
+		/* ATC registers */
+		kgi_u8_t		HorizontalPixelPanning;
 
+		/* Streams registers */
+		kgi_u32_t		PrimaryStreamControl, ColorChromaKeyControl,
+					SecondaryStreamControl,ChromaKeyUpperBound,
+					SecondaryStreamStretch, BlendControl,
+					PrimaryStreamAddress0, PrimaryStreamAddress1,
+					PrimaryStreamStride, DoubleBufferLpbSupport,
+					SecondaryStreamAddress0, SecondaryStreamAddress1,
+					SecondaryStreamStride, OpaqueOverlayControl,
+					K1VerticalScaleFactor, K2VerticalScaleFactor,
+					DDAVerticalAccumulator, StreamsFifoControl,
+					PrimaryStreamStartCoordinates, PrimaryStreamWindowSize,
+					SecondaryStreamStartCoordinates, SecondaryStreamWindowSize,
+					FifoControl, MiuControl, StreamsTimeout, MiscTimeout;
+		
 		kgi_mmio_region_t	aperture1, aperture2;
 		kgi_mmio_region_t	gp_fifo, gp_regs;
-		kgi_accel_t		gp_accel;
+		kgi_accel_t		accel;
 
 	} virge;
 
+	kgi_u8_t		enhanced;
+	
 } virge_chipset_mode_t;
 
 
-/*	Driver global state
-*/
+/* Driver global state */
 typedef enum
 {
 	VIRGE_CF_RESTORE_INITIAL	= 0x00000002,	/* restore init. state	*/
@@ -90,10 +169,7 @@ typedef enum
 typedef struct
 {
 	kgim_chipset_t		chipset;
-
 	vga_text_chipset_t	vga;
-//	kgi_u16_t		vga_SEQ_ControlReg;
-//	kgi_u16_t		vga_GRC_Mode640Reg;
 
 	virge_chipset_flags_t	flags;
 	virge_chipset_mode_t	*mode;
@@ -105,7 +181,15 @@ typedef struct
     		kgi_u32_t Command, LatTimer, IntLine;
     		pcicfg_vaddr_t *dev;
 	} pci;
-
+	
+	struct 
+	{
+		kgi_u32_t
+		VSY, S3D_DON, FIFO_OVF, FIFO_EMP, HD_DON, CD_DON, S3DF_FIF,
+		LPB_INT, SPS,
+		not_handled, no_reason;
+	} interrupt;
+	
 	struct 
 	{ 
 		kgi_u8_t 
@@ -123,13 +207,13 @@ typedef struct
 		backcompat1, backcompat2, backcompat3,
 		config1, config2, lock1, lock2, misc1,
 		fifostart, interlacestart,
-		/*modecontrol,*/ syscontrol1, syscontrol2, memcontrol1, memcontrol2,
+		syscontrol1, syscontrol2, memcontrol1, memcontrol2,
 		extsync1, lawcontrol, exthorizoverflow, extvertoverflow,
 		memcontrol3, /* Undocumented */
 		memcontrol4, extmisc1, extmisc2, config3, extmisc3;
 		
 	} crt;
-	
+
 	struct
 	{
 		kgi_u8_t
@@ -213,6 +297,12 @@ typedef struct
 		dmaread_baseaddr, dmaread_stridewidth;
 	} mpc;
 	
+	struct
+	{
+		kgi_u32_t
+		subsys_ctl,adv_func_ctl;
+	} misc;
+
 	struct
 	{
 		kgi_u32_t

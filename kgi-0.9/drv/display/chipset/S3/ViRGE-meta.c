@@ -10,29 +10,35 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:27  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #include <kgi/maintainers.h>
-#define	MAINTAINER		Jos_Hulzink	
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1 $"
-
-#define	DEBUG_LEVEL	2
+#define	DEBUG_LEVEL 	4	
+#define	MAINTAINER	Steffen_Seeger
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.8 $"
 
 #include <kgi/module.h>
+
+#include <malloc.h>
 
 #define	__S3_ViRGE
 #include "chipset/S3/ViRGE.h"
 #include "chipset/S3/ViRGE-meta.h"
 #include "chipset/S3/ViRGE-bind.h"
 
-#define	VIRGE_ControlBase		((kgi_u8 *) virge_mem_control.base_virt)
-#define	MEM_VGA			(VIRGE_ControlBase + VIRGE_VGABase)
+#define	MUCH	1274231
+
+#define VIRGE_MMIO_BASE		(virge_io->aperture.base_virt)+0x1000000
+#define VIRGE_VGA_IO_BASE      	VGA_IO_BASE
+#define VIRGE_VGA_MEM_BASE	(VIRGE_MMIO_BASE + 0x8000)
+#define	VIRGE_VGA_DAC		(virge_io->flags & VIRGE_IF_VGA_DAC)
 
 #ifdef DEBUG_LEVEL
-/*	Print verbose chipset configuration for debugging purposes
-*/
-static inline void virge_chipset_examine(virge_chipset_t *virge, 
-	kgi_u32_t flags)
+/* Print verbose chipset configuration for debugging purposes */
+static inline void virge_chipset_examine(virge_chipset_mode_t *virge_mode, kgi_u32_t flags)
 {
 	kgi_u32_t mclk, memsize;
 	kgi_u32_t foo;
@@ -43,263 +49,72 @@ static inline void virge_chipset_examine(virge_chipset_t *virge,
 	
 	KRN_DEBUG(1, "PCI Registers:");
 	KRN_DEBUG(1, "--------------");
-	KRN_DEBUG(1, "PCIBASE0 = %.8x", virge->pci.BaseAddr0);
+//	KRN_DEBUG(1, "PCIBASE0 = %.8x", virge->pci.BaseAddr0);
 
 	KRN_DEBUG(1, "");
 	
 	KRN_DEBUG(1, "CRT Registers:");
 	KRN_DEBUG(1, "--------------");
-	KRN_DEBUG(1, "HTOTAL = %.2x", virge->crt.htotal);
-	KRN_DEBUG(1, "HBLANKEND = %.2x", virge->crt.hblankend);
-	KRN_DEBUG(1, "HRETRACESTART = %.2x", virge->crt.hretracestart);
-	KRN_DEBUG(1, "HRETRACEEND = %.2x", virge->crt.hretraceend);
-	KRN_DEBUG(1, "VTOTAL = %.2x", virge->crt.vtotal);
-	KRN_DEBUG(1, "OVERFLOW = %.2x", virge->crt.overflow);
-	KRN_DEBUG(1, "PRESETROWSCAN = %.2x", virge->crt.presetrowscan);
-	KRN_DEBUG(1, "MAXSCANLINE = %.2x", virge->crt.maxscanline);
-	KRN_DEBUG(1, "CURSORSTART = %.2x", virge->crt.cursorstart);
-	KRN_DEBUG(1, "CURSOREND = %.2x", virge->crt.cursorend);
-	KRN_DEBUG(1, "STARTADDRHIGH = %.2x", virge->crt.startaddrhigh);
-	KRN_DEBUG(1, "STARTADDRLOW = %.2x", virge->crt.startaddrlow);
-	KRN_DEBUG(1, "CURSORLOCATIONHIGH = %.2x", virge->crt.cursorlocationhigh);
-	KRN_DEBUG(1, "CURSORLOCATIONLOW = %.2x", virge->crt.cursorlocationlow);
-	KRN_DEBUG(1, "VRETRACESTART = %.2x", virge->crt.vretracestart);
-	KRN_DEBUG(1, "VRETRACEEND = %.2x", virge->crt.vretraceend);
-	KRN_DEBUG(1, "DISPLAYEND = %.2x", virge->crt.displayend);
-	KRN_DEBUG(1, "OFFSET = %.2x", virge->crt.offset);
-	KRN_DEBUG(1, "UNDERLINELOCATION = %.2x", virge->crt.underlinelocation);
-	KRN_DEBUG(1, "VBLANKSTART = %.2x", virge->crt.vblankstart);
-	KRN_DEBUG(1, "VBLANKEND = %.2x", virge->crt.vblankend);
-	KRN_DEBUG(1, "MODECONTROL = %.2x", virge->crt.modecontrol);
-	KRN_DEBUG(1, "LINECOMPARE = %.2x", virge->crt.linecompare);
-/*
-	KRN_DEBUG(1, "REPAINT0 = %.2x", virge->crt.repaint0);
-	KRN_DEBUG(1, "REPAINT1 = %.2x", virge->crt.repaint1);
-	KRN_DEBUG(1, "FIFOCONTROL = %.2x", virge->crt.fifocontrol);
-	KRN_DEBUG(1, "FIFO = %.2x", virge->crt.fifo);
-
-	KRN_DEBUG(1, "EXTRA = %.2x", virge->crt.extra);
-	KRN_DEBUG(1, "PIXEL = %.2x", virge->crt.pixel);
-	KRN_DEBUG(1, "HEXTRA = %.2x", virge->crt.hextra);
-	KRN_DEBUG(1, "GRCURSOR0 = %.2x", virge->crt.grcursor0);
-	KRN_DEBUG(1, "GRCURSOR1 = %.2x", virge->crt.grcursor1);
-*/
+	//KRN_DEBUG(1, "HTOTAL = %.2x", virge->crt.htotal);
 	KRN_DEBUG(1, "");
-	
+#define PR(r) KRN_DEBUG(1,"##r = 0x%.8x", virge_mode->virge.##r)
 	KRN_DEBUG(1, "STREAMS Registers:");
 	KRN_DEBUG(1, "--------------");
-/*
-	KRN_DEBUG(1, "GRCURSOR_START_POS = %.8x", virge->dac.grcursorstartpos);
-	KRN_DEBUG(1, "NVPLL_COEFF = %.8x", virge->dac.nvpllcoeff);
-	KRN_DEBUG(1, "MPLL_COEFF = %.8x", virge->dac.mpllcoeff);
-	KRN_DEBUG(1, "VPLL_COEFF = %.8x", virge->dac.vpllcoeff);
-	KRN_DEBUG(1, "PLL_COEFF_SELECT = %.8x", virge->dac.pllcoeffselect);
-	KRN_DEBUG(1, "GENERAL_CONTROL = %.8x", virge->dac.generalcontrol);
-*/
+	PR(PrimaryStreamControl);
+	PR(ColorChromaKeyControl);
+	PR(SecondaryStreamControl);
+	PR(ChromaKeyUpperBound);
+	PR(SecondaryStreamStretch);
+	PR(BlendControl);
+	PR(PrimaryStreamAddress0);
+	PR(PrimaryStreamAddress1);
+	PR(PrimaryStreamStride);
+	PR(DoubleBufferLpbSupport);
+	PR(SecondaryStreamAddress0);
+	PR(SecondaryStreamAddress1);
+	PR(SecondaryStreamStride);
+	PR(OpaqueOverlayControl);
+	PR(K1VerticalScaleFactor);
+	PR(K2VerticalScaleFactor);
+	PR(DDAVerticalAccumulator);
+	PR(StreamsFifoControl);
+	PR(PrimaryStreamStartCoordinates);
+	PR(PrimaryStreamWindowSize);
+	PR(SecondaryStreamStartCoordinates);
+	PR(SecondaryStreamWindowSize);
 }
 #endif	/* #if (DEBUG_LEVEL > 1) */
 
-#if (DEBUG_LEVEL > 0)
-/*	Symbolic subsystem names for post-reset initalization debug messages 
-*/
-static const kgi_ascii_t *virge_chipset_subsystem[16] =
+static inline void virge_chipset_accel_sync(virge_chipset_io_t *virge_io)
 {
-	"CS",		"MC",		"GPFIFO",	"VC",
-	"DAC",		"VS",		"VGA",		"R7",
-	"GP",		"R9",		"RA",		"RB",
-	"RC",		"RD",		"RE",		"RF"
-};
-#endif	/* #if (DEBUG_LEVEL > 0)	*/
-
-static inline void virge_chipset_sync(virge_chipset_io_t *virge_io)
-{
-	kgi_u32_t count = 1;
+	kgi_u32_t foo;
 	
-	KRN_DEBUG(2, "virge_chipset_sync()");
+	KRN_DEBUG(2, "virge_chipset_accel_sync()");
 	
+	/* Wait for S3d Engine */
+	if (CRT_IN8(virge_io, CRT_EXTMISCCONTROL1) & CR66_ENBL_ENH) {
+	  for (foo=MUCH;--foo && !(MMIO_IN32(SUBSYSTEM_STATUS)& SSS_S3D_ENG);); 
+	  if (!foo) KRN_DEBUG (1,"ViRGE: S3d Engine seems to be crashed.");
+	}
 	return;
-
-#if 0
-	do 
-	{
-		while (count--);
-		count = VIRGE_CS_IN32(virge_io, VIRGE_CS_DMACount);
-
-	} while (count);
-
-	count = 1;
-	
-	do 
-	{
-		while (count++ < 255);
-		count = VIRGE_CS_IN32(virge_io, VIRGE_CS_InFIFOSpace);
-
-	} while (count);
-
-	while (VIRGE_CS_IN32(virge_io, 0x068) & VIRGE_CS068_GraphicsProcessorActive);
-#endif
 }
 
+static void virge_chipset_accel_shutdown (virge_chipset_io_t *virge_io) {
+	kgi_u_t foo;
+
+	if (!(CRT_IN8(virge_io, CRT_EXTMISCCONTROL1) & CR66_ENBL_ENH))
+	  return; /* S3D Engine already disabled.*/
+	virge_chipset_accel_sync (virge_io);
+	/* Reset S3d Engine */
+  	MMIO_OUT32(0x00008000, SUBSYSTEM_CONTROL);
+  	MMIO_OUT32(0x00004000, SUBSYSTEM_CONTROL);
+	/* Wait till S3d Engine is ready. */
+	for (foo = MUCH; --foo && !(MMIO_IN32(SUBSYSTEM_CONTROL) & 0x02000);); 
+	if (0 == foo) KRN_DEBUG (0,"ViRGE: S3D Engine reset failed.");
+}
 /* Accelerator implementation */
 
-typedef struct
-{
-	kgi_u32_t
-
-#define	VIRGE_CORE_CONTEXT_GROUP00	0x007F8000
-	Group00,
-		StartXDom, dXDom, StartXSub, dXSub, StartY, dY, Count,
-
-#define	VIRGE_CORE_CONTEXT_GROUP01	0x00238010
-	Group01,
-		RasterizerMode, YLimits, XLimits,
-
-#define	VIRGE_CORE_CONTEXT_GROUP02	0x04008020
-	Group02,
-		PackedDataLimits,
-
-#define	VIRGE_CORE_CONTEXT_GROUP03	0x021F8030
-	Group03,
-		ScissorMode, ScissorMinXY, ScissorMaxXY, ScreenSize,
-		AreaStippleMode, WindowOrigin,
-
-#define	VIRGE_CORE_CONTEXT_GROUP04	0x00FF8040
-	Group04,
-		AreaStipplePattern0, AreaStipplePattern1,
-		AreaStipplePattern2, AreaStipplePattern3,
-		AreaStipplePattern4, AreaStipplePattern5,
-		AreaStipplePattern6, AreaStipplePattern7,
-
-#define	VIRGE_CORE_CONTEXT_GROUP07	0x03FF8070
-	Group07,
-		TextureAddressMode, SStart, dSdx, dSdyDom, TStart, dTdx,
-		dTdyDom, QStart, dQdx, dQdyDom,
-
-#define	VIRGE_CORE_CONTEXT_GROUP0B	0x000780B0
-	Group0B,
-		TextureBaseAddress, TextureMapFormat, TextureDataFormat,
-
-#define	VIRGE_CORE_CONTEXT_GROUP0C	0xC00180C0
-	Group0C,
-		Texel0, TextureReadMode, TexelLUTMode,
-
-#define	VIRGE_CORE_CONTEXT_GROUP0D	0x7E7D80D0
-	Group0D,
-		TextureColorMode, FogMode, FogColor, FStart, dFdx, dFdyDom,
-		KsStart, dKsdx, dKsdyDom, KdStart, Kddx, dKddyDom,
-
-#define	VIRGE_CORE_CONTEXT_GROUP0F	0x33FF80F0
-	Group0F,
-		RStart, dRdx, dRdyDom, GStart, dGdx, dGdyDom, BStart, dBdx,
-		dBdyDom, AStart, ColorDDAMode, ConstantColor,
-
-#define	VIRGE_CORE_CONTEXT_GROUP10	0x007C8100
-	Group10,
-		AlphaBlendMode, DitherMode, FBSoftwareWriteMask, LogicalOpMode,
-		FBWriteData,
-
-#define	VIRGE_CORE_CONTEXT_GROUP11	0x43878110
-	Group11,
-		LBReadMode, LBReadFormat, LBSourceOffset, LBWindowBase,
-		LBWriteMode, LBWriteFormat,
-
-#define	VIRGE_CORE_CONTEXT_GROUP13	0x0FFF8130
-	Group13,
-		Window, StencilMode, StencilData, Stencil, DepthMode, Depth,
-		ZStartU, ZStartL, dZdxU, dZdxL, dZdyDomU, dZdyDomL,
-
-#define	VIRGE_CORE_CONTEXT_GROUP15	0x07C78150
-	Group15,
-		FBReadMode, FBSourceOffset, FBPixelOffset, FBWindowBase,
-		FBWriteMode, FBHardwareWriteMask, FBBlockColor, FBReadPixel,
-
-#define	VIRGE_CORE_CONTEXT_GROUP18	0x000F8180
-	Group18,
-		FilterMode, StatisticMode, MinRegion, MaxRegion,
-
-#define	VIRGE_CORE_CONTEXT_GROUP1D	0xFFFF81D0
-	Group1D,
-		TexelLUT0, TexelLUT1, TexelLUT2, TexelLUT3,
-		TexelLUT4, TexelLUT5, TexelLUT6, TexelLUT7,
-		TexelLUT8, TexelLUT9, TexelLUTA, TexelLUTB,
-		TexelLUTC, TexelLUTD, TexelLUTE, TexelLUTF,
-
-#define	VIRGE_CORE_CONTEXT_GROUP1E	0x000781E0
-	Group1E,
-		YUVMode, ChromaUpperBound, ChromaLowerBound;
-
-} virge_chipset_core_context_t;
-
-typedef struct
-{
-	kgi_u32_t
-
-#define	VIRGE_DELTA_CONTEXT_GROUP23	0x1FFF8230
-	Group23,
-		V0Float_s, V0Float_t, V0Float_q, V0Float_Ks, V0Float_Kd,
-		V0Float_red, V0Float_green, V0Float_blue, V0Float_alpha,
-		V0Float_fog, V0Float_x, V0Float_y, V0Float_z,
-
-#define	VIRGE_DELTA_CONTEXT_GROUP24	0x1FFF8240
-	Group24,
-		V1Float_s, V1Float_t, V1Float_q, V1Float_Ks, V1Float_Kd,
-		V1Float_red, V1Float_green, V1Float_blue, V1Float_alpha,
-		V1Float_fog, V1Float_x, V1Float_y, V1Float_z,
-
-#define	VIRGE_DELTA_CONTEXT_GROUP25	0x1FFF8250
-	Group25,
-		V2Float_s, V2Float_t, V2Float_q, V2Float_Ks, V2Float_Kd,
-		V2Float_red, V2Float_green, V2Float_blue, V2Float_alpha,
-		V2Float_fog, V2Float_x, V2Float_y, V2Float_z,
-
-#define	VIRGE_DELTA_CONTEXT_GROUP26	0x80018260
-	Group26,
-		DeltaMode, BroadcastMask;
-
-} virge_chipset_delta_context_t;
-
-typedef struct
-{
-	kgi_u32_t
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP18	0x60008180
-	Group18,
-		FBBlockColorU, FBBlockColorL,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP1B	0x000781B0
-	Group1B,
-		FBSourceBase, FBSourceDelta, Config,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP1E	0x001881E0
-	Group1E,
-		AlphaMapUpperBound, AlphaMapLowerBound,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP23	0x5FFF8230
-	Group23,
-		V0Float_s, V0Float_t, V0Float_q, V0Float_Ks, V0Float_Kd,
-		V0Float_red, V0Float_green, V0Float_blue, V0Float_alpha,
-		V0Float_fog, V0Float_x, V0Float_y, V0Float_z, V0Float_color,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP24	0x5FFF8240
-	Group24,
-		V1Float_s, V1Float_t, V1Float_q, V1Float_Ks, V1Float_Kd,
-		V1Float_red, V1Float_green, V1Float_blue, V1Float_alpha,
-		V1Float_fog, V1Float_x, V1Float_y, V1Float_z, V1Float_color,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP25	0x5FFF8250
-	Group25,
-		V2Float_s, V2Float_t, V2Float_q, V2Float_Ks, V2Float_Kd,
-		V2Float_red, V2Float_green, V2Float_blue, V2Float_alpha,
-		V2Float_fog, V2Float_x, V2Float_y, V2Float_z, V2Float_color,
-
-#define	VIRGE_PERMEDIA2_CONTEXT_GROUP26	0x00018260
-	Group26,
-		DeltaMode;
-
 #warning handle texture LUT!
-
-} virge_chipset_permedia2_context_t;
-
 
 typedef struct
 {
@@ -308,14 +123,8 @@ typedef struct
 
 	struct 
 	{
-		virge_chipset_core_context_t core;
-
-		union 
-		{
-			virge_chipset_delta_context_t delta;
-			virge_chipset_permedia2_context_t	p2;
-		} ext;
-
+		kgi_u32_t S3d_Reg[44];
+		kgi_u32_t Color_Pattern_Reg[48];
 	} state;
 
 } virge_chipset_accel_context_t;
@@ -350,43 +159,6 @@ static void virge_chipset_accel_init(kgi_accel_t *accel, void *ctx)
 	virge_ctx->aperture.bus  = virge_ctx->kgi.aperture.bus  + offset;
 	virge_ctx->aperture.phys = virge_ctx->kgi.aperture.phys + offset;
 	virge_ctx->aperture.virt = virge_ctx->kgi.aperture.virt + offset;
-
-	virge_ctx->state.core.Group00 = virge_CORE_CONTEXT_GROUP00;
-	virge_ctx->state.core.Group01 = virge_CORE_CONTEXT_GROUP01;
-	virge_ctx->state.core.Group02 = virge_CORE_CONTEXT_GROUP02;
-	virge_ctx->state.core.Group03 = virge_CORE_CONTEXT_GROUP03;
-	virge_ctx->state.core.Group04 = virge_CORE_CONTEXT_GROUP04;
-	virge_ctx->state.core.Group07 = virge_CORE_CONTEXT_GROUP07;
-	virge_ctx->state.core.Group0B = virge_CORE_CONTEXT_GROUP0B;
-	virge_ctx->state.core.Group0C = virge_CORE_CONTEXT_GROUP0C;
-	virge_ctx->state.core.Group0D = virge_CORE_CONTEXT_GROUP0D;
-	virge_ctx->state.core.Group0F = virge_CORE_CONTEXT_GROUP0F;
-	virge_ctx->state.core.Group10 = virge_CORE_CONTEXT_GROUP10;
-	virge_ctx->state.core.Group11 = virge_CORE_CONTEXT_GROUP11,
-	virge_ctx->state.core.Group13 = virge_CORE_CONTEXT_GROUP13;
-	virge_ctx->state.core.Group15 = virge_CORE_CONTEXT_GROUP15;
-	virge_ctx->state.core.Group18 = virge_CORE_CONTEXT_GROUP18;
-	virge_ctx->state.core.Group1D = virge_CORE_CONTEXT_GROUP1D;
-	virge_ctx->state.core.Group1E = virge_CORE_CONTEXT_GROUP1E;
-
-	if (virge->flags & VIRGE_CF_DELTA) {
-
-		virge_ctx->state.ext.delta.Group23 = virge_DELTA_CONTEXT_GROUP23;
-		virge_ctx->state.ext.delta.Group24 = VIRGE_DELTA_CONTEXT_GROUP24;
-		virge_ctx->state.ext.delta.Group25 = VIRGE_DELTA_CONTEXT_GROUP25;
-		virge_ctx->state.ext.delta.Group26 = VIRGE_DELTA_CONTEXT_GROUP26;
-	}
-
-	if (virge->flags & VIRGE_CF_PERMEDIA2) {
-
-		virge_ctx->state.ext.p2.Group18 = VIRGE_PERMEDIA2_CONTEXT_GROUP18;
-		virge_ctx->state.ext.p2.Group1B = VIRGE_PERMEDIA2_CONTEXT_GROUP1B;
-		virge_ctx->state.ext.p2.Group1E = VIRGE_PERMEDIA2_CONTEXT_GROUP1E;
-		virge_ctx->state.ext.p2.Group23 = VIRGE_PERMEDIA2_CONTEXT_GROUP23;
-		virge_ctx->state.ext.p2.Group24 = VIRGE_PERMEDIA2_CONTEXT_GROUP24;
-		virge_ctx->state.ext.p2.Group25 = VIRGE_PERMEDIA2_CONTEXT_GROUP25;
-		virge_ctx->state.ext.p2.Group26 = VIRGE_PERMEDIA2_CONTEXT_GROUP26;
-	}
 #endif
 }
 
@@ -394,8 +166,8 @@ static void virge_chipset_accel_done(kgi_accel_t *accel, void *ctx)
 {
 	KRN_DEBUG(2, "virge_chipset_accel_done()");
 	
-	if (ctx == accel->ctx) {
-
+	if (ctx == accel->ctx) 
+	{
 		accel->ctx = NULL;
 	}
 }
@@ -424,260 +196,8 @@ static inline void virge_chipset_accel_save(kgi_accel_t *accel)
 	virge_ctx->state.core.reg = mem_in32(gpr + (VIRGE_GP_##reg << 3))
 
 	VIRGE_SAVE(StartXDom);
-	VIRGE_SAVE(dXDom);
-	VIRGE_SAVE(StartXSub);
-	VIRGE_SAVE(dXSub);
-	VIRGE_SAVE(StartY);
-	VIRGE_SAVE(dY);
-	VIRGE_SAVE(Count);
-
-	VIRGE_SAVE(RasterizerMode);
-	VIRGE_SAVE(YLimits);
-	VIRGE_SAVE(XLimits);
-
-	VIRGE_SAVE(PackedDataLimits);
-
-	VIRGE_SAVE(ScissorMode);
-	VIRGE_SAVE(ScissorMinXY);
-	VIRGE_SAVE(ScissorMaxXY);
-	VIRGE_SAVE(ScreenSize);
-	VIRGE_SAVE(AreaStippleMode);
-	VIRGE_SAVE(WindowOrigin);
-
-	VIRGE_SAVE(AreaStipplePattern0);
-	VIRGE_SAVE(AreaStipplePattern1);
-	VIRGE_SAVE(AreaStipplePattern2);
-	VIRGE_SAVE(AreaStipplePattern3);
-	VIRGE_SAVE(AreaStipplePattern4);
-	VIRGE_SAVE(AreaStipplePattern5);
-	VIRGE_SAVE(AreaStipplePattern6);
-	VIRGE_SAVE(AreaStipplePattern7);
-
-	VIRGE_SAVE(TextureAddressMode);
-	VIRGE_SAVE(SStart);
-	VIRGE_SAVE(dSdx);
-	VIRGE_SAVE(dSdyDom);
-	VIRGE_SAVE(TStart);
-	VIRGE_SAVE(dTdx);
-	VIRGE_SAVE(dTdyDom);
-	VIRGE_SAVE(QStart);
-	VIRGE_SAVE(dQdx);
-	VIRGE_SAVE(dQdyDom);
-
-	VIRGE_SAVE(TextureBaseAddress);
-	VIRGE_SAVE(TextureMapFormat);
-	VIRGE_SAVE(TextureDataFormat);
-
-	VIRGE_SAVE(Texel0);
-	VIRGE_SAVE(TextureReadMode);
-	VIRGE_SAVE(TexelLUTMode);
-
-	VIRGE_SAVE(TextureColorMode);
-	VIRGE_SAVE(FogMode);
-	VIRGE_SAVE(FogColor);
-	VIRGE_SAVE(FStart);
-	VIRGE_SAVE(dFdx);
-	VIRGE_SAVE(dFdyDom);
-	VIRGE_SAVE(KsStart);
-	VIRGE_SAVE(dKsdx);
-	VIRGE_SAVE(dKsdyDom);
-	VIRGE_SAVE(KdStart);
-	VIRGE_SAVE(Kddx);
-	VIRGE_SAVE(dKddyDom);
-
-	VIRGE_SAVE(RStart);
-	VIRGE_SAVE(dRdx);
-	VIRGE_SAVE(dRdyDom);
-	VIRGE_SAVE(GStart);
-	VIRGE_SAVE(dGdx);
-	VIRGE_SAVE(dGdyDom);
-	VIRGE_SAVE(BStart);
-	VIRGE_SAVE(dBdx);
-	VIRGE_SAVE(dBdyDom);
-	VIRGE_SAVE(AStart);
-	VIRGE_SAVE(ColorDDAMode);
-	VIRGE_SAVE(ConstantColor);
-
-	VIRGE_SAVE(AlphaBlendMode);
-	VIRGE_SAVE(DitherMode);
-	VIRGE_SAVE(FBSoftwareWriteMask);
-	VIRGE_SAVE(LogicalOpMode);
-
-	VIRGE_SAVE(LBReadMode);
-	VIRGE_SAVE(LBReadFormat);
-	VIRGE_SAVE(LBSourceOffset);
-	VIRGE_SAVE(LBWindowBase);
-	VIRGE_SAVE(LBWriteMode);
-	VIRGE_SAVE(LBWriteFormat);
-	VIRGE_SAVE(FBWriteData);
-
-	VIRGE_SAVE(Window);
-	VIRGE_SAVE(StencilMode);
-	VIRGE_SAVE(StencilData);
-	VIRGE_SAVE(Stencil);
-	VIRGE_SAVE(DepthMode);
-	VIRGE_SAVE(Depth);
-	VIRGE_SAVE(ZStartU);
-	VIRGE_SAVE(ZStartL);
-	VIRGE_SAVE(dZdxU);
-	VIRGE_SAVE(dZdxL);
-	VIRGE_SAVE(dZdyDomU);
-	VIRGE_SAVE(dZdyDomL);
-
-	VIRGE_SAVE(FBReadMode);
-	VIRGE_SAVE(FBSourceOffset);
-	VIRGE_SAVE(FBPixelOffset);
-	VIRGE_SAVE(FBWindowBase);
-	VIRGE_SAVE(FBWriteMode);
-	VIRGE_SAVE(FBHardwareWriteMask);
-	VIRGE_SAVE(FBBlockColor);
-	VIRGE_SAVE(FBReadPixel);
-
-	VIRGE_SAVE(FilterMode);
-	VIRGE_SAVE(StatisticMode);
-	VIRGE_SAVE(MinRegion);
-	VIRGE_SAVE(MaxRegion);
-
-	VIRGE_SAVE(TexelLUT0);
-	VIRGE_SAVE(TexelLUT1);
-	VIRGE_SAVE(TexelLUT2);
-	VIRGE_SAVE(TexelLUT3);
-	VIRGE_SAVE(TexelLUT4);
-	VIRGE_SAVE(TexelLUT5);
-	VIRGE_SAVE(TexelLUT6);
-	VIRGE_SAVE(TexelLUT7);
-	VIRGE_SAVE(TexelLUT8);
-	VIRGE_SAVE(TexelLUT9);
-	VIRGE_SAVE(TexelLUTA);
-	VIRGE_SAVE(TexelLUTB);
-	VIRGE_SAVE(TexelLUTC);
-	VIRGE_SAVE(TexelLUTD);
-	VIRGE_SAVE(TexelLUTE);
-	VIRGE_SAVE(TexelLUTF);
-
-	VIRGE_SAVE(YUVMode);
-	VIRGE_SAVE(ChromaUpperBound);
-	VIRGE_SAVE(ChromaLowerBound);
 
 #undef	VIRGE_SAVE
-	
-
-#define	VIRGE_SAVE(reg)	\
-	virge_ctx->state.ext.delta.reg = mem_in32(gpr + (DELTA_GC_##reg << 3))
-
-	if (virge->flags & VIRGE_CF_DELTA) {
-
-		VIRGE_SAVE(V0Float_s);
-		VIRGE_SAVE(V0Float_t);
-		VIRGE_SAVE(V0Float_q);
-		VIRGE_SAVE(V0Float_Ks);
-		VIRGE_SAVE(V0Float_Kd);
-		VIRGE_SAVE(V0Float_red);
-		VIRGE_SAVE(V0Float_green);
-		VIRGE_SAVE(V0Float_blue);
-		VIRGE_SAVE(V0Float_alpha);
-		VIRGE_SAVE(V0Float_fog);
-		VIRGE_SAVE(V0Float_x);
-		VIRGE_SAVE(V0Float_y);
-		VIRGE_SAVE(V0Float_z);
-
-		VIRGE_SAVE(V1Float_s);
-		VIRGE_SAVE(V1Float_t);
-		VIRGE_SAVE(V1Float_q);
-		VIRGE_SAVE(V1Float_Ks);
-		VIRGE_SAVE(V1Float_Kd);
-		VIRGE_SAVE(V1Float_red);
-		VIRGE_SAVE(V1Float_green);
-		VIRGE_SAVE(V1Float_blue);
-		VIRGE_SAVE(V1Float_alpha);
-		VIRGE_SAVE(V1Float_fog);
-		VIRGE_SAVE(V1Float_x);
-		VIRGE_SAVE(V1Float_y);
-		VIRGE_SAVE(V1Float_z);
-
-		VIRGE_SAVE(V2Float_s);
-		VIRGE_SAVE(V2Float_t);
-		VIRGE_SAVE(V2Float_q);
-		VIRGE_SAVE(V2Float_Ks);
-		VIRGE_SAVE(V2Float_Kd);
-		VIRGE_SAVE(V2Float_red);
-		VIRGE_SAVE(V2Float_green);
-		VIRGE_SAVE(V2Float_blue);
-		VIRGE_SAVE(V2Float_alpha);
-		VIRGE_SAVE(V2Float_fog);
-		VIRGE_SAVE(V2Float_x);
-		VIRGE_SAVE(V2Float_y);
-		VIRGE_SAVE(V2Float_z);
-
-		VIRGE_SAVE(DeltaMode);
-		VIRGE_SAVE(BroadcastMask);
-	}
-
-#undef	VIRGE_SAVE
-#define	VIRGE_SAVE(reg)	\
-	virge_ctx->state.ext.p2.reg = mem_in32(gpr + (VIRGE_GP_##reg << 3))
-
-	if (virge->flags & VIRGE_CF_PERMEDIA2) {
-
-		VIRGE_SAVE(FBBlockColorU);
-		VIRGE_SAVE(FBBlockColorL);
-
-		VIRGE_SAVE(FBSourceBase);
-		VIRGE_SAVE(FBSourceDelta);
-		VIRGE_SAVE(Config);
-
-		VIRGE_SAVE(AlphaMapUpperBound);
-		VIRGE_SAVE(AlphaMapLowerBound);
-
-		VIRGE_SAVE(V0Float_s);
-		VIRGE_SAVE(V0Float_t);
-		VIRGE_SAVE(V0Float_q);
-		VIRGE_SAVE(V0Float_Ks);
-		VIRGE_SAVE(V0Float_Kd);
-		VIRGE_SAVE(V0Float_red);
-		VIRGE_SAVE(V0Float_green);
-		VIRGE_SAVE(V0Float_blue);
-		VIRGE_SAVE(V0Float_alpha);
-		VIRGE_SAVE(V0Float_fog);
-		VIRGE_SAVE(V0Float_x);
-		VIRGE_SAVE(V0Float_y);
-		VIRGE_SAVE(V0Float_z);
-		VIRGE_SAVE(V0Float_color);
-
-		VIRGE_SAVE(V1Float_s);
-		VIRGE_SAVE(V1Float_t);
-		VIRGE_SAVE(V1Float_q);
-		VIRGE_SAVE(V1Float_Ks);
-		VIRGE_SAVE(V1Float_Kd);
-		VIRGE_SAVE(V1Float_red);
-		VIRGE_SAVE(V1Float_green);
-		VIRGE_SAVE(V1Float_blue);
-		VIRGE_SAVE(V1Float_alpha);
-		VIRGE_SAVE(V1Float_fog);
-		VIRGE_SAVE(V1Float_x);
-		VIRGE_SAVE(V1Float_y);
-		VIRGE_SAVE(V1Float_z);
-		VIRGE_SAVE(V1Float_color);
-
-		VIRGE_SAVE(V2Float_s);
-		VIRGE_SAVE(V2Float_t);
-		VIRGE_SAVE(V2Float_q);
-		VIRGE_SAVE(V2Float_Ks);
-		VIRGE_SAVE(V2Float_Kd);
-		VIRGE_SAVE(V2Float_red);
-		VIRGE_SAVE(V2Float_green);
-		VIRGE_SAVE(V2Float_blue);
-		VIRGE_SAVE(V2Float_alpha);
-		VIRGE_SAVE(V2Float_fog);
-		VIRGE_SAVE(V2Float_x);
-		VIRGE_SAVE(V2Float_y);
-		VIRGE_SAVE(V2Float_z);
-		VIRGE_SAVE(V2Float_color);
-
-		VIRGE_SAVE(DeltaMode);
-	}
-#undef	VIRGE_SAVE
-	
 #endif
 }
 
@@ -687,20 +207,11 @@ static inline void virge_chipset_accel_restore(kgi_accel_t *accel)
 	virge_chipset_accel_context_t *virge_ctx = accel->ctx;
 
 	KRN_DEBUG(2, "virge_chipset_accel_restore()");
-#if 0	
-	KRN_ASSERT(0 == VIRGE_CS_IN32(virge_io, VIRGE_CS_DMACount));
-
-#warning flush cache-lines of the context buffer!
-
-	VIRGE_CS_OUT32(virge_io, virge_ctx->aperture.bus, VIRGE_CS_DMAAddress);
-	VIRGE_CS_OUT32(virge_io, virge_ctx->aperture.size >> 2, VIRGE_CS_DMACount);
-#endif
 }
 
 static void virge_chipset_accel_schedule(kgi_accel_t *accel)
 {
-#if 0
-#warning this must not be interrupted!
+//#warning this must not be interrupted!
 	virge_chipset_io_t *virge_io = accel->meta_io;
 	kgi_accel_buffer_t *buffer = accel->exec_queue;
 
@@ -717,7 +228,7 @@ static void virge_chipset_accel_schedule(kgi_accel_t *accel)
 		accel->exec_queue = buffer->next;
 		buffer->next = NULL;
 		buffer->exec_state = KGI_AS_IDLE;
-#warning wakeup buffer->executed !
+//#warning wakeup buffer->executed !
 
 		if (NULL == accel->exec_queue) 
 		{
@@ -747,25 +258,23 @@ static void virge_chipset_accel_schedule(kgi_accel_t *accel)
 			return;
 		}
 
-		KRN_ASSERT(0 == VIRGE_CS_IN32(virge_io, VIRGE_CS_DMACount));
+//		KRN_ASSERT(0 == VIRGE_CS_IN32(virge_io, VIRGE_CS_DMACount));
 
 		buffer->exec_state = KGI_AS_EXEC;
 		
-		VIRGE_CS_OUT32(virge_io, buffer->aperture.bus, VIRGE_CS_DMAAddress);
-		VIRGE_CS_OUT32(virge_io, buffer->exec_size >> 2, VIRGE_CS_DMACount);
+//		VIRGE_CS_OUT32(virge_io, buffer->aperture.bus, VIRGE_CS_DMAAddress);
+//		VIRGE_CS_OUT32(virge_io, buffer->exec_size >> 2, VIRGE_CS_DMACount);
 
 		return;
 
 	default:
-		KRN_ERROR("PERMEDIA: invalid state %i for queued buffer", buffer->exec_state);
+		KRN_ERROR("ViRGE: invalid state %i for queued buffer", buffer->exec_state);
 		KRN_INTERNAL_ERROR;
 		return;
 	}
-#endif
 }
 
-static void virge_chipset_accel_exec(kgi_accel_t *accel, 
-	kgi_accel_buffer_t *buffer)
+static void virge_chipset_accel_exec(kgi_accel_t *accel, kgi_accel_buffer_t *buffer)
 {
 #warning check/validate validate data stream!!!
 #warning this must not be interrupted!
@@ -776,13 +285,12 @@ static void virge_chipset_accel_exec(kgi_accel_t *accel,
 
 	buffer->exec_state = KGI_AS_WAIT;
 
-	if (accel->exec_queue) {
-
+	if (accel->exec_queue) 
+	{
 		kgi_accel_buffer_t *queued = accel->exec_queue;
 
-		while (queued->next && 
-			(queued->next->exec_pri >= buffer->exec_pri)) {
-
+		while (queued->next && (queued->next->exec_pri >= buffer->exec_pri)) 
+		{
 			queued = queued->next;
 		}
 
@@ -798,192 +306,195 @@ static void virge_chipset_accel_exec(kgi_accel_t *accel,
 	virge_chipset_accel_schedule(accel);
 }
 
-/*	IRQ and error handlers
-*/
+/* DisplayPowerManagement */
 
-static inline void virge_chipset_error_handler(virge_chipset_t *virge,
-	virge_chipset_io_t *virge_io, irq_system_t *system)
-{
-	KRN_DEBUG(2, "virge_chipset_error_handler()");
-	
-#if 0
-	kgi_u32_t handled = 0;
-	kgi_u32_t flags = virge_CS_IN32(virge_io, virge_CS_ErrorFlags);
-
-#define	VIRGE_ERROR(err, msg)						\
-	if (flags & VIRGE_CS038_##err##Error) {				\
-									\
-		handled |= VIRGE_CS038_##err##Error;			\
-		KRN_TRACE(0, virge->error.err++);			\
-		KRN_ERROR(msg " (pcidev %.8x)", VIRGE_PCIDEV(virge_io));\
+/* FIXME : Fix that annoying switch (santaclaus) */
+static void virge_set_dpm_mode (virge_chipset_io_t *virge_io, 
+			 virge_chipset_mode_t *virge_mode,
+			 kgi_u32_t santaclaus) {
+	const kgim_monitor_mode_t *crt_mode = virge_mode->virge.kgim.crt;
+	/* The switch statment uses conditional breaks. The idea:
+	 * If the display can handle the requested dpm mode, it is set.
+	 * Otherwise, the most power-saving mode below the requested that the 
+	 * display CAN handle is set.
+	 */
+	switch (santaclaus) {
+		case 0:
+		  /* Off */
+		  if (KGIM_ST_SYNC_OFF & crt_mode->sync) {
+		    CRT_OUT8 (virge_io, CR56_VSYNC_OFF|CR56_HSYNC_OFF, CRT_EXTSYNC1);
+		    break;
+		  }
+		case 1:
+		  /* Suspend */
+		  if (KGIM_ST_SYNC_SUSPEND & crt_mode->sync) {
+		    CRT_OUT8 (virge_io, CR56_VSYNC_OFF, CRT_EXTSYNC1);
+		    break;
+		  }
+		case 2:
+		  /* Standby */
+		  if (KGIM_ST_SYNC_STANDBY & crt_mode->sync) {
+		    CRT_OUT8 (virge_io, CR56_HSYNC_OFF, CRT_EXTSYNC1);
+		    break;
+		  }
+		case 3:
+		default:
+		  /* Normal */
+		  CRT_OUT8 (virge_io, 0x00, CRT_EXTSYNC1);
+		  break;
 	}
-
-	VIRGE_ERROR(InFIFO, "write to full input FIFO");
-	VIRGE_ERROR(OutFIFO, "read from empty output FIFO");
-	VIRGE_ERROR(Message, "incorrect FIFO/GC access");
-	VIRGE_ERROR(DMA, "input FIFO write during DMA transfer");
-	VIRGE_ERROR(VideoFifoUnderflow, "video FIFO underflow");
-	VIRGE_ERROR(VSBUnderflow, "Stream B: FIFO underflow");
-	VIRGE_ERROR(VSAUnderflow, "Stream A: FIFO underflow");
-	VIRGE_ERROR(Master, "PCI bus-mastering error");
-	VIRGE_ERROR(OutDMA, "output FIFO read during DMA transfer");
-	VIRGE_ERROR(InDMAOverwrite, "InDMACount overwritten");
-	VIRGE_ERROR(OutDMAOverwrite, "OutDMACount overwritten");
-	VIRGE_ERROR(VSAInvalidInterlace, "Stream A: invalid interlace");
-	VIRGE_ERROR(VSBInvalidInterlace, "Stream B: invalid interlace");
-
-#undef	VIRGE_ERROR
-
-	if (flags & ~handled) {
-
-		KRN_TRACE(0, virge->error.unknown++);
-		KRN_ERROR("unknown virge error(s): %.8x", flags & ~handled);
-	}
-
-	if (! handled) { 
-
-		KRN_TRACE(0, virge->error.no_reason++);
-		KRN_ERROR("virge error interrupt, but no errors indicated.");
-	}
-
-	VIRGE_CS_OUT32(virge_io, handled, VIRGE_CS_ErrorFlags);
-#endif
 }
 
-kgi_error_t virge_chipset_irq_handler(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, irq_system_t *system)
+/* Streams processor procedures */
+
+static void virge_chipset_streams_disable (virge_chipset_io_t *virge_io)
 {
-#if 0
+  kgi_u32_t foo;
+  /* Find VSYNC */
+  for (foo=MUCH; --foo && !(MMIO_IN8(0x83DA) & 0x08); ); 
+  SPR_OUT32(virge_io,0x0200,0x0000C000);
+  CRT_OUT8 (virge_io, CRT_IN8 (virge_io, CRT_EXTMISCCONTROL2) & 
+		      ~CR67_FULL_STREAMS, CRT_EXTMISCCONTROL2); 
+}
+
+/* Interrupt procedures */
+
+kgi_error_t virge_chipset_irq_handler(virge_chipset_t *virge, virge_chipset_io_t *virge_io, irq_system_t *system)
+{
 	kgi_u32_t handled = 0;
-	kgi_u32_t flags = VIRGE_CS_IN32(virge_io, virge_CS_IntFlags);
 
-	KRN_ASSERT(virge);
-	KRN_ASSERT(virge_io);
+	/* Get interrupt status and clear pending interrupts immediately */
+	kgi_u32_t sss = MMIO_IN32 (SUBSYSTEM_STATUS);
+	kgi_u32_t lif = MMIO_IN32 (LPB_INTR_FLAGS);
 
-	if (flags & VIRGE_CS010_DMAFlag) {
+  	MMIO_OUT32(SSC_CLEAR_ALL_INTERRUPTS, SUBSYSTEM_CONTROL);
+  	MMIO_OUT32(virge->misc.subsys_ctl, SUBSYSTEM_CONTROL);
+  	CRT_OUT8(virge_io, CRT_IN8(virge_io, 0x11)&~0x30,0x11);  
+  	if (virge->misc.subsys_ctl & SSC_VSY_ENB)
+    	  CRT_OUT8(virge_io, CRT_IN8(virge_io, 0x11)|0x10,0x11);     
 
-		handled |= VIRGE_CS010_DMAFlag;
-		KRN_TRACE(0, virge->interrupt.DMA++);
-		KRN_DEBUG(1, "DMA interrupt");
-		
-		if (virge->mode) {
-
-			virge_chipset_accel_schedule(&(virge->mode->virge.gp_accel));
-		}
-	}
-
-	if (flags & VIRGE_CS010_SyncFlag) {
-
-		handled |= VIRGE_CS010_SyncFlag;
-		KRN_TRACE(0, virge->interrupt.Sync++);
-		KRN_DEBUG(1, "Sync interrupt (pcidev %.8x)", VIRGE_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_ErrorFlag) {
-
-		handled |= VIRGE_CS010_ErrorFlag;
-		KRN_TRACE(0, virge->interrupt.Error++);
-		virge_chipset_error_handler(virge, virge_io, system);
-	}
-
-	if (flags & VIRGE_CS010_VRetraceFlag) {
-
-		handled |= VIRGE_CS010_VRetraceFlag;
-		KRN_TRACE(0, virge->interrupt.VRetrace++);
-	}
-
-	if (flags & VIRGE_CS010_ScanlineFlag) {
-
-		handled |= VIRGE_CS010_ScanlineFlag;
-		KRN_TRACE(0, virge->interrupt.Scanline++);
-	}
-
-	if (flags & VIRGE_CS010_TextureInvalidFlag) {
-
-		handled |= VIRGE_CS010_TextureInvalidFlag;
-		KRN_TRACE(0, virge->interrupt.TextureInvalid++);
-		KRN_DEBUG(1, "texture invalid interrupt (pcidev %.8x)",
+  	/* Now act on pending interrupts. */
+   
+	KRN_DEBUG(3, "Interrupt: SSS=0x%.8x",sss);
+	if (sss & SSS_VSY_INT) 
+	{
+    	/* Vertical Sync Interrupt */
+	  handled |= SSS_VSY_INT;
+	  KRN_TRACE(0, virge->interrupt.VSY++);
+	  KRN_DEBUG(1, "VSY interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
 	}
-
-	if (flags & VIRGE_CS010_BypassDMAIntFlag) {
-
-		handled |= VIRGE_CS010_BypassDMAIntFlag;
-		KRN_TRACE(0, virge->interrupt.BypassDMA++);
-		KRN_DEBUG(1, "bypass DMA interrupt (pcidev %.8x)",
-			virge_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_VSBFlag) {
-
-		handled |= VIRGE_CS010_VSBFlag;
-		KRN_TRACE(0, virge->interrupt.VSB++);
-		KRN_DEBUG(1, "video stream B interrupt (pcidev %.8x)",
+	if (sss & SSS_S3D_DON) 
+	{
+    	/* 3D Engine done */
+	  handled |= SSS_S3D_DON;
+	  KRN_TRACE(0, virge->interrupt.S3D_DON++);
+	  KRN_DEBUG(1, "S3D_DON interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_VSAFlag) {
-
-		handled |= VIRGE_CS010_VSAFlag;
-		KRN_TRACE(0, virge->interrupt.VSA++);
-		KRN_DEBUG(1, "video stream A interrupt (pcidev %.8x)",
+  	}
+  	if (sss & SSS_FIFO_OVF) 
+	{
+    	/* Command FIFO Overflow */
+	  handled |= SSS_FIFO_OVF;
+	  KRN_TRACE(0, virge->interrupt.FIFO_OVF++);
+	  KRN_DEBUG(1, "FIFO_OVF interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_VideoStreamSerialFlag) {
-
-		handled |= VIRGE_CS010_VideoStreamSerialFlag;
-		KRN_TRACE(0, virge->interrupt.VideoStreamSerial++);
-		KRN_DEBUG(1, "video stream serial interrupt (pcidev %.8x)",
+  	}
+  	if (sss & SSS_FIFO_EMP) 
+	{
+    	/* Command FIFO Empty */
+	  handled |= SSS_FIFO_EMP;
+	  KRN_TRACE(0, virge->interrupt.FIFO_EMP++);
+	  KRN_DEBUG(1, "FIFO_EMP interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_VideoDDCFlag) {
-
-		handled |= VIRGE_CS010_VideoDDCFlag;
-		KRN_TRACE(0, virge->interrupt.VideoDDC++);
-		KRN_DEBUG(1, "video DDC interrupt (pcidev %.8x)",
+  	}
+  	if (sss & SSS_HD_DON) 
+	{
+    	/* Host DMA Done */
+	  handled |= SSS_HD_DON;
+	  KRN_TRACE(0, virge->interrupt.HD_DON++);
+	  KRN_DEBUG(1, "HD_DON interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
-	}
-
-	if (flags & VIRGE_CS010_VideoStreamExternalFlag) {
-
-		handled |= VIRGE_CS010_VideoStreamExternalFlag;
-		KRN_TRACE(0, virge->interrupt.VideoStreamExternal++);
-		KRN_DEBUG(1, "video stream external interrupt (pcidev %.8x)",
+  	}
+  	if (sss & SSS_CD_DON) 
+	{
+    	/* Command DMA Done */
+	  handled |= SSS_CD_DON;
+	  KRN_TRACE(0, virge->interrupt.CD_DON++);
+	  KRN_DEBUG(1, "CD_DON interrupt (pcidev %.8x)",
 			VIRGE_PCIDEV(virge_io));
-	}
+  	}
+  	if (sss & SSS_S3DF_FIF) 
+	{
+    	/* S3d FIFO Empty */
+	  handled |= SSS_S3DF_FIF;
+	  KRN_TRACE(0, virge->interrupt.S3DF_FIF++);
+	  KRN_DEBUG(1, "S3DF_FIF interrupt (pcidev %.8x)",
+			VIRGE_PCIDEV(virge_io));
+  	}
+  	if (sss & SSS_LPB_INT) 
+	{
+    	/* LPB Interrupt */
+	  handled |= SSS_LPB_INT;
+	  KRN_TRACE(0, virge->interrupt.LPB_INT++);
+	  KRN_DEBUG(1, "LPB_INT interrupt (pcidev %.8x)",
+			VIRGE_PCIDEV(virge_io));
+  	}
+  	if (lif & LIF_SPS) 
+	{
+    	/* Serial Port Start */
+	  KRN_TRACE(0, virge->interrupt.SPS++);
+	  KRN_DEBUG(1, "SPS interrupt (pcidev %.8x)",
+			VIRGE_PCIDEV(virge_io));
+  	}
 
-	if (flags & ~handled) {
-
+	if (sss & ~handled & 0x000000ff) 
+	{
 		KRN_TRACE(0, virge->interrupt.not_handled++);
-		KRN_ERROR("virge: unhandled interrupt flags %.8x (pcidev %.8x)",
-			flags & ~handled, VIRGE_PCIDEV(virge_io));
+		KRN_ERROR("virge: unhandled interrupt flag(s) %.8x (pcidev %.8x)", sss & ~handled, VIRGE_PCIDEV(virge_io));
 	}
-
-	if (!flags) {
-
+	if (!(sss & 0x000000ff)) 
+	{
 		KRN_TRACE(0, virge->interrupt.no_reason++);
 		KRN_ERROR("virge: interrupt but no reason indicated.");
 	}
 
-	VIRGE_CS_OUT32(virge_io, handled, VIRGE_CS_IntFlags);
-
-#endif
 	return KGI_EOK;
 }
 
-#warning If you need those, extend chipset_io_t appropriately!
-/*	no extern declarations outside the header files allowed!
+static void virge_chipset_interrupts_disable (virge_chipset_io_t *virge_io)
+{
+	/* Switch off ViRGE interrupt generator and vertical retrace */
+	CRT_OUT8(virge_io, (CRT_IN8(virge_io, 0x11) & 0xDF) | 0x10, 0x11);
+  	/* Disable all enhanced interrupts. */
+  	MMIO_OUT32(0, SUBSYSTEM_CONTROL);	
+}
+
+static void virge_chipset_interrupts_enable (virge_chipset_io_t *virge_io, virge_chipset_t *virge)
+{
+	kgi_u8_t crt11;
+	
+	/* Clear vertical sync interrupt and enable it. */
+  	if (virge->misc.subsys_ctl & SSC_VSY_ENB) {
+   	  crt11 = CRT_IN8(virge_io,0x11);
+  	  CRT_OUT8(virge_io, crt11 & ~0x30,0x11);  
+  	  CRT_OUT8(virge_io, crt11 | 0x10,0x11);
+  	}  
+  
+  	/* Clear all pending enhanced interrupts and enable them */
+  	MMIO_OUT32(0x0000007F, SUBSYSTEM_CONTROL);
+  	MMIO_OUT32(virge->misc.subsys_ctl, SUBSYSTEM_CONTROL);
+}
+
 extern kgi_u8_t virge_chipset_vga_crt_in8(virge_chipset_io_t *io, kgi_u_t reg);
 extern kgi_u32_t virge_chipset_ctl_in32(virge_chipset_io_t *mem, kgi_u_t reg);
-*/
 
-
-kgi_error_t virge_chipset_init(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, const kgim_options_t *options)
+kgi_error_t virge_chipset_init(virge_chipset_t *virge, virge_chipset_io_t *virge_io, const kgim_options_t *options)
 {
 	pcicfg_vaddr_t pcidev = VIRGE_PCIDEV(virge_io);
+	kgi_u32_t	DCLKdiv, m,n,r;
+	kgi_u8_t	cr58,i;
+	float		f;
 
 	KRN_DEBUG(2, "virge_chipset_init()");
 	
@@ -991,317 +502,437 @@ kgi_error_t virge_chipset_init(virge_chipset_t *virge,
 	KRN_ASSERT(virge_io);
 	KRN_ASSERT(options);
 
-	KRN_DEBUG(2, "Initializing %s %s", 
-		virge->chipset.vendor, virge->chipset.model);
+	KRN_DEBUG(2, "Initializing %s %s", virge->chipset.vendor, virge->chipset.model);
 
+	/* Make sure all IO is done in IO space, not in MMIO space */
+	virge_io->flags = 0;
+	
 #define	PCICFG_SET_BASE(value, reg)		\
 	pcicfg_out32(0xFFFFFFFF, reg);	\
 	pcicfg_in32(reg);		\
 	pcicfg_out32((value), reg)
 
-	PCICFG_SET_BASE(virge_io->aperture.base_io,
-		pcidev + PCI_BASE_ADDRESS_0);
-/*	PCICFG_SET_BASE(virge_io->framebuffer.base_io,
-**		pcidev + PCI_BASE_ADDRESS_1);
-*/	
+	PCICFG_SET_BASE(virge_io->aperture.base_io,   pcidev + PCI_BASE_ADDRESS_0);
+	
 #undef	PCICFG_SET_BASE
 
 	KRN_DEBUG(1, "PCI (re-)configuration done");
 
-	if (virge->pci.Command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+	/* When we arrive here. We don't know anything about the current state
+	 * of the chipset. The chipset might already be the initial console
+	 * driver, but it also can be asleep... It actually even might be the
+	 * cause of that smoke coming out of your computer right now.
+	 */
 
-		KRN_DEBUG(2, "Chipset initialized, reading configuration");
+	if (PCI_COMMAND_MEMORY == 
+	    (virge->pci.Command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
+	{		
+		/* If only COMMAND_MEMORY is on, there might be another driver 
+		 * for this chipset, so we have to abort.
+		 */
+		KRN_NOTICE ("Sorry, your ViRGE is in a state that only should occur when another driver is   present. Bailing out to prevent problems."); 
+		return -E(CHIPSET, FAILED);
+	}
+	
+	if (virge->pci.Command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) 
+	{
+		/* The ViRGE has access to the PCI bus. COMMAND_IO is on, so
+		 * it is the primary display adapter. 
+		 */
 		
+		/*
+		** Enable access to all registers
+		*/
+		CRT_OUT8(virge_io, CRT_IN8(virge_io,0x11) & 0x7f, 0x11);
+		/* Set the magic numbers */
+		CRT_OUT8(virge_io, CR38_MAGIC, 0x38);
+		CRT_OUT8(virge_io, CR39_MAGIC, 0x39);
+		CRT_OUT8(virge_io, 0x22,       0x33);
+		CRT_OUT8(virge_io, CRT_IN8 (virge_io, 0x35) & 0x0f, 0x35);
+		/* 0x40 is wrong in the ViRGE books */
+		CRT_OUT8(virge_io, CRT_IN8(virge_io, 0X40) & ~0x01, 0x40);
+		SEQ_OUT8(virge_io, SR08_MAGIC, 0x08);
+		
+		KRN_DEBUG(2, "Chipset initialized, reading configuration");
 		virge->flags |= VIRGE_CF_RESTORE_INITIAL;
 		
-#if 0
-		            virge->crt.htotal = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_TOTAL);
-		         virge->crt.hblankend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_BLANK_END);
-		     virge->crt.hretracestart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_RETRACE_START);
-		       virge->crt.hretraceend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_RETRACE_END);
-		            virge->crt.vtotal = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_TOTAL);
-		          virge->crt.overflow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_OVERFLOW);
-		     virge->crt.presetrowscan = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_PRESET_ROW_SCAN);
-		       virge->crt.maxscanline = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_MAX_SCAN_LINE);
-		       virge->crt.cursorstart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_START);
-		         virge->crt.cursorend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_END);
-		     virge->crt.startaddrhigh = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_START_ADDR_HIGH);
-		      virge->crt.startaddrlow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_START_ADDR_LOW);
-		virge->crt.cursorlocationhigh = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_LOCATION_HIGH);
-		 virge->crt.cursorlocationlow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_LOCATION_LOW);
-		     virge->crt.vretracestart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_RETRACE_START);
-		       virge->crt.vretraceend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_RETRACE_END);
-		        virge->crt.displayend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_DISPLAY_END);
-		            virge->crt.offset = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_OFFSET);
-		 virge->crt.underlinelocation = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_UNDERLINE_LOCATION);
-		       virge->crt.vblankstart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_BLANK_START);
-		         virge->crt.vblankend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_BLANK_END);
-		       virge->crt.modecontrol = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_MODE_CONTROL);
-		       virge->crt.linecompare = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_LINE_COMPARE);
-		          virge->crt.repaint0 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_REPAINT0);
-		          virge->crt.repaint1 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_REPAINT1);
-		       virge->crt.fifocontrol = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_FIFO_CONTROL);
-		              virge->crt.fifo = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_FIFO);
-		             virge->crt.extra = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_EXTRA);
-		             virge->crt.pixel = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_PIXEL);
-		            virge->crt.hextra = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_EXTRA);
-		         virge->crt.grcursor0 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_GRCURSOR0);
-		         virge->crt.grcursor1 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_GRCURSOR1);
-
-		  virge->dac.grcursorstartpos = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_GRCURSOR_START_POS);
-		        virge->dac.nvpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_NVPLL_COEFF);
-		         virge->dac.mpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_MPLL_COEFF);
-		         virge->dac.vpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_VPLL_COEFF);
-		    virge->dac.pllcoeffselect = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_PLL_COEFF_SELECT);
-		    virge->dac.generalcontrol = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_GENERAL_CONTROL);
-#endif
-		vga_text_chipset_init(&(virge->vga), &(virge_io->vga), options);
-
-	} else {
-
-		kgi_u_t cnt = 0;
-
-		KRN_DEBUG(2, "Chipset not initialized, resetting");
-
-#if 0
-		            virge->crt.htotal = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_TOTAL);
-		         virge->crt.hblankend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_BLANK_END);
-		     virge->crt.hretracestart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_RETRACE_START);
-		       virge->crt.hretraceend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_RETRACE_END);
-		            virge->crt.vtotal = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_TOTAL);
-		          virge->crt.overflow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_OVERFLOW);
-		     virge->crt.presetrowscan = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_PRESET_ROW_SCAN);
-		       virge->crt.maxscanline = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_MAX_SCAN_LINE);
-		       virge->crt.cursorstart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_START);
-		         virge->crt.cursorend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_END);
-		     virge->crt.startaddrhigh = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_START_ADDR_HIGH);
-		      virge->crt.startaddrlow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_START_ADDR_LOW);
-		virge->crt.cursorlocationhigh = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_LOCATION_HIGH);
-		 virge->crt.cursorlocationlow = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_CURSOR_LOCATION_LOW);
-		     virge->crt.vretracestart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_RETRACE_START);
-		       virge->crt.vretraceend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_RETRACE_END);
-		        virge->crt.displayend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_DISPLAY_END);
-		            virge->crt.offset = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_OFFSET);
-		 virge->crt.underlinelocation = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_UNDERLINE_LOCATION);
-		       virge->crt.vblankstart = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_BLANK_START);
-		         virge->crt.vblankend = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_VERT_BLANK_END);
-		       virge->crt.modecontrol = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_MODE_CONTROL);
-		       virge->crt.linecompare = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_LINE_COMPARE);
-		          virge->crt.repaint0 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_REPAINT0);
-		          virge->crt.repaint1 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_REPAINT1);
-		       virge->crt.fifocontrol = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_FIFO_CONTROL);
-		              virge->crt.fifo = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_FIFO);
-		             virge->crt.extra = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_EXTRA);
-		             virge->crt.pixel = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_PIXEL);
-		            virge->crt.hextra = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_HORIZ_EXTRA);
-		         virge->crt.grcursor0 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_GRCURSOR0);
-		         virge->crt.grcursor1 = virge_chipset_vga_crt_in8(virge_io, NV_PCRTC_GRCURSOR1);
-
-		  virge->dac.grcursorstartpos = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_GRCURSOR_START_POS);
-		        virge->dac.nvpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_NVPLL_COEFF);
-		         virge->dac.mpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_MPLL_COEFF);
-		         virge->dac.vpllcoeff = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_VPLL_COEFF);
-		    virge->dac.pllcoeffselect = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_PLL_COEFF_SELECT);
-		    virge->dac.generalcontrol = virge_chipset_ctl_in32(virge_io, NV_PRAMDAC_GENERAL_CONTROL);
-#endif
+		//vga_text_chipset_init(&(virge->vga), &(virge_io->vga), options);
+	} 
+	else 
+	{
+		/* The ViRGE has no access to the PCI bus, i.e. it is sleeping.
+		 * We have to wake it up completely. This is a hard job, for
+		 * the ViRGE chipsets have bugfixes in BIOS (That is most likely
+		 * not executed since last reboot)
+		 */
 		
+		if IS_VIRGE_DXGX (virge)
+		{
+			KRN_ERROR ("ViRGE: The ViRGE DX / GX doesn't work as secondary display adapter.");
+			return -E(CHIPSET,NOSUP);
+		}
+		
+		KRN_NOTICE("Sorry, getting the ViRGE alive as secondary adapter is not possible yet.");
+		return -E(CHIPSET,NOSUP); 
+		KRN_DEBUG(2, "Chipset not initialized, starting wakeup sequence.");
+		/* First enable memory access through the PCI bus */
+		pcicfg_out32 ((virge->pci.Command  | PCI_COMMAND_MEMORY) & 
+						    ~PCI_COMMAND_IO, 
+						    pcidev +  PCI_COMMAND); 
+		/* Make the ViRGE listen to MMIO commands */
+		MMIO_OUT8 (0x01, 0x83c3);
+		virge_io->flags |= VIRGE_IF_MMIO_ENABLED;
+		MISC_OUT8(virge_io, MISC_IN8 (virge_io) | 0x01);
+		/* We have to make the virge registers enabled. Keep fingers
+		 * crossed here.
+		 */
+		CRT_OUT8(virge_io, CR38_MAGIC, 0x38);
+		CRT_OUT8(virge_io, CR39_MAGIC, 0x39);
+		/* Check out if there is response */
+		KRN_DEBUG(1, "Wakeup: CRT 0x2D: %x", CRT_IN8 (virge_io, 0x2D));
+		pcicfg_out32 ((virge->pci.Command   & ~PCI_COMMAND_MEMORY) & 
+						    ~PCI_COMMAND_IO, 
+						    pcidev +  PCI_COMMAND); 
+		/*FIXME*/
 		vga_text_chipset_init(&(virge->vga), &(virge_io->vga), options);
 	}
 
+	/* Current state of the driver: All register access enabled. Bugfixes
+	 * are handled.
+	 * Command MMIO works, Framebuffer MMIO should work, but frame-
+	 * buffer size is still unknown.
+	 */
+	
 	KRN_DEBUG(2, "Chipset enabled");
 
-	/* Detect RAM size */
-#if 0	
-	virge->fb.boot0 = virge_chipset_ctl_in32(virge_io, NV_PFB_BOOT_0);
+	/* Detect RAM (Framebuffer) size */
+  
+	if (!IS_VIRGE_VX(virge) && !IS_VIRGE_GX2(virge) && !IS_VIRGE_MX(virge))
+	{ 
+    	  virge->chipset.memory = 1 MB;
+    	  switch (CRT_IN8(virge_io, CRT_CONFIG1) & CR36_MEMSIZE_MASK) {
+	    case CR36_4MB:
+	      virge->chipset.memory *= 2; /* Fallthrough */
+       	    case CR36_2MB:
+       	      virge->chipset.memory *= 2; /* Fallthrough */
+       	    case CR36_1MB:
+	      KRN_NOTICE("ViRGE: Detected %d KB of video memory",
+	         virge->chipset.memory >> 10);
+	      break;
+       	    default:
+	      KRN_NOTICE("ViRGE: Unknown amount of memory. Assuming 1 MB");
+	      break;
+          } /* switch */
+ 	} else if IS_VIRGE_VX(virge) {
+	  /* The VX is a weirdo. If I understand correctly, it has some 
+	   * memory, that can't be used for display images. Forget this memory
+	   * for now, someone pass me a VX manual please ?
+	   */
+          virge->chipset.memory = 2 MB*(1+((CRT_IN8(virge_io,CRT_CONFIG1) & 0x60) >> 5));
+          KRN_NOTICE("ViRGE: VX: Detected %d KB of video memory",
+	         virge->chipset.memory >> 10);
+          switch (CRT_IN8 (virge_io,0x37) & 0x60) {
+            case 1:
+              virge->chipset.memory -= 2 MB;
+	    case 2:
+	      virge->chipset.memory -= 2 MB;
+          } /* switch */
+          KRN_NOTICE("ViRGE: VX: On-screen memory: %d", virge->chipset.memory >> 10);
+	} else 
+	{
+          /* Gx2 or Mx chipsets use an incompatible CONFIG1 register */
+    	  virge->chipset.memory = 2 MB;
+    	  switch ((CRT_IN8(virge_io, CRT_CONFIG1) & 0xC0) >> 6) 
+	  {
+            case 3:
+              virge->chipset.memory <<= 1;
+      	    case 1:
+	      KRN_NOTICE("ViRGE: GX2 / MX: Detected %d KB of video memory",
+	         virge->chipset.memory >> 10);
+	      break;
+            default:
+	      KRN_NOTICE("ViRGE: GX2 / MX: Unknown amount of memory. Assuming 2 MB");
+	      break;
+	  } /* switch */
+	} /* else */
 	
-	switch(virge->fb.boot0 & 0x00000003) {
+	cr58= 	(CRT_IN8 (virge_io, 0x58) & 0x80)|
+	      	(1 MB == virge->chipset.memory ? 0x01 :
+		(2 MB == virge->chipset.memory ? 0x02 : 0x03)) |
+		(IS_VIRGE_VX(virge) ? 0x50: 0x10);
+	CRT_OUT8 (virge_io, cr58, 0x58);
+	CRT_OUT8 (virge_io, 0x08, 0x53);
+	
+	/*
+	** Enable MMIO access
+	*/
+	CRT_OUT8(virge_io, 0x10, 0x32);
 
-	case NV_PFB_BOOT_0_RAM_AMOUNT_4MB:
-		KRN_DEBUG(1, "4MB video memory detected");
-		virge->chipset.memory = 4 MB;
-		break;
+	CRT_OUT8(virge_io, 0x1B, 0x37);
+	CRT_OUT8(virge_io, 0x00, 0x54); /* FIXME: BIG ENDIAN SUPPORT */
+	CRT_OUT8(virge_io, 0x10, 0x55);
+	CRT_OUT8(virge_io, 0x00, 0x56);
+	CRT_OUT8(virge_io, 0x00, 0x61); /* FIXME: BIG ENDIAN SUPPORT */
+	CRT_OUT8(virge_io, 0x00, 0x65); /*XFree86 source says this is right*/
 	
-	case NV_PFB_BOOT_0_RAM_AMOUNT_8MB:
-		KRN_DEBUG(1, "8MB video memory detected");
-		virge->chipset.memory = 8 MB;
-		break;
+	/*FIXME: Illegal for secondary boards */
+	io_out8 (0x01, VGA_IO_BASE + 0x003); 
 	
-	case NV_PFB_BOOT_0_RAM_AMOUNT_16MB:
-		KRN_DEBUG(1, "4MB video memory detected");
-		virge->chipset.memory = 16 MB;
-		break;
-	
-	case NV_PFB_BOOT_0_RAM_AMOUNT_32MB:
-		KRN_DEBUG(1, "32MB video memory detected");
-		virge->chipset.memory = 32 MB;
-		break;
-	}
-	
-	switch(virge->fb.boot0 & 0x00000030) {
+	/* Below next line, all IO is done in MMIO mode */
+	SEQ_OUT8(virge_io, 0x01, 0x09);
+	virge_io->flags |= VIRGE_IF_MMIO_ENABLED;
+	pcicfg_out32 ((virge->pci.Command  | PCI_COMMAND_MEMORY) & 
+					    ~PCI_COMMAND_IO, 
+					    pcidev +  PCI_COMMAND); 
+	MMIO_OUT32 (PCI_COMMAND_MEMORY, 0x8004);
+	/* To be done here: release all IO claims, ViRGE is off IO now */
 
-	case NV_PMC_BOOT_0_MAJOR_REVISION_A:
-		KRN_DEBUG(1, "Major revision A detected");
-		/* video bandwidth = 800000 K/sec */
-		break;
+	/* Setup some chipset dependent stuff */
+	switch (virge->chipset.device_id)
+	{
+		case PCI_DEVICE_ID_S3_ViRGE:
+			break;
+		case PCI_DEVICE_ID_S3_ViRGE_VX:
+			break;
+		case PCI_DEVICE_ID_S3_ViRGE_MX:
+			break;
+		case PCI_DEVICE_ID_S3_ViRGE_MXP:
+			break;
+		case PCI_DEVICE_ID_S3_ViRGE_MXPMV:
+			break;
+		case PCI_DEVICE_ID_S3_ViRGE_DXGX:
+			break;
+	 	case PCI_DEVICE_ID_S3_ViRGE_GX2:
+			break;
+		default:
+			KRN_ERROR("ViRGE: Don't know how to configure device ID %x chipsets.");
+			KRN_INTERNAL_ERROR;
+			break;
+	} /* switch */
 	
-	default:
-		/* video bandwidth = 1000000 K/sec */
-		break;
+	virge->misc.subsys_ctl=0;
+#if DEBUG_LEVEL < 1
+	if (virge->flags & VIRGE_CF_IRQ_CLAIMED) 
+	{
+	/* Enable interrupts */
+	  /* Standard the next interrupts are enabled:
+	   * Vertical Sync (to be the most-called interrupt routine ?)
+	   * S3D Engine Done (To sync the accelleration engine)
+	   * Fifo overflow (To detect errors in the driver)
+	   */
+	  virge->misc.subsys_ctl = SSC_VSY_ENB | SSC_3DD_ENB |
+		  		   SSC_FIFO_ENB_OVF;  
+	  MMIO_OUT32(SSC_CLEAR_ALL_INTERRUPTS, SUBSYSTEM_CONTROL);
+  	  MMIO_OUT32(virge->misc.subsys_ctl, SUBSYSTEM_CONTROL);
+  	  CRT_OUT8(virge_io, CRT_IN8(virge_io, 0x11)&~0x30,0x11);  
+  	  if (virge->misc.subsys_ctl & SSC_VSY_ENB)
+    	    CRT_OUT8(virge_io, CRT_IN8(virge_io, 0x11)|0x10,0x11);     
+	  /* We don't have to clear the interrupt counters here, for 
+	   * in the bind.c file, the complete virge structure is initated 
+	   * at zeroes.
+	   */
 	}
 #endif
-	
-#if 0
-	chip->CrystalFreqKHz   = (chip->PEXTDEV[0x00000000 / 4] & 0x00000040) ? 14318 : 13500;
-	chip->CURSOR           = &(chip->PRAMIN[0x00010000 / 4 - 0x0800 / 4]);
-	chip->CURSORPOS        = &(chip->PRAMDAC[0x0300 / 4]);
-	chip->VBLANKENABLE     = &(chip->PCRTC[0x0140 / 4]);
-	chip->VBLANK           = &(chip->PCRTC[0x0100 / 4]);
-	chip->VBlankBit        = 0x00000001;
-	chip->MaxVClockFreqKHz = 250000;
-	chip->LockUnlockIO     = 0x3D4;
-	chip->LockUnlockIndex  = 0x1F;
-#endif
-	
-	KRN_TRACE(2, virge_chipset_examine(virge, 1));
+	CRT_OUT8(virge_io, 0x20, 0x0A);
+	SEQ_OUT8(virge_io, ESA_2MCLK | ESA_PIN50_RAS1, 0x0A);
+	SEQ_OUT8(virge_io, SR14_NORMAL_OPERATION, 0x14);
+	SEQ_OUT8(virge_io, SR15_2CYC_MWR, 0x15); /*FIXME:Check this*/
 
-	if (virge->flags & VIRGE_CF_IRQ_CLAIMED) {
-
-//		VIRGE_CS_OUT32(virge_io, VIRGE_CS010_SyncFlag | VIRGE_CS010_ErrorFlag | VIRGE_CS010_VRetraceFlag, 0x010);
-//		VIRGE_CS_OUT32(virge_io, VIRGE_CS008_SyncIntEnable | VIRGE_CS008_ErrorIntEnable | VIRGE_CS008_VRetraceIntEnable, 0x008);
-	}
-
+	/* Find out current MCLK settings */
+	n = SEQ_IN8 (virge_io, 0x10);
+	r = (n & 0x60) >> 5;
+	n &= 0x1f;
+	m = SEQ_IN8 (virge_io, 0x11) & 0x7f;
+	f = ((1431818 * (m + 2)) / (n + 2) / (1 << r) + 50) / 1000000; 
+	KRN_NOTICE ("ViRGE: MCLK running at %.3f MHz", f);
 	return KGI_EOK;
 }
 
-void virge_chipset_done(virge_chipset_t *virge, virge_chipset_io_t *virge_io, 
-	const kgim_options_t *options)
+void virge_chipset_done(virge_chipset_t *virge, virge_chipset_io_t *virge_io, const kgim_options_t *options)
 {
 	pcicfg_vaddr_t pcidev = VIRGE_PCIDEV(virge_io);
 
 	KRN_DEBUG(2, "virge_chipset_done()");
 	
-	if (virge->flags & VIRGE_CF_IRQ_CLAIMED) {
-
-//		VIRGE_CS_OUT32(virge_io, VIRGE_CS008_DisableInterrupts, 0x008);
+	if (virge->flags & VIRGE_CF_IRQ_CLAIMED) 
+	{
+		virge_chipset_interrupts_disable (virge_io);
 	}
 
-	if (virge->flags & VIRGE_CF_RESTORE_INITIAL) {
+	if (virge->flags & VIRGE_CF_RESTORE_INITIAL) 
+	{
 
 		KRN_DEBUG(2, "Restoring initial chipset state");
 		vga_text_chipset_done((&virge->vga), &(virge_io->vga), options);
 	}
 }
 
-kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, 
-	kgi_timing_command_t cmd, kgi_image_mode_t *img, kgi_u_t images)
+/* Mode setup procedures */
+
+static void virge_chipset_set_screen_base (kgi_u_t x, kgi_u_t y, 
+					   virge_chipset_io_t *virge_io,
+					   kgi_image_mode_t *img)
+{
+	kgi_u32_t a;	
+	/* Check if the visible area crosses the border of the virtual
+	 * area. If so, bail out.
+	 */
+	if ((img[0].virt.x < img[0].size.x + x) ||
+	    (img[0].virt.y < img[0].size.y + y))
+	{
+		KRN_DEBUG(1,"Image out of virtual range.");
+		return;
+	}
+	a = (img[0].virt.x * y + x) * kgim_attr_bits(img[0].out->bpda) >> 3;
+	CRT_OUT8(virge_io, a & 0xff, 0x0D);
+	CRT_OUT8(virge_io, (a >> 8) & 0xff, 0x0C);
+	CRT_OUT8(virge_io, (a >> 16) & 0x0f, 0x69);
+	/*FIXME: Streams modes. Problem here is that STREAMS needs base address
+	 * quadword aligned, someone tell me how to deal with 24 bpp please.*/	
+}
+
+static void virge_adjust_timing(kgim_monitor_mode_t *mode, kgi_u_t div)
+{
+
+	#define ADJUST(X) mode->x.X -= (mode->x.X % div)
+
+	ADJUST(width);
+	ADJUST(blankstart);
+	ADJUST(syncstart);
+	ADJUST(syncend);
+	ADJUST(blankend);
+
+	if (mode->x.total % div) 
+		mode->x.total += div - (mode->x.total % div);
+
+	if (((mode->x.syncend / div) & 0x3F) ==
+		((mode->x.syncstart / div) & 0x3F)) 
+		mode->x.syncend -= div;
+
+	if (((mode->x.blankend / div) & 0x7F) ==
+		((mode->x.blankstart / div) & 0x7F)) 
+		mode->x.blankend -= div;
+
+	if ((mode->y.syncend & 0x0F) == (mode->y.syncstart & 0x0F)) 
+		mode->y.syncend--;
+
+	if ((mode->y.blankend & 0xFF) == (mode->y.blankstart & 0xFF)) 
+		mode->y.blankend--;
+
+	#undef ADJUST
+}
+
+kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, kgi_timing_command_t cmd, kgi_image_mode_t *img, kgi_u_t images)
 {
 	kgi_dot_port_mode_t *dpm = img->out;
-	const kgim_monitor_mode_t *crt_mode = virge_mode->virge.kgim.crt;
-	kgi_u_t shift, bpf, bpc, bpp, pgm, width, lclk, pp[3];
+	kgim_monitor_mode_t *crt_mode = virge_mode->virge.kgim.crt;
+	kgi_u_t shift, bpf, bpc, bpp, psc, width, lclk;
 	kgi_mmio_region_t *r;
 	kgi_accel_t *a;
 	kgi_u_t mul, div, bpd;
-
+	kgi_u_t DCLKdiv=8;
+	kgi_u_t AddrUnit = 8;
+	
 	KRN_DEBUG(2, "virge_chipset_mode_check()");
 	
-	if (images != 1) {
+	/* for text16 support we fall back to VGA mode
+	*/
+	if (img[0].flags & KGI_IF_TEXT16) 
+	{
+		virge_mode->enhanced = 0;
+		return vga_text_chipset_mode_check(&virge->vga, &virge_io->vga, &virge_mode->vga, cmd, img, images);
+	}
+	/* for unsupported colour depths, bail out. The ramdac driver will
+	 * do a decent check, all we have to check here is if the requested
+	 * depth is supported by the ViRGEs Enhanced Mode (vga modes not 
+	 * supported yet)
+	 */
+	switch (bpd) 
+	{
+	case  1:	
+	case  2:	
+	case  4:	
+		/*return vga_chipset_mode_check(&virge->vga, &virge_io->vga, &virge_mode->vga, cmd, img, images);*/
+		return -E(CHIPSET, NOSUP);
+	case  8:		
+	case 16:	
+	case 24:	
+	case 32:
+		break;
 
+	default:	
+		KRN_DEBUG(0, "%i bpd not supported", bpd);
+		return -E(CHIPSET, NOSUP);
+	}
+
+	/* Only one image is enough for the good old ViRGE :) */
+	if (images != 1) 
+	{
 		KRN_DEBUG(2, "%i images not supported.", images);
 		return -E(CHIPSET, NOSUP);
 	}
 
-	/*	for text16 support we fall back to VGA mode
-	**	for unsupported image flags, bail out.
-	*/
-	if ((img[0].flags & KGI_IF_TEXT16) || 
-		(img[0].fam & KGI_AM_TEXTURE_INDEX)) {
-
-		return vga_text_chipset_mode_check(&virge->vga, &virge_io->vga, 
-			&virge_mode->vga, cmd, img, images);
-	}
-	
-	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL)) {
-
-		KRN_DEBUG(1, "Image flags %.8x not supported", img[0].flags);
+	/* And some more unsupported stuff. If you really want tiled images
+	 * turn around your CRT
+	 */
+	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL)) 
+	{
+		KRN_DEBUG(2, "Image flags %.8x not supported", img[0].flags);
+		
 		return -E(CHIPSET, INVAL);
 	}
 
-	/*	Check if common attributes are supported
-	*/
-	switch (img[0].cam) {
-
+	/* Check if common attributes are supported */
+	switch (img[0].cam) 
+	{
 	case 0:
 		KRN_DEBUG(2, "img[0].cam = 0");
 		break;
 
 	case KGI_AM_STENCIL | KGI_AM_Z:
 		
-		if ((1 != img[0].bpca[0]) || (15 != img[0].bpca[1])) {
-
-			KRN_DEBUG(2, "S%iZ%i local buffer not supported",
-				img[0].bpca[0], img[0].bpca[1]);
+		if ((1 != img[0].bpca[0]) || (15 != img[0].bpca[1])) 
+		{
+			KRN_DEBUG(2, "S%iZ%i local buffer not supported", img[0].bpca[0], img[0].bpca[1]);
 			return -E(CHIPSET, INVAL);
 		}
 		break;
 
 	case KGI_AM_Z:
-		if (16 != img[0].bpca[1]) {
-
-			KRN_DEBUG(2, "Z%i local buffer not supported",
-				img[0].bpca[0]);
+		if (16 != img[0].bpca[1]) 
+		{
+			KRN_DEBUG(2, "Z%i local buffer not supported", img[0].bpca[0]);
 			return -E(CHIPSET, INVAL);
 		}
 		
 	default:
-		KRN_DEBUG(2, "Common attributes %.8x not supported",
-			img[0].cam);
+		KRN_DEBUG(2, "Common attributes %.8x not supported", img[0].cam);
 		return -E(CHIPSET, INVAL);
 	}
 
-	/*	total bits per dot
-	*/
+	/* total bits per dot */
 	bpf = kgim_attr_bits(img[0].bpfa);
 	bpc = kgim_attr_bits(img[0].bpca);
 	bpd = kgim_attr_bits(dpm->bpda);
-	bpp = (img[0].flags & KGI_IF_STEREO)
-		? (bpc + bpf * img[0].frames * 2) 
-		: (bpc + bpf*img[0].frames);
+	bpp = (img[0].flags & KGI_IF_STEREO) ? (bpc + bpf * img[0].frames * 2) : (bpc + bpf*img[0].frames);
 
 	shift = 0;
 	
-	switch (bpd) {
+	lclk = (cmd == KGI_TC_PROPOSE) ? 0 : dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
 
-	case  1:	shift++;	/* fall through	*/
-	case  2:	shift++;	/* fall through */
-	case  4:	shift++;	/* fall through	*/
-	case  8:	shift++;	/* fall through	*/
-	case 16:	shift++;	/* fall through	*/
-	case 32:
-		pgm = 1;
-		pgm = (pgm << shift) - 1;
-		break;
-
-	default:	
-		KRN_DEBUG(0, "%i bpd not supported", bpd);
-		return -E(CHIPSET, FAILED);
-	}
-
-	lclk = (cmd == KGI_TC_PROPOSE) 
-		? 0 : dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
-
-	switch (cmd) {
-
+	switch (cmd) 
+	{
 	case KGI_TC_PROPOSE:
 		KRN_DEBUG(3, "KGI_TC_PROPOSE");
 		KRN_ASSERT(img[0].frames);
 		KRN_ASSERT(bpp);
 
-		/*	If size.x or size.y are zero, default to 640x400
-		*/
-		if ((0 == img[0].size.x) || (0 == img[0].size.y)) {
-
-			KRN_DEBUG(2, "Defaulting to 640x480");
+		dpm->rclk.mul = dpm->rclk.div = 1;
+		
+		/* If size.x or size.y are zero, default to 640x400 */
+		if ((0 == img[0].size.x) || (0 == img[0].size.y)) 
+		{
+			KRN_DEBUG(2, "Defaulting to 640x400");
 			img[0].size.x = 640;
 			img[0].size.y = 400;
 		}
@@ -1309,175 +940,156 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge,
 		/*	if virt.x and virt.y are zero, default to size;
 		**	if either virt.x xor virt.y is zero, maximize the other
 		*/
-		if ((0 == img[0].virt.x) && (0 == img[0].virt.y)) {
-
+		if ((0 == img[0].virt.x) && (0 == img[0].virt.y)) 
+		{
 			KRN_DEBUG(2, "Defaulting to size,x, size.y");
 			
 			img[0].virt.x = img[0].size.x;
 			img[0].virt.y = img[0].size.y;
 		}
 
-		if (0 == img[0].virt.x) {
-
+		if (0 == img[0].virt.x) 
+		{
 			KRN_DEBUG(2, "virt.x = 0");
 			
-			img[0].virt.x = (8 * virge->chipset.memory) / 
-				(img[0].virt.y * bpp);
+			img[0].virt.x = (8 * virge->chipset.memory) / (img[0].virt.y * bpp);
 
-			if (img[0].virt.x > virge->chipset.maxdots.x) {
-
+			if (img[0].virt.x > virge->chipset.maxdots.x) 
+			{
 				KRN_DEBUG(2, "virt.x > maxdots.x");
 				img[0].virt.x = virge->chipset.maxdots.x;
 			}
 		}
 		
-		if (0 == img[0].virt.y) {
-
+		if (img[0].virt.x % DCLKdiv) 
+			img[0].virt.x += DCLKdiv - img[0].virt.x % DCLKdiv;
+		if (img[0].size.x % DCLKdiv) 
+			img[0].size.x += DCLKdiv - img[0].size.x % DCLKdiv;
+		
+		if (0 == img[0].virt.y) 
+		{
 			KRN_DEBUG(2, "virt.y = 0");
-			img[0].virt.y = (8 * virge->chipset.memory) / 
-				(img[0].virt.x * bpp);
+			img[0].virt.y = (8 * virge->chipset.memory) / (img[0].virt.x * bpp);
 		}
 
-		/*	Are we beyond the limits of the H/W?
-		*/
-		if ((img[0].size.x >= virge->chipset.maxdots.x) ||
-			(img[0].virt.x >= virge->chipset.maxdots.x)) {
-
-			KRN_DEBUG(2, "%i (%i) horizontal pixels are too many",
-				img[0].size.x, img[0].virt.x);
+		/* Are we beyond the limits of the H/W? */
+		if ((img[0].size.x >= virge->chipset.maxdots.x) || 
+		    (img[0].virt.x >= virge->chipset.maxdots.x)) 
+		{
+			KRN_DEBUG(2, "%i (%i) horizontal pixels are too many", 
+				  img[0].size.x, img[0].virt.x);
 			return -E(CHIPSET, UNKNOWN);
 		}
 
-		if ((img[0].size.y >= virge->chipset.maxdots.y) ||
-			(img[0].virt.y >= virge->chipset.maxdots.y)) {
+		if ((img[0].size.y >= virge->chipset.maxdots.y) || 
+		    (img[0].virt.y >= virge->chipset.maxdots.y)) 
+		{
 
-			KRN_DEBUG(2, "%i (%i) vertical pixels are too many",
-				img[0].size.y, img[0].virt.y);
+			KRN_DEBUG(2, "%i (%i) vertical pixels are too many", 
+				  img[0].size.y, img[0].virt.y);
 			return -E(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > 
-			(8 * virge->chipset.memory)) {
-
-			KRN_DEBUG(2, "not enough memory for "
-				"(%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames,
-				bpc, img[0].virt.x, img[0].virt.y);
+		    (8 * virge->chipset.memory)) 
+		{
+			KRN_DEBUG(2, "not enough memory for (%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames, bpc, img[0].virt.x, img[0].virt.y);
 			return -E(CHIPSET,NOMEM);
 		}
 
-		/*	Take screen visible width up to next 32/64-bit word 
-		*/
-#if 0
-		if (img[0].size.x & pgm) {
-
-			img[0].size.x &= ~pgm;
-			img[0].size.x += pgm + 1;
-		}
-#endif
-
-		/*	Set CRT visible fields 
-		*/
+		/* Set CRT visible fields */
 		dpm->dots.x = img[0].size.x;
 		dpm->dots.y = img[0].size.y;
 
-		if (img[0].size.y < 400) {
-
-			dpm->dots.y += img[0].size.y;
+		/* If the requested resolution is very low, we have to put 
+		 * the ViRGE in pixeldoubeling mode, or else timingproblems
+		 * will occur.
+		 * The values 600 and 350 are no documented values, just some
+		 * guesses. Many monitors go crazy if you use much lower values
+	 	 */
+	
+		if (img[0].size.x < 600) 
+		{
+			dpm->dots.x += img[0].size.x;
+			if (dpm->dots.x < 600)
+			{
+				/* Sorry, we can't go below 300 pixels hor.
+				 */
+				return -E(CHIPSET,INVAL);
+			}
 		}
 		
-		KRN_DEBUG(2, "dots.x = %d, dots.y = %d", 
-			dpm->dots.x, dpm->dots.y);
+		if (img[0].size.y < 350)
+		{
+			dpm->dots.y += img[0].size.y;
+			if (dpm->dots.y < 350)
+			{
+				/* Nor 175 pixels vertically
+				 */
+				return -E(CHIPSET,INVAL);
+			}
+			
+		}
+		
+		KRN_DEBUG(2, "dots.x = %d, dots.y = %d", dpm->dots.x, dpm->dots.y);
 		
 		return KGI_EOK;
 
 	case KGI_TC_LOWER:
+		KRN_DEBUG(3, "KGI_TC_LOWER");
 	case KGI_TC_RAISE:
-		KRN_DEBUG(3, (cmd == KGI_TC_LOWER) 
-			? "KGI_TC_LOWER" : "KGI_TC_RAISE");
+		if (cmd != KGI_TC_LOWER)
+		  KRN_DEBUG(3, "KGI_TC_RAISE");
 
-		/*	Adjust lclk and rclk. Use 64 bit bus on P2, 32 on P1
-		*/
-		dpm->lclk.mul = 1;
-		dpm->lclk.div = 1 + pgm;
-
-		dpm->rclk.mul = 1;
-/*		dpm->rclk.div = (virge->flags & VIRGE_CF_PERMEDIA2) 
-**			? 1 : dpm->lclk.div;
-*/		dpm->rclk.div = dpm->lclk.div;
-
-		if (cmd == KGI_TC_LOWER) {
-
-			if (dpm->dclk < virge->chipset.dclk.min) {
-
-				KRN_DEBUG(1, "DCLK = %i Hz is too low", 
-					dpm->dclk);
+		if (cmd == KGI_TC_LOWER) 
+		{
+			if (dpm->dclk < virge->chipset.dclk.min) 
+			{
+				KRN_DEBUG(1, "DCLK = %i Hz is too low", dpm->dclk);
 				return -E(CHIPSET, UNKNOWN);
 			}
 
-			if (lclk > 50000000) {
-
-				dpm->dclk = 50000000 * dpm->lclk.div / 
-					dpm->lclk.mul;
+			if (lclk > 50000000) 
+			{
+				dpm->dclk = 50000000 * dpm->lclk.div / dpm->lclk.mul;
 			}
 
-		} else {
-
-			if (lclk > 50000000) {
-
+		} else 
+		{
+			if (lclk > 50000000) 
+			{
 				KRN_DEBUG(1, "LCLK = %i Hz is too high", lclk);
 				return -E(CHIPSET, UNKNOWN);
 			}
 		}
+		
 		return KGI_EOK;
 
 	case KGI_TC_CHECK:
 		KRN_DEBUG(3, "KGI_TC_CHECK");
-
-#warning DO PROPER CHECKING!!!
-
-		KRN_ASSERT(pp[0] < 8);
-		KRN_ASSERT(pp[1] < 8);
-		KRN_ASSERT(pp[2] < 8);
-
-		if (width != img[0].virt.x) {
-
-			KRN_DEBUG(2, "Invalid width!");
-			return -E(CHIPSET, INVAL);
-		}
-		
 		if ((img[0].size.x >= virge->chipset.maxdots.x) ||
-			(img[0].size.y >= virge->chipset.maxdots.y) || 
-			(img[0].virt.x >= virge->chipset.maxdots.x) ||
-			((img[0].virt.y * img[0].virt.x * bpp) >
-			(8 * virge->chipset.memory))) {
-
-			KRN_DEBUG(1, "Resolution too high: %ix%i (%ix%i)",
-				img[0].size.x, img[0].size.y, 
-				img[0].virt.x, img[0].virt.y);
+		    (img[0].size.y >= virge->chipset.maxdots.y) || 
+		    (img[0].virt.x >= virge->chipset.maxdots.x) ||
+		    ((img[0].virt.y * img[0].virt.x * bpp) >
+		     (8 * virge->chipset.memory))) 
+		{
+			KRN_DEBUG(1, "Resolution too high: %ix%i (%ix%i)", img[0].size.x, img[0].size.y, img[0].virt.x, img[0].virt.y);
 			return -E(CHIPSET, INVAL);
 		}
-
-		if (((dpm->lclk.mul != 1) && (dpm->lclk.div != 1 + pgm)) || 
-			((dpm->rclk.mul != dpm->lclk.mul) && 
-			 (dpm->rclk.div != dpm->lclk.div))) {
-
-			KRN_DEBUG(1, "invalid LCLK (%i:%i) or CLK (%i:%i)", 
-				dpm->lclk.mul, dpm->lclk.div, 
-				dpm->rclk.mul, dpm->rclk.div);
-			return -E(CHIPSET, INVAL);
-		}
-
-		if (lclk > 50000000) {
-
+		if (lclk > 50000000) 
+		{
 			KRN_DEBUG(1, "LCLK = %i Hz is too high\n", lclk);
 			return -E(CHIPSET, CLK_LIMIT);
 		}
 
-		if (img[0].flags & KGI_IF_STEREO) {
-
+		if (img[0].flags & KGI_IF_STEREO) 
+		{
 			KRN_DEBUG(1, "stereo modes not supported on virge");
 			return -E(CHIPSET, NOSUP);
 		}
+		
+		virge_adjust_timing (crt_mode, DCLKdiv);
+
 		break;
 
 	default:
@@ -1489,55 +1101,220 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge,
 	/*	Now everything is checked and should be sane.
 	**	proceed to setup device dependent mode.
 	*/
-#warning cleanup the C++ style comments!
-//	virge_mode->VIRGE.VideoControl = VIRGE_VC058_EnableGPVideo | VIRGE_VC058_VSyncActive | VIRGE_VC058_HSyncActive | ((crt_mode->x.polarity > 0) ? VIRGE_VC058_HSyncHigh : VIRGE_VC058_HSyncLow) | ((crt_mode->y.polarity > 0) ? VIRGE_VC058_VSyncHigh : VIRGE_VC058_VSyncLow) | (((virge->flags & virge_CF_PERMEDIA2) && (kgim_attr_bits(img[0].bpfa) == 8)) ? 0 : VIRGE_VC058_Data64Enable);
 
-//	virge_mode->virge.ScreenBase = 0;
-	
-//	if ((img[0].flags & KGI_IF_STEREO) && (virge->flags & VIRGE_CF_PERMEDIA2)) 
-//	{
-//		kgi_u_t 
-//		Bpf = ((img[0].virt.x * img[0].virt.y * bpd) / 8 + 7) & ~7;
-
-//		virge_mode->VIRGE.VideoControl |= VIRGE_VC058_StereoEnable;
-//		virge_mode->VIRGE.ScreenBaseRight = ((1 == img[0].frames) && (2*bpf == bpd)) ? virge_mode->virge.ScreenBase : virge_mode->virge.ScreenBase + Bpf;
-//	}
-
-	mul = dpm->lclk.mul;
-	div = dpm->lclk.div;
+	KRN_ASSERT (dpm->lclk.mul < dpm->lclk.div);
+	DCLKdiv = 8; /*FIXME*/
 	bpd = kgim_attr_bits(dpm->bpda);
 
-	/* Based on 64bit units */
-//	virge_mode->VIRGE.ScreenStride = img[0].virt.x * mul / div;
-	
-//	if ((virge->flags & VIRGE_CF_PERMEDIA) || ((virge->flags & VIRGE_CF_PERMEDIA2) && (bpd == 8))) 
-//	{
-//		virge_mode->virge.ScreenStride /= 2;
-//	}
-
-	/* Based on LCLKs (32bit or 64bit units) */
-	virge_mode->virge.HTotal = (crt_mode->x.total * mul / div) - 2;
-	virge_mode->virge.HgEnd = ((crt_mode->x.total - crt_mode->x.width) * mul / div) - 1;
-	virge_mode->virge.HbEnd = ((crt_mode->x.total - crt_mode->x.width) * mul / div) - 1;
-	virge_mode->virge.HsStart = (crt_mode->x.syncstart - crt_mode->x.width) * mul / div;
-	virge_mode->virge.HsEnd = (crt_mode->x.syncend - crt_mode->x.width) * mul / div;
-
-	/* For some reason the video unit seems to delay the hsync pulse */
-	shift = (((dpm->dclk / 10000) * 100) / 10000) * mul / div;
-	if (virge_mode->virge.HsStart < shift) {
-
-		shift = virge_mode->virge.HsStart;
+	switch (DCLKdiv)
+	{
+		case 8: 
+			virge_mode->virge.ClockingMode = 1;
+			break;
+		case 9: 
+			virge_mode->virge.ClockingMode = 0;
+			break;
+		default:
+			KRN_ERROR("Unsupported dclk / cclk ratio.");
+			return -E(CHIPSET, NOSUP);
 	}
 	
-	virge_mode->virge.HsStart -= shift;
-	virge_mode->virge.HsEnd -= shift;
-
+	/* Based on CCLKs (DCLK / 8 (Or 9, depends on SR1 bit 0)) */
+	
+	//virge_adjust_timing (crt_mode, DCLKdiv);
+	
+	virge_mode->virge.HTotal = (crt_mode->x.total / DCLKdiv) - 5;
+	virge_mode->virge.HdEnd = (crt_mode->x.width/ DCLKdiv) - 1;
+	virge_mode->virge.HbStart = crt_mode->x.blankstart / DCLKdiv;
+	virge_mode->virge.HbEnd = (crt_mode->x.blankend - crt_mode->x.blankstart) / DCLKdiv; 
+			   	   
+	virge_mode->virge.HsStart = crt_mode->x.syncstart / DCLKdiv;
+	virge_mode->virge.HsEnd = (crt_mode->x.syncend - crt_mode->x.syncstart) / DCLKdiv;
+				  
+	virge_mode->virge.Offset = bpd * img[0].virt.x / (8 * AddrUnit);
+	
 	/* Based on lines */
-	virge_mode->virge.VTotal	= crt_mode->y.total - 2;
-	virge_mode->virge.VsStart	= crt_mode->y.syncstart - crt_mode->y.width;
-	virge_mode->virge.VsEnd	= crt_mode->y.syncend - crt_mode->y.width - 1;
-	virge_mode->virge.VbEnd	= crt_mode->y.total - crt_mode->y.width - 1;
+	virge_mode->virge.VTotal = crt_mode->y.total - 2;
+	virge_mode->virge.VdEnd = crt_mode->y.width - 1;
+	virge_mode->virge.VbStart = crt_mode->y.blankstart - 1;
+	virge_mode->virge.VbEnd = crt_mode->y.blankend;
+	virge_mode->virge.VsStart = crt_mode->y.syncstart;
+	virge_mode->virge.VsEnd = crt_mode->y.syncend;
 
+	/* Sync polarity */
+	virge_mode->virge.Misc = (crt_mode->x.polarity > 0 ? 0 : 0x40) |
+				 (crt_mode->y.polarity > 0 ? 0 : 0x80) |
+				 0x2F;
+	
+	/* Interlace modes */
+	/* FIXME */
+	virge_mode->virge.InterlaceRetraceStart = crt_mode->y.total/2; 
+	virge_mode->virge.ModeControl = (0/*Interlaced?*/?CR42_INTERLACED:0);
+	
+	virge_mode->virge.ExtendedSequencerB = SR0B_NO_FEAT_INPUT;
+	virge_mode->virge.DacClkSynControl = SR18_NORMAL_OPERATION;
+
+	virge_mode->virge.MemoryConfiguration = 0x4D;
+	if ((bpd > 4) &&  
+	   !((img[0].flags & KGI_IF_TEXT16) || (img[0].fam & KGI_AM_TEXTURE_INDEX)))
+	{
+		virge_mode->enhanced = 1;
+		virge_mode->virge.Miscellaneous1 = CR3A_NO4BPPMODE;
+		if (IS_VIRGE_VX(virge)) 
+		  virge_mode->virge.ExtendedMiscellaneousControl1 = 0x90;
+		else
+		  virge_mode->virge.ExtendedMiscellaneousControl1 = 0x89;
+		virge_mode->virge.MemoryModeControl = 0x02; 
+		virge_mode->virge.UnderlineLocation = 0x1f; 
+		virge_mode->virge.MemoryConfiguration |= 0x0C;
+		virge_mode->virge.EnableWritePlane = 0x0F;
+		virge_mode->virge.HorizontalPixelPanning = 0x00;
+	} 
+	else
+	{
+		virge_mode->enhanced = 0;
+		virge_mode->virge.Miscellaneous1 = CR3A_HISPEEDTXT;
+		virge_mode->virge.ExtendedMiscellaneousControl1 = 0x88;
+		virge_mode->virge.MemoryModeControl = 0x02;
+		virge_mode->virge.MemoryConfiguration |= 0x40;
+		virge_mode->virge.EnableWritePlane = 0x03;
+	}
+		
+	virge_mode->virge.MaximumScanLine = 0;
+	virge_mode->virge.PresetRowScan   = 0;
+	
+	virge_mode->virge.CRTCModeControl = 	VGA_CR17_CGA_BANKING |
+					    	VGA_CR17_HGC_BANKING |
+						VGA_CR17_ENABLE_SYNC |
+						VGA_CR17_WORDMODE    |
+						VGA_CR17_CGA_ADDR_WRAP;
+	
+	virge_mode->virge.ExtendedMode = (16 == bpp ? 0x80: 0x00);
+	virge_mode->virge.ExtendedRAMDACControl = 0;
+	virge_mode->virge.LineCompare = -1;
+	switch (bpd) 
+	{
+	case  8:
+		if (KGI_AM_I == img[0].out->dam)
+		{
+			if (0/*DCLK > DCLKMax*/) 
+			{
+			  virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				  CR67_DAC_MODE8;
+			  virge_mode->virge.DacClkSynControl  |= SR18_CLKx2;
+			  virge_mode->virge.ClkSynControl2 |= SR15_DCLKd2;
+			} else 
+			{  
+		  	  virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				  CR67_DAC_MODE0;// | CR67_FULL_STREAMS;
+			}
+			psc = STREAMS_PSC_RGB8;
+		}
+		else
+		{
+			/* Uh ? */
+			KRN_ERROR("Illegal dot attribute mask for 8 bpd!");
+			return -E(CHIPSET,NOSUP);
+		}	
+		break;	
+	case 16:
+		if ((KGI_AM_RGBA == img[0].out->dam) ||
+		    (KGI_AM_RGBX == img[0].out->dam))
+		{
+			/* 15 bit colourdepth */
+			virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				CR67_DAC_MODE9/* | CR67_FULL_STREAMS*/;
+		  	psc = STREAMS_PSC_KRGB16;
+		}
+		else if (KGI_AM_RGB == img[0].out->dam)
+		{
+			/* 16 bit colourdepth */
+			virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				CR67_DAC_MODEA/* | CR67_FULL_STREAMS*/;
+			psc = STREAMS_PSC_RGB16;
+		}
+		else
+		{
+			/* Uh ? */
+			KRN_ERROR("Illegal dot attribute mask for 16 bpd!");
+			return -E(CHIPSET,NOSUP);
+		}
+		break;
+	case 24:	
+		if (KGI_AM_RGB == img[0].out->dam)
+		{
+			virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				CR67_DAC_MODED | CR67_FULL_STREAMS;
+			psc = STREAMS_PSC_RGB24;
+		}
+		else
+		{
+			/* Uh ? */
+			KRN_ERROR("Illegal dot attribute mask for 24 bpd!");
+			return -E(CHIPSET,NOSUP);
+		}
+		break;
+	case 32:
+		if ((KGI_AM_RGBA == img[0].out->dam) ||
+		    (KGI_AM_RGBX == img[0].out->dam))
+		{
+			virge_mode->virge.ExtendedMiscellaneousControl2 |= 
+				CR67_DAC_MODED | CR67_FULL_STREAMS;
+			psc = STREAMS_PSC_XRGB32;
+		}
+		else
+		{
+			/* Uh ? */
+			KRN_ERROR("Illegal dot attribute mask for 32 bpd!");
+			return -E(CHIPSET,NOSUP);
+		}			
+		break;
+	default:	
+		KRN_ERROR("Driver should have bailed out already.");
+		return -E(CHIPSET, FAILED);
+	}
+	virge_mode->virge.PrimaryStreamControl 	  = psc & 0x77000000;
+	virge_mode->virge.ColorChromaKeyControl	  = 0;
+	if (2*img[0].size.x == crt_mode->x.width)
+	{
+		virge_mode->virge.PrimaryStreamControl   |= 0x20000000;
+		virge_mode->virge.SecondaryStreamControl  = 0x03000fff;
+	}
+	else
+		virge_mode->virge.SecondaryStreamControl  = 0x03000000;
+//					(img[0].size.x -1)&0xfff; 
+	virge_mode->virge.ChromaKeyUpperBound	  = 0;
+	virge_mode->virge.SecondaryStreamStretch  = 0;
+	virge_mode->virge.BlendControl		  = 0x01000000;
+	virge_mode->virge.PrimaryStreamAddress0	  = 0;
+	virge_mode->virge.PrimaryStreamAddress1	  = 0;
+	virge_mode->virge.PrimaryStreamStride     = img[0].virt.x * bpd / 8;
+	virge_mode->virge.DoubleBufferLpbSupport  = 0;  
+	virge_mode->virge.SecondaryStreamAddress0 = 0;
+	virge_mode->virge.SecondaryStreamAddress1 = 0;
+	virge_mode->virge.SecondaryStreamStride   = 0x00000001;
+	virge_mode->virge.OpaqueOverlayControl    = 0xC0000000;
+	virge_mode->virge.K1VerticalScaleFactor   = 0;//img[0].size.y -1;
+	virge_mode->virge.K2VerticalScaleFactor   = 0;//(img[0].size.y-crt_mode->y.width)&0x7ff ;
+	virge_mode->virge.DDAVerticalAccumulator  = 0;//crt_mode->y.width - 1;
+	virge_mode->virge.StreamsFifoControl      = 0x00000000; 
+	virge_mode->virge.PrimaryStreamStartCoordinates=0x00010001;
+	virge_mode->virge.PrimaryStreamWindowSize = img[0].size.y + 
+						    ((img[0].size.x - 1) << 16);
+	virge_mode->virge.SecondaryStreamStartCoordinates=0x07ff07ff;
+	virge_mode->virge.SecondaryStreamWindowSize=0x00010001;
+	virge_mode->virge.FifoControl = 0x00010400;
+	virge_mode->virge.MiuControl  = 0x0200;
+	virge_mode->virge.StreamsTimeout = 0x00001808;
+	virge_mode->virge.MiscTimeout = 0x08080810;
+	/* End of STREAMS setup */
+	
+	virge_mode->virge.StartFifoFetch = crt_mode->x.total / DCLKdiv -10;
+	virge_mode->virge.BackwardCompatability3 = 0x10;	
+	
+	/*FIXME*/
+	//virge_chipset_accel_init ();
+	
 	/* Initialize exported resources */
 	r = &virge_mode->virge.aperture1;
 	r->meta = virge;
@@ -1552,54 +1329,40 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge,
 	r->win.phys = virge_io->aperture.base_phys;
 	r->win.virt = virge_io->aperture.base_virt;
 	
+	KRN_TRACE(2, virge_chipset_examine(virge_mode, 1));
+
 	return KGI_EOK;
 }
 
-kgi_resource_t *virge_chipset_mode_resource(virge_chipset_t *virge, 
-	virge_chipset_mode_t *virge_mode, kgi_image_mode_t *img, 
-	kgi_u_t images, kgi_u_t index)
+kgi_resource_t *virge_chipset_mode_resource(virge_chipset_t *virge, virge_chipset_mode_t *virge_mode, kgi_image_mode_t *img, kgi_u_t images, kgi_u_t index)
 {
 	KRN_DEBUG(2, "virge_chipset_mode_resource()");
 	
-	if (img->fam & KGI_AM_TEXTURE_INDEX) {
-
+	if (img->fam & KGI_AM_TEXTURE_INDEX) 
+	{
 		return vga_text_chipset_mode_resource(&virge->vga, &virge_mode->vga, img, images, index);
 	}
 
 	switch (index) 
 	{
 	case 0:	
-		KRN_DEBUG(2, "Returning aperture1 as a resource");
-		return	(kgi_resource_t *) &virge_mode->virge.aperture1;
-	case 1:	
-		KRN_DEBUG(2, "Returning aperture2 as a resource");
-		return	(kgi_resource_t *) &virge_mode->virge.aperture2;
+		KRN_DEBUG(2, "Returning aperture as a resource");
+		return (kgi_resource_t *) &virge_mode->virge.aperture1;
 	}
 	
 	KRN_DEBUG(2, "Returning NULL, index = %d", index);
-	
 	return NULL;
 }
 
-void virge_chipset_mode_prepare(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, 
-	kgi_image_mode_t *img, kgi_u_t images)
+void virge_chipset_mode_prepare(virge_chipset_t *virge, virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
 	KRN_DEBUG(2, "virge_chipset_mode_prepare()");
 
-	virge_chipset_sync(virge_io);
+	virge_chipset_accel_sync(virge_io);
 	
-	if (img->fam & KGI_AM_TEXTURE_INDEX) {
-
+	if (img->fam & KGI_AM_TEXTURE_INDEX) 
+	{
 		virge_io->flags |= VIRGE_IF_VGA_DAC;
-
-//		VIRGE_MC_OUT32(virge_io, -1, VIRGE_MC_BypassWriteMask);
-//		VIRGE_CS_OUT32(virge_io, VIRGE_CS050_ControllerVGA, 0x050);
-//		VIRGE_CS_OUT32(virge_io, (VIRGE_CS_IN32(virge_io, 0x070) |
-//			VIRGE_CS070_VGAEnable) & ~VIRGE_CS070_VGAFixed, 0x070);
-//		kgi_chipset_vga_seq_out8(&(virge_io->vga), SR05_VGAEnableDisplay |
-//					 SR05_EnableHostMemoryAccess |
-//					 SR05_EnableHostDACAccess, 0x05);
 		vga_text_chipset_mode_prepare(&virge->vga, &virge_io->vga,
 					 &virge_mode->vga, img, images);
 
@@ -1607,145 +1370,277 @@ void virge_chipset_mode_prepare(virge_chipset_t *virge,
 		return;
 	}
 
+	
 	virge_io->flags &= ~VIRGE_IF_VGA_DAC;
-
-//	VIRGE_MC_OUT32(virge_io, -1, VIRGE_MC_BypassWriteMask);
-//	VIRGE_CS_OUT32(virge_io, VIRGE_CS050_ControllerMem, 0x050);
-//	VIRGE_CS_OUT32(virge_io, VIRGE_CS_IN32(virge_io, 0x070) &
-//		~VIRGE_CS070_VGAEnable, 0x070);
-//	VGA_SEQ_OUT8(&(virge_io->vga), 0, 0x05);
-
+	
+	virge_chipset_streams_disable (virge_io);
+	virge_chipset_interrupts_disable (virge_io);
+	/* Switch off sync signals */  
+	CRT_OUT8(virge_io, CRT_IN8(virge_io, CRT_EXTSYNC1) |0x06, CRT_EXTSYNC1);
+	/* Switch off display */
+	SEQ_OUT8(virge_io, SEQ_IN8(virge_io,0x01) | VGA_SR01_DISPLAY_OFF, 0x01);
+	
 	KRN_DEBUG(2, "prepared for virge mode");
 }
 
-void virge_chipset_mode_enter(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, 
-	kgi_image_mode_t *img, kgi_u_t images)
+void virge_chipset_mode_enter(virge_chipset_t *virge, virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
+	kgi_u8_t	seq01, crt11, foo;
+	
 	KRN_DEBUG(2, "virge_chipset_mode_enter()");
 
-	vga_text_chipset_mode_enter(&virge->vga, &virge_io->vga, &virge_mode->vga, img, images);
-	KRN_DEBUG(2, "After vga_text_chipset_mode_enter()");
-	
-#if 0	
-	int DCLKdiv = 8;
-	int xtotal, xwidth, xblankstart, xblankend, xsyncstart, xsyncend,
-	    ytotal, ywidth, yblankstart, yblankend, ysyncstart, ysyncend,
-	    offset, bpp;
-
-//	memcpy(&newmode, &reg_template, sizeof(struct riva_regs));
-
-//	priv->newmode = &newmode;
-
-//	KRN_DEBUG(2, "Setting mode... (%dx%d %d)", mode->request.virt.x, mode->request.virt.y, mode->request.graphtype);
-
-	xtotal = (mode->x.total / DCLKdiv) - 5;
-	xwidth = (mode->x.width / DCLKdiv) - 1;
-	xblankstart = mode->x.blankstart / DCLKdiv;
-	xblankend = mode->x.blankend / DCLKdiv;
-	xsyncstart = mode->x.syncstart / DCLKdiv;
-	xsyncend = mode->x.syncend / DCLKdiv;
-
-	ytotal = mode->y.total - 2;
-	ywidth = mode->y.width - 1;
-	yblankstart = mode->y.blankstart - 1;
-	yblankend = mode->y.blankend - 1;
-	ysyncstart = mode->y.syncstart - 1;
-	ysyncend = mode->y.syncend - 1;
-
-	switch(mode->request.graphtype) {
-
-	case KGIGT_8BIT: bpp = 8; break;
-	case KGIGT_16BIT: bpp = 16; break;
-	case KGIGT_32BIT: bpp = 32; break;
-	default:
-		INTERNAL_ERROR;
+	if ((img[0].flags & KGI_IF_TEXT16) || (img[0].fam & KGI_AM_TEXTURE_INDEX)) 
+	{
+		vga_text_chipset_mode_enter(&virge->vga, &virge_io->vga, 
+				       &virge_mode->vga, img, images);
+		/* Fall through to turn off all enhanced stuff */
 		return;
 	}
-
-	offset = (mode->request.virt.x/8) * (bpp/8);
-
-	virge->crt.htotal = xtotal & 0xFF;
-	virge->crt.hdisplayend = xwidth & 0xFF;
-	virge->crt.hblankstart = xblankstart & 0xFF;
-	virge->crt.hblankend |= xblankend & 0x1F;
-	virge->crt.hretracestart = xsyncstart & 0xFF;
-	virge->crt.hretraceend = (xsyncend & 0x1F) | SetBitField(xblankend, 5:5, NV_PCRTC_HORIZ_RETRACE_END_HORIZ_BLANK_END_5);
-
-	/* Vertical */
-	virge->crt.vdisplayend = ywidth & 0xFF;
-	virge->crt.vblankstart = yblankstart & 0xFF;
-	virge->crt.vretracestart = ysyncstart & 0xFF;
-	virge->crt.vretraceend = ysyncend & 0xFF;
-	virge->crt.vblankend = yblankend & 0xFF;
-	virge->crt.vtotal = ytotal & 0xFF;
-
-	/* Other */
-
-	virge->crt.overflow =
-		SetBitField( ysyncstart,  9:9, NV_PCRTC_OVERFLOW_VERT_RETRACE_START_9) |
-		SetBitField( ywidth,	  9:9, NV_PCRTC_OVERFLOW_VERT_DISPLAY_END_9) |
-		SetBitField( ytotal,      9:9, NV_PCRTC_OVERFLOW_VERT_TOTAL_9) |
-		SetBitField( 1,		  0:0, NV_PCRTC_OVERFLOW_LINE_COMPARE_8) |
-		SetBitField( yblankstart, 8:8, NV_PCRTC_OVERFLOW_VERT_BLANK_START_8) |
-		SetBitField( ysyncstart,  8:8, NV_PCRTC_OVERFLOW_VERT_RETRACE_START_8) |
-		SetBitField( ywidth,      8:8, NV_PCRTC_OVERFLOW_VERT_DISPLAY_END_8) |
-		SetBitField( ytotal,      8:8, NV_PCRTC_OVERFLOW_VERT_TOTAL_8);
-
-	virge->crt.offset = offset & 0xFF;
-
-	virge->crt.maxscanline =
-		SetBitField( (mode->magnify.y == 2), 0:0, NV_PCRTC_MAX_SCAN_LINE_DOUBLE_SCAN) |
-		SetBitField(1,             	     0:0, NV_PCRTC_MAX_SCAN_LINE_LINE_COMPARE_9) |
-		SetBitField(yblankstart,	     9:9, NV_PCRTC_MAX_SCAN_LINE_VERT_BLANK_START_9) |
-		SetBitField(0,			     4:0, NV_PCRTC_MAX_SCAN_LINE_MAX_SCAN_LINE);
-
-//        newmode.misc_output |=
-//		((mode->x.polarity > 0) ? 0 : MISC_NEG_HSYNC) |
-//		((mode->y.polarity > 0) ? 0 : MISC_NEG_VSYNC);
-
-	/* Ok.  We'll do the actual hardware programming now. */
-
-//        kgim_clock_set_mode(dpy, mode);
-
-	riva.CalcStateExt(&riva, &newmode.ext, bpp, mode->request.virt.x,
-			   mode->x.width, xwidth, xsyncstart, xsyncend,
-			   xtotal, mode->request.virt.y, ywidth, ysyncstart,
-			   ysyncend, ytotal,
-			   priv->clock / 1000); /* the clock is calculated in kgim_clock_set_mode */
-
-//	ENTER_CRITICAL;
+	KRN_DEBUG(2, "After vga_text_chipset_mode_enter()");
 	
-//	load_state(dpy, &newmode);
-//	kgim_monitor_set_mode(dpy, mode);
-//	kgim_ramdac_set_mode(dpy, mode);
-//	kgim_accel_set_mode(dpy, mode);
+	/* Turn on the Streams Processor if necessary 
+	 * Assuming screen is disabled here !!!
+	 */
+	CRT_OUT8 (virge_io, virge_mode->virge.ExtendedMiscellaneousControl2, 0x67);
+	if (virge_mode->enhanced)
+	{
+	/* Setup the streams registers. 
+	 * Warning: Some ViRGEs are known to crash when writing to
+	 * streams processor while it is disabled
+	 */
+#define STREAMS_OUT(r) KRN_DEBUG (3,"Streams 0x%.4x <- 0x%.8x",STREAMS_##r,virge_mode->virge.r); MMIO_OUT32(virge_mode->virge.r,STREAMS_##r)
+	if ((virge_mode->virge.ExtendedMiscellaneousControl2 & CR67_FULL_STREAMS) == CR67_FULL_STREAMS)
+	{
+	  KRN_DEBUG(1,"---STREAMS PROCESSOR REGISTERS---");
+	  STREAMS_OUT(PrimaryStreamControl);
+	  STREAMS_OUT(ColorChromaKeyControl);
+	  STREAMS_OUT(SecondaryStreamControl);
+	  STREAMS_OUT(ChromaKeyUpperBound);
+	  STREAMS_OUT(SecondaryStreamStretch);
+	  STREAMS_OUT(BlendControl);
+	  STREAMS_OUT(PrimaryStreamAddress0);
+	  STREAMS_OUT(PrimaryStreamAddress1);
+	  STREAMS_OUT(PrimaryStreamStride);
+	  STREAMS_OUT(DoubleBufferLpbSupport);
+	  STREAMS_OUT(SecondaryStreamAddress0);
+	  STREAMS_OUT(SecondaryStreamAddress1);
+	  STREAMS_OUT(SecondaryStreamStride);
+	  STREAMS_OUT(OpaqueOverlayControl);
+	  STREAMS_OUT(K1VerticalScaleFactor);
+	  STREAMS_OUT(K2VerticalScaleFactor);
+	  STREAMS_OUT(DDAVerticalAccumulator);
+	  //STREAMS_OUT(StreamsFifoControl);
+	  STREAMS_OUT(PrimaryStreamStartCoordinates);
+	  STREAMS_OUT(PrimaryStreamWindowSize);
+	  STREAMS_OUT(SecondaryStreamStartCoordinates);
+	  STREAMS_OUT(SecondaryStreamWindowSize);
+	  STREAMS_OUT(FifoControl);
+	  STREAMS_OUT(MiuControl);
+	  STREAMS_OUT(StreamsTimeout);
+	  STREAMS_OUT(MiscTimeout);
+	}
+	}
+	if (virge_mode->enhanced) {
+	  /* Setup Misc and FCtrl */
+	  virge_io->vga.MiscOut8(virge_io, virge_mode->virge.Misc);
+	  /* Setup SEQ registers */
+	  /* SEQ 0x00 : Obsolete */
+	  SEQ_OUT8(virge_io, virge_mode->virge.ClockingMode | 0x20 , 0x01);
+	  SEQ_OUT8(virge_io, virge_mode->virge.EnableWritePlane	 , 0x02);
+	  /*SEQ 0x02 - 0x03 : Obsolete for 8bpp + modes */
+	  SEQ_OUT8(virge_io, virge_mode->virge.MemoryModeControl   , 0x04);
+	}
+	/* SEQ 0x05 - 0x07 : Undocumented
+	 * SEQ 0x08 - 0x0A : Handled by driver setup
+	 */
+	SEQ_OUT8(virge_io, virge_mode->virge.ExtendedSequencerB  , 0x0B);
+	/* SEQ 0x0C : Undocumented */
+	SEQ_OUT8(virge_io, virge_mode->virge.ExtendedSequencerD  , 0x0D);
+	/* SEQ 0x0E - 0x0F : Undocumented
+	 * SEQ 0x10 - 0x11 : Don't know what to do with them
+	 * SEQ 0x12 - 0x13 : Handled by clock driver
+	 * SEQ 0x14 : Handled by driver setup
+	 * SEQ 0x15 : Handled by driver setup and clock driver
+	 * SEQ 0x16 - 0x17 : Feature not implemented in this driver
+	 * SEQ 0x18 : Handled by clock driver (???)
+	 * SEQ 0x19 - 0x1B : Undocumented
+	 * SEQ 0x1C : For Future Implementation
+	 */
+
+	/* Setup CRT registers */
+	if (virge_mode->enhanced) {
+		CRT_OUT8(virge_io, virge_mode->virge.HTotal  & 0xff, 	0x00);
+		CRT_OUT8(virge_io, virge_mode->virge.HdEnd   & 0xff, 	0x01);
+		CRT_OUT8(virge_io, virge_mode->virge.HbStart & 0xff, 	0x02);
+		/* FIXME */
+		CRT_OUT8(virge_io, (virge_mode->virge.HbEnd & 0x1f)| 0x80,0x03);
+		CRT_OUT8(virge_io, virge_mode->virge.HsStart & 0xff, 	0x04);
+		CRT_OUT8(virge_io, (virge_mode->virge.HsEnd  & 0x1f)|
+		     		((virge_mode->virge.HbEnd & 0x20)<<2) , 0x05);
+		
+		CRT_OUT8(virge_io, virge_mode->virge.VTotal  & 0xff, 	0x06);
+		foo =   ((virge_mode->virge.VTotal 	& 0x0100) >> 8) |
+			((virge_mode->virge.VdEnd  	& 0x0100) >> 7) |
+			((virge_mode->virge.VsStart	& 0x0100) >> 6) |
+			((virge_mode->virge.VbStart	& 0x0100) >> 5) |
+			((virge_mode->virge.LineCompare	& 0x0100) >> 4) |
+			((virge_mode->virge.VTotal  	& 0x0200) >> 4) |
+			((virge_mode->virge.VdEnd  	& 0x0200) >> 3) |
+			((virge_mode->virge.VsStart  	& 0x0200) >> 2);
+		CRT_OUT8(virge_io, foo,				 	0x07);
+		CRT_OUT8(virge_io, virge_mode->virge.PresetRowScan, 	0x08);
+		foo =   (virge_mode->virge.MaximumScanLine & 0x1f)	|
+			((virge_mode->virge.VbStart	& 0x0200) >> 4) |
+			((virge_mode->virge.LineCompare & 0x0200) >> 3);
+		CRT_OUT8(virge_io, foo, 				0x09);
+		/* 0X0A, 0X0B : Handled by VGA driver if necessary */
+		/* 0x0C, 0X0D: Set by SetOrigin */
+		CRT_OUT8 (virge_io, 0x00, 0x0C); // TEMP
+		CRT_OUT8 (virge_io, 0x00, 0x0D); // TEMP
+		CRT_OUT8 (virge_io, 0x00, 0x69); // TEMP !!!
+		/* 0X0E, 0X0F: Set by textcursor handling procedures */
+		CRT_OUT8(virge_io, virge_mode->virge.VsStart & 0xff, 	0x10);
+		/* CRT 0x11: High nibble is set by interrupt handlers 
+		* What about the !3/5 bit?? 
+		*/
+		CRT_OUT8(virge_io, virge_mode->virge.VsEnd   & 0x0f, 	0x11);
+		CRT_OUT8(virge_io, virge_mode->virge.VdEnd   & 0xff, 	0x12);
+		CRT_OUT8(virge_io, virge_mode->virge.Offset  & 0xff,	0x13);
+		CRT_OUT8(virge_io, virge_mode->virge.UnderlineLocation, 0x14);
+		CRT_OUT8(virge_io, virge_mode->virge.VbStart & 0xff,	0x15);
+		CRT_OUT8(virge_io, virge_mode->virge.VbEnd   & 0xff,	0x16);
+		CRT_OUT8(virge_io, virge_mode->virge.CRTCModeControl,	0x17);
+		CRT_OUT8(virge_io, virge_mode->virge.LineCompare & 0xff,0x18);
+	}
+	/* CRT 0x19 - 0x21 + 0x23: Undocumented. 
+	 * CRT 0x22 & 0x24: Read only.
+	 * CRT 0x25 - 0x2E: Undocumented.
+	 * CRT 0x2F - 0x30: Read only
+	 */
+	CRT_OUT8(virge_io, virge_mode->virge.MemoryConfiguration,0x31);
+	///CRT_OUT8(virge_io, virge_mode->virge.BackwardCompatability1,0x32);
+	//CRT_OUT8(virge_io, virge_mode->virge.BackwardCompatability2,0x33);
+	CRT_OUT8(virge_io, virge_mode->virge.BackwardCompatability3, 0x34);
+	/* CRT 0x35 - 0x39: Don't touch, handled at driver setup */
+	CRT_OUT8(virge_io, virge_mode->virge.Miscellaneous1,	0x3A);
+	CRT_OUT8(virge_io, virge_mode->virge.StartFifoFetch,	0x3B);
+	CRT_OUT8(virge_io, virge_mode->virge.InterlaceRetraceStart,0x3C);
+	/* CRT 0x3D - 0x3F: Undocumented
+	 * CRT 0x40 : Handled at driver setup	
+	 * CRT 0x41 : Obsolete
+	 */
+	CRT_OUT8(virge_io, virge_mode->virge.ModeControl,	0x42);
+	CRT_OUT8(virge_io, virge_mode->virge.ExtendedMode,	0x43);
+	/* CRT 0x44 : Undocumented 
+	 * CRT 0x45 - 0x4F : Handled by hardware cursor routines
+	 * CRT 0x50 : Undocumented, ViRGE VX Fix follows
+	 */
+	/* CRT 0x51 : Bit 0-1 Handled by SetOrigin
+	 * 	      Bit 2-3 Obsolete
+	 */
+	CRT_OUT8(virge_io, (virge_mode->virge.Offset >> 4) & 0x30, 0x51);
+	/* CRT 0x52 : Obsolete 
+	 * CRT 0x53 - /0x54 : Handled at driver setup */
+	CRT_OUT8(virge_io, virge_mode->virge.ExtendedRAMDACControl, 0x55);	
+	/* CRT 0x56 : Handled by VESA DPM procedures 
+	 * CRT 0x57 : Undocumented
+	 * CRT 0x58 - 0x5A: Handled by driver setup.
+	 * CRT 0x5B : Undocumented
+	 * CRT 0x5C : General Out Port, must be handled some day some how
+	 */
+	foo =	((virge_mode->virge.HTotal & 0x0100) >> 8) | 
+		((virge_mode->virge.HdEnd  & 0x0100) >> 7) | 
+		((virge_mode->virge.HbStart& 0x0100) >> 6) | 
+		((virge_mode->virge.HbEnd  & 0x0040) >> 3) | 
+		((virge_mode->virge.HsStart& 0x0100) >> 4) | 
+		((virge_mode->virge.HsEnd  & 0x0020)) 	   | 
+		((virge_mode->virge.StartFifoFetch & 0x0100) >> 2);
+	CRT_OUT8(virge_io, foo,					0x5D);	
+	foo =	((virge_mode->virge.VTotal & 0x0400) >>10) | 
+		((virge_mode->virge.VdEnd  & 0x0400) >> 9) | 
+		((virge_mode->virge.VbStart& 0x0400) >> 8) | 
+		((virge_mode->virge.VsEnd  & 0x0400) >> 6) | 
+		((virge_mode->virge.LineCompare & 0x0400) >> 4); 
+	CRT_OUT8(virge_io, foo,					0x5E);
+	CRT_OUT8(virge_io, 0xff, 0x60);
+	/* CRT 0x5F - 0x60 : Undocumented
+	 * CRT 0x61 : Handled by driver setup
+	 * CRT 0x62 : Undocumented
+	 */
+	if (!IS_VIRGE_VX(virge)) {
+	  CRT_OUT8(virge_io, 0x00, 0x63);
+	}
+	/*
+	 * CRT 0x64-0x65 : Handled by setup ???
+	 */
+	CRT_OUT8(virge_io, virge_mode->virge.ExtendedMiscellaneousControl1, 0x66);	
+	//CRT_OUT8(virge_io, virge_mode->virge.ExtendedMiscellaneousControl2, 0x67);	
+	/* CRT 0x68 : Handled by driver setup
+	 * CRT 0x69 - 0x6E : Obsolete
+	 * CRT 0x6F : Handled by VESA DDC procedures
+	 */
+ 		
+	/* Setup GRC registers */
+	if (virge_mode->enhanced) {
+		GRC_OUT8 (virge_io, 0x00, 0x00); //NEW
+		GRC_OUT8 (virge_io, 0x00, 0x01);
+		GRC_OUT8 (virge_io, 0x00, 0x02); //NEW 
+		GRC_OUT8 (virge_io, 0x00, 0x03);
+		GRC_OUT8 (virge_io, 0x00, 0x04);
+		GRC_OUT8 (virge_io, 0x00, 0x05); // 0x40 ???
+		GRC_OUT8 (virge_io, 0x05, 0x06);
+		GRC_OUT8 (virge_io, 0x00, 0x07); //NEW
+		GRC_OUT8 (virge_io, 0xFF, 0x08);
+	}
+	/* Setup ATC registers */
+	if (virge_mode->enhanced) {
+		ATC_OUT8 (virge_io, 0x05, 0x10); // CHANGED
+		ATC_OUT8 (virge_io, 0xff, 0x11); // NEW
+		ATC_OUT8 (virge_io, 0x0f, 0x12); // NEW
+		ATC_OUT8 (virge_io, virge_mode->virge.HorizontalPixelPanning, 	0x13); 
+		ATC_OUT8 (virge_io, 0x00, 0x14); // NEW
+	}
+	//SEQ_OUT8 (virge_io, 0x0F, 0x02);
+	//CRT_OUT8 (virge_io, 0xFF, 0x60);
+	if (IS_VIRGE_DXGX(virge) || IS_VIRGE_GX2(virge)) {
+	  CRT_OUT8 (virge_io, 0x80, 0x86); /* Disable DAC power savings */
+	  CRT_OUT8 (virge_io, 0x00, 0x90); /* Disable Stream display fetch length control */
+	}
+	if IS_VIRGE_VX(virge) {
+	  /* The famous unknown register. XFree does this, and that driver
+	   * seems to work...
+	   */
+	  CRT_OUT8 (virge_io, 0x00, 0x50);
+	  /* ExtendedMiscellaneousControl has moved from 0x66 to 0x63.
+	   */
+	  CRT_OUT8 (virge_io, virge_mode->virge.ExtendedMiscellaneousControl1,0x63);
+	}
+	KRN_DEBUG(1,"chip set");
 	
-//	LEAVE_CRITICAL;
-
-//	NOTICE2("setting up display...");
-
-//	chipset_setup_dpy(dpy, mode);
-
-//	NOTICE1("Mode set complete");
+	virge_chipset_accel_restore (&(virge_mode->virge.accel));
+	KRN_DEBUG(1,"accellerator restored");
 	
-#if DEBUG_LEVEL > 1
-	KRN_DEBUG(1, "Newly programmed state:");
-	dump_state(dpy, &newmode);
-#endif
-#endif	
-	KRN_DEBUG(2, "Before...");
+	/* Turn on sync signals */
+	CRT_OUT8(virge_io,CRT_IN8(virge_io, CRT_EXTSYNC1) & 0xf9, CRT_EXTSYNC1);
+	/* Enable screen */
+	seq01 = SEQ_IN8(virge_io, 0x01); 
+	SEQ_OUT8 (virge_io, seq01 & ~VGA_SR01_DISPLAY_OFF, 0x01);
+        MMIO_OUT8(0x20,0x83c0);
+	MMIO_OUT8(0x01,0x83c3);
+	virge_chipset_interrupts_enable (virge_io, virge);
 	virge->mode = virge_mode;
-	KRN_DEBUG(2, "...After.");
+
 }
 
-void virge_chipset_mode_leave(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, 
-	kgi_image_mode_t *img, kgi_u_t images)
+void virge_chipset_mode_leave(virge_chipset_t *virge, virge_chipset_io_t *virge_io, virge_chipset_mode_t *virge_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
 	KRN_DEBUG(2, "virge_chipset_mode_leave()");
-	
-	virge_chipset_sync(virge_io);
+	virge_chipset_accel_sync(virge_io);
+	virge_chipset_accel_save(&(virge_mode->virge.accel));
+	virge_chipset_accel_shutdown(virge_io);
+	virge_chipset_interrupts_disable(virge_io);	
 
+	/* Screen off */
+	SEQ_OUT8 (virge_io, SEQ_IN8(virge_io, 0x01) | 0x20, 0x01);
 	virge->mode = NULL;
 }

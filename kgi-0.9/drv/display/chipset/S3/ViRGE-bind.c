@@ -11,12 +11,15 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:25  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #include <kgi/maintainers.h>
-#define	DEBUG_LEVEL		2
-#define	MAINTAINER		Jos_Hulzink
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1 $"
+#define	DEBUG_LEVEL	255
+#define	MAINTAINER	Steffen_Seeger
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 0.1 $"
 
 #include <kgi/module.h>
 
@@ -25,28 +28,21 @@
 #include "chipset/S3/ViRGE-meta.h"
 
 #define VIRGE_MMIO_BASE		(virge_io->aperture.base_virt)+0x1000000
-/*	#define	VIRGE_CONTROL_BASE	VIRGE_MMIO_BASE
-*/
 #define VIRGE_VGA_IO_BASE      	VGA_IO_BASE
-#define VIRGE_VGA_MEM_BASE	(VIRGE_MMIO_BASE + 0x8000)
+#define VIRGE_VGA_MEM_BASE	(VIRGE_MMIO_BASE + 0x83C0)
 #define	VIRGE_VGA_DAC		(virge_io->flags & VIRGE_IF_VGA_DAC)
 
-#define ViRGE_IO_CF_MMIO_ONLY 	0 /*FIXME*/
-
-/*
-**	ViRGE specific I/O functions
+/*	ViRGE specific I/O functions
 */
 
-static inline void virge_chipset_mmio_out16(virge_chipset_io_t *virge_io, 
-	kgi_u16_t val, kgi_u32_t reg)
+static inline void virge_chipset_mmio_out16(virge_chipset_io_t *virge_io, kgi_u16_t val, kgi_u32_t reg)
 {
 	KRN_DEBUG(3, "MMIO%.4x <- %.4x", reg, val);
 	
 	mem_out16(val, (VIRGE_MMIO_BASE + reg));
 }
 
-static inline kgi_u16_t virge_chipset_mmio_in16(virge_chipset_io_t *virge_io,
-	kgi_u32_t reg)
+static inline kgi_u16_t virge_chipset_mmio_in16(virge_chipset_io_t *virge_io, kgi_u32_t reg)
 {
 	kgi_u16_t val;
 	
@@ -57,16 +53,14 @@ static inline kgi_u16_t virge_chipset_mmio_in16(virge_chipset_io_t *virge_io,
 	return val;
 }
 
-static inline void virge_chipset_mmio_out32(virge_chipset_io_t *virge_io,
-	kgi_u32_t val, kgi_u32_t reg)
+static inline void virge_chipset_mmio_out32(virge_chipset_io_t *virge_io, kgi_u32_t val, kgi_u32_t reg)
 {
 	KRN_DEBUG(3, "MMIO%.4x <- %.8x", reg, val);
 	
 	mem_out32(val, (VIRGE_MMIO_BASE + reg));
 }
 
-static inline kgi_u32_t virge_chipset_mmio_in32(virge_chipset_io_t *virge_io,
-	kgi_u32_t reg)
+static inline kgi_u32_t virge_chipset_mmio_in32(virge_chipset_io_t *virge_io, kgi_u32_t reg)
 {
 	kgi_u32_t val;
 	
@@ -77,190 +71,202 @@ static inline kgi_u32_t virge_chipset_mmio_in32(virge_chipset_io_t *virge_io,
 	return val;
 }
 
-/*
-**	VGA subsystem I/O functions
-*/
+/* VGA subsystem I/O functions */
 
-static inline void virge_chipset_vga_seq_out8(virge_chipset_io_t *virge_io,
-	kgi_u8_t val, kgi_u_t reg)
+static inline void virge_chipset_vga_seq_out8(virge_chipset_io_t *virge_io, kgi_u8_t val, kgi_u_t reg)
 {
-	KRN_DEBUG(3, "VGA_SEQ%.2x <- %.2x", reg, val);
- 	
-	if (virge_io->flags & ViRGE_IO_CF_MMIO_ONLY) {
-
-		mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_SEQ_INDEX);
-		mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_SEQ_DATA);
-
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  KRN_DEBUG(3, "VGA_SEQ mm %.2x w %.2x", reg, val);
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_SEQ_INDEX);
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_SEQ_DATA);
 	} else {
-
-		io_out8(reg, VIRGE_VGA_IO_BASE + VGA_SEQ_INDEX);
-		io_out8(val, VIRGE_VGA_IO_BASE + VGA_SEQ_DATA);
+	  KRN_DEBUG(3, "VGA_SEQ io %.2x w %.2x", reg, val);
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_SEQ_INDEX);
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_SEQ_DATA);
 	}
+#ifdef CHECK_WRITES
+	SEQ_IN8(virge_io, reg);
+#endif
 }
 
-static inline kgi_u8_t virge_chipset_vga_seq_in8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg)
+static inline kgi_u8_t virge_chipset_vga_seq_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
 	kgi_u8_t val;
 	
-/*	mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_SEQ_INDEX);	
-**	return mem_in8(VIRGE_VGA_MEM_BASE + VGA_SEQ_DATA);
-*/
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_SEQ_INDEX);
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_SEQ_DATA);
-	
-	KRN_DEBUG(3, "VGA_SEQ%.2x -> %.2x", reg, val);
-	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_SEQ_INDEX);	
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_SEQ_DATA);
+	  KRN_DEBUG(3, "VGA_SEQ mm %.2x r %.2x", reg, val);
+	} else {
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_SEQ_INDEX);
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_SEQ_DATA);
+	  KRN_DEBUG(3, "VGA_SEQ io %.2x r %.2x", reg, val);
+	}
 	return val;
 }
 
-static inline void virge_chipset_vga_crt_out8(virge_chipset_io_t *virge_io,
-	kgi_u8_t val, kgi_u_t reg)
+static inline void virge_chipset_vga_crt_out8(virge_chipset_io_t *virge_io, kgi_u8_t val, kgi_u_t reg)
 {
-	KRN_DEBUG(3, "VGA_CRT%.2x <- %.2x", reg, val);
 	
-/*	mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_CRT_INDEX);
-**	mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_CRT_DATA);
-*/
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_CRT_INDEX);
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_CRT_DATA);
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_CRT_INDEX);
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_CRT_DATA);
+	  KRN_DEBUG(3, "VGA_CRT mm %.2x w %.2x", reg, val);
+	} else {
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_CRT_INDEX);
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_CRT_DATA);
+	  KRN_DEBUG(3, "VGA_CRT io %.2x w %.2x", reg, val);
+	}
+#ifdef CHECK_WRITES
+	CRT_IN8(virge_io, reg);
+#endif
 }
 
-static inline kgi_u8_t virge_chipset_vga_crt_in8(virge_chipset_io_t *virge_io,
-	kgi_u_t reg)
+static inline kgi_u8_t virge_chipset_vga_crt_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
 	kgi_u8_t val;
 	
-/*	mem_out8(reg, VIRGE_VGA_BASE + VGA_CRT_INDEX);
-**	return mem_in8(VIRGE_VGA_BASE + VGA_CRT_DATA);
-*/
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_CRT_INDEX);
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_CRT_DATA);
-	
-	KRN_DEBUG(3, "VGA_CRT%.2x -> %.2x", reg, val);
-	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_CRT_INDEX);
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_CRT_DATA);
+	  KRN_DEBUG(3, "VGA_CRT mm %.2x r %.2x", reg, val);
+	} else {
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_CRT_INDEX);
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_CRT_DATA);
+	  KRN_DEBUG(3, "VGA_CRT io %.2x r %.2x", reg, val);
+	}
 	return val;
 }
 
-static inline void virge_chipset_vga_grc_out8(virge_chipset_io_t *virge_io, 
-	kgi_u8_t val, kgi_u_t reg)
+static inline void virge_chipset_vga_grc_out8(virge_chipset_io_t *virge_io, kgi_u8_t val, kgi_u_t reg)
 {
-	KRN_DEBUG(3, "VGA_GRC%.2x <- %.2x", reg, val);
 	
-/*	mem_out8(reg, VIRGE_VGA_BASE + VGA_GRC_INDEX);
-**	mem_out8(val, VIRGE_VGA_BASE + VGA_GRC_DATA);
-*/
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_GRC_INDEX);
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_GRC_DATA);
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_GRC_INDEX);
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_GRC_DATA);
+	  KRN_DEBUG(3, "VGA_GRC mm %.2x w %.2x", reg, val);
+	} else {
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_GRC_INDEX);
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_GRC_DATA);
+	  KRN_DEBUG(3, "VGA_GRC io %.2x w %.2x", reg, val);
+	}
+#ifdef CHECK_WRITES
+	GRC_IN8(virge_io, reg);
+#endif
 }
 
 static inline kgi_u8_t virge_chipset_vga_grc_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
 	kgi_u8_t val;
 	
-/*	mem_out8(reg, VIRGE_VGA_BASE + VGA_GRC_INDEX);	
-*/	return mem_in8(VIRGE_VGA_BASE + VGA_GRC_DATA);
-
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_GRC_INDEX);
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_GRC_DATA);
-	
-	KRN_DEBUG(3, "VGA_GRC%.2x -> %.2x", reg, val);
-	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_GRC_INDEX);	
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_GRC_DATA);
+	  KRN_DEBUG(3, "VGA_GRC mm %.2x r %.2x", reg, val);
+	} else {
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_GRC_INDEX);
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_GRC_DATA);
+	  KRN_DEBUG(3, "VGA_GRC io %.2x r %.2x", reg, val);
+	}	
 	return val;
 }
 
-static inline void virge_chipset_vga_atc_out8(virge_chipset_io_t *virge_io, 
-	kgi_u8_t val, kgi_u_t reg)
+static inline void virge_chipset_vga_atc_out8(virge_chipset_io_t *virge_io, kgi_u8_t val, kgi_u_t reg)
 {
-	KRN_DEBUG(3, "VGA_ATC%.2x <- %.2x", reg, val);
-#if 0	
-	mem_in8(VIRGE_VGA_BASE + VGA_ATC_AFF);
-	mem_out8(reg, VIRGE_VGA_BASE + VGA_ATC_INDEX);
-	mem_out8(val, VIRGE_VGA_BASE + VGA_ATC_DATAw);
-	mem_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_BASE + VGA_ATC_INDEX);
-
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_ATC_DATAw);
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_in8(VIRGE_VGA_MEM_BASE + VGA_ATC_AFF);
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_ATC_INDEX);
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_ATC_DATAw);
+	  mem_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_MEM_BASE + VGA_ATC_INDEX);
+	  KRN_DEBUG(3, "VGA_ATC mm %.2x w %.2x", reg, val);
+	} else {
+	  io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_AFF);
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_ATC_DATAw);
+ 	  io_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
+	  KRN_DEBUG(3, "VGA_ATC io %.2x w %.2x", reg, val);
+	}
+#ifdef CHECK_WRITES
+	ATC_IN8(virge_io, reg);
 #endif
-	
-	io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_AFF);
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_ATC_DATAw);
-	io_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
 }
 
-static inline kgi_u8_t virge_chipset_vga_atc_in8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg)
+static inline kgi_u8_t virge_chipset_vga_atc_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
 	register kgi_u8_t val;
-#if 0	
-	mem_in8(VIRGE_VGA_BASE + VGA_ATC_AFF);
-	mem_out8(reg, VIRGE_VGA_BASE + VGA_ATC_INDEX);
-	val = mem_in8(VIRGE_VGA_BASE + VGA_ATC_DATAr);
-	mem_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_BASE + VGA_ATC_INDEX);
-#endif
-	io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_AFF);
-	io_out8(reg, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_DATAr);
-	io_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
-
-	KRN_DEBUG(3, "VGA_ATC%.2x -> %.2x", reg, val);
 	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_in8(VIRGE_VGA_MEM_BASE + VGA_ATC_AFF);
+	  mem_out8(reg, VIRGE_VGA_MEM_BASE + VGA_ATC_INDEX);
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_ATC_DATAr);
+	  mem_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_MEM_BASE + VGA_ATC_INDEX);
+	  KRN_DEBUG(3, "VGA_ATC mm %.2x r %.2x", reg, val);
+	} else {
+	  io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_AFF);
+	  io_out8(reg, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_ATC_DATAr);
+	  io_out8(VGA_ATCI_ENABLE_DISPLAY, VIRGE_VGA_IO_BASE + VGA_ATC_INDEX);
+	  KRN_DEBUG(3, "VGA_ATC io %.2x r %.2x", reg, val);
+	}
 	return val;
 }
 
-static inline void virge_chipset_vga_misc_out8(virge_chipset_io_t *virge_io, 
-	kgi_u8_t val)
+static inline void virge_chipset_vga_misc_out8(virge_chipset_io_t *virge_io, kgi_u8_t val)
 {
-	KRN_DEBUG(3, "VGA_MISC <- %.2x", val);
-	
-/*	mem_out8(val, VIRGE_VGA_BASE + VGA_MISCw);
-*/
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_MISCw);
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_MISCw);
+	  KRN_DEBUG(3, "VGA_MISC mm w %.2x", val);
+	} else {
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_MISCw);
+	  KRN_DEBUG(3, "VGA_MISC io w %.2x", val);
+	}
 }
 
 static inline kgi_u8_t virge_chipset_vga_misc_in8(virge_chipset_io_t *virge_io)
 {
 	kgi_u8_t val;
 	
-/*	return mem_in8(VIRGE_VGA_BASE + VGA_MISCr);
-*/
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_MISCr);
-	KRN_DEBUG(3, "VGA_MISC -> %.2x", val);
-	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_MISCr);
+	  KRN_DEBUG(3, "VGA_MISC mm r %.2x", val);
+	} else {
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_MISCr);
+	  KRN_DEBUG(3, "VGA_MISC io r %.2x", val);
+	}
 	return val;
 }
 
-static inline void virge_chipset_vga_fctrl_out8(virge_chipset_io_t *virge_io, 
-	kgi_u8_t val)
+static inline void virge_chipset_vga_fctrl_out8(virge_chipset_io_t *virge_io, kgi_u8_t val)
 {
-	KRN_DEBUG(3, "VGA_FCTRL <- %.2x", val);
-	
-/*	mem_out8(val, VIRGE_VGA_BASE + VGA_FCTRLw);
-*/
-	io_out8(val, VIRGE_VGA_IO_BASE + VGA_FCTRLw);
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  mem_out8(val, VIRGE_VGA_MEM_BASE + VGA_FCTRLw);
+	  KRN_DEBUG(3, "VGA_FCTRL mm w %.2x", val);
+	} else {
+	  io_out8(val, VIRGE_VGA_IO_BASE + VGA_FCTRLw);
+	  KRN_DEBUG(3, "VGA_FCTRL io w %.2x", val);
+	}
 }
 
 static inline kgi_u8_t virge_chipset_vga_fctrl_in8(virge_chipset_io_t *virge_io)
 {
 	kgi_u8_t val;
 	
-/*	return mem_in8(VIRGE_VGA_BASE + VGA_FCTRLr);
-*/
-	val = io_in8(VIRGE_VGA_IO_BASE + VGA_FCTRLr);
-	
-	KRN_DEBUG(3, "VGA_FCTRL -> %.2x", val);
-	
+	if (virge_io->flags & VIRGE_IF_MMIO_ENABLED) {
+	  val = mem_in8(VIRGE_VGA_MEM_BASE + VGA_FCTRLr);
+	  KRN_DEBUG(3, "VGA_FCTRL mm r %.2x", val);
+	} else {
+	  val = io_in8(VIRGE_VGA_IO_BASE + VGA_FCTRLr);
+	  KRN_DEBUG(3, "VGA_FCTRL io r%.2x", val);
+	}
 	return val;
 }
 
-#if 1
 /* DAC subsystem I/O */
 static const kgi_u_t virge_vga_dac_register[4] = { 0x08, 0x09, 0x06, 0x07 };
 
-#define	VIRG_SET_DAC_ADDR23					  	\
-	mem_out8(0x05, VIRGE_VGA_BASE + VGA_SEQ_INDEX);		  	\
-	mem_out8((mem_in8(VIRGE_VGA_BASE + VGA_SEQ_DATA) &	 	\
+#define	virge_SET_DAC_ADDR23						  	\
+	mem_out8(0x05, VIRGE_VGA_BASE + VGA_SEQ_INDEX);		  	  	\
+	mem_out8((mem_in8(VIRGE_VGA_BASE + VGA_SEQ_DATA) &		  	\
 		~VIRGE_SR05_DACAddrMask) | ((reg << 2) & VIRGE_SR05_DACAddrMask),	\
 		VIRGE_VGA_BASE + VGA_SEQ_DATA)
 
@@ -271,20 +277,20 @@ static inline void virge_chipset_dac_out8(virge_chipset_io_t *virge_io, kgi_u8_t
 	if (VIRGE_VGA_DAC) {
 
 		KRN_DEBUG(3, "DAC_IO %.2x <- %.2x", reg, val);
-		
+
 /*		virge_SET_DAC_ADDR23;
 **		mem_out8(val, VIRGE_VGA_BASE + VIRGE_vga_dac_register[reg & 3]);
 */		io_out8(val, VIRGE_VGA_IO_BASE + virge_vga_dac_register[reg & 3]);
 	} else {
 
 		KRN_DEBUG(3, "DAC_MEM %.2x <- %.2x", reg, val);
+		
 /*		mem_out8(val, VIRGE_VGA_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3));
 */
 	}
 }
 
-static inline kgi_u8_t virge_chipset_dac_in8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg)
+static inline kgi_u8_t virge_chipset_dac_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
 /*	KRN_ASSERT(reg < VIRGE_MAX_DAC_REGISTERS);
 */
@@ -293,9 +299,8 @@ static inline kgi_u8_t virge_chipset_dac_in8(virge_chipset_io_t *virge_io,
 		register kgi_u8_t val;
 
 /*		VIRGE_SET_DAC_ADDR23;
-*/
-		
-/*		val = mem_in8(VIRGE_VGA_BASE + virge_vga_dac_register[reg & 3]);
+**		
+**		val = mem_in8(VIRGE_VGA_BASE + virge_vga_dac_register[reg & 3]);
 */		val = io_in8(VIRGE_VGA_IO_BASE + virge_vga_dac_register[reg & 3]);
 		
 		KRN_DEBUG(3, "DAC_IO %.2x -> %.2x", reg, val);
@@ -307,18 +312,16 @@ static inline kgi_u8_t virge_chipset_dac_in8(virge_chipset_io_t *virge_io,
 		register kgi_u8_t val = 0xff;
 
 /*		val = mem_in8(VIRGE_VGA_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3));
-*/		
+*/
 		KRN_DEBUG(3, "DAC_MEM %.2x -> %.2x", reg, val);
 		
 		return val;
 	}
 }
 
-static inline void virge_chipset_dac_outs8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg, void *buf, kgi_u_t cnt)
+static inline void virge_chipset_dac_outs8(virge_chipset_io_t *virge_io, kgi_u_t reg, void *buf, kgi_u_t cnt)
 {
-#warning fix this
-#if 0
+#if 0 /* FIXME */
 	KRN_ASSERT(reg < VIRGE_MAX_DAC_REGISTERS);
 
 	if (VIRGE_VGA_DAC) {
@@ -328,99 +331,103 @@ static inline void virge_chipset_dac_outs8(virge_chipset_io_t *virge_io,
 		VIRGE_SET_DAC_ADDR23;
 		
 		mem_outs8(VIRGE_VGA_BASE + virge_vga_dac_register[reg & 3], buf, cnt);
+
 	} else {
 
 		KRN_DEBUG(3, "dac_mem %.2x <- (%i bytes)", reg, cnt);
 		
-		mem_outs8(VIRGE_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3), 
-			buf, cnt);
+		mem_outs8(VIRGE_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3), buf, cnt);
 	}
 #endif
 }
 
-static inline void virge_chipset_dac_ins8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg, void *buf, kgi_u_t cnt)
+static inline void virge_chipset_dac_ins8(virge_chipset_io_t *virge_io, kgi_u_t reg, void *buf, kgi_u_t cnt)
 {
-#warning fix this!
-#if 0
-	KRN_ASSERT(reg < VIRGE_MAX_DAC_REGISTERS);
-
+/*	KRN_ASSERT(reg < VIRGE_MAX_DAC_REGISTERS);
+*/
 	if (VIRGE_VGA_DAC) {
 
 		KRN_DEBUG(3, "DAC_VGA %.2x -> (%i bytes)", reg, cnt);
 		
-		VIRGE_SET_DAC_ADDR23;
-		
-		mem_ins8(VIRGE_VGA_BASE + VIRGE_vga_dac_register[reg & 3], buf, cnt);
-		io_ins8(VIRGE_VGA_IO_BASE + virge_vga_dac_register[reg & 3], buf, cnt);
+/*		VIRGE_SET_DAC_ADDR23;
+**
+**		mem_ins8(VIRGE_VGA_BASE + VIRGE_vga_dac_register[reg & 3], buf, cnt);
+*/		io_ins8(VIRGE_VGA_IO_BASE + virge_vga_dac_register[reg & 3], buf, cnt);
+
 	} else {
 
 		KRN_DEBUG(3, "DAC_MEM %.2x -> (%i bytes)", reg, cnt);
 		
-		mem_ins8(VIRGE_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3), buf, cnt);
+/*		mem_ins8(VIRGE_MMIO_BASE + VIRGE_DAC_BASE + (reg << 3), buf, cnt);
+*/
 	}
-#endif
 }
 
-/*	Clock control
-*/
-static inline void virge_chipset_clk_out8(virge_chipset_io_t *virge_io,
-	kgi_u8_t val, kgi_u_t reg)
+/* Clock control */
+static inline void virge_chipset_clk_out8(virge_chipset_io_t *virge_io, kgi_u8_t val, kgi_u_t reg)
 {
-	KRN_ASSERT(reg == 0);
-
-	if (VIRGE_VGA_DAC) {
+	if (reg < 7) {
 
 		KRN_DEBUG(3, "VGA_CLK%.2x <= %.2x", reg, val);
-		
-		io_out8((io_in8(VIRGE_VGA_IO_BASE + VGA_MISCr) & 
-			~VGA_MISC_CLOCK_MASK) | ((val & 3) << 2), 
-			VIRGE_VGA_IO_BASE + VGA_MISCw);
-	} else {
-#warning fix this!
-#if 0
-		register kgi_u32_t CS040 = mem_in32(VIRGE_CONTROL_BASE + 
-			virge_ControlStatusBase + 0x040);
+		switch (reg) {
 
-		mem_out32((CS040 & ~VIRGE_CS040_VClkMask) | 
-			(val & VIRGE_CS040_VClkMask), 
-			VIRGE_CONTROL_BASE + VIRGE_ControlStatusBase + 0x040);
-#endif
+		case 0:
+			val = (val & 3) << 2;
+			MISC_OUT8(virge_io, (MISC_IN8(virge_io) & ~VGA_MISC_CLOCK_MASK) |
+				val);
+			return;
+
+		case 6:
+		  	SEQ_OUT8(virge_io, 
+				 (SEQ_IN8(virge_io, 0x15) & ~0x23) |
+				 (val & 0x23), 0x15);
+			return;
+
+		default:
+			SEQ_OUT8(virge_io, val, reg + 0x0F);
+		}
+
+	} else {
+
+		KRN_DEBUG(0,"invalid CLK register index (%i)", reg);
 	}
 }
 
-static inline kgi_u8_t virge_chipset_clk_in8(virge_chipset_io_t *virge_io, 
-	kgi_u_t reg)
+static inline kgi_u8_t virge_chipset_clk_in8(virge_chipset_io_t *virge_io, kgi_u_t reg)
 {
-	KRN_ASSERT(reg == 0);
+	if (reg < 7) {
 
-	if (VIRGE_VGA_DAC) {
+		switch (reg) {
 
-		return (io_in8(VIRGE_VGA_IO_BASE + VGA_MISCr) & 
-			VGA_MISC_CLOCK_MASK) >> 2;
+		case 0:
+			return (MISC_IN8(virge_io) >> 2) & 3;
+
+		case 6:
+			return SEQ_IN8(virge_io, 0x15) & ~0x23;
+
+		default:
+			return SEQ_IN8(virge_io, reg + 0x0F);
+		}
+
 	} else {
 
-/*		return mem_in32(VIRGE_CONTROL_BASE + VIRGE_ControlStatusBase + 0x040) & VIRGE_CS040_VClkMask;
-*/
+		KRN_DEBUG(0,"invalid CLK register index (%i)", reg);
+		return 0xFF;
 	}
-	
-	return 0;
 }
-#endif
 
-kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, 
-	virge_chipset_io_t *virge_io, const kgim_options_t *options)
+
+kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t *virge_io, const kgim_options_t *options)
 {
 	static const kgi_u32_t virge_chipset_pcicfg[] =
         {
-#warning enable here what you truely intend to support.
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE),
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_VX),
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_DXGX),
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_GX2),
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MX),
                 PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MXP),
-		PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MXPMV),
+                PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MXPMV),
                 PCICFG_SIGNATURE(0,0)
         };
 	pcicfg_vaddr_t pcidev = options->pci->dev;
@@ -457,11 +464,11 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE):
 		kgim_strcpy(virge->chipset.vendor, "S3");
 		kgim_strcpy(virge->chipset.model,  "ViRGE");
-		virge->chipset.maxdots.x = 2048;
-		virge->chipset.maxdots.y = 2048;
+                virge->chipset.maxdots.x = 2048;
+                virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*		virge->chipset.mclk.max = 50000000;
-*/		break;
+/*		virge->chipset.mclk.max = 50000000; */
+		break;
 
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_VX):
                 kgim_strcpy(virge->chipset.vendor, "S3");
@@ -469,8 +476,8 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*		virge->chipset.mclk.max = 50000000;
-*/		break;
+/*		virge->chipset.mclk.max = 50000000; */
+		break;
 
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_DXGX):
                 kgim_strcpy(virge->chipset.vendor, "S3");
@@ -478,8 +485,8 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 170000000;
-/*		virge->chipset.mclk.max = 66000000;
-*/		break;
+/*		virge->chipset.mclk.max = 66000000; */
+		break;
 
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_GX2):
                 kgim_strcpy(virge->chipset.vendor, "S3");
@@ -487,8 +494,8 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*              virge->chipset.mclk.max = 66000000;
-*/		break;
+/*		virge->chipset.lclk.max = 66000000; */
+		break;
 
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MX):
                 kgim_strcpy(virge->chipset.vendor, "S3");
@@ -496,8 +503,8 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*		virge->chipset.mclk.max = 50000000;
-*/		break;
+/*		virge->chipset.lclk.max = 50000000; */
+		break;
 
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MXP):
                 kgim_strcpy(virge->chipset.vendor, "S3");
@@ -505,17 +512,17 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*		virge->chipset.mclk.max = 50000000;
-*/		break;
- 
+/*		virge->chipset.lclk.max = 50000000;	*/
+		break;
+
         case PCICFG_SIGNATURE(PCI_VENDOR_ID_S3, PCI_DEVICE_ID_S3_ViRGE_MXPMV):
                 kgim_strcpy(virge->chipset.vendor, "S3");
                 kgim_strcpy(virge->chipset.model,  "ViRGE MXPMV");
                 virge->chipset.maxdots.x = 2048;
                 virge->chipset.maxdots.y = 2048;
                 virge->chipset.dclk.max = 135000000;
-/*		virge->chipset.mclk.max = 50000000;
-*/		break;
+/*		virge->chipset.lclk.max = 50000000;	*/
+                break;
 
         default:
                 KRN_ERROR("Device not yet supported (vendor %.4x device %.4x).",
@@ -593,7 +600,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
 
 		if (mem_check_region(&virge_io->aperture)) {
 
-			KRN_ERROR("%s region already served!", 
+			KRN_ERROR("%s region already served!",
 				virge_io->aperture.name);
 			return -E(CHIPSET, INVAL);
 		}
@@ -610,8 +617,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
 	}
 
 	SET_BASE(virge_io->aperture, options->pci->base0, VIRGE_Base0_Size);
-/*	SET_BASE(virge_io->framebuffer, options->pci->base1, 2 * 1024 * 1024);
-*/
+
 #undef SET_BASE
 	
 	/*	Make sure the memory regions are free
@@ -639,7 +645,14 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge,
 		KRN_DEBUG(2, "Interrupt line claimed successfully");
 		virge->flags |= VIRGE_CF_IRQ_CLAIMED;
 	}
-
+	
+	/* FIXME: Ugly...*/
+	virge->vga.chipset.maxdots.x = virge->chipset.maxdots.x;
+	virge->vga.chipset.maxdots.y = virge->chipset.maxdots.y;
+	virge->vga.chipset.memory    = virge->chipset.memory;
+	virge->vga.chipset.dclk.max  = virge->chipset.dclk.max;
+	virge->vga.chipset.dclk.min  = virge->chipset.dclk.min;
+	
 	virge_io->vga.kgim.DacOut8  = (void *) virge_chipset_dac_out8;
 	virge_io->vga.kgim.DacIn8   = (void *) virge_chipset_dac_in8;
 	virge_io->vga.kgim.DacOuts8 = (void *) virge_chipset_dac_outs8;
