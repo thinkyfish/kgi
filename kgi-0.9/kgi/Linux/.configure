@@ -4,7 +4,7 @@
 LINUX_VERSIONFILE=$DIR_BUILD/linux/Makefile
 if [ ! -f $LINUX_VERSIONFILE ]
 then
-	LINUX_SRC=`echo $DIR_SOURCE/linux-2.2.*.tar.gz`
+	LINUX_SRC=`echo $DIR_SOURCE/linux-2.[234].*.tar.gz`
 	if [ -f $LINUX_SRC ]
 	then
 		echo -n "$1 Extracting $LINUX_SRC, "
