@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: system.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:43  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_kgi_system_h
 #define	_kgi_system_h
@@ -209,7 +212,7 @@ typedef union
 #define	GB	*(1024*1024*1024)
 
 
-/*	ISO 10646 defines symbol codes as 32 bit unsinged int organized into
+/*	ISO 10646 defines symbol codes as 32 bit unsigned int organized into
 **	groups, planes, rows and cells. By now only the first plane (group=0,
 **	plane=0) is defined, which maps directly to UNICODE. Use these macros
 **	to extract group, plane, row or cell.
