@@ -16,7 +16,7 @@ function configure_arg() {
 #
 #	First configure all modules in $DIR_TOOLS
 #
-MODULES=`find $DIR_TOOLS -name configure.sh -print | sed "s%/configure.sh$%%" | sort -n`
+MODULES=`find $DIR_TOOLS/. -name configure.sh -print | sed "s%/configure.sh$%%" | sort -n`
 
 function configure_modules() {
 
