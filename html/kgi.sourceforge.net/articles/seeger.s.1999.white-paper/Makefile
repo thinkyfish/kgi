@@ -1,4 +1,5 @@
+IMAGES = hardware.jpeg
 
-default.init: index.var
+default.init:: index.var $(IMAGES)
 
-welcome.en.html: welcome.en.htf hardware.jpeg
+welcome.en.html: welcome.en.htf

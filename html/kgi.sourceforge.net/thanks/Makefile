@@ -1,2 +1,2 @@
 
-default.entry:	index.var
+default.entry::	index.var

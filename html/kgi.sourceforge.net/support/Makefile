@@ -1,3 +1,3 @@
 
-default.init: index.var
+default.init::index.var
 
