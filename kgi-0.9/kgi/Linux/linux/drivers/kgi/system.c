@@ -13,6 +13,10 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: system.c,v $
+**	Revision 1.2  2001/09/09 23:33:27  skids
+**	
+**	Updated PCI bus traversal when compiling on 2.4.x series kernels
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -472,7 +476,7 @@ __kgi_error_t irq_claim_line(irq_line_t *irq)
 	result = request_irq(irq->line, irq_handler, flags, irq->name,
 			(void *) irq);
 	KRN_DEBUG(2, "irq_claim_line('%s', line %i) %s", irq->name,
-		irq->name, result ? "failed" : "success");
+		irq->line, result ? "failed" : "success");
 	return result;
 }
 
