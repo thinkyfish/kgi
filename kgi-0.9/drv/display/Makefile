@@ -16,10 +16,11 @@ distclean.exit:
 	rm -rf modules
 
 welcome.en.htf: $(DIR_SOURCE)/status2htf.awk $(wildcard $DIR_SOURCE/*/*/status)
-	( echo "$(DIR_SOURCE)/vendors";					\
-	cat $(DIR_SOURCE)/vendors;					\
+	( cd $(DIR_SOURCE);						\
+	echo "./vendors";						\
+	cat ./vendors;							\
 	for dir in board/ chipset/ clock/ ramdac/ monitor/; do		\
-		for file in `find $(DIR_SOURCE)/$$dir -name status -print`; do \
+		for file in `find ./$$dir -name status -print`; do \
 			echo $$file;					\
 			cat $$file;					\
 		done;							\

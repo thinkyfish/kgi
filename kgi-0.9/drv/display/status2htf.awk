@@ -95,7 +95,7 @@ BEGIN {
 		printf	"\t<dt>"
 		if (vendor_url[$1]) {
 
-			printf	"<a href=\"%s\" target="_top">%s</a>\n",
+			printf	"<a href=\"%s\" target=\"_top\">%s</a>\n",
 				vendor_url[$1], vendor_name[$1]
 		} else {
 			printf	"%s\n", vendor_name[$1]
@@ -131,7 +131,7 @@ BEGIN {
 		printf	"\t<dt>"
 		if (vendor_url[$1]) {
 
-			printf	"<a href=\"%s\" target="_top">%s</a>\n",
+			printf	"<a href=\"%s\" target=\"_top\">%s</a>\n",
 				vendor_url[$1], vendor_name[$1]
 		} else {
 			printf	"%s\n", vendor_name[$1]
@@ -167,7 +167,7 @@ BEGIN {
 		printf	"\t<dt>"
 		if (vendor_url[$1]) {
 
-			printf	"<a href=\"%s\" target="_top">%s</a>\n",
+			printf	"<a href=\"%s\" target=\"_top\">%s</a>\n",
 				vendor_url[$1], vendor_name[$1]
 		} else {
 			printf	"%s\n", vendor_name[$1]
@@ -203,7 +203,7 @@ BEGIN {
 		printf	"\t<dt>"
 		if (vendor_url[$1]) {
 
-			printf	"<a href=\"%s\" target="_top">%s</a>\n",
+			printf	"<a href=\"%s\" target=\"_top\">%s</a>\n",
 				vendor_url[$1], vendor_name[$1]
 		} else {
 			printf	"%s\n", vendor_name[$1]
@@ -239,7 +239,7 @@ BEGIN {
 		printf	"\t<dt>"
 		if (vendor_url[$1]) {
 
-			printf	"<a href=\"%s\" target="_top">%s</a>\n",
+			printf	"<a href=\"%s\" target=\"_top\">%s</a>\n",
 				vendor_url[$1], vendor_name[$1]
 		} else {
 			printf	"%s\n", vendor_name[$1]
