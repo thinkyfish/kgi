@@ -42,7 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: cfbhrzvert.c /main/9 1998/02/09 14:05:53 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 
 #include "gc.h"
 #include "window.h"

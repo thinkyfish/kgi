@@ -31,8 +31,8 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* $TOG: cfbmskbits.h /main/28 1998/02/09 14:06:32 kaleb $ */
 /* Optimizations for PSZ == 32 added by Kyle Marvin (marvin@vitec.com) */
 
-#include	"X.h"
-#include	"Xmd.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
 #include	"servermd.h"
 #if defined(XFREE86) || ( defined(__OpenBSD__) && defined(__alpha__) )
 #define NO_COMPILER_H_EXTRAS

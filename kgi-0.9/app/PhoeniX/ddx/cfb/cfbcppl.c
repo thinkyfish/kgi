@@ -23,8 +23,8 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/Xserver/cfb/cfbcppl.c,v 1.4 2000/02/12 03:39:23 dawes Exp $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "gcstruct.h"
 #include "window.h"
 #include "pixmapstr.h"
@@ -33,9 +33,9 @@ in this Software without prior written authorization from The Open Group.
 #include "cfb.h"
 #if PSZ == 8
 #undef   PSZ /* for maskbits.h */
-#include "maskbits.h"
+#include "ddx/mfb/maskbits.h"
 #define PSZ 8
-#include "mergerop.h"
+#include "ddx/mfb/mergerop.h"
 #endif
 
 

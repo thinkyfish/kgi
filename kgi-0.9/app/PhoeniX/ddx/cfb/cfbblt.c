@@ -30,9 +30,9 @@ Author: Keith Packard
 
 /* 24-bit bug fixes: Peter Wainwright, 1998/11/28 */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
 #include	"scrnintstr.h"
@@ -41,8 +41,8 @@ Author: Keith Packard
 #include	"cfb.h"
 #include	"cfbmskbits.h"
 #include	"cfb8bit.h"
-#include	"fastblt.h"
-#include	"mergerop.h"
+#include	"ddx/mfb/fastblt.h"
+#include	"ddx/mfb/mergerop.h"
 
 #ifdef notdef /* XXX fails right now, walks off end of pixmaps */
 #if defined (FAST_UNALIGNED_READS) && PSZ == 8

@@ -29,8 +29,8 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ********************************************************/
 /* $TOG: cfbscrinit.c /main/60 1998/02/09 14:07:30 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
@@ -38,11 +38,11 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "colormap.h"
 #include "colormapst.h"
 #include "cfb.h"
-#include "mi.h"
-#include "mistruct.h"
+#include "mi/mi.h"
+#include "mi/mistruct.h"
 #include "dix.h"
 #include "cfbmskbits.h"
-#include "mibstore.h"
+#include "mi/mibstore.h"
 
 BSFuncRec cfbBSFuncRec = {
     cfbSaveAreas,

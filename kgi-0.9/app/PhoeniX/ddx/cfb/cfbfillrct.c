@@ -26,18 +26,18 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbfillrct.c /main/20 1998/02/09 14:05:17 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "gcstruct.h"
 #include "window.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 #include "windowstr.h"
-#include "mi.h"
+#include "mi/mi.h"
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "mergerop.h"
+#include "ddx/mfb/mergerop.h"
 
 
 void

@@ -25,19 +25,19 @@ in this Software without prior written authorization from The Open Group.
  * Jeff Anton'x fixes: cfb8line.c   97/02/07
  */
 
-#include "X.h"
+#include "X11/X.h"
 
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmapstr.h"
 #include "regionstr.h"
 #include "scrnintstr.h"
-#include "mistruct.h"
+#include "mi/mistruct.h"
 
 #include "cfb.h"
 #include "cfbmskbits.h"
 #include "cfbrrop.h"
-#include "miline.h"
+#include "mi/miline.h"
 
 #ifdef PIXEL_ADDR
 

@@ -43,7 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbpntwin.c,v 3.3 2000/02/12 03:39:28 dawes Exp $ */
 
-#include "X.h"
+#include "X11/X.h"
 
 #include "windowstr.h"
 #include "regionstr.h"
@@ -52,7 +52,7 @@ SOFTWARE.
 
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 #ifdef PANORAMIX
 #include "panoramiX.h"

@@ -26,11 +26,11 @@ in this Software without prior written authorization from The Open Group.
  * only.
  */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"cfb.h"
-#include	"fontstruct.h"
+#include	"X11/fonts/fontstruct.h"
 #include	"dixfontstr.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"

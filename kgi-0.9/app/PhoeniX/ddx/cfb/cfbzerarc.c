@@ -29,17 +29,17 @@ in this Software without prior written authorization from The Open Group.
  * The Computer Journal, November 1967, Volume 10, Number 3, pp. 282-289
  */
 
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "miscstruct.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "mizerarc.h"
+#include "mi/mizerarc.h"
 #include "cfbrrop.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 #ifdef PIXEL_ADDR
 

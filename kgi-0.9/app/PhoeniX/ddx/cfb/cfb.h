@@ -31,7 +31,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if !defined(__CFB_H__) || defined(CFB_PROTOTYPES_ONLY)
 
-#include "X.h"
+#include "X11/X.h"
 #include "globals.h"
 #include "pixmap.h"
 #include "region.h"
@@ -40,7 +40,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "miscstruct.h"
 #include "servermd.h"
 #include "windowstr.h"
-#include "mfb.h"
+#include "ddx/mfb/mfb.h"
 #undef PixelType
 
 #include "cfbmap.h"

@@ -43,11 +43,11 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbtegblt.c,v 3.3 2000/02/12 03:39:32 dawes Exp $ */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"cfb.h"
-#include	"fontstruct.h"
+#include	"X11/fonts/fontstruct.h"
 #include	"dixfontstr.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
@@ -55,9 +55,9 @@ SOFTWARE.
 #include	"pixmapstr.h"
 #include	"regionstr.h"
 #include	"cfbmskbits.h"
-#include	"mi.h"
+#include	"mi/mi.h"
 #define MFB_CONSTS_ONLY
-#include	"maskbits.h"
+#include	"ddx/mfb/maskbits.h"
 
 /*
     this works for fonts with glyphs <= 32 bits wide, on an

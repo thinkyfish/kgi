@@ -23,17 +23,17 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbfillarc.c /main/18 1998/02/09 14:05:10 kaleb $ */
 
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "miscstruct.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "mifillarc.h"
+#include "mi/mifillarc.h"
 #include "cfbrrop.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 /* gcc 1.35 is stupid */
 #if defined(__GNUC__) && __GNUC__ < 2 && defined(mc68020)

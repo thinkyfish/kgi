@@ -27,8 +27,8 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbtileodd.c /main/17 1998/02/09 14:08:07 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "gcstruct.h"
 #include "window.h"
@@ -40,7 +40,7 @@ in this Software without prior written authorization from The Open Group.
 #include "cfbmskbits.h"
 #include "cfb8bit.h"
 
-#include "mergerop.h"
+#include "ddx/mfb/mergerop.h"
 
 #if PSZ == 24
 #define LEFTSHIFT_AMT (3)
@@ -606,7 +606,7 @@ MROP_NAME(cfbFillSpanTileOdd) (pDrawable, n, ppt, pwidth, tile, xrot, yrot, alu,
     }
 }
 
-# include "fastblt.h"
+# include "ddx/mfb/fastblt.h"
 
 #define IncSrcPtr   psrc++; if (!--srcRemaining) { srcRemaining = widthSrc; psrc = psrcStart; }
 

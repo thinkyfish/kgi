@@ -42,11 +42,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: cfbbresd.c /main/17 1998/02/09 14:04:47 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "miline.h"
+#include "mi/miline.h"
 
 /* Dashed bresenham line */
 

@@ -29,21 +29,21 @@ Author: Keith Packard
 */
 /* $TOG: cfbbitblt.c /main/73 1998/05/14 14:41:31 msr $ */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
 #include	"scrnintstr.h"
 #include	"pixmapstr.h"
 #include	"regionstr.h"
-#include	"mi.h"
+#include	"mi/mi.h"
 #include	"cfb.h"
 #include	"cfbmskbits.h"
 #include	"cfb8bit.h"
-#include	"fastblt.h"
+#include	"ddx/mfb/fastblt.h"
 #define MFB_CONSTS_ONLY
-#include	"maskbits.h"
+#include	"ddx/mfb/maskbits.h"
 
 #if PSZ == 8
 #define cfbCopyPlane1toN cfbCopyPlane1to8

@@ -23,8 +23,8 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/Xserver/cfb/cfballpriv.c,v 1.9 1999/12/13 02:13:06 robin Exp $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
@@ -32,11 +32,11 @@ in this Software without prior written authorization from The Open Group.
 #include "colormap.h"
 #include "colormapst.h"
 #include "cfb.h"
-#include "mi.h"
-#include "mistruct.h"
+#include "mi/mi.h"
+#include "mi/mistruct.h"
 #include "dix.h"
 #include "cfbmskbits.h"
-#include "mibstore.h"
+#include "mi/mibstore.h"
 
 #if PSZ==8
 int cfbWindowPrivateIndex;

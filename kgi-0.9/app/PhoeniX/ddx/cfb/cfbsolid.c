@@ -24,8 +24,8 @@ in this Software without prior written authorization from The Open Group.
 /* $XFree86: xc/programs/Xserver/cfb/cfbsolid.c,v 3.4 2000/02/12 03:39:31 dawes Exp $ */
 
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "gcstruct.h"
 #include "window.h"
@@ -37,8 +37,8 @@ in this Software without prior written authorization from The Open Group.
 #include "cfbmskbits.h"
 #include "cfbrrop.h"
 
-#include "mi.h"
-#include "mispans.h"
+#include "mi/mi.h"
+#include "mi/mispans.h"
 
 #if defined(FAST_CONSTANT_OFFSET_MODE) && (RROP != GXcopy)
 # define Expand(left,right,leftAdjust) {\

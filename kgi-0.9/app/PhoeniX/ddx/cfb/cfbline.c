@@ -42,18 +42,18 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: cfbline.c /main/25 1998/02/09 14:06:12 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmapstr.h"
 #include "regionstr.h"
 #include "scrnintstr.h"
-#include "mistruct.h"
+#include "mi/mistruct.h"
 
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include "miline.h"
+#include "mi/miline.h"
 
 /* single-pixel lines on a color frame buffer
 

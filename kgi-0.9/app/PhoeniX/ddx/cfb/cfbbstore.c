@@ -18,8 +18,8 @@
 /* $TOG: cfbbstore.c /main/18 1998/02/17 11:03:44 kaleb $ */
 
 #include    "cfb.h"
-#include    "X.h"
-#include    "mibstore.h"
+#include    "X11/X.h"
+#include    "mi/mibstore.h"
 #include    "regionstr.h"
 #include    "scrnintstr.h"
 #include    "pixmapstr.h"

@@ -43,7 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: cfbimage.c /main/20 1998/02/09 14:06:06 kaleb $ */
 
-#include "X.h"
+#include "X11/X.h"
 #include "windowstr.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
@@ -51,7 +51,7 @@ SOFTWARE.
 #include "cfb.h"
 #include "cfbmskbits.h"
 #include "servermd.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 void
 cfbPutImage(pDraw, pGC, depth, x, y, w, h, leftPad, format, pImage)

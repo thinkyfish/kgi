@@ -23,14 +23,14 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/Xserver/cfb/cfbply1rct.c,v 3.6 2000/02/12 03:39:28 dawes Exp $ */
 
-#include "X.h"
+#include "X11/X.h"
 
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmapstr.h"
 #include "regionstr.h"
 #include "scrnintstr.h"
-#include "mistruct.h"
+#include "mi/mistruct.h"
 
 #include "cfb.h"
 #include "cfbmskbits.h"

@@ -73,8 +73,8 @@ SOFTWARE.
 
 /* $TOG: cfbfillsp.c /main/47 1998/02/09 14:05:23 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "gcstruct.h"
 #include "window.h"
@@ -85,17 +85,17 @@ SOFTWARE.
 #include "cfb.h"
 #include "cfbmskbits.h"
 
-#include "mergerop.h"
+#include "ddx/mfb/mergerop.h"
 
 #if PSZ == 8
 #include "cfb8bit.h"
 #endif
 
 #define MFB_CONSTS_ONLY
-#include "maskbits.h"
+#include "ddx/mfb/maskbits.h"
 
-#include "mi.h"
-#include "mispans.h"
+#include "mi/mi.h"
+#include "mi/mispans.h"
 
 /* scanline filling for color frame buffer
    written by drewry, oct 1986 modified by smarks

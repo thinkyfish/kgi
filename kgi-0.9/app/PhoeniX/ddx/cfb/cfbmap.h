@@ -186,7 +186,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #ifndef CFBNAME
-cfb can not hack PSZ yet
+#error cfb can not hack PSZ yet
 #endif
 
 #undef CATNAME

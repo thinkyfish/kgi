@@ -43,8 +43,8 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbgetsp.c,v 3.6 2000/02/12 03:39:25 dawes Exp $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 
 #include "misc.h"

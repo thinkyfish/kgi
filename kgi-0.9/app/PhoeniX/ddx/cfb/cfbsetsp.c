@@ -43,8 +43,8 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbsetsp.c,v 3.2 2000/02/12 03:39:31 dawes Exp $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 
 #include "misc.h"
@@ -56,7 +56,7 @@ SOFTWARE.
 
 #include "cfb.h"
 #include "cfbmskbits.h"
-#include <mergerop.h>
+#include "ddx/mfb/mergerop.h"
 
 /* cfbSetScanline -- copies the bits from psrc to the drawable starting at
  * (xStart, y) and continuing to (xEnd, y).  xOrigin tells us where psrc 
