@@ -7,8 +7,6 @@
 #	control and copyright information and add the original filename 
 #	to the dependencies of your target.
 
-GMAKE_CLEAN_INIT+="*.jpeg" "*.png"
-
 %: %.uue
 	${UUDECODE} -o $@ $<
 
