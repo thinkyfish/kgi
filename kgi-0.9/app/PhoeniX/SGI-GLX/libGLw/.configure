@@ -1,0 +1,11 @@
+
+#
+#	we should check here if a Motif version is installed
+#
+rm GNUmakefile .config
+echo "$1 build of libGLw disabled"
+
+mkdir -p $DIR_TOP_BUILD/include/GL
+
+ln -sf $DIR_SOURCE/GLwDrawA.h	$DIR_TOP_BUILD/include/GL/GLwDrawA.h
+ln -sf $DIR_SOURCE/GLwMDrawA.h	$DIR_TOP_BUILD/include/GL/GLwMDrawA.h
