@@ -454,7 +454,7 @@ the final visible image.
 	filled-in operation mode description and auto-negotiate the proper
 	operation mode.
 	<p>This modular display driver internal interface is defined in 
-	<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/include/kgi/module.h"><tt>kgi-0.9/drv/display/include/kgi/module.h</tt></a>,
+	<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/kgi/module.h"><tt>kgi-0.9/drv/display/kgi/module.h</tt></a>,
 	but is adopted to allow an easier
 	mapping to the UDI driver model and not yet finalized.
 
