@@ -2,7 +2,7 @@
 #	html rules
 #
 
-GMAKE_CLEAN_INIT+= ".htaccess" "index.var"
+GMAKE_CLEAN_INIT += ".htaccess" "index.var"
 
 HTML_LANGUAGE_LIST=$(subst ",,$(HTML_LANGUAGES))
 
