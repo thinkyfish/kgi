@@ -10,7 +10,10 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	##AUTHOR##
 **
-**	$Log: ##META##-meta.h,v $
+**	$Log: pll-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _clock_##VENDOR##_##META##_meta_h
 #define	_clock_##VENDOR##_##META##_meta_h
@@ -22,7 +25,7 @@ typedef pll_clock_io_t ##meta##_clock_io_t;
 #define	##META##_DAC_OUT8(ctx, val, reg)	PLL_DAC_OUT8(ctx, val, reg)
 #define	##META##_DAC_IN8(ctx, reg)		PLL_DAC_IN8(ctx, reg)
 #define	##META##_CLK_OUT8(ctx, val, reg)	PLL_CLK_OUT8(ctx, val, reg)
-#define	##META##_CLK_IN8(ctx, val, reg)	PLL_CLK_IN8(ctx, reg)
+#define	##META##_CLK_IN8(ctx, reg)	PLL_CLK_IN8(ctx, reg)
 
 typedef struct
 {
