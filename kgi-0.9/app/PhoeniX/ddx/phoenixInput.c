@@ -13,6 +13,8 @@
 **	- added PhoeniX DDX stubs and included in build system
 */
 
+#include "config.h"
+
 #include "scrnintstr.h"
 #include "inputstr.h"
 #include "mi/mipointer.h"
@@ -249,8 +251,6 @@ Bool LegalModifier(unsigned int key, DevicePtr kbd)
 
 void ProcessInputEvents()
 {
-	/* APP_DEBUG("ProcessInputEvents(): processing input events\n"); */
-	
 	while (kiiEventAvailable(phoenix.input.kii)) {
 
 		xEvent xev;
@@ -259,8 +259,6 @@ void ProcessInputEvents()
 		xev.u.keyButtonPointer.time = ev->any.time;
 
 		if ((1 << ev->any.type) & KII_EM_KEYBOARD) {
-
-			APP_DEBUG("keyboard event\n");
 
 			xev.u.u.detail = ev->key.code + 8;
 	
@@ -290,8 +288,6 @@ void ProcessInputEvents()
 			int dx, dy;
 			static int ptr_oldx = 0, ptr_oldy = 0;
 
-			APP_DEBUG("pointer event\n");
-    
 			if (ev->any.type == KII_EV_PTR_ABSOLUTE) {
 
 				dx = ev->pmove.x - ptr_oldx;      

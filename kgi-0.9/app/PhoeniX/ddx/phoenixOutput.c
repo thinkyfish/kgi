@@ -21,6 +21,8 @@
 **	
 */
 
+#include "config.h"
+
 #include "scrnintstr.h"
 #include "servermd.h"
 #include "colormapst.h"
@@ -164,7 +166,7 @@ static int PhoenixScreenInit(int id, ScreenPtr screen,
 	output->xf86 = xf86CreateScreenInfoRec();
 	if (! xf86Init(output->x11, output->xf86)) {
 	
-		APP_DEBUG("failed to initialize XF86 compatibility layer for"
+		APP_DEBUG("failed to initialize XF86 compatibility layer for "
 			"screen %i (index %i)\n", id, idx);
 		xf86DestroyScreenInfoRec(output->xf86);
 		output->xf86 = NULL;
@@ -172,7 +174,7 @@ static int PhoenixScreenInit(int id, ScreenPtr screen,
 	}
 
 	output->xaa = XAACreateInfoRec();
-	output->xaa = PhoenixXAA_Sync;
+	output->xaa->Sync = PhoenixXAA_Sync;
 	if (! XAAInit(output->x11, output->xaa)) {
 
 		APP_DEBUG("failed to initialize XAA for screen %i (index %i)\n",
