@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: console.c,v $
+**	Revision 1.3  2001/08/24 19:34:27  seeger_s
+**	- fixed missing symbols on compile bug
+**	
 **	Revision 1.2  2001/07/03 08:50:44  seeger_s
 **	- text control now done via image resources
 **	- gadget handling now done all in console.c and scroll_sync()
@@ -33,6 +36,11 @@
 #include <linux/major.h>
 #include <linux/malloc.h>
 #include <linux/vmalloc.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+#else
+#include <linux/init.h>
+#include <linux/devfs_fs_kernel.h>
+#endif
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
 #include <linux/console.h>
@@ -49,6 +57,13 @@
 #define	COLOR	1
 
 #define	CONFIG_VT_CONSOLE
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+#else
+int want_console = -1;
+
+extern void kii_bottomhalf(void); /* FIXME do this properly */
+#endif
 
 /*
 **	text buffer operations
@@ -1331,7 +1346,7 @@ static struct console console_printk_driver =
 #endif /* #ifdef CONFIG_VT_CONSOLE */
 
 
-
+#ifdef CONFIG_KGI_TERM_DUMB
 
 /* -----------------------------------------------------------------------------
  *	A very dumb console parser to have output even with no parser loaded.
@@ -1374,6 +1389,7 @@ static void dumb_do_reset(kgi_console_t *cons, kgi_u_t do_reset)
 	/* !!! kbd_setleds */
 }
 
+#endif
 
 static void dumb_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 {
@@ -1733,7 +1749,17 @@ static inline void console_driver_init(void)
 	memset(&console_driver, 0, sizeof(struct tty_driver));
 
 	console_driver.magic		= TTY_DRIVER_MAGIC;
-	console_driver.name		= "tty";
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+	console_driver.name             = "tty";
+#else
+	console_driver.driver_name	= "vc_emulator";
+	console_driver.name		= "vc/%d";
+       /* Tell tty_register_driver() to skip consoles because they are
+        * registered before kmalloc() is ready. We'll patch them in later.
+        * See comments at console_init(); see also con_init_devfs().
+        */
+	console_driver.flags            |= TTY_DRIVER_NO_DEVFS;
+#endif
 	console_driver.name_base	= 1;
 	console_driver.major		= TTY_MAJOR;
 	console_driver.minor_start	= 1;
@@ -1768,7 +1794,11 @@ kgi_console_t *console_arr[CONFIG_KGII_MAX_NR_CONSOLES];
 
 #define	PANIC(x)	panic(__FILE__ ": " x);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 void dev_console_init(void)
+#else 
+void __init dev_console_init(void)
+#endif
 {
 	kgi_console_t *cons;
 
@@ -1832,4 +1862,26 @@ void dev_console_init(void)
 	}
 	kii_map_device(console_arr[0]->kii.id);
 }
+
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+#else
+
+#ifdef CONFIG_KGI_VT_LINUX
+/* We can't register the console with devfs during dev_console_init(),
+ * because it is called before kmalloc() works.  This function is called
+ * later to do the registration.
+ */
+void __init con_init_devfs (void)
+{
+	int i;
+
+	for (i = 0; i < console_driver.num; i++)
+		tty_register_devfs (&console_driver, DEVFS_FL_AOPEN_NOTIFY,
+				    console_driver.minor_start + i);
+}
+#endif
+
+#endif
+
 
