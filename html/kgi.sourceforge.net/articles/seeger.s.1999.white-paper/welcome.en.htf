@@ -4,7 +4,7 @@ HTF_LONG_TITLE="White Paper on KGI, the  Kernel Graphics Interface"
 HTF_DESCRIPTION="This article gives and a short introduction to the KGI project, its goals and design concepts."
 HTF_KEYWORDS="KGI Project; introduction"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.3 $"
+HTF_REVISION="$Revision: 1.4 $"
 
 cat <<end-of-htf
 
@@ -23,7 +23,7 @@ requirements of the KGI architecture -  being finished already.
 This includes an implementation of most of the concepts explained here.
 Any file references given here refer to files included in the snapshot.
 An online version of the source tree is available at 
-<a href="$KGI_SOURCE_URL/kgi-0.9">$KGI_SOURCE_URL/kgi-0.9</a>
+<a href="$KGI_SOURCE_URL/kgi-0.9"><tt>$KGI_SOURCE_URL/kgi-0.9</tt></a>
 </blockquote>
 
 <h2><a name="introduction"></a><u>Introduction</u></h2>

@@ -4,7 +4,7 @@ HTF_LONG_TITLE="KGI Display Hardware Driver Overview"
 HTF_DESCRIPTION="A short introduction to the display hardware driver design."
 HTF_KEYWORDS="KGI Project; display drivers"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.1.1.1 $"
+HTF_REVISION="$Revision: 1.3 $"
 
 cat <<end-of-htf
 
@@ -195,7 +195,7 @@ in a platform-independent manner.
 		decode and name fields of the region passed have to be properly
 		initialized.</li>
 
-	<li><tt><i>io</i>_vaddr <i>io</i>_claim_region(<i>io</i>_region_t *)</tt>br>
+	<li><tt><i>io</i>_vaddr <i>io</i>_claim_region(<i>io</i>_region_t *)</tt><br>
 		This environment function registers the region - if possible -
 		with a central resource management facility and establishes 
 		a virtual mapping of this region. Before claiming a region,
