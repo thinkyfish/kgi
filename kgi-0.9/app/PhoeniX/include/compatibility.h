@@ -65,6 +65,10 @@
 #	define	XKB
 #endif
 
+#ifdef	X11_EXT_SGI_GLX
+#	define	GLXEXT
+#endif
+
 
 
 

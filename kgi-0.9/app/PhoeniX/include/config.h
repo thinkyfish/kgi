@@ -27,6 +27,7 @@
 
 #undef	X11_EXT_SGI_MISC
 #undef	X11_EXT_SGI_XKB
+#define	X11_EXT_SGI_GLX
 
 #undef	X11_EXT_XC_APPGROUP
 #undef	X11_EXT_XC_SECURITY
