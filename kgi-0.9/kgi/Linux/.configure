@@ -90,8 +90,8 @@ then
 	fi
 
 	echo -n "$1 Linking KGI includes, "
-		ln -fs $DIR_TOP_BUILD/include/kii linux/include/kii
-		ln -fs $DIR_TOP_BUILD/include/kgi linux/include/kgi
+		ln -fs $DIR_TOP_BUILD/include/kii linux/include
+		ln -fs $DIR_TOP_BUILD/include/kgi linux/include
 	echo "done."
 
 	if [ "$DIR_BUILD" != "$DIR_SOURCE" ]
@@ -108,8 +108,8 @@ then
 fi
 
 echo -n "$1 Linking Linux includes, "
-	ln -fs `pwd`/linux/include/linux $DIR_TOP_BUILD/include/linux
-	ln -fs `pwd`/linux/include/asm $DIR_TOP_BUILD/include/asm
+	ln -fs `pwd`/linux/include/linux $DIR_TOP_BUILD/include
+	ln -fs `pwd`/linux/include/asm $DIR_TOP_BUILD/include
 echo "done."
 
 echo -n "$1 Configuring kernel via 'yes | make oldconfig', "
