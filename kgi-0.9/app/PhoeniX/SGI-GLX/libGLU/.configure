@@ -1,0 +1,9 @@
+
+mkdir -p $DIR_TOP_BUILD/include/GL
+
+ln -sf $DIR_SOURCE/glu.h	$DIR_TOP_BUILD/include/GL/glu.h
+
+cp .config .config.tmp
+
+echo "CC_INCLUDE_PATH=\"$CC_INCLUDE_PATH $DIR_SOURCE\"" >> .config.tmp
+echo "CXX_INCLUDE_PATH=\"$CXX_INCLUDE_PATH $DIR_SOURCE\"" >> .config.tmp
