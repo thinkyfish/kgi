@@ -13,6 +13,9 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: dpy-i386.c,v $
+**	Revision 1.2  2000/06/02 09:17:17  seeger_s
+**	- fixed broken compile with SPLASH screen enabled
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:47  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -259,7 +262,15 @@ typedef struct
 {
 	kgi_dot_port_mode_t	dpm;
 
-} text16_dev_mode_t;
+	kgi_marker_t		pointer_ctrl;
+	kgi_u_t			pointer_mask, pointer_old;
+
+	kgi_marker_t		cursor_ctrl;
+	kgi_u_t			cursor_mask, cursor_old;
+
+	kgi_text16_t		text16;
+
+} text16_mode_t;
 
 typedef struct
 {
@@ -268,26 +279,22 @@ typedef struct
 	kgi_ucoord_t		screen_size;
 	kgi_mmio_region_t	fb;
 	kgi_accel_t		accel;
-	kgi_u_t			pointer_mask, pointer_old;
-	kgi_u_t			cursor_mask, cursor_old;
-	text16_dev_mode_t	dev_mode;
 
 } text16_display_t;
 
 /*	text16 operations
 */
-static void text16_pointer_show(kgic_mode_text16context_t *ctx, kgi_u_t x, 
-	kgi_u_t y)
+static void text16_pointer_show(kgi_marker_t *ptr, kgi_u_t x, kgi_u_t y)
 {
-	register text16_display_t *text16 = (text16_display_t *) ctx->meta_object;
-	register kgi_u16_t *fb = (kgi_u16_t *) text16->fb.win.virt;
+	text16_mode_t  *text16 = ptr->meta;
+	register kgi_u16_t *fb = ptr->meta_io;
 	register kgi_u_t new;
 
-	x /= ctx->cell.x; 
-	y /= ctx->cell.y;
-	new = x  +  y * ctx->virt.x;
+	x /= text16->text16.cell.x;
+	y /= text16->text16.cell.y;
+	new = x  +  y * text16->text16.virt.x;
 
-	KRN_ASSERT((x < ctx->size.x) && (y < ctx->size.y));
+	KRN_ASSERT((x < text16->text16.size.x) && (y < text16->text16.size.y));
 
 	if (text16->pointer_old & 0x8000) {
 
@@ -311,13 +318,13 @@ static void text16_pointer_show(kgic_mode_text16context_t *ctx, kgi_u_t x,
 		(mem_vaddr_t) fb);
 }
 
-static void text16_pointer_hide(kgic_mode_text16context_t *ctx)
+static void text16_pointer_hide(kgi_marker_t *ptr)
 {
-	register text16_display_t *text16 = (text16_display_t *) ctx->meta_object;
-	register kgi_u16_t *fb = (kgi_u16_t *) text16->fb.win.virt;
+	text16_mode_t *text16 = ptr->meta;
 
 	if (text16->pointer_old & 0x8000) {
 
+		kgi_u16_t *fb = ptr->meta_io;
 		mem_out16(text16->pointer_old >> 16,
 			(mem_vaddr_t) (fb + (text16->pointer_old & 0x7FFF)));
 	}
@@ -326,13 +333,15 @@ static void text16_pointer_hide(kgic_mode_text16context_t *ctx)
 
 #define	text16_pointer_undo	text16_pointer_hide
 
-static void text16_cursor_show(kgic_mode_text16context_t *ctx, kgi_u_t x, kgi_u_t y)
-{
-	register text16_display_t *text16 = (text16_display_t *) ctx->meta_object;
-	register kgi_u_t new = x  +  y * ctx->virt.x;
-	register kgi_u16_t *fb = (kgi_u16_t *) text16->fb.win.virt;
 
-	KRN_ASSERT((x < ctx->size.x) && (y < ctx->size.y));
+static void text16_cursor_show(kgi_marker_t *cur, kgi_u_t x, kgi_u_t y)
+{
+	text16_mode_t *text16 = cur->meta;
+	register kgi_u16_t *fb = cur->meta_io;
+
+	register kgi_u_t new = x  +  y * text16->text16.virt.x;
+
+	KRN_ASSERT((x < text16->text16.size.x) && (y < text16->text16.size.y));
 
 	if (text16->cursor_old & 0x8000) {
 
@@ -356,13 +365,13 @@ static void text16_cursor_show(kgic_mode_text16context_t *ctx, kgi_u_t x, kgi_u_
 		(mem_vaddr_t) fb);
 }
 
-static void text16_cursor_hide(kgic_mode_text16context_t *ctx)
+static void text16_cursor_hide(kgi_marker_t *cur)
 {
-	register text16_display_t *text16 = (text16_display_t *) ctx->meta_object;
-	register ushort *fb = (kgi_u16_t *) text16->fb.win.virt;
+	text16_mode_t *text16 = cur->meta;
 
 	if (text16->cursor_old & 0x8000) {
 
+		ushort *fb = cur->meta_io;
 		mem_out16(text16->cursor_old >> 16,
 			(mem_vaddr_t) (fb + (text16->cursor_old & 0x7FFF)));
 	}
@@ -371,66 +380,24 @@ static void text16_cursor_hide(kgic_mode_text16context_t *ctx)
 
 #define	text16_cursor_undo	text16_cursor_hide
 
-static void text16_put_text16(kgic_mode_text16context_t *ctx, kgi_u_t offset,
-	const kgi_u16_t *text, kgi_u_t count)
+
+static void text16_put_text16(kgi_text16_t *text16,
+	kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count)
 {
-	register kgi_u16_t *
-	fb = (kgi_u16_t *) ((text16_display_t *) ctx->meta_object)->fb.win.virt;
-	KRN_ASSERT(count < 4096);
+	text16_mode_t *text16_mode = text16->meta;
+	register kgi_u16_t *fb = text16->meta_io;
+	KRN_ASSERT(offset < 4096);
+	KRN_ASSERT(offset + count < 4096);
+	KRN_ASSERT(! (text16_mode->cursor_old & 0x00008000));
+	KRN_ASSERT(! (text16_mode->pointer_old & 0x00008000));
 	mem_put16((mem_vaddr_t) (fb + offset), text, count);
 }
 
-/*	text16 display operations
-*/
 
-static kgi_error_t text16_mode_command(void *context, kgi_u_t cmd, 
-	void *in_buffer, void **out_buffer, kgi_size_t *out_size)
+static kgi_error_t text16_display_command(kgi_display_t *dpy,
+	kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size)
 {
-	kgic_mode_context_t *ctx = (kgic_mode_context_t *) context;
-	text16_display_t *text16 = (text16_display_t *) ctx->dpy;
-
-	switch (cmd) {
-
-	case KGIC_MODE_TEXT16CONTEXT:
-		{
-			kgic_mode_text16context_t *out = *out_buffer;
-			kgic_mode_text16context_request_t *in = in_buffer;
-
-			if (in->image) {
-
-				KRN_DEBUG(1, "invalid image %i", in->image);
-				return -EINVAL;
-			}
-
-			out->revision = KGIC_MODE_TEXT16CONTEXT_REVISION;
-			out->meta_object = (kgi_display_t *) text16;
-			out->size.x = ctx->img->size.x;
-			out->size.y = ctx->img->size.y;
-			out->virt.x = ctx->img->virt.x;
-			out->virt.y = ctx->img->virt.y;
-			out->cell.x = 8;  /* Good enough for boot display */
-			out->cell.y = 12; /* (gives approximate mouse feel.) */
-			out->font.x = 8;
-			out->font.y = 12;
-			out->CursorShow = text16_cursor_show;
-			out->CursorUndo = text16_cursor_undo;
-			out->CursorHide = text16_cursor_hide;
-			out->PointerShow = text16_pointer_show;
-			out->PointerUndo = text16_pointer_undo;
-			out->PointerHide = text16_pointer_hide;
-			out->PutText16 = text16_put_text16;
-			return KGI_EOK;
-		}
-	default:
-		KRN_DEBUG(1, "unknown/unsupported image command %.8x", cmd);
-		return -EINVAL;
-	}
-}
-
-static kgi_error_t text16_display_command(void *ctx, unsigned int cmd, 
-	void *in, void **out_buffer, unsigned long *out_size)
-{
-	*out_buffer = NULL;
+	*out = NULL;
 	*out_size = 0;
 	return -EINVAL;
 }
@@ -460,7 +427,7 @@ static int text16_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 #define	DEFAULT(x)	if (! (x)) { x = text16->mode.x; }
 #define	MATCH(x)	((x) == text16->mode.x)
 	text16_display_t *text16 = (text16_display_t *) dpy;
-	text16_dev_mode_t *devmode = (text16_dev_mode_t *) dev_mode;
+	text16_mode_t *devmode = (text16_mode_t *) dev_mode;
 
 	if (images != 1) {
 
@@ -525,6 +492,67 @@ static int text16_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			r[0] = (kgi_resource_t *) &text16->fb;
 			r[1] = (kgi_resource_t *) &text16->accel;
 		}
+
+		/*	text16 control
+		*/
+		devmode->text16.meta		= devmode;
+		devmode->text16.meta_io		= text16->fb.win.virt;
+		devmode->text16.type		= KGI_RT_TEXT16_CONTROL;
+		devmode->text16.prot		= KGI_PF_DRV_RWS;
+		devmode->text16.name		= "text16 control";
+		devmode->text16.size.x		= img[0].size.x;
+		devmode->text16.size.y		= img[0].size.y;
+		devmode->text16.virt.x		= img[0].size.x;
+		devmode->text16.virt.y		= img[0].size.y;
+		devmode->text16.cell.x		= 8;
+		devmode->text16.cell.y		= 14;
+		devmode->text16.font.x		= 8;
+		devmode->text16.font.y		= 14;
+		devmode->text16.PutText16	= text16_put_text16;
+
+		KRN_NOTICE("text16 set up: size %ix%i, virt %ix%i",
+			devmode->text16.size.x, devmode->text16.size.y,
+			devmode->text16.virt.x, devmode->text16.virt.y);
+
+		/*	cursor control
+		*/
+		devmode->cursor_mask = (img[0].fam & KGI_AM_BLINK)
+			? 0x7700 : 0xFF00;
+		devmode->cursor_old = 0;
+
+		devmode->cursor_ctrl.meta	= devmode;
+		devmode->cursor_ctrl.meta_io	= text16->fb.win.virt;
+		devmode->cursor_ctrl.type	= KGI_RT_CURSOR_CONTROL;
+		devmode->cursor_ctrl.prot	= KGI_PF_DRV_RWS;
+		devmode->cursor_ctrl.name	= "cursor control";
+		devmode->cursor_ctrl.size.x	= 1;
+		devmode->cursor_ctrl.size.y	= 1;
+		devmode->cursor_ctrl.Show	= text16_cursor_show;
+		devmode->cursor_ctrl.Hide	= text16_cursor_hide;
+		devmode->cursor_ctrl.Undo	= text16_cursor_undo;
+
+
+		/*	pointer control
+		*/
+		devmode->pointer_mask = (img[0].fam & KGI_AM_BLINK)
+			? 0x7700 : 0x7F00;
+		devmode->pointer_old = 0;
+
+		devmode->pointer_ctrl.meta	= devmode;
+		devmode->pointer_ctrl.meta_io	= text16->fb.win.virt;
+		devmode->pointer_ctrl.type	= KGI_RT_POINTER_CONTROL;
+		devmode->pointer_ctrl.prot	= KGI_PF_DRV_RWS;
+		devmode->pointer_ctrl.name	= "pointer control";
+		devmode->pointer_ctrl.size.x	= 1;
+		devmode->pointer_ctrl.size.y	= 1;
+		devmode->pointer_ctrl.Show	= text16_pointer_show;
+		devmode->pointer_ctrl.Hide	= text16_pointer_hide;
+		devmode->pointer_ctrl.Undo	= text16_pointer_undo;
+
+		img[0].resource[0]= (kgi_resource_t *) &(devmode->text16);
+		img[0].resource[1]= (kgi_resource_t *) &(devmode->cursor_ctrl);
+		img[0].resource[2]= (kgi_resource_t *) &(devmode->pointer_ctrl);
+
 		return KGI_EOK;
 
 	default:
@@ -632,7 +660,7 @@ kgi_display_t *text16_malloc_display(unsigned long fb, kgi_u_t fb_size,
 	sprintf(text16->dpy.model,
 		"%s text16 @%p", color ? "color" : "monochrome", (void *) fb);
 	text16->dpy.flags = 0;
-	text16->dpy.mode_size = sizeof(text16_dev_mode_t);
+	text16->dpy.mode_size = sizeof(text16_mode_t);
 	text16->dpy.Command = text16_display_command;
 
 /*	text16->dpy.priv.priv_u64 = 0; */
@@ -644,14 +672,13 @@ kgi_display_t *text16_malloc_display(unsigned long fb, kgi_u_t fb_size,
 
 	text16->dpy.CheckMode = text16_check_mode;
 	text16->dpy.SetMode = text16_set_mode;
-	text16->dpy.ModeCommand = text16_mode_command;
 
 	text16->dpy.focus = NULL;
 
 	/*	initialize mode struct 
 	*/
 	text16->mode.revision = KGI_MODE_REVISION;
-	text16->mode.dev_mode = &text16->dev_mode;
+	text16->mode.dev_mode = NULL;
 	text16->mode.resource[0] = (kgi_resource_t *) &text16->fb;
 	text16->mode.images = 1;
 	text16->mode.img[0].out = NULL;
@@ -722,9 +749,6 @@ kgi_display_t *text16_malloc_display(unsigned long fb, kgi_u_t fb_size,
 	*/
 	text16->screen_size.x = screen_x;
 	text16->screen_size.y = screen_y;
-
-	text16->cursor_mask = color ? 0xFF00 : 0x7700;
-	text16->pointer_mask = color ? 0x7F00 : 0x7700;
 
 	return (kgi_display_t *) text16;
 }
@@ -987,6 +1011,7 @@ int dpy_i386_init(int display, int max_display)
 			hide_msg(kgi_boot_fb, ORIG_VIDEO_COLS, ORIG_VIDEO_LINES);
 		}
 #	endif
+
 	unregister_console(&kgi_boot_console);
 
 	return display;
