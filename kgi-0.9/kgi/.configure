@@ -15,9 +15,11 @@
 
 cat > $DIR_TOP_BUILD/include/kgi/config.h <<-end-of-config
 /*
-**	WARNING	This file has been generated automatically! Do not edit!
+**	WARNING	This file has been generated automatically by configure!
+**	Do not edit!
 */
-#ifndef _kgi_config_h
+#ifndef _KGI_CONFIG_H
+#define _KGI_CONFIG_H
 
 #define	HOST_OS		HOST_OS_$HOST_OS
 #define	HOST_CPU	HOST_CPU_$HOST_CPU
