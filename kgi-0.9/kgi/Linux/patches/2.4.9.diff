@@ -1,8 +1,7 @@
-diff -r -u --new-file linux-2.2.0/Documentation/Configure.help linux/Documentation/Configure.help
---- linux-2.2.0/Documentation/Configure.help	Wed Jan 20 20:05:32 1999
-+++ linux/Documentation/Configure.help	Tue Nov 23 18:27:36 1999
-@@ -2107,6 +2107,61 @@
-   non-kernel sources, you would benefit from this option. Otherwise
+diff --exclude CVS -U2 -r -N linux/Documentation/Configure.help linux_kgi/Documentation/Configure.help
+--- linux/Documentation/Configure.help	Mon Jul 23 17:09:41 2001
++++ linux_kgi/Documentation/Configure.help	Fri Sep  7 23:04:50 2001
+@@ -3835,4 +3835,61 @@
    it's not that important. So, N ought to be a safe bet.
  
 +Kernel Graphics Interface (KGI) support
@@ -11,7 +10,7 @@ diff -r -u --new-file linux-2.2.0/Documentation/Configure.help linux/Documentati
 +  allows you to have virtual terminals on multiple video cards.
 +  Video card drivers for supported video graphics cards and
 +  input device drivers (mice, keyboards) can be loaded dynamically.
-+  NOTE: If you enable this option, make sure you have disabled the 
++  NOTE: If you enable this option, make sure you have disabled the
 +  'Virtual Terminal' option or building the kernel will fail.
 +
 +KGI splash logo
@@ -22,37 +21,39 @@ diff -r -u --new-file linux-2.2.0/Documentation/Configure.help linux/Documentati
 +
 +Terminal emulator: dumb console terminal parser
 +CONFIG_KGI_TERM_DUMB
-+  This enables support for the dumb terminal parser. 
++  This enables support for the dumb terminal parser.
 +
 +Terminal emulator: xterm-color like terminal parser
 +CONFIG_KGI_TERM_XTERM
 +  This enables support for the xterm-color like terminal parser.
 +
-+Linux terminal code backward compatiblity
++Linux terminal code backward compatiblity (EXPERIMENTAL)
 +CONFIG_KGI_VT_LINUX
++  This enables the backward compatibility code for
++  the old Linux Virtual Terminal
 +
-+/dev/graphic special device file driver
-+CONFIG_KGI_DEV_GRAPHIC=y
++/dev/graphic special device file driver (EXPERIMENTAL)
++CONFIG_KGI_DEV_GRAPHIC
 +  This enables the /dev/graphic special file device services.
 +  These provide kernel assisted raw access to the display hardware.
 +  You may not need this if you don't want to load KGI display drivers.
 +  If unsure, say Yes here.
 +
-+/dev/event special device driver
++/dev/event special device driver (EXPERIMENTAL)
 +CONFIG_KGI_DEV_EVENT
 +  This enables the /dev/event special file device services.
 +  These provide kernel assisted access to the input hardware.
 +  You may not need this if you don't want to load KGI input drivers.
 +  If unsure, say Yes here.
 +
-+null display support 
++null display support (EXPERIMENTAL)
 +CONFIG_KGI_DPY_NULL
 +  If enabled up to CONFIG_KGI_DISPLAY null display drivers are registered
 +  after any other boot displays are detected. This way open() on /dev/ttyXX
 +  without will not fail. Only useful if you want to use KGI's true multihead
 +  capabilities with XFree86. If unsure, say No here.
 +
-+i386 text buffer display support (VGA, EGA, CGA)
++i386 text buffer display support (VGA, EGA, CGA) (EXPERIMENTAL)
 +CONFIG_KGI_DPY_I386
 +  If enabled the KGI boot code probes for a monochrome (MDA/Hercules) and
 +  a color (CGA,EGA,VGA) display and registers them as display(s) 0 and 1
@@ -62,30 +63,36 @@ diff -r -u --new-file linux-2.2.0/Documentation/Configure.help linux/Documentati
 +
  Kernel module loader support
  CONFIG_KMOD
-   Normally when you have selected some drivers and/or filesystems to
-diff -r -u --new-file linux-2.2.0/Makefile linux/Makefile
---- linux-2.2.0/Makefile	Sat Jan 23 19:45:12 1999
-+++ linux/Makefile	Tue Nov 23 18:27:37 1999
-@@ -116,6 +116,10 @@
- DRIVERS := $(DRIVERS) drivers/nubus/nubus.a
- endif
+diff --exclude CVS -U2 -r -N linux/Makefile linux_kgi/Makefile
+--- linux/Makefile	Sat Jul 21 06:28:36 2001
++++ linux_kgi/Makefile	Fri Sep  7 23:04:51 2001
+@@ -2,5 +2,5 @@
+ PATCHLEVEL = 4
+ SUBLEVEL = 7
+-EXTRAVERSION =
++EXTRAVERSION = kgi
  
-+ifeq ($(CONFIG_KGI),y)
-+DRIVERS := $(DRIVERS) drivers/kgi/kgi.a
-+endif
-+
- ifeq ($(CONFIG_ISDN),y)
- DRIVERS := $(DRIVERS) drivers/isdn/isdn.a
- endif
-diff -r -u --new-file linux-2.2.0/arch/i386/defconfig linux/arch/i386/defconfig
---- linux-2.2.0/arch/i386/defconfig	Wed Jan 20 20:33:56 1999
-+++ linux/arch/i386/defconfig	Tue Nov 23 18:27:37 1999
-@@ -246,9 +246,22 @@
- # CONFIG_CD_NO_IDESCSI is not set
+ KERNELRELEASE=$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
+@@ -35,4 +35,5 @@
+ OBJDUMP		= $(CROSS_COMPILE)objdump
+ MAKEFILES	= $(TOPDIR)/.config
++# MAKE		= make -j3
+ GENKSYMS	= /sbin/genksyms
+ DEPMOD		= /sbin/depmod
+@@ -139,4 +140,5 @@
+ DRIVERS-$(CONFIG_DRM) += drivers/char/drm/drm.o
+ DRIVERS-$(CONFIG_NUBUS) += drivers/nubus/nubus.a
++DRIVERS-$(CONFIG_KGI) += drivers/kgi/kgi.a
+ DRIVERS-$(CONFIG_ISDN) += drivers/isdn/isdn.a
+ DRIVERS-$(CONFIG_NET_FC) += drivers/net/fc/fc.o
+diff --exclude CVS -U2 -r -N linux/arch/i386/defconfig linux_kgi/arch/i386/defconfig
+--- linux/arch/i386/defconfig	Mon Jul 16 13:45:15 2001
++++ linux_kgi/arch/i386/defconfig	Fri Sep  7 23:04:51 2001
+@@ -496,7 +496,20 @@
  
  #
 -# Character devices
-+#	KGI configuration
++# KGI configuration
  #
 -CONFIG_VT=y
 +CONFIG_KGI=y
@@ -104,212 +111,172 @@ diff -r -u --new-file linux-2.2.0/arch/i386/defconfig linux/arch/i386/defconfig
 +CONFIG_VT=n
  CONFIG_VT_CONSOLE=y
  CONFIG_SERIAL=y
- # CONFIG_SERIAL_CONSOLE is not set
-diff -r -u --new-file linux-2.2.0/drivers/Makefile linux/drivers/Makefile
---- linux-2.2.0/drivers/Makefile	Fri Nov 20 17:59:01 1998
-+++ linux/drivers/Makefile	Tue Nov 23 18:27:37 1999
-@@ -17,6 +17,10 @@
- MOD_SUB_DIRS += dio
- endif
- 
-+ifdef CONFIG_KGI
-+SUB_DIRS += kgi
-+endif
-+
- ifdef CONFIG_PCI
- SUB_DIRS += pci
- endif
-diff -r -u --new-file linux-2.2.0/drivers/block/genhd.c linux/drivers/block/genhd.c
---- linux-2.2.0/drivers/block/genhd.c	Sat Jan  9 07:54:17 1999
-+++ linux/drivers/block/genhd.c	Tue Nov 23 18:30:00 1999
-@@ -1283,7 +1283,9 @@
- 
- __initfunc(void device_setup(void))
- {
-+#ifdef CONFIG_VT
- 	extern void console_map_init(void);
+diff --exclude CVS -U2 -r -N linux/arch/i386/kernel/setup.c linux_kgi/arch/i386/kernel/setup.c
+--- linux/arch/i386/kernel/setup.c	Wed Jul 11 12:31:44 2001
++++ linux_kgi/arch/i386/kernel/setup.c	Fri Sep  7 23:04:51 2001
+@@ -314,5 +314,7 @@
+ 	{ "pic1", 0x20, 0x3f, IORESOURCE_BUSY },
+ 	{ "timer", 0x40, 0x5f, IORESOURCE_BUSY },
++#ifndef CONFIG_KGI
+ 	{ "keyboard", 0x60, 0x6f, IORESOURCE_BUSY },
 +#endif
- #ifdef CONFIG_PARPORT
- 	extern int parport_init(void);
- #endif
-diff -r -u --new-file linux-2.2.0/drivers/char/Config.in linux/drivers/char/Config.in
---- linux-2.2.0/drivers/char/Config.in	Sun Dec 27 19:48:46 1998
-+++ linux/drivers/char/Config.in	Tue Nov 23 18:27:37 1999
-@@ -8,6 +8,22 @@
- if [ "$CONFIG_VT" = "y" ]; then
-   bool 'Support for console on virtual terminal' CONFIG_VT_CONSOLE
- fi
-+bool 'Kernel Graphics Interface (KGI) support (EXPERIMENTAL)' CONFIG_KGI
-+if [ "$CONFIG_KGI" = "y" ]; then
-+  bool 'KGI splash logo' CONFIG_KGI_SPLASH
-+  bool 'Terminal emulator: dumb terminal' CONFIG_KGI_TERM_DUMB
-+  bool 'Terminal emulator: xterm-color terminal' CONFIG_KGI_TERM_XTERM
-+  bool 'Linux terminal code backward compatibility' CONFIG_KGI_VT_LINUX
-+  bool '/dev/graphic support' CONFIG_KGI_DEV_GRAPHIC
-+  bool '/dev/event support' CONFIG_KGI_DEV_EVENT
-+  comment 'boot display drivers'
-+  bool 'null display support' CONFIG_KGI_DPY_NULL
-+  bool 'text16 display (VGA, EGA, CGA, MDA, Hercules)' CONFIG_KGI_DPY_I386
-+#  bool ' 8bpp linear frame buffer' CONFIG_KGI_DPY_8BPP
-+#  bool '16bpp linear frame buffer' CONFIG_KGI_DPY_16BPP
-+#  bool '24bpp linear frame buffer' CONFIG_KGI_DPY_24BPP
-+#  bool '32bpp linear frame buffer' CONFIG_KGI_DPY_32BPP
-+fi
- tristate 'Standard/generic (dumb) serial support' CONFIG_SERIAL
- if [ "$CONFIG_SERIAL" = "y" ]; then
-    bool '   Support for console on serial port' CONFIG_SERIAL_CONSOLE
-@@ -54,8 +70,10 @@
-   fi
- fi
+ 	{ "dma page reg", 0x80, 0x8f, IORESOURCE_BUSY },
+ 	{ "pic2", 0xa0, 0xbf, IORESOURCE_BUSY },
+diff --exclude CVS -U2 -r -N linux/drivers/Makefile linux_kgi/drivers/Makefile
+--- linux/drivers/Makefile	Sun Jul 15 19:15:44 2001
++++ linux_kgi/drivers/Makefile	Fri Sep  7 23:04:51 2001
+@@ -16,4 +16,5 @@
  
--bool 'Mouse Support (not serial mice)' CONFIG_MOUSE
-+if [ "$CONFIG_KGI" = "n" ]; then
- if [ "$CONFIG_MOUSE" = "y" ]; then
-+    bool 'Mouse Support (not serial mice)' CONFIG_MOUSE
-+    if [ "$CONFIG_MOUSE" = "y" ]; then
- 	mainmenu_option next_comment
- 	comment 'Mice'
- 	tristate 'ATIXL busmouse support' CONFIG_ATIXL_BUSMOUSE
-@@ -65,6 +83,8 @@
- 	tristate 'C&T 82C710 mouse port support (as on TI Travelmate)' CONFIG_82C710_MOUSE
- 	tristate 'PC110 digitizer pad support' CONFIG_PC110_PAD
- 	endmenu
-+    fi
+ subdir-$(CONFIG_DIO)		+= dio
++subdir-$(CONFIG_KGI)		+= kgi
+ subdir-$(CONFIG_PCI)		+= pci
+ subdir-$(CONFIG_PCMCIA)		+= pcmcia
+diff --exclude CVS -U2 -r -N linux/drivers/block/genhd.c linux_kgi/drivers/block/genhd.c
+--- linux/drivers/block/genhd.c	Thu Jul 19 20:48:15 2001
++++ linux_kgi/drivers/block/genhd.c	Fri Sep  7 23:04:51 2001
+@@ -26,5 +26,7 @@
+ #endif
+ extern int net_dev_init(void);
++#ifdef CONFIG_VT
+ extern void console_map_init(void);
++#endif
+ extern int soc_probe(void);
+ extern int atmdev_init(void);
+diff --exclude CVS -U2 -r -N linux/drivers/char/Config.in linux_kgi/drivers/char/Config.in
+--- linux/drivers/char/Config.in	Wed Jul  4 17:41:33 2001
++++ linux_kgi/drivers/char/Config.in	Fri Sep  7 23:04:51 2001
+@@ -5,8 +5,18 @@
+ comment 'Character devices'
+ 
+-bool 'Virtual terminal' CONFIG_VT
+-if [ "$CONFIG_VT" = "y" ]; then
++if [ "$CONFIG_KGI" != "y" ]; then
++   bool 'Virtual terminal' CONFIG_VT
++   if [ "$CONFIG_VT" = "y" ]; then
+    bool '  Support for console on virtual terminal' CONFIG_VT_CONSOLE
++   fi
 +fi
++
++if [ "$CONFIG_VT" != "y" ]; then
++   bool 'Kernel Graphics Interface (KGI) support (EXPERIMENTAL)' CONFIG_KGI
++   if [ "$CONFIG_KGI" = "y" ]; then
++      source drivers/kgi/Config.in
++   fi
  fi
++
+ tristate 'Standard/generic (8250/16550 and compatible UARTs) serial support' CONFIG_SERIAL
+ if [ "$CONFIG_SERIAL" = "y" ]; then
+@@ -89,4 +99,5 @@
+ mainmenu_option next_comment
+ comment 'Mice'
++if [ "$CONFIG_KGI" = "n" ]; then
+ tristate 'Bus Mouse Support' CONFIG_BUSMOUSE
+ if [ "$CONFIG_BUSMOUSE" != "n" ]; then
+@@ -105,7 +116,8 @@
+    tristate '  PC110 digitizer pad support' CONFIG_PC110_PAD
+ fi
++fi
+ endmenu
+ 
+-source drivers/char/joystick/Config.in
++#KGI   source drivers/char/joystick/Config.in
  
  tristate 'QIC-02 tape support' CONFIG_QIC02_TAPE
-@@ -147,14 +167,16 @@
+diff --exclude CVS -U2 -r -N linux/drivers/char/Makefile linux_kgi/drivers/char/Makefile
+--- linux/drivers/char/Makefile	Wed Jul  4 17:41:33 2001
++++ linux_kgi/drivers/char/Makefile	Fri Sep  7 23:04:51 2001
+@@ -130,8 +130,10 @@
+ obj-$(CONFIG_SERIAL_AMBA) += serial_amba.o
  
- endmenu
++ifndef CONFIG_KGI
+ ifndef CONFIG_SUN_KEYBOARD
+   obj-$(CONFIG_VT) += keyboard.o $(KEYMAP) $(KEYBD)
+ else
+   obj-$(CONFIG_PCI) += keyboard.o $(KEYMAP)
++endif
+ endif
  
-+if [ "$CONFIG_KGI" != "y" ]; then
- mainmenu_option next_comment
- comment 'Joystick support'
+diff --exclude CVS -U2 -r -N linux/drivers/char/misc.c linux_kgi/drivers/char/misc.c
+--- linux/drivers/char/misc.c	Thu May 24 18:14:08 2001
++++ linux_kgi/drivers/char/misc.c	Fri Sep  7 23:04:51 2001
+@@ -32,4 +32,6 @@
+  *
+  * Added devfs support. Richard Gooch <rgooch@atnf.csiro.au>  10-Jan-1998
++ *
++ * kgi support (kgi.sourceforge.net) 199x-
+  */
  
--tristate 'Joystick support' CONFIG_JOYSTICK
--if [ "$CONFIG_JOYSTICK" != "n" ]; then
--  source drivers/char/joystick/Config.in
--fi
-+  tristate 'Joystick support' CONFIG_JOYSTICK
-+  if [ "$CONFIG_JOYSTICK" != "n" ]; then
-+    source drivers/char/joystick/Config.in
-+  fi
- endmenu
-+fi
- 
- mainmenu_option next_comment
- comment 'Ftape, the floppy tape device driver'
-diff -r -u --new-file linux-2.2.0/drivers/char/misc.c linux/drivers/char/misc.c
---- linux-2.2.0/drivers/char/misc.c	Sat Jan 16 02:46:27 1999
-+++ linux/drivers/char/misc.c	Tue Nov 23 18:27:37 1999
-@@ -47,8 +47,11 @@
- #include <linux/apm_bios.h>
- #endif
+@@ -48,9 +50,12 @@
+ #include <linux/init.h>
  
 +#ifndef CONFIG_KGI
  #include <linux/tty.h>
  #include <linux/selection.h>
-+#endif
++#include "busmouse.h"
++#endif /* CONFIG_KGI */
 +
  #include <linux/kmod.h>
  
- /*
-@@ -62,6 +65,7 @@
- #define DYNAMIC_MINORS 64 /* like dynamic majors */
- static unsigned char misc_minors[DYNAMIC_MINORS / 8];
+-#include "busmouse.h"
  
-+#ifndef CONFIG_KGI
- extern int bus_mouse_init(void);
- extern int qpmouse_init(void);
- extern int ms_bus_mouse_init(void);
-@@ -70,6 +74,7 @@
- extern int atari_mouse_init(void);
- extern int sun_mouse_init(void);
- extern int adb_mouse_init(void);
-+#endif
- extern void watchdog_init(void);
- extern void wdt_init(void);
- extern void acq_init(void);
-@@ -186,6 +191,7 @@
- 	proc_misc = create_proc_entry("misc", 0, 0);
- 	if (proc_misc)
- 		proc_misc->read_proc = misc_read_proc;
-+#ifndef CONFIG_KGI
- #ifdef CONFIG_BUSMOUSE
- 	bus_mouse_init();
- #endif
-@@ -210,6 +216,8 @@
- #ifdef CONFIG_ADBMOUSE
- 	adb_mouse_init();
- #endif
-+#endif
-+
- #ifdef CONFIG_PC110_PAD
- 	pc110pad_init();
- #endif
-diff -r -u --new-file linux-2.2.0/drivers/char/sysrq.c linux/drivers/char/sysrq.c
---- linux-2.2.0/drivers/char/sysrq.c	Thu Nov 26 02:25:17 1998
-+++ linux/drivers/char/sysrq.c	Tue Nov 23 18:27:37 1999
-@@ -18,7 +18,9 @@
- #include <linux/major.h>
+ /*
+diff --exclude CVS -U2 -r -N linux/drivers/char/sysrq.c linux_kgi/drivers/char/sysrq.c
+--- linux/drivers/char/sysrq.c	Fri Feb  9 14:30:22 2001
++++ linux_kgi/drivers/char/sysrq.c	Fri Sep  7 23:04:51 2001
+@@ -20,5 +20,7 @@
  #include <linux/reboot.h>
  #include <linux/sysrq.h>
 +#ifndef	CONFIG_KGI
  #include <linux/kbd_kern.h>
-+#endif
++#endif /* CONFIG_KGI */
  #include <linux/quotaops.h>
  #include <linux/smp_lock.h>
- 
-@@ -64,6 +66,7 @@
- 	console_loglevel = 7;
+@@ -73,4 +75,5 @@
  	printk(KERN_INFO "SysRq: ");
  	switch (key) {
 +#ifndef	CONFIG_KGI
  	case 'r':					    /* R -- Reset raw mode */
  		if (kbd) {
- 			kbd->kbdmode = VC_XLATE;
-@@ -78,6 +81,7 @@
- 		reset_vc(fg_console);
+@@ -87,4 +90,5 @@
  		break;
  #endif
-+#endif
++#endif /* CONFIG_KGI */
  	case 'b':					    /* B -- boot immediately */
  		printk("Resetting\n");
- 		machine_restart(NULL);
-@@ -131,11 +135,13 @@
- 		orig_log_level = 8;
+@@ -140,4 +144,5 @@
  		break;
  	default:					    /* Unknown: help */
 +#ifndef	CONFIG_KGI
  		if (kbd)
  			printk("unRaw ");
- #ifdef CONFIG_VT
- 		if (tty)
+@@ -146,4 +151,5 @@
  			printk("saK ");
-+#endif
  #endif
- 		printk("Boot "
- #ifdef CONFIG_APM
-diff -r -u --new-file linux-2.2.0/drivers/char/tty_io.c linux/drivers/char/tty_io.c
---- linux-2.2.0/drivers/char/tty_io.c	Sat Jan 16 02:46:27 1999
-+++ linux/drivers/char/tty_io.c	Tue Nov 23 18:27:37 1999
-@@ -85,9 +85,13 @@
- #include <asm/system.h>
++#endif /* CONFIG_KGI */
+ 		printk("Boot ");
+ 		if (sysrq_power_off)
+diff --exclude CVS -U2 -r -N linux/drivers/char/tty_io.c linux_kgi/drivers/char/tty_io.c
+--- linux/drivers/char/tty_io.c	Sun Jul 15 19:15:44 2001
++++ linux_kgi/drivers/char/tty_io.c	Sat Sep  8 02:15:11 2001
+@@ -96,12 +96,16 @@
  #include <asm/bitops.h>
  
 +#ifdef CONFIG_KGI
 +#include <linux/kgii.h>
-+#else
++#else /* CONFIG_KGI */
  #include <linux/kbd_kern.h>
  #include <linux/vt_kern.h>
  #include <linux/selection.h>
-+#endif	/* #ifdef CONFIG_KGI */
++#endif /* CONFIG_KGI */
+ #include <linux/devfs_fs_kernel.h>
  
  #include <linux/kmod.h>
  
-@@ -1254,6 +1258,18 @@
- 		noctty = 1;
+-#ifdef CONFIG_VT
++#if defined(CONFIG_VT) || defined(CONFIG_KGI_VT_LINUX)
+ extern void con_init_devfs (void);
+ #endif
+@@ -1314,4 +1318,15 @@
  	}
  #endif
 +#ifdef CONFIG_KGI
@@ -317,67 +284,63 @@ diff -r -u --new-file linux-2.2.0/drivers/char/tty_io.c linux/drivers/char/tty_i
 +
 +		int minor = kii_console_device(kii_focus_of_task(current));
 +		if (minor < 0) {
-+
 +			minor = console_printk_console;
 +		}
 +		device = MKDEV(TTY_MAJOR, minor+1);
 +		noctty = 1;
 +	}
-+#endif
++#endif /* CONFIG_KGI */
  	if (device == SYSCONS_DEV) {
  		struct console *c = console_drivers;
- 		while(c && !c->device)
-@@ -2020,6 +2036,9 @@
-  * we can't necessarily depend on lots of kernel help here.
+@@ -2165,4 +2180,7 @@
   * Just do some early initializations, and do the complex setup
   * later.
 + * 
 + * KGI	For KGI enabled kernels, we initialize the console device termios.
 + * KGI	This is called very early from kgi.c so the above still holds true.
   */
- long __init console_init(long kmem_start, long kmem_end)
- {
-@@ -2053,6 +2072,9 @@
- 	kmem_start = serial_console_init(kmem_start, kmem_end);
+ void __init console_init(void)
+@@ -2199,4 +2217,8 @@
+ 	serial_console_init();
  #endif /* CONFIG_8xx */
- #endif
-+#ifdef CONFIG_KGI
-+	kmem_start = kgi_boot_init(kmem_start, kmem_end);
 +#endif
- 	return kmem_start;
- }
- 
-@@ -2060,7 +2082,7 @@
- #ifdef CONFIG_UNIX98_PTYS
++
++#ifdef CONFIG_KGI
++	kgi_boot_init();
+ #ifdef CONFIG_SGI_SERIAL
+ 	sgi_serial_console_init();
+@@ -2236,5 +2258,5 @@
  static struct tty_driver dev_ptmx_driver;
  #endif
 -#ifdef CONFIG_VT
 +#if defined(CONFIG_VT) || defined(CONFIG_KGI)
  static struct tty_driver dev_console_driver;
  #endif
- 
-@@ -2117,7 +2139,7 @@
- 		panic("Couldn't register /dev/ptmx driver\n");
+@@ -2280,5 +2302,5 @@
+ 	 * Thus, we can't devfs_register() then.  Do so now, instead. 
+ 	 */
+-#ifdef CONFIG_VT
++#if defined(CONFIG_VT) || defined(CONFIG_KGI_VT_LINUX)
+ 	con_init_devfs();
+ #endif
+@@ -2297,5 +2319,5 @@
  #endif
  	
 -#ifdef CONFIG_VT
 +#if defined(CONFIG_VT) || defined(CONFIG_KGI)
  	dev_console_driver = dev_tty_driver;
- 	dev_console_driver.driver_name = "/dev/tty0";
- 	dev_console_driver.name = dev_console_driver.driver_name + 5;
-@@ -2128,7 +2150,9 @@
- 	if (tty_register_driver(&dev_console_driver))
+ 	dev_console_driver.driver_name = "/dev/vc/0";
+@@ -2308,5 +2330,7 @@
  		panic("Couldn't register /dev/tty0 driver\n");
  
 +#ifndef CONFIG_KGI
  	kbd_init();
-+#endif
++#endif /* CONFIG_KGI */
  #endif
  #ifdef CONFIG_ESPSERIAL  /* init ESP before rs, so rs doesn't see the port */
- 	espserial_init();
-diff -r -u --new-file linux-2.2.0/include/linux/ascii.h linux/include/linux/ascii.h
---- linux-2.2.0/include/linux/ascii.h	Thu Jan  1 01:00:00 1970
-+++ linux/include/linux/ascii.h	Tue Nov 23 18:27:37 1999
+diff --exclude CVS -U2 -r -N linux/include/linux/ascii.h linux_kgi/include/linux/ascii.h
+--- linux/include/linux/ascii.h	Wed Dec 31 19:00:00 1969
++++ linux_kgi/include/linux/ascii.h	Sat Sep  8 10:59:19 2001
 @@ -0,0 +1,86 @@
 +#ifndef	_LINUX_ASCII_H
 +#define	_LINUX_ASCII_H
@@ -465,19 +428,26 @@ diff -r -u --new-file linux-2.2.0/include/linux/ascii.h linux/include/linux/asci
 +#define	ASCII_US	31	/* unit separator	*/
 +
 +#endif	/* _LINUX_ASCII_H */
-diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/keyboard.h
---- linux-2.2.0/include/linux/keyboard.h	Thu Jul 30 20:17:12 1998
-+++ linux/include/linux/keyboard.h	Tue Nov 23 18:27:37 1999
-@@ -12,6 +12,7 @@
- #define KG_CAPSSHIFT	8
+diff --exclude CVS -U2 -r -N linux/include/linux/interrupt.h linux_kgi/include/linux/interrupt.h
+--- linux/include/linux/interrupt.h	Mon Jul 23 17:22:24 2001
++++ linux_kgi/include/linux/interrupt.h	Sat Sep  8 21:36:57 2001
+@@ -28,4 +28,6 @@
+ 	TIMER_BH = 0,
+ 	TQUEUE_BH,
++	CONSOLE_BH,
++	KEYBOARD_BH,
+ 	DIGI_BH,
+ 	SERIAL_BH,
+diff --exclude CVS -U2 -r -N linux/include/linux/keyboard.h linux_kgi/include/linux/keyboard.h
+--- linux/include/linux/keyboard.h	Mon Jul 23 17:26:37 2001
++++ linux_kgi/include/linux/keyboard.h	Sat Sep  8 11:29:28 2001
+@@ -15,4 +15,5 @@
  
  #define NR_SHIFT	9
 +#define	MAX_NR_SHIFT	16	/* KII allows up to 16 modifiers.	*/
  
  #define NR_KEYS		128
- #define MAX_NR_KEYMAPS	256
-@@ -20,10 +21,12 @@
- #define MAX_NR_OF_USER_KEYMAPS 256 	/* should be at least 7 */
+@@ -23,8 +24,10 @@
  
  #ifdef __KERNEL__
 +#ifndef CONFIG_KGI
@@ -485,55 +455,44 @@ diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/k
  extern const int max_vals[];
  extern unsigned short *key_maps[MAX_NR_KEYMAPS];
  extern unsigned short plain_map[NR_KEYS];
-+#endif
- extern struct wait_queue * keypress_wait;
++#endif /* CONFIG_KGI */
+ extern wait_queue_head_t keypress_wait;
  extern unsigned char keyboard_type;
- #endif
-@@ -41,8 +44,10 @@
- #define KT_SHIFT	7
+@@ -44,6 +47,8 @@
  #define KT_META		8
  #define KT_ASCII	9
 +#ifndef CONFIG_KGI
  #define KT_LOCK		10
  #define KT_SLOCK	12
-+#endif
++#endif /* CONFIG_KGI */
  
  #define K(t,v)		(((t)<<8)|(v))
- #define KTYP(x)		((x) >> 8)
-@@ -306,6 +311,7 @@
- #define K_UNDO		K(KT_FN,255)
+@@ -309,4 +314,5 @@
  
  
 +#define K_VOID		K(KT_SPEC,0)
  #define K_HOLE		K(KT_SPEC,0)
  #define K_ENTER		K(KT_SPEC,1)
- #define K_SH_REGS	K(KT_SPEC,2)
-@@ -326,6 +332,8 @@
- #define K_INCRCONSOLE	K(KT_SPEC,17)
+@@ -329,4 +335,6 @@
  #define K_SPAWNCONSOLE	K(KT_SPEC,18)
  #define K_BARENUMLOCK	K(KT_SPEC,19)
 +#define	K_TOGGLESCREEN	K(KT_SPEC,20)
 +#define	K_LAST_SPEC	K(KT_SPEC,21)
  
  #define K_ALLOCATED	K(KT_SPEC,126) /* dynamically allocated keymap */
- #define K_NOSUCHMAP	K(KT_SPEC,127) /* returned by KDGKBENT */
-@@ -352,6 +360,7 @@
- #define K_PPARENR	K(KT_PAD,19)	/* key-pad right parenthesis */
+@@ -355,4 +363,5 @@
  
  #define NR_PAD		20
 +#define	K_LAST_PAD	K(KT_PAR,NR_PAD)
  
  #define K_DGRAVE	K(KT_DEAD,0)
- #define K_DACUTE	K(KT_DEAD,1)
-@@ -361,12 +370,55 @@
- #define K_DCEDIL	K(KT_DEAD,5)
+@@ -364,4 +373,5 @@
  
  #define NR_DEAD		6
 +#define	K_LAST_DEAD	K(KT_DEAD,NR_DEAD)
  
  #define K_DOWN		K(KT_CUR,0)
- #define K_LEFT		K(KT_CUR,1)
- #define K_RIGHT		K(KT_CUR,2)
+@@ -370,4 +380,46 @@
  #define K_UP		K(KT_CUR,3)
  
 +#define	NR_CUR		4
@@ -580,9 +539,7 @@ diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/k
 +
  #define K_SHIFT		K(KT_SHIFT,KG_SHIFT)
  #define K_CTRL		K(KT_SHIFT,KG_CTRL)
- #define K_ALT		K(KT_SHIFT,KG_ALT)
-@@ -377,6 +429,9 @@
- #define K_CTRLR	 	K(KT_SHIFT,KG_CTRLR)
+@@ -380,4 +432,7 @@
  #define K_CAPSSHIFT	K(KT_SHIFT,KG_CAPSSHIFT)
  
 +#endif	/* #ifdef CONFIG_KGI	*/
@@ -590,9 +547,7 @@ diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/k
 +
  #define K_ASC0		K(KT_ASCII,0)
  #define K_ASC1		K(KT_ASCII,1)
- #define K_ASC2		K(KT_ASCII,2)
-@@ -405,6 +460,9 @@
- #define K_HEXf		K(KT_ASCII,25)
+@@ -408,4 +463,7 @@
  
  #define NR_ASCII	26
 +#define	K_LAST_ASCII	K(KT_ASCII,NR_ASCII)
@@ -600,9 +555,7 @@ diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/k
 +#ifndef CONFIG_KGI
  
  #define K_SHIFTLOCK	K(KT_LOCK,KG_SHIFT)
- #define K_CTRLLOCK	K(KT_LOCK,KG_CTRL)
-@@ -427,4 +485,9 @@
- #define NR_LOCK		8
+@@ -430,3 +488,8 @@
  
  #define MAX_DIACR	256
 +
@@ -611,14 +564,17 @@ diff -r -u --new-file linux-2.2.0/include/linux/keyboard.h linux/include/linux/k
 +#endif	/* #ifndef CONFIG_KGI */
 +
  #endif
-diff -r -u --new-file linux-2.2.0/include/linux/kgii.h linux/include/linux/kgii.h
---- linux-2.2.0/include/linux/kgii.h	Thu Jan  1 01:00:00 1970
-+++ linux/include/linux/kgii.h	Tue Nov 23 18:27:37 1999
-@@ -0,0 +1,94 @@
+diff --exclude CVS -U2 -r -N linux/include/linux/kgii.h linux_kgi/include/linux/kgii.h
+--- linux/include/linux/kgii.h	Wed Dec 31 19:00:00 1969
++++ linux_kgi/include/linux/kgii.h	Sat Sep  8 12:46:27 2001
+@@ -0,0 +1,103 @@
++
 +#ifndef _linux_kgii_h
 +#define	_linux_kgii_h
 +
 +#ifdef __KERNEL__
++
++#include <linux/version.h>
 +
 +/*	KGI/KII limits. 
 +**
@@ -644,8 +600,13 @@ diff -r -u --new-file linux-2.2.0/include/linux/kgii.h linux/include/linux/kgii.
 +/*
 +**	public API
 +*/
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 +extern unsigned long kgi_boot_init(unsigned long kmem_start, 
 +			unsigned long kmem_end);
++#else
++void kgi_boot_init(void);
++#endif
++
 +#ifdef	CONFIG_KGI_DPY_I386
 +extern int dpy_i386_init(int display, int max_display);
 +#endif
@@ -657,6 +618,7 @@ diff -r -u --new-file linux-2.2.0/include/linux/kgii.h linux/include/linux/kgii.
 +extern int focus_init(void);
 +extern void dev_console_init(void);
 +extern int dev_graphic_init(void);
++extern int dev_event_init(void);
 +
 +/*
 +**	public data, kgi.c
@@ -709,43 +671,63 @@ diff -r -u --new-file linux-2.2.0/include/linux/kgii.h linux/include/linux/kgii.
 +#endif	/* #ifdef __KERNEL__	*/
 +
 +#endif	/* #ifndef _linux_kgii_h	*/
-diff -r -u --new-file linux-2.2.0/include/linux/mm.h linux/include/linux/mm.h
---- linux-2.2.0/include/linux/mm.h	Tue Jan 26 01:06:22 1999
-+++ linux/include/linux/mm.h	Tue Nov 23 18:27:37 1999
-@@ -57,6 +57,8 @@
- 	unsigned long vm_offset;
- 	struct file * vm_file;
- 	unsigned long vm_pte;			/* shared mem */
+diff --exclude CVS -U2 -r -N linux/include/linux/mm.h linux_kgi/include/linux/mm.h
+--- linux/include/linux/mm.h	Mon Jul 23 17:22:24 2001
++++ linux_kgi/include/linux/mm.h	Sat Sep  8 21:36:56 2001
+@@ -104,7 +104,10 @@
+ #define VM_DONTEXPAND	0x00040000	/* Cannot expand with mremap() */
+ #define VM_RESERVED	0x00080000	/* Don't unmap it from swap_out */
++#define VM_FASTHANDLER  0x10000000      /* KGI -- fast MMIO handler */
++#define VM_KGIUNMAP     0x20000000      /* temp kludge for missing unmap hook */
+ 
+ #define VM_STACK_FLAGS	0x00000177
+ 
 +
-+	void	*vm_private;	/* KGI -- hook for handler private data	*/
+ #define VM_READHINTMASK			(VM_SEQ_READ | VM_RAND_READ)
+ #define VM_ClearReadHint(v)		(v)->vm_flags &= ~VM_READHINTMASK
+@@ -129,4 +132,5 @@
+ 	void (*close)(struct vm_area_struct * area);
+ 	struct page * (*nopage)(struct vm_area_struct * area, unsigned long address, int write_access);
++        void (*unmap)(struct vm_area_struct *area, unsigned long, size_t);
  };
  
- /*
-@@ -80,6 +82,7 @@
- #define VM_EXECUTABLE	0x1000
- #define VM_LOCKED	0x2000
- #define VM_IO           0x4000  /* Memory mapped I/O or similar */
-+#define VM_FASTHANDLER	0x8000	/* KGI -- fast MMIO handler */
- 
- #define VM_STACK_FLAGS	0x0177
- 
-diff -r -u --new-file linux-2.2.0/include/linux/tty.h linux/include/linux/tty.h
---- linux-2.2.0/include/linux/tty.h	Tue Jan 26 01:06:19 1999
-+++ linux/include/linux/tty.h	Tue Nov 23 18:27:37 1999
-@@ -333,19 +333,18 @@
- extern struct termios tty_std_termios;
+diff --exclude CVS -U2 -r -N linux/include/linux/signal.h linux_kgi/include/linux/signal.h
+--- linux/include/linux/signal.h	Mon Jul 23 17:22:24 2001
++++ linux_kgi/include/linux/signal.h	Sun Sep  9 20:59:50 2001
+@@ -74,5 +74,6 @@
+ 	unsigned long i;						\
+ 									\
+-	for (i = 0; i < _NSIG_WORDS/4; ++i) {				\
++	/* Funny math is for GCC's benefit */				\
++	for (i = 0; (i + 1) < (_NSIG_WORDS/4 + 1); ++i) {		\
+ 		a0 = a->sig[4*i+0]; a1 = a->sig[4*i+1];			\
+ 		a2 = a->sig[4*i+2]; a3 = a->sig[4*i+3];			\
+@@ -124,5 +125,6 @@
+ 	unsigned long i;						\
+ 									\
+-	for (i = 0; i < _NSIG_WORDS/4; ++i) {				\
++	/* Funny math is for GCC's benefit */				\
++	for (i = 0; (i + 1) < (_NSIG_WORDS/4 + 1); ++i) {		\
+ 		set->sig[4*i+0] = op(set->sig[4*i+0]);			\
+ 		set->sig[4*i+1] = op(set->sig[4*i+1]);			\
+diff --exclude CVS -U2 -r -N linux/include/linux/tty.h linux_kgi/include/linux/tty.h
+--- linux/include/linux/tty.h	Mon Jul 23 17:22:24 2001
++++ linux_kgi/include/linux/tty.h	Sat Sep  8 21:36:56 2001
+@@ -344,9 +344,12 @@
  extern struct tty_struct * redirect;
  extern struct tty_ldisc ldiscs[];
--extern int fg_console, last_console, want_console;
- 
++#ifndef CONFIG_KGI
+ extern int fg_console, last_console, want_console;
+-
++#endif
  extern int kmsg_redirect;
  
--extern unsigned long con_init(unsigned long);
--
- extern int rs_init(void);
- extern int lp_init(void);
- extern int pty_init(void);
- extern int tty_init(void);
++#ifndef CONFIG_KGI
+ extern void con_init(void);
++#endif
+ extern void console_init(void);
+ 
+@@ -359,5 +362,7 @@
  extern int pcxe_init(void);
  extern int pc_init(void);
 +#ifdef CONFIG_VT
@@ -753,15 +735,12 @@ diff -r -u --new-file linux-2.2.0/include/linux/tty.h linux/include/linux/tty.h
 +#endif
  extern int rp_init(void);
  extern int cy_init(void);
- extern int stl_init(void);
-@@ -400,10 +399,16 @@
- 
+@@ -417,8 +422,13 @@
  extern void console_print(const char *);
  
 +
 +#ifndef CONFIG_KGI
 +extern int fg_console, last_console, want_console;
-+extern unsigned long con_init(unsigned long);
 +
  /* vt.c */
  
@@ -770,12 +749,10 @@ diff -r -u --new-file linux-2.2.0/include/linux/tty.h linux/include/linux/tty.h
 +#endif
  
  #endif /* __KERNEL__ */
- #endif
-diff -r -u --new-file linux-2.2.0/init/main.c linux/init/main.c
---- linux-2.2.0/init/main.c	Wed Jan 20 19:18:53 1999
-+++ linux/init/main.c	Tue Nov 23 18:27:37 1999
-@@ -336,6 +336,11 @@
- extern void md_setup(char *str,int *ints) __init;
+diff --exclude CVS -U2 -r -N linux/init/main.c linux_kgi/init/main.c
+--- linux/init/main.c	Sat Jul 21 06:28:37 2001
++++ linux_kgi/init/main.c	Fri Sep  7 23:04:51 2001
+@@ -110,4 +110,9 @@
  #endif
  
 +#ifdef CONFIG_KGI
@@ -785,107 +762,92 @@ diff -r -u --new-file linux-2.2.0/init/main.c linux/init/main.c
 +
  /*
   * Boot command-line arguments
-  */
-@@ -1213,6 +1218,10 @@
- {
- #ifdef CONFIG_BLK_DEV_INITRD
- 	int real_root_mountflags;
-+#endif
-+#ifdef	CONFIG_KGI
+@@ -672,4 +677,8 @@
+ 	child_reaper = current;
+ 
++#ifdef CONFIG_KGI
 +	kii_init();
 +	kgi_init();
- #endif
++#endif
+ #if defined(CONFIG_MTRR)	/* Do this after SMP initialization */
+ /*
+diff --exclude CVS -U2 -r -N linux/kernel/printk.c linux_kgi/kernel/printk.c
+--- linux/kernel/printk.c	Tue Feb 13 16:15:05 2001
++++ linux_kgi/kernel/printk.c	Fri Sep  7 23:04:51 2001
+@@ -358,4 +358,20 @@
+ 	char	*q;
+ 	unsigned long flags;
++	struct console **prev, *cp;
++	  
++	prev = &console_drivers;
++	for (cp = console_drivers; cp; prev = &(cp->next), cp = cp->next)
++	{
++		if (cp->device(cp) == console->device(console))
++		{
++			break;
++		}
++	}
++	
++	if (cp)
++	{
++		*(prev) = cp->next;
++		cp->next = NULL;
++	}
  
  	/*
-diff -r -u --new-file linux-2.2.0/kernel/printk.c linux/kernel/printk.c
---- linux-2.2.0/kernel/printk.c	Fri Nov 20 20:43:19 1998
-+++ linux/kernel/printk.c	Tue Nov 23 18:29:02 1999
-@@ -329,7 +329,23 @@
- 	char	buf[16];
- 	signed char msg_level = -1;
- 	char	*q;
--
-+ 	struct console **prev, *cp;
-+ 	  
-+ 	prev = &console_drivers;
-+ 	for (cp = console_drivers; cp; prev = &(cp->next), cp = cp->next)
-+ 	{
-+ 		if (cp->device(cp) == console->device(console))
-+ 		{
-+ 			break;
-+ 		}
-+ 	}
-+ 	
-+ 	if (cp)
-+ 	{
-+ 		*(prev) = cp->next;
-+ 		cp->next = NULL;
-+ 	}
-+ 
- 	/*
- 	 *	See if we want to use this console driver. If we
- 	 *	didn't select a console we take the first one
-diff -r -u --new-file linux-2.2.0/mm/memory.c linux/mm/memory.c
---- linux-2.2.0/mm/memory.c	Tue Jan 19 02:33:10 1999
-+++ linux/mm/memory.c	Tue Nov 23 18:27:37 1999
-@@ -839,6 +839,19 @@
- 	unsigned long page;
+diff --exclude CVS -U2 -r -N linux/mm/memory.c linux_kgi/mm/memory.c
+--- linux/mm/memory.c	Thu Jul 12 12:05:22 2001
++++ linux_kgi/mm/memory.c	Sat Sep  8 15:51:57 2001
+@@ -1203,4 +1203,15 @@
  	pte_t entry;
  
-+ 	/* KGI fast MMIO handler - by Andreas Beck */
-+ 	if ((vma->vm_flags & VM_FASTHANDLER) 
-+ 		&& vma->vm_ops && vma->vm_ops->nopage) {
-+  
-+  		if (vma->vm_ops->nopage(vma, address, 
-+  			write_access && !(vma->vm_flags & VM_SHARED))) {
-+  
-+  			force_sig(SIGBUS, current);
++	/* KGI fast MMIO handler - by Andreas Beck */
++	if ((vma->vm_flags & VM_FASTHANDLER)
++				&& vma->vm_ops && vma->vm_ops->nopage) {
++		if (NOPAGE_SIGBUS == vma->vm_ops->nopage(vma, address,
++				write_access && !(vma->vm_flags & VM_SHARED))) {
++			force_sig(SIGBUS, current);
 +			return 0;
-+  		}
-+  		return 1;
-+ 	}
++		}
++		return 1;
++	}
 +
- 	if (!vma->vm_ops || !vma->vm_ops->nopage) {
- 		unlock_kernel();
- 		return do_anonymous_page(tsk, vma, page_table, write_access);
-diff -r -u --new-file linux-2.2.0/mm/mmap.c linux/mm/mmap.c
---- linux-2.2.0/mm/mmap.c	Tue Jan 19 01:24:06 1999
-+++ linux/mm/mmap.c	Tue Nov 23 18:27:37 1999
-@@ -647,15 +647,26 @@
- 	 * so release them, and unmap the page range..
- 	 * If the one of the segments is only being partially unmapped,
+ 	if (!vma->vm_ops || !vma->vm_ops->nopage)
+ 		return do_anonymous_page(mm, vma, page_table, write_access, address);
+diff --exclude CVS -U2 -r -N linux/mm/mmap.c linux_kgi/mm/mmap.c
+--- linux/mm/mmap.c	Thu May 24 18:20:18 2001
++++ linux_kgi/mm/mmap.c	Sat Sep  8 21:35:43 2001
+@@ -760,4 +760,6 @@
  	 * it will put new vm_area_struct(s) into the address space.
-+	 * KGI	If a vma is served by the fast MMIO handler, we have to clear
-+	 * KGI	the whole mapping, even if a partial unmap was requested.
+ 	 * In that case we have to be careful with VM_DENYWRITE.
++	 * KGI  If a vma is served by the fast MMIO handler, we have to clear
++	 * KGI  the whole mapping, even if a partial unmap was requested.
  	 */
  	while ((mpnt = free) != NULL) {
- 		unsigned long st, end, size;
- 
+@@ -767,9 +769,25 @@
  		free = free->vm_next;
  
--		st = addr < mpnt->vm_start ? mpnt->vm_start : addr;
--		end = addr+len;
--		end = end > mpnt->vm_end ? mpnt->vm_end : end;
-+		if (mpnt->vm_flags & VM_FASTHANDLER) {
-+
-+			st = mpnt->vm_start;
-+			end = mpnt->vm_end;
-+
-+		} else {
-+
-+			st = addr < mpnt->vm_start ? mpnt->vm_start : addr;
-+			end = addr+len;
-+			end = end > mpnt->vm_end ? mpnt->vm_end : end;
-+		}
-+	
- 		size = end - st;
++#ifdef CONFIG_KGI
++              if (mpnt->vm_flags & VM_FASTHANDLER) {
++                      st = mpnt->vm_start;
++                      end = mpnt->vm_end;
++              } else {
++#endif
+ 		st = addr < mpnt->vm_start ? mpnt->vm_start : addr;
+ 		end = addr+len;
+ 		end = end > mpnt->vm_end ? mpnt->vm_end : end;
+-		size = end - st;
++#ifdef CONFIG_KGI
++	      }
++#endif
++	      size = end - st;
  
- 		if (mpnt->vm_ops && mpnt->vm_ops->unmap)
-@@ -819,6 +830,7 @@
- 		    (mpnt->vm_pte != prev->vm_pte)	||
- 		    (mpnt->vm_ops != prev->vm_ops)	||
- 		    (mpnt->vm_flags != prev->vm_flags)	||
-+		    ((mpnt->vm_flags | prev->vm_flags) & VM_FASTHANDLER) ||
- 		    (prev->vm_end != mpnt->vm_start))
- 			continue;
- 
++#ifdef CONFIG_KGI
++	      if (mpnt->vm_flags & VM_KGIUNMAP) { 
++		/* unmap may not be initialized by others */
++	      if (mpnt->vm_ops && mpnt->vm_ops->unmap)
++		mpnt->vm_ops->unmap(mpnt, st, size);
++	      }
++#endif
+ 		if (mpnt->vm_flags & VM_DENYWRITE &&
+ 		    (st != mpnt->vm_start || end != mpnt->vm_end) &&
