@@ -1,0 +1,491 @@
+HTF_LANGUAGE=en
+HTF_TITLE="Hardware Design"
+HTF_LONG_TITLE="High-Performance Graphics Hardware Design"
+HTF_DESCRIPTION="A review of high-performance graphics hardware design requirements. Aimed at chip, board and subsystem designers, this page reviews techniques used by high-end graphics vendors such as SGI, IBM, HP, Sun, E&S and others."
+HTF_KEYWORDS="high performance graphics hardware design requirement chip board subsystem SGI IBM HP Sun E&S direct access kernel scheduling interrupt page fault cursor atomic"
+HTF_AUTHOR="Linas Vepstas"
+HTF_REVISION="$Revision: 0.0 $"
+
+cat <<end-of-htf
+
+<i>	written by and published here with permission of 
+	<a href="mailto:linas@linas.org">Linas Vepstas, <tt>linas@linas.org</tt></a>
+</i>
+
+
+<a name="abstract"></a><h2><u>Abstract</u></h2>
+<p>
+	This page attempts to spell out graphics hardware design requirements
+	needed to build high-performance graphics subsystems.
+	This page is intended for h/w graphics chip and board designers,
+	as well as graphics software sub-system designers and graphics 
+	device driver writers.
+	It's intent is to broaden the understanding of hardware
+	design principles needed to create high-performance graphics 
+	subsystems.
+	These principles are well known to high-end folks, but are sorely 
+	lacking in the Wintel PC clone marketplace.
+	</p><p>
+	This page is motivated by discussions on the
+	<a href="news:comp.os.linux.development.system"><tt>comp.os.linux.development.system</tt></a>
+	USENET group, and the efforts of the
+	<a href="http://www.ggi-project.org">Linux GGI group</a>,
+	where it has been discovered that most PC-class/ MS Windows 
+	graphics hardware is sorely lacking in important graphics features.
+	Current work on hardware-accelerated 3D centers around the 
+	<a href="http://www.ssec.wisc.edu/~brianp/Mesa.html">Mesa</a>
+	OpenGL implementation.
+	The
+	<a href="http://linas.org/linux/graphics-ad.html">Graphics Advocacy</a>
+	page provides the Linux background for accelerated 3D graphics.
+</p>
+
+<a name="basics"></a><h2><u>Basic Principles</u></h2>
+<p>
+	The single most fundamental concept of high-performance graphics
+	hardware design is that the graphics program must have direct 
+	access to the hardware.
+	Depending on your experience, this may sound either obvious, or 
+	a damned-fool bad idea.
+	To people writing computer games, and to people building hardware,
+	this is obvious.
+	To people writing operating systems and graphics applications, who
+	are used to device drivers, libraries and windowing systems,
+	this sounds stupid.
+	In fact, both camps are correct: fast access is direct
+	access, and yes, with improperly designed hardware, it is dangerous.
+</p><p>
+	The high-end Unix graphics hardware community has learned that both 
+	worlds are possible: direct access from user-level programs 
+	(usually through libraries) for performance, coupled to protected 
+	system modes that prevent out-of-control or malicious programs from 
+	hanging the system and locking up the hardware.
+	However, to create such a system, certain principles must be adhered 
+	to in the raster chip, bus interface chip, and graphics card design.
+	These principles are not terribly hard, and in fact are sometimes 
+	deceptively simple and obvious.
+	However, many schedules have been slipped due to a misunderstanding
+	of the required functions.
+	The repercussions of these principles affect the hardware, the
+	graphics system, the operating system, the window system, and
+	the graphics application.
+	&quot;Minor&quot; hardware bugs in these areas are not easily worked
+	around in software; indeed, it may not be even possible to work
+	around them.
+</p><p>
+	There are two basic principles: (1) a recognition that there is 
+	a difference between a protected mode, to which only the operating
+	system has access, and user-level drawing commands, which any 
+	program can bang on. (2) The concept of context switching, whereby
+	one graphics application can be stopped, and another re-started, 
+	all without hanging the graphics adapter, or loosing/scrambling 
+	the state of the hardware.
+	All of the other principles follow from the above.
+</p><p>
+	Without further ado, the list:
+	<dl>
+	<dt><b>Protected Mode</b>
+	<dd><p>
+		Certain graphics h/w registers/functions, such as cursor 
+		control and colormap load, must be segregated into a 
+		distinct address space from other functions, such as area 
+		clear and line drawing.
+		This allows the operating system to protect *privileged 
+		functions*, such as cursor movement or colormap loading, 
+		from *user space programs*, which want to have direct access
+		to hardware registers for line drawing and area clear for 
+		(obvious) performance reasons.
+		Such functions must be separated by at least 4K bytes, 
+		since most CPU's do not allow fine-grained memory 
+		protection (e.g. Intel x86, PowerPC, MIPS, Sparc only 
+		allow protection for 1K-4K byte pages.)
+	</p></dd>
+	<dt><b>Hardware Cursor</b>
+	<dd><p>
+		It is impossible to build a high-performance graphics 
+		subsystem if the cursor needs to be drawn using software.
+		This is not much of an issue, since many DAC's today support
+		hardware cursors, and many/most graphics cards provide this
+		function.
+	</p></dd>
+	<dt><b>Atomic Operations</b>
+	<dd><p>
+		All drawing (i.e non-protected) operations must be atomic.
+		This allows the operating system to suspend one program 
+		that is drawing, and start up another program that is 
+		drawing, without hanging the graphics hardware.
+		For example, if it requires three registers to be written
+		to draw a line or clear an are (start-xy, end-xy, and 
+		&quot;command&quot;), it must be possible for the software 
+		to write the start/end points, and never get around to 
+		writing the command, without hanging the hardware.
+		(If the command is never written, then the line is never drawn).
+	<p></p>
+		In particular, this requires that command words be written 
+		last, and not first.
+		For commands that require multiple registers to be written,
+		it must be possible to break off the command at any point
+		without hanging the hardware (i.e. it must be possible to
+		write some of the registers, without writing all of them,
+		without indefinitely hanging the hardware).
+		If only a partial command is written, then no operation is 
+		performed.
+	</p></dd>
+	<dt><b>Interruptible Operations</b>
+	<dd>
+	<p>
+		All drawing (i.e. user-level) operations must be interruptible.
+		That is, if a command requires that multiple registers must be
+		written, it must be possible to start writing data for this 
+		command, and then break this off and perform another command
+		instead.
+		Thus, for example, it must be possible to specify the line 
+		endpoints, then specify clear-area extents, then clear the
+		area, then move the cursor, and then ask for the line to be
+		drawn (software may have reloaded the line endpoints first).
+		Such interrupted operations must NOT leave the hardware in 
+		an unknown or hung state.
+	</p><p>
+		This, together with the atomic-operations requirement above,
+		and the readable registers requirement below, allows a 
+		multi-tasking operating system to stop a drawing process 
+		at any time (on an instruction-by-instruction basis), put it
+		to sleep, and then allow another drawing process to run and 
+		do its drawing.
+		Non-atomic, non-interruptible drawing operations require that
+		the drawing program to obtain a lock, do its stuff, then
+		release the lock when it's done.
+		In general, locks are undesirable: they are slow.
+		Even if a lock was fast, just having to do one takes CPU 
+		cycles away from what we really want to do: draw stuff.
+	</p><p>
+		Note that after the operating system has suspended one client,
+		it may do house-hold functions, such as updating the cursor 
+		or the colormap, before allowing other processes to run.
+		Thus, it must be possible to execute privileged commands 
+		that interrupt user commands.
+	</p>
+	<dt><b>Readable Registers</b>
+	<dd><p>
+		All registers must be readable.
+		This is vital for a multi-tasking operating system.
+		This allows the operating system to stop a graphics process,
+		and save its graphics hardware context.
+		It then allows the OS to restore a possibly different context
+		from a different graphics process, allowing it to run, then
+		stopping it, saving, etc.
+	</p><p>
+		The concept introduced here is of &quot;context switching&quot;
+		or &quot;multi-tasking&quot;. Basically, a graphics program 
+		can be suspended at any time, and another graphics program 
+		can be started exactly where it last left off. 
+		In order to be able to restart another process precisely where
+		it left off, it must be possible to set the graphics hardware
+		into the exact same state where the last program left off.
+		To be able to get back to the exact same state, it must be 
+		possible to somehow read and save this state.
+	</p><p>
+		Note that high-end hardware usually provides features that 
+		not only make it possible to read and restore state 
+		information, but also make this operation extremely fast.
+		Hardware that does support save/restore usually supports this
+		at sub-millisecond speeds, thus allowing hundreds of context
+	 	switches per second, while still leaving the the CPU and 
+		graphics card 90% free so that drawing can continue without
+		hardly any slowdown.
+	</p><p>
+		Note that more modern high-end high-end hardware allows 
+		multiple graphics contexts: these can be saved to, and 
+		restored from special RAM areas on the card, without having 
+		to move all of the context information over the bus.
+	</p></dd>
+	<dt><b>Window Clipping Planes</b>
+	<dd><p>
+		Window clipping planes prevent a program from drawing 
+		outside of it's window boundaries.
+		This function isn't absolutely required, but is almost so.
+		A graphics program can achieve much higher performance by 
+		not worrying about whether it is drawing outside of it's
+		window boundaries, or whether it is obscured by another window.
+		In addition, clipping planes provide an important security 
+		function: they prevent errant or intentionally malicious 
+		programs from drawing where they should not. 
+		Thus, an out-of-control program will not scribble all over 
+		the screen.
+	</p><p>
+		The update of window clipping planes must be a reserved, 
+		protected operation.
+		That is, the control of window clipping planes must be 
+		segregated into a different address space than other 
+		user-mode drawing operations.
+	</p><p>
+		Note that some graphics hardware provides user-mode clipping
+		registers.
+		These are NOT what we are talking about here.
+		Yes, it is nice to have user-mode clip registers, but these 
+		cannot be used by the operating system to prevent
+		out-of-control or malicious programs from drawing where they 
+		shouldn't.
+	</p><p>
+		Note that hardware that supports directly-addressable 
+		frame buffers should also support clip tests against data 
+		written to the directly addressable areas.
+	</p></dd>
+	<dt><b>Per-Window Double Buffering</b>
+	<dd><p>
+		This is not strictly a requirement, but frankly, for a 
+		high-performance, animated 3D hardware, full-screen double
+		buffering sucks.
+		It is painful to support in the operating system, in the 
+		graphics subsystem, and basically looks bad once you have 
+		two or more windows animating at the same time.
+	</p></dd>
+	<dt><b>Per-Window Multiple Colormaps</b>
+	<dd><p>
+		Again, not strictly a requirement, but if you want things 
+		to look nice on the screen, you have got to allow applications
+		to set their own private colormaps, without ruining everything
+		for the other windows on the screen.
+	</p></dd>
+	<dt><b>FIFO's</b>
+	<dd><p>
+		Another non-requirement, but the fact is that most high-end 
+		graphics hardware employs FIFOs to buffer drawing commands
+		between the central CPU and the graphics hardware.
+		These FIFO's are typically anywhere from 64 Bytes to 64 KBytes
+		long.
+		This allows the CPU to write commands to the graphics adapter
+		without having to wait for it to finish, and it allows
+		the graphics hardware to process drawing commands without
+		having to wait for the CPU to provide more commands.
+		As long as the buffer never accumulates more than one-tenth 
+		of a second worth of drawing commands, any delays or lags 
+		become essentially un-noticeable to the user.
+	</p><p>
+		Four common designs are seen: FIFO's in hardware (on the 
+		graphics adapter), FIFO's in user-memory, and "ping-pong"
+		buffers.
+		FIFO's on the graphics card can present a problem: when a 
+		context switch occurs, the FIFO contents must be saved and
+		restored.
+		They can be moved either to other memory on the graphics 
+		card, or they can be sent across the bus, back to the system.
+		FIFO's in user memory present a problem: data and pointers 
+		can be corrupted by the user program (accidentally or
+		maliciously).
+		Of course, it must not be possible to hang the hardware due
+		to corrupt data in the FIFO.
+	</p></dd>
+	<dt><b>Hardware Contexts</b>
+	<dd><p>
+		Yet another non-requirement.
+		However, almost all high-end hardware keeps considerable 
+		graphics context information on the hardware itself.
+		Just as is the case with FIFO's, this context information 
+		must be saved and restored when a context switch occurs.
+		Again, this context is moved either to another memory 
+		location on the adapter, or is sent back across the bus to 
+		the system for temporary storage in the kernel.
+	</p></dd>
+	</dl>
+</p><p>
+	Well, that all.
+	There are in fact a large variety of more detailed design
+	issues, but these are too numerous to be discussed in this overview.
+	All of the principles discussed above are well-known and understood
+	in the high-end (UNIX) graphics hardware community.
+	All of these have been discussed and written about in public forums 
+	and journals.
+	However, many of these are rare, have low circulation, or are 
+	out-of-print.
+	This is the ultimate reason for the existence of this page.
+	See the <a href="#bibliography">bibliography</a> below.
+
+<a name="kernel"></a><h2><u>Kernel Considerations</u></h2>
+<p>
+	The operating system kernel must address each of the hardware design
+	considerations expressed above.
+	In particular, the kernel on SGI Irix and IBM RS/6000 AIX systems
+	supports the following functions:
+	<dl>
+	<dt><b>Grant and Retract</b>
+	<dd><p>
+		A user application is granted direct access to the drawing
+		subsystem for the very first time by registering itself with
+		the kernel.
+		The kernel returns addresses to the drawing subsystem hardware. 
+	</p></dd>
+	<dt><b>Graphics Faults</b>
+	<dd><p>
+		Access control to the graphics hardware is governed by a
+		mechanism similar in many ways to the page-fault mechanism.
+		Let us review page-faulting: when the CPU attempts to touch
+		a page which is not in real memory (is in the swap space, 
+		for instance), the CPU receives an interrupt.
+		The interrupt handler puts the process to sleep, and issues
+		a read request to the disk.
+		When the disk has found the requested page, that page is 
+		loaded into real memory, the virtual page tables are updated,
+		and the process is marked "ready-to-run".
+		When a time slice is available, the kernel will schedule 
+		the process and allow it to run again.
+	</p><p>
+		A graphics fault proceeds in a similar manner: as long as 
+		there are no other graphics processes that want to access 
+		the hardware, the current process can bang away at it.
+		Periodically, however (typically, every 4 milliseconds),
+		the graphics time-slice expires. 
+		The kernel looks to see if here are any other graphics
+		processes that want to run.
+		If so, then it retracts write permission to the graphics
+		hardware from the first process, performs the graphics 
+		context switch, and then grants address access to the 
+		second process.
+		At this point, if the first process attempts to touch the 
+		graphics i/o space, an interrupt will be generated. 
+		The first process will be put to sleep.
+		The kernel will then schedule another process to run (not
+		necessarily another graphics process).
+		Graphics time-slice scheduling and regular process scheduling
+		typically run independently of each other.
+	</p></dd>
+	<dt><b>Cursor</b>
+	<dd><p>
+		The kernel must provide interfaces to allow a special process
+		(typically, the X Server) to update the position of the cursor.
+	</p></dd>
+	<dt><b>WID Management</b>
+	<dd><p>
+		Most high-end graphics hardware has window-id (WID) planes.
+		These planes control not only which hardware color palette 
+		is used for pixel color lookup, but also typically provide
+		hardware clipping so that a process cannot draw outside of
+		its window and corrupt the screen.
+	</p><p>
+		The kernel must provide interfaces to manage these clipping
+		planes, and/or take over management itself.
+		In particular, if a window is moved (e.g. the user picks it
+		up with the mouse and moves it), the WID planes must be 
+		updated to reflect the new window position.
+		Window ID updates are by definition a privileged operation:
+		user processes must not be allowed to twiddle with them, as
+		this would allow them to corrupt window contents 
+		accidentally or intentionally.
+		If the corruption is accidental, then it is merely ugly: the
+		user sees crap drawn all over the screen, where it shouldn't be.
+		A malicious example might be a rogue program running on 
+		a CIA/NSA machine attempting to read confidential information
+		from another window.
+	</p></dd>
+	<dt><b>Context Management</b>
+	<dd><p>
+		If the graphics hardware has hardware contexts or hardware 
+		FIFOs, then the kernel must shuffle this data around during
+		a context switch.
+		If the adapter does not have a lot of memory on it, then 
+		this data must be copied back across the bus, and stored 
+		in some temporary location within the kernel.
+		This memory must, of course,be cleaned up if the graphics
+		process exits.
+	</p></dd>
+	<dt><b>Double Buffering</b>
+	<dd><p>
+		All high-end graphics hardware supports hardware double 
+		buffering.
+		Some supports hardware quad-buffering (for double-buffered 
+		stereo viewing).
+		Buffer swaps need to be synchronized with vertical retrace
+		interrupts, so that image tearing does not occur.
+		The kernel is often involved with synchronizing the swap
+		with the retrace interrupt.
+	</p><p>
+		Furthermore, the kernel must count the number of pending 
+		buffer swaps for a graphics process, and put it to sleep 
+		if there are two.
+		A graphics program is still typically allowed to write to 
+		a FIFO or buffer while there is one pending, outstanding 
+		swap request.
+		But any more than that, and things get ugly.
+		For example, we once allowed a program to issue 600 buffer
+		swaps without putting it to sleep.
+		It then proceeded to buffer swap 60 times a second for 
+		the next ten seconds, while everybody wondered why it 
+		couldn't be control-C'd, and otherwise acted unexpectedly!
+		Never mind that what it was drawing was 10 seconds out of
+		date with respect to the current position of the mouse!
+	</p></dd>
+	</dl>
+
+</p>
+
+<a name="bibliography"></a><h2><u>Bibliography</u></h2>
+<p>
+	Many of the above principles are discussed in greater detail in the
+	following classical references.
+	If my memory serves me correctly, the papers by Voorhies and by 
+	Rhoden are particularly descriptive of the issues and possible
+	solutions. 
+	Yes, these would appear to be very old, but, if anything, they 
+	illustrate how Unix and Unix workstations have at times enjoyed
+	a ten year lead in technology over PC's and PC operating systems. 
+	<ol>
+	<li><p>
+		Akeley, Kurt and Tom Jermoluk,
+		"High Performance Polygon Rendering",
+		Conference Proceedings, SIGGRAPH, 1988, vol 22 no. 4,
+		pp 239-246.
+	</p></li>
+	<li><p>
+		Doyle, Brian,
+		"All About Multi-Processing for Unix Workstations",
+		Conference Proceedings NCGA '1990, pp228-253.
+		(National Computer Graphics Association).
+	</p></li>
+	<li><p>
+		Haletky, Edward H. and Linas Vepstas,
+		"Integration of GL with the X Window System",
+		Conference Proceedings, Xhibition 1991, pp.105-113
+	</p></li>
+	<li><p>
+		Norrod, Forest and Larry Thayer,
+		"An Advanced VLSI Chip Set for Very High Speed 
+		Graphics Rendering",
+		Conference Proceedings, NCGA 1991, pp 1-10.
+	</p></li>
+	<li><p>
+		Rhoden, Desi and Chris Wilcox.
+		"Hardware Acceleration for Window Systems",
+		Conference Proceedings  SIGGRAPH 1989 
+		vol 23 no. 3 pp 61-67.
+	</p></li>
+	<li><p>
+		Stewart, Don.
+		"VLSI: Key to Four Basic Strategies for Improving
+		Workstation Graphics",
+		Conference Proceedings, NCGA 1990 pp 302-308.
+	</p></li>
+	<li><p>
+		Vepstas, Linas.
+		"Porting OpenGL to New Hardware Platforms",
+		Course Notes, OpenGL, SIGGRAPH 1992.
+	</p></li>
+	<li><p>
+		Voorhies, Douglas, David Kirk and Olin Lathrop,
+		"Virtual Graphics",
+		Conference Proceedings, SIGGRAPH 1988, vol 22 no. 4, pp 247-253.
+	</li>
+	</ol>
+
+<a name="acknowledgements"></a><h2><u>Acknowledgements</u></h2>
+
+	This article was originally written by Linas Vepstas and reproduced
+	here with friendly permission by Linas.
+	The version presented here was dervied from a version
+	published on Thu, 9-Nov-2000 on his web-page at
+	<a href="http://linas.org/linux/graphics.html"><tt>http://linas.org/linux/graphics.html</tt></a>
+	<br>
+	Linas can be reached at 
+	<a href="mailto:linas@linas.org"><tt>mailto:linas@linas.org</tt></a>.
+	See also <a href="http://linas.org/">Linas Web Page, <tt>http://linas.org</tt></a>.
+
+end-of-htf

@@ -4,7 +4,7 @@ HTF_LONG_TITLE="Introductionary Articles about KGI"
 HTF_DESCRIPTION="A list of articles currently avaliable about KGI."
 HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: $"
+HTF_REVISION="$Revision: 1.2 $"
 
 cat <<end-of-htf
 <table width="100%" nosave>
@@ -12,5 +12,6 @@ cat <<end-of-htf
 <tr><td>Steffen Seeger</td> <td>1999</td><td><a href="seeger.s.1999.white-paper/index.en.html" target="_top">KGI white paper</a></td></tr>
 <tr><td>Steffen Seeger</td> <td>1999</td><td><a href="seeger.s.1999.display-driver/index.en.html" target="_top">KGI display driver overview</a></td></tr>
 <tr><td>Steffen Seeger</td> <td>1999</td><td><a href="seeger.s.1999.acceleration/index.en.html" target="_top">KGI acceleration handling</a></td></tr>
+<tr><td>Linas Vepstas</td>  <td>2000</td><td><a href="vepstas.l.2000.high-performance/index.en.html" target="_top">High-Performance Graphics Hardware Design</a></td></tr>
 </table>
 end-of-htf
