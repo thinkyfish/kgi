@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: kii.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -686,6 +689,8 @@ inline void kii_map_device(kii_u_t dev_id)
 
 		(dev->MapDevice)(dev);
 	}
+
+	return;
 }
 
 /*	Do necessary actions to prepare mapping of device <dev>.
@@ -737,9 +742,8 @@ inline kii_s_t kii_unmap_device(kii_u_t dev_id)
 kii_device_t *kii_current_focus(kii_u_t focus_id)
 {
 	KRN_ASSERT(KII_VALID_FOCUS_ID(focus_id));
-	KRN_ASSERT(kiifocus[focus_id]);
 
-	return kiifocus[focus_id]->focus;
+	return kiifocus[focus_id] ? kiifocus[focus_id]->focus : NULL;
 }
 
 int kii_focus_of_task(void *task_ptr)
@@ -1416,7 +1420,7 @@ static
 void kii_bottomhalf(void)
 {
 	kii_u_t i;
-	
+
 	for (i = 0; i < KII_MAX_NR_FOCUSES; i++) {
 
 		kii_s_t dev;
@@ -1517,12 +1521,16 @@ void kgi_set_pointer(struct kgi_device *dev, ggi_uint x, ggi_uint y)
 #include <linux/config.h>
 #include <linux/module.h>
 
-/*	KGI manager interface
+/*	KII manager interface
 */
 EXPORT_SYMBOL(kii_handle_input);
 EXPORT_SYMBOL(kii_register_device);
 EXPORT_SYMBOL(kii_unregister_device);
 EXPORT_SYMBOL(kii_register_input);
 EXPORT_SYMBOL(kii_unregister_input);
+EXPORT_SYMBOL(kii_map_device);
+EXPORT_SYMBOL(kii_unmap_device);
+EXPORT_SYMBOL(kii_current_focus);
+EXPORT_SYMBOL(kiidev_focus);
 
 #endif	/* #ifdef EXPORT_SYMTAB */
