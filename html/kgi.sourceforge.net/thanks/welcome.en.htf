@@ -3,9 +3,11 @@ HTF_TITLE="Thanks from the KGI Project"
 HTF_DESCRIPTION="People, Companies and Institutions the KGI Project likes to thank."
 HTF_KEYWORDS="KGI Project; Thanks; Credits"
 HTF_AUTHOR="Steffen Seeger"
-HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
+HTF_DOCUMENT_TITLE="<center><img src=\"../kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
+HTF_REVISION="$Revision: $" 
 
 cat <<end-of-htf
+<hr noshade>
 The KGI project likes to thank the following people, companies and institutions
 for their support of development boards:
 <ul>
