@@ -12,6 +12,11 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00-meta.h,v $
+**	Revision 1.3  2001/09/12 20:55:52  ortalo
+**	Acceleration support added for G400 (w/ bus-master DMA) and Mystique
+**	(w/ pseudo-DMA).
+**	Added a Matrox-specific test program.
+**	
 **	Revision 1.2  2001/08/31 23:56:32  ortalo
 **	/tmp/cvs46Wo9B
 **	
@@ -135,6 +140,7 @@ typedef enum {
   MGAG_CF_1x64    = (0x01 << 1),
   MGAG_CF_G200    = (0x01 << 2),
   MGAG_CF_G400    = (0x01 << 3),
+  MGAG_CF_G450    = (0x01 << 8), /* variant of G400 */
 
   /* capabilities */
   MGAG_CF_OLD     = (0x01 << 4),

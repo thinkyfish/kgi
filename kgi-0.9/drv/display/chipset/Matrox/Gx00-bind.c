@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.4  2001/08/31 23:50:04  ortalo
+**	Driver nearly operational (without accel) on G400 and Mystique boards.
+**	
 **	Revision 1.3  2001/07/03 08:58:59  seeger_s
 **	- updated to changes in kgi/module.h
 **	
@@ -24,7 +27,7 @@
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.4 $"
 
 /*
 ** Debug levels
@@ -520,6 +523,11 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 		mgag->chipset.maxdots.y = 4096;
 
 		mgag->flags |= MGAG_CF_G400;
+		if (pcicfg_in8(pcidev + PCI_REVISION_ID) >= 128)
+		  {
+		    KRN_NOTICE("Matrox G450 variant");
+		    mgag->flags |= MGAG_CF_G450;
+		  }
 
 		mgabase2_size = G400_MGABASE2_SIZE;
 

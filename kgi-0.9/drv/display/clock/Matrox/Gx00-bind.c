@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.4  2001/08/31 23:59:14  ortalo
+**	Driver nearly operational (without accel) on G400 and Mystique boards.
+**	
 **	Revision 1.3  2001/07/03 08:59:00  seeger_s
 **	- updated to changes in kgi/module.h
 **	
@@ -23,7 +26,7 @@
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.4 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -130,6 +133,11 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 
 		mgag->flags |= MGAG_CF_G400;
 
+		if (pcicfg_in8(MGAG_PCIDEV(mgag_io) + PCI_REVISION_ID) >= 128)
+		  {
+		    KRN_NOTICE("triggering G450 clock parameters");
+		    mgag->flags |= MGAG_CF_G450;
+		  }
 		mgag->pll.fref = KGIM_DEFAULT(options->clock->fref, 27 MHZ);
 
 		mgag->pll.mul.min = 8;

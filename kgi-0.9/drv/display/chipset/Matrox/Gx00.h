@@ -12,6 +12,11 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00.h,v $
+**	Revision 1.4  2001/09/12 20:55:52  ortalo
+**	Acceleration support added for G400 (w/ bus-master DMA) and Mystique
+**	(w/ pseudo-DMA).
+**	Added a Matrox-specific test program.
+**	
 **	Revision 1.3  2001/09/02 17:42:08  ortalo
 **	Added some tentative power up code for the G200.
 **	
@@ -404,7 +409,7 @@
 #define POINTER_FB_AREA_SIZE (1 KB)
 #define PX_POINTER1       0x10000000
 #define PX_POINTER2       0x20000000
-#define PX_POINTER3       0x30000000 /* etc. if wanted... */
+#define PX_POINTER3       0x40000000 /* etc. if wanted... */
 
 /* Extended DAC definitions */
 
@@ -807,8 +812,19 @@
 #define TEXTRANSHIGH				(MGAG_DWGREG1+0x38)	/* WO, G200+ */
 #define TEXCTL2					(MGAG_DWGREG1+0x3C)	/* WO, G200+ */
 #define SECADDRESS				(MGAG_DWGREG1+0x40)	/* G200+ */
+#define SECADDRESS_DMAMOD_MASK  0x00000003
+#define SECADDRESS_DMAMOD_GENERAL_WRITE 0x00
+#define SECADDRESS_DMAMOD_BLIT_WRITE    0x01
+#define SECADDRESS_DMAMOD_VECTOR_WRITE  0x02
+#define SECADDRESS_DMAMOD_VERTEX_WRITE  0x03
+#define SECADDRESS_ADDRESS_MASK 0xFFFFFFFC
 #define SECEND					(MGAG_DWGREG1+0x44)	/* G200+ */
+#define SECEND_PAGPXFER    (0x01 << 1)
+#define SECEND_ADDRESS_MASK 0xFFFFFFFC
+
 #define SOFTRAP					(MGAG_DWGREG1+0x48)	/* G200+ */
+#define SOFTRAP_SOFTRAPHAND 0xFFFFFFFC
+#define SOFTRAPHAND SOFTRAP_SOFTRAPHAND /* for brevity */
 #define DWGSYNC					(MGAG_DWGREG1+0x4C)	/* G200+ */
 #define DR0_Z32_LSB				(MGAG_DWGREG1+0x50)	/* WO, G200+ */
 #define DR0_Z32_MSB				(MGAG_DWGREG1+0x54)	/* WO, G200+ */
@@ -846,14 +862,65 @@
 #define TDUALSTAGE0				(MGAG_DWGREG1+0xF8)	/* WO, G400+ */
 #define TDUALSTAGE1				(MGAG_DWGREG1+0xFC)	/* WO, G400+ */
 
-/* WARP registers, These only occur in G200 and newer. */
+/*
+** WARP registers, These only occur in G200 and newer.
+*/
 
 #define WIADDR					(MGAG_DWGREG0+0x1C0)	/* WO */
+#define WIADDR_WMODE_MASK    0x3
+#define WIADDR_WMODE_SUSPEND 0x0
+#define WIADDR_WMODE_RESUME  0x1
+#define WIADDR_WMODE_JUMP    0x2
+#define WIADDR_WMODE_START   0x3
+#define WIADDR_WAGP          (1 << 2)
+#define WIADDR_WIADDR_MASK   0xFFFFFFF8
+
 #define WFLAG					(MGAG_DWGREG0+0x1C4)	/* WO */
+
 #define WGETMSB					(MGAG_DWGREG0+0x1C8)	/* WO */
+#define WGETMSB_WGETMSBMIN_SHIFT  0
+#define WGETMSB_WGETMSBMIN_MASK   (0x1F << WGETMSB_WGETMSBMIN_SHIFT)
+#define WGETMSB_WGETMSBMAX_SHIFT  8
+#define WGETMSB_WGETMSBMAX_MASK   (0x1F << WGETMSB_WGETMSBMAX_SHIFT)
+#define WGETMSB_WBRKLEFTTOP       (1 << 16)
+#define WGETMSB_WFASTCROP         (1 << 17)
+#define WGETMSB_WCENTERSNAP       (1 << 18)
+#define WGETMSB_WBRKRIGHTTOP      (1 << 19)
+
 #define WVRTXSZ					(MGAG_DWGREG0+0x1CC)	/* WO */
+#define WVRTXSZ_WVRTXSZ_SHIFT  0
+#define WVRTXSZ_WVRTXSZ_MASK   (0x3F << WVRTXSZ_WVRTXSZ_SHIFT)
+#define WVRTXSZ_PRIMSZ_SHIFT   8
+#define WVRTXSZ_PRIMSZ_MASK    (0x3F << WVRTXSZ_PRIMSZ_SHIFT)
+
 #define WACCEPTSEQ				(MGAG_DWGREG0+0x1D4)	/* WO, G400+ */
+#define WACCEPTSEQ_SEQDST0_SHIFT  0
+#define WACCEPTSEQ_SEQDST0_MASK   (0x3F << WACCEPTSEQ_SEQDST0_SHIFT)
+#define WACCEPTSEQ_SEQDST1_SHIFT  6
+#define WACCEPTSEQ_SEQDST1_MASK   (0x3F << WACCEPTSEQ_SEQDST1_SHIFT)
+#define WACCEPTSEQ_SEQDST2_SHIFT  12
+#define WACCEPTSEQ_SEQDST2_MASK   (0x3F << WACCEPTSEQ_SEQDST2_SHIFT)
+#define WACCEPTSEQ_SEQDST3_SHIFT  18
+#define WACCEPTSEQ_SEQDST3_MASK   (0x3F << WACCEPTSEQ_SEQDST3_SHIFT)
+#define WACCEPTSEQ_SEQLEN_SHIFT   24
+#define WACCEPTSEQ_SEQLEN_MASK    (0x3 << WACCEPTSEQ_SEQLEN_SHIFT)
+#define WACCEPTSEQ_SEQLEN_0       (0x0 << WACCEPTSEQ_SEQLEN_SHIFT)
+#define WACCEPTSEQ_SEQLEN_01      (0x1 << WACCEPTSEQ_SEQLEN_SHIFT)
+#define WACCEPTSEQ_SEQLEN_012     (0x2 << WACCEPTSEQ_SEQLEN_SHIFT)
+#define WACCEPTSEQ_SEQLEN_0123    (0x3 << WACCEPTSEQ_SEQLEN_SHIFT)
+#define WACCEPTSEQ_WFIRSTTAG      (1 << 26)
+#define WACCEPTSEQ_WSAMETAG       (1 << 27)
+#define WACCEPTSEQ_SEQOFF         (1 << 28)
+
 #define WIADDR2					(MGAG_DWGREG0+0x1D8)	/* WO, G400+ */
+#define WIADDR2_WMODE_MASK    0x3
+#define WIADDR2_WMODE_SUSPEND 0x0
+#define WIADDR2_WMODE_RESUME  0x1
+#define WIADDR2_WMODE_JUMP    0x2
+#define WIADDR2_WMODE_START   0x3
+#define WIADDR2_WAGP          (1 << 2)
+#define WIADDR2_WIADDR_MASK   0xFFFFFFF8
+
 #define WFLAG1					(MGAG_DWGREG0+0x1E0)	/* WO, G400+ */
 #define WIADDRNB2				(MGAG_DWGREG0+0x200)	/* WO, G400+ */
 #define WIADDRNB1				(MGAG_DWGREG0+0x204)	/* RO, G400+ */
@@ -862,13 +929,19 @@
 #define WIFLAGNB				(MGAG_HSTREG+0x64)
 #define WIMEMADDR				(MGAG_HSTREG+0x68)	/* WO */
 #define WCODEADDR				(MGAG_HSTREG+0x6C)	/* RO */
+
 #define WMISC					(MGAG_HSTREG+0x70)
+#define WMISC_WUCODECACHE  (1 << 0)
+#define WMISC_WMASTER       (1 << 1)
+#define WMISC_WCACHEFLUSH  (1 << 3)
+
 #define WIMEMDATA				(MGAG_WIMEMDATA+0x000)
 #define WIMEMDATA1				(MGAG_WIMEMDATA+0x100)	/* G400+ */
 
 /* There are 64 of these, spaced at 4 byte */
-
-#define WR					(MGAG_DWGREG1+0x100)
+/* "WR" is too short IMHO -- ortalo */
+#define WARPREG_BASE				(MGAG_DWGREG1+0x100)
+#define WARPREG(x)   (WARPREG_BASE | ((x) << 2))
 
 /* Back-end Scaler defintions */
 
@@ -924,6 +997,27 @@
 #define CODECHOSTPTR				(MGAG_VINCODEC+0x48)	/* WO */
 #define CODECHARDPTR				(MGAG_VINCODEC+0x4C)	/* RO */
 #define CODECLCODE				(MGAG_VINCODEC+0x50)	/* RO */
+
+/* Builds a 8bits (pseudo-)DMA value for a reg */
+
+#define MGA_DMA(x) ((((x) & 0x2000) >> 6) | (((x) & 0x1FC) >> 2))
+
+#define MGA_DMA4(x,y,z,t) (MGA_DMA(x) | (MGA_DMA(y) << 8) \
+		| (MGA_DMA(z) << 16) | (MGA_DMA(t) << 24))
+
+/*
+** some TAG values to identify different buffer types
+*/
+
+/* tag length in bytes (must be a multiple of 4) */
+#define MGAG_ACCEL_TAG_LENGTH 4
+
+/* drawing engine type: regular display list (reg,val) */
+#define MGAG_ACCEL_TAG_DRAWING_ENGINE 0x1
+
+/* setup engine type: vertex list */
+#define MGAG_ACCEL_TAG_WARP_TGZ 0x2
+/* TODO: define other WARP tags (TGZF, T2GZ, etc.) */
 
 /* to be OR (|) to last accel register setup to activate engine */
 

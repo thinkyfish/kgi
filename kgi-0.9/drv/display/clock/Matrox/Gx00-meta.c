@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-meta.c,v $
+**	Revision 1.2  2001/08/31 23:59:14  ortalo
+**	Driver nearly operational (without accel) on G400 and Mystique boards.
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -18,7 +21,7 @@
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
 
 #ifndef DEBUG_LEVEL
 #define DEBUG_LEVEL 1
@@ -104,6 +107,41 @@ void mgag_clock_mode_prepare(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
   /*	Get loop filter value (s) - 1x64 and G200 uses the same values
    */
 
+#if 0
+  if (mgag->flags & MGAG_CF_G450) {
+
+    if ((mgag_mode->pll.fvco < 55 MHZ)) {
+      
+      mgag_mode->s = 0;
+      
+    } else if (mgag_mode->pll.fvco < 70 MHZ) {
+
+      mgag_mode->s = 1;
+
+    } else if (mgag_mode->pll.fvco < 90 MHZ) {
+
+      mgag_mode->s = 2;
+      
+    } else if (mgag_mode->pll.fvco < 110 MHZ) {
+
+      mgag_mode->s = 3;
+
+    } else if (mgag_mode->pll.fvco < 130 MHZ) {
+
+      mgag_mode->s = 4;
+
+    } else if (mgag_mode->pll.fvco < mgag->pll.fvco.max) {
+
+      mgag_mode->s = 5;
+
+    } else {
+
+      KRN_INTERNAL_ERROR;
+    }
+
+  }
+  else
+#endif
   if (mgag->flags & MGAG_CF_G400) {
 
     if ((mgag_mode->pll.fvco > 50 MHZ) && 
@@ -184,7 +222,7 @@ void mgag_clock_mode_enter(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 		 XPIXPLLCM);
   MGAG_EDAC_OUT8(mgag_io, ((actual_p & XPIXPLLP_PIXPLLP_MASK) |
 			   (mgag_mode->s << XPIXPLLP_PIXPLLS_SHIFT))
-		 & XPIXPLLP_MASK,
+		 /* & XPIXPLLP_MASK */,
 		 XPIXPLLCP);
 
   /* Select Set C (unused at boot) as the pixel clock source */
