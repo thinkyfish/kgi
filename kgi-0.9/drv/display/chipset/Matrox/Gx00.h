@@ -1,16 +1,20 @@
 /* ----------------------------------------------------------------------------
 **	Matrox Gx00 register definitions
 ** ----------------------------------------------------------------------------
-**	Copyright (C)	1999-2000	Johan Karlberg
+**	Copyright (C)	1999-2001	Johan Karlberg
+**					Rodolphe Ortalo
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
 **	with this software for details of these terms and conditions.
 **
 ** ----------------------------------------------------------------------------
-**	MAINTAINER	Johan_Karlberg
+**	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _Matrox_Gx00_h
 #define _Matrox_Gx00_h
@@ -92,6 +96,7 @@
 #	define G400_O1_PLLSEL		(0x01 << 6)
 #	define G400_O1_MEMCONFIG_SHIFT	10
 #	define G400_O1_MEMCONFIG_MASK	(0x07 << G400_O1_MEMCONFIG_SHIFT)
+#	define G400_O1_HARDPWMSK	(0x01 << 14)
 #	define G400_O1_RFHCNT_SHIFT	15
 #	define G400_O1_RFHCNT_MASK	(0x2F << G400_O1_RFHCNT_SHIFT)
 #	define G400_O1_ENHMEMACC	(0x01 << 22)
@@ -227,6 +232,7 @@
 #define IEN					(MGAG_HSTREG+0x1C)
 #	define IEN_SOFTRAPIEN			(0x01 << 0)	/* RO */
 #	define IEN_PICKPIEN			(0x01 << 2)	/* RO */
+/* Check if the following really exists (in CRTC11 I think) -- ortalo */
 #	define IEN_VSYNCIEN			(0x01 << 4)	/* RO */
 #	define IEN_VLINEIEN			(0x01 << 5)	/* RO */
 #	define IEN_EXTIEN			(0x01 << 6)	/* RO */
@@ -279,7 +285,17 @@
 #	define OPMODE_DIRDATASIZ_LE_32BPP	(0x02 << OPMODE_DMADATASIZ_SHIFT)
 
 #define PRIMADDRESS	(MGAG_HSTREG+0x58)	/* G200+ */
+#define PRIMADDRESS_DMAMOD_MASK  0x00000003
+#define PRIMADDRESS_DMAMOD_GENERAL_WRITE 0x00
+#define PRIMADDRESS_DMAMOD_BLIT_WRITE    0x01
+#define PRIMADDRESS_DMAMOD_VECTOR_WRITE  0x02
+#define PRIMADDRESS_DMAMOD_VERTEX_WRITE  0x03
+#define PRIMADDRESS_ADDRESS_MASK 0xFFFFFFFC
+
 #define PRIMEND		(MGAG_HSTREG+0x5C)	/* G200+ */
+#define PRIMEND_PRIMNOSTART (0x01 << 0)
+#define PRIMEND_PAGPXFER    (0x01 << 1)
+#define PRIMEND_ADDRESS_MASK 0xFFFFFFFC
 
 /* Indirect write, there are 16 of these 32bits apart. */
 
@@ -288,7 +304,7 @@
 #define CACHEFLUSH	(MGAG_VGAREG+0xFF)
 
 
-/* VGA compatability registers */
+/* VGA compatibility registers */
 
 #define ECRT0					0x00
 #	define ECRT0_STARTADD0_SHIFT		0
@@ -371,6 +387,16 @@
 /* leftover, is this standard enough to be in VGA.h? */
 
 #define MISC_CLOCK_1X				0x08
+
+/*
+** DAC registers
+*/
+
+/* Pseudo-DAC registers: access to pointer shapes */
+#define POINTER_FB_AREA_SIZE (1 KB)
+#define PX_POINTER1       0x10000000
+#define PX_POINTER2       0x20000000
+#define PX_POINTER3       0x30000000 /* etc. if wanted... */
 
 /* Extended DAC definitions */
 
@@ -676,6 +702,9 @@
 #	define Gx00_MCTLWTST_BPLDELAY_SHIFT	29
 #	define Gx00_MCTLWTST_BPLDELAY_MASK	(0x07 << Gx00_MCTLWTST_BPLDELAY_SHIFT)
 
+/* G400 specific (maybe good for G200?) */
+#define G400_MCTLWTST_RESET_VALUE 0x84A49921
+
 #define ZORG					(MGAG_DWGREG0+0x0C)	/* WO */
 #define PAT0					(MGAG_DWGREG0+0x10)	/* WO */
 #define PAT1					(MGAG_DWGREG0+0x14)	/* WO */
@@ -899,7 +928,7 @@
 #define NrSEQRegs				2
 #define NrDACRegs				2
 #define NrEDACRegs				2
-#define NrCRTRegs				2
-#define NrECRTRegs				2
+#define NrCRTRegs				(0x18+1)
+#define NrECRTRegs				(0x08+1)
 
 #endif /*_Matrox_Gx00_h */
