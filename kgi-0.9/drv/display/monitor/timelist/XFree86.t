@@ -24,29 +24,29 @@ vtiming	480	480	488	491	521	521
 # XFree "800x600", 60.3 Hz, 37.879 kHz
 dclk	40.000
 hsync	+
-vsync	+
 htiming	800	800	840	968	1056	1056
+vsync	+
 vtiming	600	600	601	605	628	628
 
 # XFree "800x600", 72.2 Hz, 48.077 kHz
 dclk	50.000
 hsync	+
-vsync	+
 htiming	800	800	856	976	1040	1040
+vsync	+
 vtiming	600	600	637	643	666	666
 
 # XFree "1024x768", 60.0 Hz, 48.363 kHz
 dclk	65.000
 hsync	-
-vsync	-
 htiming	1024	1024	1032	1176	1344	1344
+vsync	-
 vtiming	768	768	771	777	806	806
 
 # XFree "1024x768", 70.1 Hz, 56.476 kHz
 dclk	75.000
 hsync	-
-vsync	-
 htiming	1024	1024	1048	1184	1328	1328
+vsync	-
 vtiming	768	768	771	777	806	806
 
 # XFree "1280x1024", 43.8 Hz, 51.020 kHz
