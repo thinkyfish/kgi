@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: 1.4 $" 
+HTF_REVISION="$Revision: 1.5 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -54,7 +54,7 @@ things documented. -- <i>Steffen Seeger</i>
 		<li>server sources compile</li>
 		<li>graphics card gets initialized properly</li>
 		<li>responds reasonably to mouse and keyboard</li>
-		</li>
+		</ul>
 	<li>some minor cleanups</li>
 	<li>improvements on the DisplayDDK documentation</li>
 	</li>
