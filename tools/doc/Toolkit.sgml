@@ -1,0 +1,34 @@
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article class="TechReport">
+	<artheader>
+		<author><firstname>Steffen</firstname><surname>Seeger</surname></author>
+		<title>The KGI Build and Configuration Toolkit</title>
+		<titleabbrev>KGI Toolkit</titleabbrev>
+		<!--
+			$Log: Toolkit.sgml,v $
+		-->
+		<revhistory>
+			<revision>
+				<revnumber>0.0</revnumber><date>2001-01-18</date>
+				<revremark>Draft version.</revremark>
+			</revision>
+		</revhistory>
+	</artheader>
+	<abstract>
+		<para>This article is intended to give a hands-on introduction to using the KGI Build and Configuration 
+		Toolkit (KGI Toolkit).</para>
+	</abstract>
+	<section><title>A few words before you start</title>
+		<para>
+		This document is intended to help you getting familiar with the build system used with KGI.
+		This document will sometimes make references to shell scripts or Makefiles included with the
+		KGI Toolkit source distribution.
+		Please be aware that if information given in this document and scripts or Makefiles referenced
+		are contradictionary, this document should be considered to be out of date.
+		That is, the actual Toolkit implementation takes precedence over information presented
+		in this document.
+		However, if you spot a section where this is the case, please notify the author of this document about
+		this condition so he can resolve this problem.
+		</para>
+	</section>
+</article>
