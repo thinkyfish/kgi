@@ -10,10 +10,15 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	##AUTHOR##
 **
-**	$Log: ##META##-bind.h,v $
+**	$Log: pll-bind.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _clock_##VENDOR##_##META##_bind_h
 #define	_clock_##VENDOR##_##META##_bind_h
+
+#include "clock/##VENDOR##/##META##-meta.h"
 
 KGIM_META_INIT_MODULE_FN(##meta##_clock)
 KGIM_META(##meta##_clock)

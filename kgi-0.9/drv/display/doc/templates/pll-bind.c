@@ -9,11 +9,14 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: ##META##-bind.c,v $
+**	$Log: pll-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		##AUTHOR##
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -37,7 +40,7 @@ kgi_error_t ##meta##_clock_init_module(##meta##_clock_t *##meta##,
 
 	##meta##->pll.clock.type	= KGIM_CT_PROG;
 #warning set DCLK range here.
-	##meta##->pll.clock.dclk.range[0].min =    400000;
+	##meta##->pll.clock.dclk.range[0].min =  13800000;
 	##meta##->pll.clock.dclk.range[0].max = 120000000;
 
 #warning set external PLL reference clock frequency here.
