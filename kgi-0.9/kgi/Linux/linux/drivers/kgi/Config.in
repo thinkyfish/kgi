@@ -1,0 +1,17 @@
+#
+# KGI configuration
+#
+bool '  KGI splash logo' CONFIG_KGI_SPLASH
+bool '  Terminal emulator: dumb terminal' CONFIG_KGI_TERM_DUMB
+bool '  Terminal emulator: xterm-color terminal' CONFIG_KGI_TERM_XTERM
+bool '  Linux terminal code backward compatibility' CONFIG_KGI_VT_LINUX
+bool '  /dev/graphic support' CONFIG_KGI_DEV_GRAPHIC
+tristate '  /dev/event support' CONFIG_KGI_DEV_EVENT
+comment '   boot display drivers'
+bool '  null display support' CONFIG_KGI_DPY_NULL
+bool '  text16 display (VGA, EGA, CGA, MDA, Hercules)' CONFIG_KGI_DPY_I386
+# not yet ready..
+#bool '   8bpp linear frame buffer' CONFIG_KGI_DPY_8BPP
+#bool '  16bpp linear frame buffer' CONFIG_KGI_DPY_16BPP
+#bool '  24bpp linear frame buffer' CONFIG_KGI_DPY_24BPP
+#bool '  32bpp linear frame buffer' CONFIG_KGI_DPY_32BPP
