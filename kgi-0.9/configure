@@ -19,10 +19,14 @@ else
 	DIR_TOP_SOURCE=$PWD
 fi
 
-if test -f $DIR_TOP_SOURCE/tools/config/main.sh
-then
-	. $DIR_TOP_SOURCE/tools/config/main.sh
-else
-	echo "Tools directory not found. Please refer to README.install for details."
+
+if test ! -f $DIR_TOP_SOURCE/tools/config/main.sh ;then
+	if test -f $DIR_TOP_SOURCE/../tools/config/main.sh ;then
+		ln -s ../tools tools
+	else
+		echo "Tools directory not found. Please refer to README.install for details."
+		exit
+	fi
 fi
+	. $DIR_TOP_SOURCE/tools/config/main.sh
 
