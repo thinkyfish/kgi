@@ -1,4 +1,4 @@
 
 default.init:: index.var
 
-welcome.en.html:: welcome.en.htf
+welcome.en.html: welcome.en.htf
