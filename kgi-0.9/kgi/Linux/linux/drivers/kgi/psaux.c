@@ -13,6 +13,10 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: psaux.c,v $
+**	Revision 1.3  2001/09/15 21:33:06  skids
+**	
+**	Changes when compiling with 2.4 series kernels
+**	
 **	Revision 1.2  2001/09/09 23:35:15  skids
 **	
 **	Use different kill_fasync call when building for 2.4.x kernels.
@@ -264,6 +268,7 @@ static struct file_operations psaux_fops =
 	release:	psaux_close,
 	fasync:		psaux_fasync,
 	/* Will GCC guarantee NULL if we don't explicitly init here? */
+	llseek:		NULL,
 	readdir:	NULL,
 	ioctl:		NULL,
 	mmap:		NULL,
