@@ -74,7 +74,7 @@ fi
 
 if [ "$HTML_PROVIDER_LOGO" != "" ]
 then
-	HTF_PROVIDER_LOGO="<center><a href=\"$HTML_PROVIDER_URL\">$HTML_PROVIDER_LOGO</a></center>"
+	HTF_PROVIDER_LOGO="<center><a href=\"$HTML_PROVIDER_URL\" target=\"_top\">$HTML_PROVIDER_LOGO</a></center>"
 fi
 
 cat <<end-of-header
