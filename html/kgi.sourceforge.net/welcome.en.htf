@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: $" 
+HTF_REVISION="$Revision: 1.2 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -27,7 +27,7 @@ things documented. -- <i>Steffen Seeger</i>
 <tr VALIGN=TOP BGCOLOR="#CCFFFF">
 	<td rowspan="2"><b>News</b></td>
 	<td>2000-04-04</td>
-	<td>KGI Mailing lists available<br>
+	<td><a href="developers/resources/welcome.en.html#mailing-lists">KGI Mailing lists available</a><br>
 		web-site update</td>
 </tr> 
 <tr valign=top bgcolor="#CCFFFF">
@@ -67,12 +67,13 @@ things documented. -- <i>Steffen Seeger</i>
 	<td>Here you may download the last few snapshots.</td>
 </tr>
 <tr bgcolor="#99FFCC" valign=top>
-	<td><a href="support/index.en.html" target="_top">Support</a></td>
+	<td>Support</td>
 	<td>installation guides, frequently asked questions, how to contact developers etc.</td>
 </tr>
 <tr bgcolor="#99FFCC" valign=top>
-	<td><a href="developers" target="_top">Developers</a></td>
-	<td>In the developers section there will make available<dl>
+	<td><a href="developers/index.en.html" target="_top">Developers</a></td>
+	<td>In the developers section there will be the following documents
+		available<dl>
 		<dt>Specifications<dd>
 			Kernel Graphics Interface API<br>
 			Display Hardware Driver API<br>
