@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: VGA-text-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:19  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _chipset_IBM_vga_text_meta_h
 #define	_chipset_IBM_vga_text_meta_h
@@ -107,7 +110,6 @@ typedef struct
 typedef struct
 {
 	kgim_chipset_mode_t	kgim;
-	
 
 	kgi_u8_t	MISC;
 	kgi_u8_t	FCTRL;
@@ -122,7 +124,13 @@ typedef struct
 	kgi_u_t			orig_dot_y;
 	kgi_u_t			orig_offs;
 	kgi_u_t			fb_size;
+	kgi_u_t			fb_stride;
 	kgi_mmio_region_t	fb;
+
+	kgi_marker_t	cursor_ctrl;
+	kgi_marker_t	pointer_ctrl;
+	kgi_tlut_t	tlut_ctrl;
+	kgi_text16_t	text16;
 
 } vga_text_chipset_mode_t;
 
@@ -132,5 +140,6 @@ KGIM_META_MODE_CHECK_FN(vga_text_chipset)
 KGIM_META_MODE_RESOURCE_FN(vga_text_chipset)
 KGIM_META_MODE_PREPARE_FN(vga_text_chipset)
 KGIM_META_MODE_ENTER_FN(vga_text_chipset)
+KGIM_META_IMAGE_RESOURCE_FN(vga_text_chipset)
 
 #endif	/* #ifndef _chipset_IBM_vga_text_meta_h	*/

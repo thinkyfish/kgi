@@ -10,20 +10,22 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-text-meta.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:19  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
-
-#include <kgi/module.h>
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
 #endif
 
+#include <kgi/module.h>
 
 #include "chipset/IBM/VGA.h"
 #include "chipset/IBM/VGA-text-meta.h"
@@ -147,26 +149,20 @@ static void vga_text_chipset_adjust_timing(kgim_display_t *dpy,
 #endif
 
 
-/* ----	text16 context operations ----------------------------------------------
-**
-**	We use the meta_mode and meta_object fields of kgic_mode_text16context
-**	to store a reference to our kgim_display_t and kgim_display_mode_t.
+/* ----------------------------------------------------------------------------
+**	text16 operations
+** ----------------------------------------------------------------------------
 */
-#define	VGA_CHIPSET_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, chipset)
 
-#define	VGA_CHIPSET_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, chipset)
-
-static void vga_text16_hc_show(kgic_mode_text16context_t *ctx,
+/*	hardware cursor
+*/
+static void vga_text_chipset_show_hc(kgi_marker_t *cur,
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_text_chipset_io_t    *vga_io   = VGA_CHIPSET_IO(ctx);
-	vga_text_chipset_mode_t  *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t  *vga_mode = cur->meta;
+	vga_text_chipset_io_t    *vga_io   = cur->meta_io;
 
-	kgi_u_t pos = vga_mode->orig_offs  +  x  +  y * ctx->virt.x;
-
-	KRN_ASSERT((x < ctx->size.x) && (y < ctx->size.y));
+	kgi_u_t pos = vga_mode->orig_offs  +  x  +  y * vga_mode->fb_stride;
 
 	if (vga_mode->fb_size <= pos) {
 
@@ -178,28 +174,26 @@ static void vga_text16_hc_show(kgic_mode_text16context_t *ctx,
 	VGA_CRT_OUT8(vga_io, pos >> 8, VGA_CRT_CURSORADDR_H);
 }
 
-static void vga_text16_hc_hide(kgic_mode_text16context_t *ctx)
+static void vga_text_chipset_hide_hc(kgi_marker_t *cursor)
 {
-	vga_text_chipset_io_t *vga_io = VGA_CHIPSET_IO(ctx);
+	vga_text_chipset_io_t *vga_io = cursor->meta_io;
 
 	VGA_CRT_OUT8(vga_io, 0xFF, VGA_CRT_CURSORADDR_H);
 	VGA_CRT_OUT8(vga_io, 0xFF, VGA_CRT_CURSORADDR_L);
 }
 
-#define	vga_text16_hc_undo	NULL
+#define	vga_text_chipset_undo_hc	NULL
 
 
 /*	software cursor
 */
-static void vga_text16_sc_show(kgic_mode_text16context_t *ctx,
+static void vga_text_chipset_show_sc(kgi_marker_t *cur,
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = cur->meta;
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
-	kgi_u32_t new = vga_mode->orig_offs + x + y * ctx->virt.x, old;
-
-	KRN_ASSERT((x < ctx->size.x) && (y < ctx->size.y));
+	kgi_u32_t new = vga_mode->orig_offs + x + y * vga_mode->fb_stride;
 
 	if (vga_mode->fb_size < new) {
 
@@ -207,137 +201,149 @@ static void vga_text16_sc_show(kgic_mode_text16context_t *ctx,
 	}
 	KRN_ASSERT(new < vga_mode->fb_size);
 
-	if (vga_mode->cur.old & 0x8000) {
+	if (vga_mode->cur.old & 0x00010000) {
 
-		mem_out16(vga_mode->cur.old >> 16, 
-			(mem_vaddr_t) (fb + (vga_mode->cur.old & 0x7FFF)));
+		mem_out16(vga_mode->cur.old, 
+			(mem_vaddr_t) (fb + (vga_mode->cur.old >> 17)));
 	}
+
 	fb += new;
-	old = mem_in16((mem_vaddr_t) fb);
-	mem_out16((old & vga_mode->cur.and) ^ vga_mode->cur.xor, (mem_vaddr_t)fb);
-	old <<= 16;
-	if ((vga_mode->ptr.old & 0x8000) && 
-		((vga_mode->ptr.old & 0x7FFF) == new)) {
 
-		old = vga_mode->ptr.old & 0xFFFF0000;
+	new = (new << 17) | 0x00010000;
+	if ((vga_mode->ptr.old & 0xFFFF0000) == new) {
+
+		new |= vga_mode->ptr.old & 0x0000FFFF;
+
+	} else {
+
+		new |= mem_in16((mem_vaddr_t) fb);
 	}
-	vga_mode->cur.old = old | 0x8000;
+	vga_mode->cur.old = new;
+
+	mem_out16((new & vga_mode->cur.and) ^ vga_mode->cur.xor,
+		(mem_vaddr_t) fb);
 }
 
-static void vga_text16_sc_hide(kgic_mode_text16context_t *ctx)
+static void vga_text_chipset_hide_sc(kgi_marker_t *cur)
 {
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = cur->meta;
 
-	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
+	if (vga_mode->cur.old & 0x00010000) {
 
-	if (vga_mode->cur.old & 0x8000) {
-
-		mem_out16(vga_mode->cur.old >> 16,
-			(mem_vaddr_t) (fb + (vga_mode->cur.old & 0x7FFF)));
+		kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
+		mem_out16(vga_mode->cur.old,
+			(mem_vaddr_t) (fb + (vga_mode->cur.old >> 17)));
 	}
 	vga_mode->cur.old = 0;
 }
 
-#define vga_text16_sc_undo	vga_text16_sc_hide
+#define vga_text_chipset_undo_sc	vga_text_chipset_hide_sc
 
 
 /*	software pointer
 */
-static void vga_text16_sp_show(kgic_mode_text16context_t *ctx,
+static void vga_text_chipset_show_sp(kgi_marker_t *ptr,
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = ptr->meta;
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
-	kgi_u32_t new, old;
+	kgi_u32_t new;
 
-	x /= ctx->cell.x;
-	y /= ctx->cell.y;
-	KRN_ASSERT((x < ctx->size.x) && (y < ctx->size.y));
-
-	new = vga_mode->orig_offs + x + y * ctx->virt.x;
+	x /= vga_mode->text16.cell.x;
+	y /= vga_mode->text16.cell.y;
+	new = vga_mode->orig_offs + x + y * vga_mode->fb_stride;
 	if (vga_mode->fb_size <= new) {
 
 		new -= vga_mode->fb_size;
 	}
 	KRN_ASSERT(new < vga_mode->fb_size);
 
-	if (vga_mode->ptr.old & 0x8000) {
+	if (vga_mode->ptr.old & 0x00010000) {
 
-		mem_out16(vga_mode->ptr.old >> 16,
-			(mem_vaddr_t) (fb + (vga_mode->ptr.old & 0x7FFF)));
+		mem_out16(vga_mode->ptr.old,
+			(mem_vaddr_t) (fb + (vga_mode->ptr.old >> 17)));
 	}
+
 	fb += new;
-	old = mem_in16((mem_vaddr_t) fb);
-	mem_out16((old & vga_mode->ptr.and) ^ vga_mode->ptr.xor,
+
+	new = (new << 17) | 0x00010000;
+	if ((vga_mode->cur.old & 0xFFFF0000) == new) {
+
+		new |= vga_mode->cur.old & 0x0000FFFF;
+
+	} else {
+
+		new |= mem_in16((mem_vaddr_t) fb);
+	}
+	vga_mode->ptr.old = new;
+
+	mem_out16((new & vga_mode->ptr.and) ^ vga_mode->ptr.xor,
 		(mem_vaddr_t) fb);
-	old <<= 16;
-	if ((vga_mode->cur.old & 0x8000) && 
-		((vga_mode->cur.old & 0x7FFF) == new)) {
-
-		old = vga_mode->cur.old & 0xFFFF0000;
-	}
-	vga_mode->ptr.old = old | 0x8000;
 }
 
-static void vga_text16_sp_hide(kgic_mode_text16context_t *ctx)
+static void vga_text_chipset_hide_sp(kgi_marker_t *marker)
 {
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = marker->meta;
 
-	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
+	if (vga_mode->ptr.old & 0x00010000) {
 
-	if (vga_mode->ptr.old & 0x8000) {
-
-		mem_out16(vga_mode->ptr.old >> 16,
-			(mem_vaddr_t) (fb + (vga_mode->ptr.old & 0x7FFF)));
+		kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
+		mem_out16(vga_mode->ptr.old,
+			(mem_vaddr_t) (fb + (vga_mode->ptr.old >> 17)));
 	}
-	vga_mode->cur.old = 0;
+	vga_mode->ptr.old = 0;
 }
 
-#define	vga_text16_sp_undo	vga_text16_sp_hide
+#define	vga_text_chipset_undo_sp	vga_text_chipset_hide_sp
 
 /*	depending on the ((vga_text_chipset_mode_t *) vga_mode)->flags setting,
 **	we use either the hard- or software cursor marker.
 */
-#define	vga_text16_cursor_show(vga_mode)			\
+#define	vga_text_chipset_cur_show(vga_mode)			\
 	((vga_mode->flags & VGA_CMF_HW_CURSOR)			\
-		? vga_text16_hc_show : vga_text16_sc_show)
-#define	vga_text16_cursor_hide(vga_mode)			\
+		? vga_text_chipset_show_hc : vga_text_chipset_show_sc)
+#define	vga_text_chipset_cur_hide(vga_mode)			\
 	((vga_mode->flags & VGA_CMF_HW_CURSOR)			\
-		? vga_text16_hc_hide : vga_text16_sc_hide)
-#define	vga_text16_cursor_undo(vga_mode)			\
+		? vga_text_chipset_hide_hc : vga_text_chipset_hide_sc)
+#define	vga_text_chipset_cur_undo(vga_mode)			\
 	((vga_mode->flags & VGA_CMF_HW_CURSOR)			\
-		? vga_text16_hc_undo : vga_text16_sc_undo)
+		? vga_text_chipset_undo_hc : vga_text_chipset_undo_sc)
 
-#define	vga_text16_pointer_show	vga_text16_sp_show
-#define	vga_text16_pointer_hide	vga_text16_sp_hide
-#define	vga_text16_pointer_undo	vga_text16_sp_undo
+#define	vga_text_chipset_ptr_show	vga_text_chipset_show_sp
+#define	vga_text_chipset_ptr_hide	vga_text_chipset_hide_sp
+#define	vga_text_chipset_ptr_undo	vga_text_chipset_undo_sp
+
 
 /*	text rendering
 */
-static void vga_text16_put_text16(kgic_mode_text16context_t *ctx,
+static void vga_text_chipset_put_text16(kgi_text16_t *text16,
 	kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count)
 {
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = text16->meta;
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->fb.win.virt;
 	mem_put16((mem_vaddr_t) (fb + offset), text, count);
+
+	KRN_ASSERT(! (vga_mode->cur.old & 0x10000));
+	KRN_ASSERT(! (vga_mode->ptr.old & 0x10000));
 }
+
 
 /*	Texture look up table handling
 */
-static void vga_text16_set_tlut(kgic_mode_text16context_t *ctx,
-	kgi_u_t table, kgi_u_t index, kgi_u_t slots, void *tdata)
+static void vga_text_chipset_set_tlut(kgi_tlut_t *tlut,
+	kgi_u_t table, kgi_u_t index, kgi_u_t slots, const void *tdata)
 {
-	vga_text_chipset_io_t   *vga_io   = VGA_CHIPSET_IO(ctx);
-	vga_text_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_text_chipset_mode_t *vga_mode = tlut->meta;
+	vga_text_chipset_io_t   *vga_io   = tlut->meta_io;
 
-	kgi_u8_t *data = tdata;
+	const kgi_u8_t *data = tdata;
 	kgi_u8_t *fbuf = (kgi_u8_t *) vga_mode->fb.win.virt;
 	kgi_u8_t SR2, SR4, GR4, GR5, GR6, CR3A;
 
 	fbuf += (table * 0x2000) + (index << 5);
-	data += ctx->font.y * index;
+	data += vga_mode->text16.font.y * index;
 
 	/*	prepare hardware to access font plane
 	*/
@@ -363,11 +369,11 @@ static void vga_text16_set_tlut(kgic_mode_text16context_t *ctx,
 
 		/*	set font if data is valid
 		*/
-		register kgi_s_t j, cnt = 32 - ctx->font.y;
+		register kgi_s_t j, cnt = 32 - vga_mode->text16.font.y;
 
 		while (slots--) {
 
-			for (j = ctx->font.y; j--; ) {
+			for (j = vga_mode->text16.font.y; j--; ) {
 
 				mem_out8(*(data++), fbuf++);
 			}
@@ -416,63 +422,10 @@ static void vga_text16_set_tlut(kgic_mode_text16context_t *ctx,
 	VGA_CRT_OUT8(vga_io, CR3A, 0x3A);
 }
 
-#undef	VGA_CHIPSET_MODE
-#undef	VGA_CHIPSET_IO
-/*
-**
-** ----	end of text16 context functions ----------------------------------------
-*/
-
 /* ----	begin of mode_check() functions ---------------------------------------
 **
 */
-static kgi_error_t vga_text16_command(kgic_mode_context_t *ctx, kgi_u_t cmd,
-	void *in_buffer, void **out_buffer, kgi_size_t *out_size)
-{
-	kgim_display_mode_t *dpy_mode = ctx->dev_mode;
-	vga_text_chipset_mode_t *vga_mode = KGIM_SUBSYSTEM_MODE(dpy_mode, chipset);
 
-	switch (cmd) {
-
-	case KGIC_MODE_TEXT16CONTEXT:
-		{
-			kgic_mode_text16context_t *out = *out_buffer;
-			kgic_mode_text16context_request_t *in = in_buffer;
-
-			if (in->image) {
-
-				KRN_DEBUG(1, "invalid image %i", in->image);
-				return -KGI_ERRNO(DRIVER, INVAL);
-			}
-
-			out->revision    = KGIC_MODE_TEXT16CONTEXT_REVISION;
-			out->meta_object = ctx->dpy;
-			out->meta_mode	 = ctx->dev_mode;
-			out->size.x      = ctx->img->size.x;
-			out->size.y      = ctx->img->size.y;
-			out->virt.x      = ctx->img->virt.x;
-			out->virt.y      = ctx->img->virt.y;
-			out->cell.x      = 9;
-			out->cell.y      = 16;
-			out->font.x      = 8;
-			out->font.y      = 16;
-			out->CursorShow  = vga_text16_cursor_show(vga_mode);
-			out->CursorHide  = vga_text16_cursor_hide(vga_mode);
-			out->CursorUndo  = vga_text16_cursor_undo(vga_mode);
-			out->PointerShow = vga_text16_pointer_show;
-			out->PointerHide = vga_text16_pointer_hide;
-			out->PointerUndo = vga_text16_pointer_undo;
-			out->PutText16   = vga_text16_put_text16;
-			out->SetCLUT     = NULL;
-			out->SetTLUT     = vga_text16_set_tlut;
-			return KGI_EOK;
-		}
-
-	default:
-		KRN_DEBUG(1, "unknown/unsupported mode command %.8x", cmd);
-		return -KGI_ERRNO(DRIVER, INVAL);
-	}
-}
 
 /*	This is the SetOffset() handler for the exported memory mapped
 **	I/O region. We export a 64KB region, the first 32K being a linear
@@ -513,7 +466,7 @@ static void vga_text16_fb_set_offset(kgi_mmio_region_t *r, kgi_size_t offset)
 
 static const kgi_u8_t vga_default_SEQ[VGA_SEQ_REGS] =
 {
-	0x03, 0x00, 0x0F, 0x20, 0x02
+	0x03, 0x00, 0x0F, 0x00, 0x02
 };
 
 static const kgi_u8_t vga_default_CRT[VGA_CRT_REGS] =
@@ -752,6 +705,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 #		undef TM
 
 /*		vga_text_chipset_adjust_timing(img, mode); */
+		img[0].flags |= KGI_IF_TEXT16;
 		break;
 
 	default:
@@ -771,22 +725,17 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 	/*	set default values
 	*/
-	vga_mode->kgim.Command   = vga_text16_command;
-
 	vga_mode->MISC		= 0x23;
 	kgim_memcpy(vga_mode->SEQ, vga_default_SEQ, sizeof(vga_mode->SEQ));
 	kgim_memcpy(vga_mode->CRT, vga_default_CRT, sizeof(vga_mode->CRT));
 	kgim_memcpy(vga_mode->GRC, vga_default_GRC, sizeof(vga_mode->GRC));
 	kgim_memcpy(vga_mode->ATC, vga_default_ATC, sizeof(vga_mode->ATC));
-	vga_mode->flags		= VGA_CMF_HW_CURSOR;
-	vga_mode->cur.and	= 0x00FF;
-	vga_mode->cur.xor	= 0x7F00;
-	vga_mode->ptr.and	= 0x00FF;
-	vga_mode->ptr.xor	= 0x6F00;
+	vga_mode->flags		= /* VGA_CMF_HW_CURSOR */ 0;
 	vga_mode->orig_dot_x	= 0;
 	vga_mode->orig_dot_y	= 0;
 	vga_mode->orig_offs	= 0;
 	vga_mode->fb_size	= img[0].virt.x * img[0].virt.y;
+	vga_mode->fb_stride	= img[0].virt.x;
 
 	/*	frame buffer region
 	*/
@@ -803,6 +752,66 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 	vga_mode->fb.win.phys	= vga_io->aperture.base_phys;
 	vga_mode->fb.win.virt	= vga_io->aperture.base_virt;
 	vga_mode->fb.SetOffset	= vga_text16_fb_set_offset;
+
+	/*	text16 handling
+	*/
+	vga_mode->text16.meta		= vga_mode;
+	vga_mode->text16.meta_io	= vga_io;
+	vga_mode->text16.type		= KGI_RT_TEXT16_CONTROL;
+	vga_mode->text16.prot		= KGI_PF_DRV_RWS;
+	vga_mode->text16.name		= "VGA-text text16 control";
+	vga_mode->text16.size.x		= img[0].size.x;
+	vga_mode->text16.size.y		= img[0].size.y;
+	vga_mode->text16.virt.x		= img[0].virt.x;
+	vga_mode->text16.virt.y		= img[0].virt.y;
+	vga_mode->text16.cell.x		= 9;
+	vga_mode->text16.cell.y		= 16;
+	vga_mode->text16.font.x		= 8;
+	vga_mode->text16.font.y		= 16;
+	vga_mode->text16.PutText16	= vga_text_chipset_put_text16;
+
+	/*	texture look up table control
+	*/
+	vga_mode->tlut_ctrl.meta	= vga_mode;
+	vga_mode->tlut_ctrl.meta_io	= vga_io;
+	vga_mode->tlut_ctrl.type	= KGI_RT_TLUT_CONTROL;
+	vga_mode->tlut_ctrl.prot	= KGI_PF_DRV_RWS;
+	vga_mode->tlut_ctrl.name	= "VGA-text tlut control";
+	vga_mode->tlut_ctrl.Set		= vga_text_chipset_set_tlut;
+
+	/*	cursor setup
+	*/
+	vga_mode->cur.and	= 0x00FF;
+	vga_mode->cur.xor	= 0x7F00;
+	vga_mode->cur.old	= 0;
+
+	vga_mode->cursor_ctrl.meta	= vga_mode;
+	vga_mode->cursor_ctrl.meta_io	= vga_io;
+	vga_mode->cursor_ctrl.type	= KGI_RT_CURSOR_CONTROL;
+	vga_mode->cursor_ctrl.prot	= KGI_PF_DRV_RWS;
+	vga_mode->cursor_ctrl.name	= "VGA-text cursor control";
+	vga_mode->cursor_ctrl.size.x	= 1;
+	vga_mode->cursor_ctrl.size.y	= 1;
+	vga_mode->cursor_ctrl.Show	= vga_text_chipset_cur_show(vga_mode);
+	vga_mode->cursor_ctrl.Hide	= vga_text_chipset_cur_hide(vga_mode);
+	vga_mode->cursor_ctrl.Undo	= vga_text_chipset_cur_undo(vga_mode);
+
+	/*	pointer setup
+	*/
+	vga_mode->ptr.and	= 0x00FF;
+	vga_mode->ptr.xor	= 0x6F00;
+	vga_mode->ptr.old	= 0;
+
+	vga_mode->pointer_ctrl.meta	= vga_mode;
+	vga_mode->pointer_ctrl.meta_io	= vga_io;
+	vga_mode->pointer_ctrl.type	= KGI_RT_POINTER_CONTROL;
+	vga_mode->pointer_ctrl.prot	= KGI_PF_DRV_RWS;
+	vga_mode->pointer_ctrl.name	= "VGA-text pointer control";
+	vga_mode->pointer_ctrl.size.x	= 1;
+	vga_mode->pointer_ctrl.size.y	= 1;
+	vga_mode->pointer_ctrl.Show	= vga_text_chipset_ptr_show;
+	vga_mode->pointer_ctrl.Hide	= vga_text_chipset_ptr_hide;
+	vga_mode->pointer_ctrl.Undo	= vga_text_chipset_ptr_undo;
 
 	/*	Setup bits per pixel and logical screen width
 	*/
@@ -894,6 +903,23 @@ kgi_resource_t *vga_text_chipset_mode_resource(vga_text_chipset_t *vga,
 	kgi_image_mode_t *img, kgi_u_t images, kgi_u_t index)
 {
 	return (0 == index) ? (kgi_resource_t *) &vga_mode->fb : NULL;
+}
+
+kgi_resource_t *vga_text_chipset_image_resource(vga_text_chipset_t *vga,
+	vga_text_chipset_mode_t *vga_mode,
+	kgi_image_mode_t *img, kgi_u_t image, kgi_u_t index)
+{
+	KRN_ASSERT(0 == image);
+
+	switch (index) {
+
+	case 0:	return (kgi_resource_t *) &(vga_mode->cursor_ctrl);
+	case 1:	return (kgi_resource_t *) &(vga_mode->pointer_ctrl);
+	case 2:	return (kgi_resource_t *) &(vga_mode->tlut_ctrl);
+	case 3:	return (kgi_resource_t *) &(vga_mode->text16);
+
+	}
+	return NULL;
 }
 
 void vga_text_chipset_mode_prepare(vga_text_chipset_t *vga, 
