@@ -11,6 +11,9 @@
 ** ---------------------------------------------------------------------------
 **
 ** 	$Log: kgim-0.9.c,v $
+** 	Revision 1.2  2000/09/21 09:25:04  seeger_s
+** 	- E() -> KGI_ERRNO()
+** 	
 ** 	Revision 1.1.1.1  2000/04/18 08:51:03  seeger_s
 ** 	- initial import of pre-SourceForge tree
 ** 	
@@ -217,21 +220,19 @@ static inline void *kgim_free(void *ptr)
 */
 #define	KGIM_ALIGN(x)	(((x) + 7) & ~7)
 
-static kgi_error_t kgim_display_command(void *ctx, kgi_u_t cmd, void *in,
-	void **out, kgi_size_t *out_size)
+static kgi_error_t kgim_display_command(
+	kgi_display_t *kgi_dpy, void *dev_mode,
+	kgi_image_mode_t *img, kgi_u_t images,
+	kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size)
 {
+/*	kgim_display_t *kgim = (kgim_display_t *) kgi_dpy;
+**	kgim_display_mode_t *kgim_mode = (kgim_display_mode_t *) dev_mode;
+*/
 	KRN_DEBUG(2, "kgim_display_command(cmd = %d)", cmd);
 	
 	return -KGI_ERRNO(DRIVER, INVAL);
 }
 
-static kgi_error_t kgim_display_mode_command(void *ctx,
-	kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size)
-{
-	KRN_DEBUG(2, "kgim_display_mode_command(cmd = %d)", cmd);
-	
-	return -KGI_ERRNO(DRIVER, INVAL);
-}
 
 static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
 	kgi_timing_command_t cmd, kgi_image_mode_t *img, kgi_u_t images,
@@ -263,7 +264,6 @@ static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
 		KRN_DEBUG(2, "KGI_TC_PROPOSE:");
 		
 		kgim_memset(dpy_mode, 0, dpy->kgi.mode_size);
-		dpy_mode->Command = kgim_display_mode_command;
 
 		dev_mode = ((kgi_u8_t *) dev_mode) +
 				KGIM_ALIGN(sizeof(kgim_display_mode_t));
@@ -302,10 +302,10 @@ static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
 		}
 	}
 
-	chipset_mode	= KGIM_SUBSYSTEM_MODE(dpy_mode, chipset);
-	dac_mode	= KGIM_SUBSYSTEM_MODE(dpy_mode, ramdac);
-	clock_mode	= KGIM_SUBSYSTEM_MODE(dpy_mode, clock);
-	monitor_mode	= KGIM_SUBSYSTEM_MODE(dpy_mode, monitor);
+	chipset_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_chipset];
+	dac_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_ramdac];
+	clock_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_clock];
+	monitor_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_monitor];
 
 #warning for KGI_TC_CHECK too??
 	
@@ -406,47 +406,93 @@ static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
 
 	} else {
 
-		kgi_u_t rindex = 0;
-		kgim_subsystem_t s = 0;
+		kgi_u_t index, subsys_index;
+		kgim_subsystem_type_t subsys;
 
-		KRN_DEBUG(2, "Setting up resources and metadata "
+		KRN_DEBUG(2, "Setting up global resources and metadata "
 			"for %i subsystems", KGIM_LAST_SUBSYSTEM);
-		
-		while (s < KGIM_LAST_SUBSYSTEM) {
+		index = 0;
+		subsys = 0;
+		subsys_index = 0;
+		while (subsys < KGIM_LAST_SUBSYSTEM) {
 
 			const kgim_meta_t *meta;
 			void *meta_data, *meta_mode;
 			kgi_resource_t *resource;
 			
-			KRN_DEBUG(2, "Setting up resources and metadata "
-				"for subsystem %i", s);
+			if (rsize <= index) {
 
-			if (rsize <= rindex) {
-
-				KRN_DEBUG(0, "rsize <= rindex");
+				KRN_DEBUG(0, "rsize (%i) <= index (%i)",
+					rsize, index);
 				return -ENOMEM;
 			}
 
-			meta = dpy->subsystem[s].meta_lang;
-			meta_data = dpy->subsystem[s].meta_data;
-			meta_mode = dpy_mode->subsystem_mode[s];
+			meta = dpy->subsystem[subsys].meta_lang;
+			meta_data = dpy->subsystem[subsys].meta_data;
+			meta_mode = dpy_mode->subsystem_mode[subsys];
 
 			resource = (meta && meta->ModeResource)
 				? meta->ModeResource(meta_data, meta_mode,
-					img, images, rindex)
+					img, images, subsys_index)
 				: NULL;
 
 			if (resource) {
 
-				r[rindex++] = resource;
+				KRN_DEBUG(2, "resource %i: %s", index,
+					resource->name);
+				r[index++] = resource;
+				subsys_index++;
 
 			} else {
 
-				s++;
-				rindex = 0;
+				subsys++;
+				subsys_index = 0;
 			}
 			continue;
 		}
+
+		KRN_DEBUG(2, "Setting up image resources and metadata "
+			"for %i subsystems", KGIM_LAST_SUBSYSTEM);
+		index = 0;
+		subsys = 0;
+		subsys_index = 0;
+		while (subsys < KGIM_LAST_SUBSYSTEM) {
+
+			const kgim_meta_t *meta;
+			void *meta_data, *meta_mode;
+			kgi_resource_t *resource;
+			
+			if (__KGI_MAX_NR_IMAGE_RESOURCES <= index) {
+
+				KRN_DEBUG(0, "%i <= index",
+					__KGI_MAX_NR_IMAGE_RESOURCES);
+				return -ENOMEM;
+			}
+
+			meta = dpy->subsystem[subsys].meta_lang;
+			meta_data = dpy->subsystem[subsys].meta_data;
+			meta_mode = dpy_mode->subsystem_mode[subsys];
+
+			resource = (meta && meta->ImageResource)
+				? meta->ImageResource(meta_data, meta_mode,
+					img, 0, subsys_index)
+				: NULL;
+
+			if (resource) {
+
+				KRN_DEBUG(2, "img resource %i: %s", index,
+					resource->name);
+				img[0].resource[index++] = resource;
+				subsys_index++;
+
+			} else {
+
+				subsys++;
+				subsys_index = 0;
+			}
+			continue;
+		}
+
 		return KGI_EOK;
 	}
 }
@@ -527,7 +573,7 @@ static void kgim_display_unset_mode(kgi_display_t *kgi_dpy,
 
 
 static kgi_error_t kgim_display_subsystem_init(kgim_display_t *dpy, 
-	kgim_subsystem_t system)
+	kgim_subsystem_type_t system)
 {
 	const kgim_meta_t *meta = dpy->subsystem[system].meta_lang;
 	void *meta_data, *meta_io;
@@ -638,7 +684,7 @@ static kgi_error_t kgim_display_subsystem_init(kgim_display_t *dpy,
 }
 
 static void kgim_display_subsystem_done(kgim_display_t *dpy,
-	kgim_subsystem_t system)
+	kgim_subsystem_type_t system)
 {
 	const kgim_meta_t *meta = dpy->subsystem[system].meta_lang;
 	void *meta_data   = dpy->subsystem[system].meta_data;
@@ -709,17 +755,16 @@ kgi_error_t kgim_display_init(kgim_display_t *dpy)
 	dpy->kgi.CheckMode	= kgim_display_check_mode;
 	dpy->kgi.SetMode	= kgim_display_set_mode;
 	dpy->kgi.UnsetMode	= kgim_display_unset_mode;
-	dpy->kgi.ModeCommand	= kgim_display_mode_command;
 
-	if ((error = kgi_register_display(&dpy->kgi, 
+	if ((error = kgi_register_display(&(dpy->kgi),
 		dpy->options.misc->display))) {
 
 		KRN_DEBUG(1, "Failed to register display.");
 		goto display;
 	}
 
-	KRN_DEBUG(1, "%s %s driver loaded as display %i",
-		dpy->kgi.vendor, dpy->kgi.model, dpy->kgi.id);
+	KRN_DEBUG(1, "%s %s driver loaded as display %i (%p)",
+		dpy->kgi.vendor, dpy->kgi.model, dpy->kgi.id, dpy);
 	return KGI_EOK;
 
 	/*	If there was some error during startup, we still have to
