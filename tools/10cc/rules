@@ -14,6 +14,12 @@
 #
 #		.o	C object file
 #               .oo     C++ object file
+#		.a	C static library file (archive)
+#		.aa	C++ static library file (archive)
+#
+#	suffixes for files removed when making really clean:
+#
+#		.so	shared object file (dynamically linked library)
 #
 
 CC_BIN:=$(subst ",,$(CC_BIN))
@@ -65,7 +71,8 @@ endif
 
 ifeq ($(MAKELEVEL),0)
 
-GMAKE_CLEAN_INIT += "*.o" "*.oo"
+GMAKE_CLEAN_INIT += "*.o" "*.oo" "*.a" "*.aa"
+GMAKE_REALCLEAN_INIT += "*.so"
 
 endif
 

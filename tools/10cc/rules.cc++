@@ -17,6 +17,7 @@
 #		-L <dir> ...	search libraries in <dir> too. (may be repeated)
 #		-D<define>	add <define> to preprocessor variables
 #		-l<lib>		link in library <lib>
+#		-Wl,-soname=<s>	set shared object name to <s>
 #
 #	The following file name conventions apply in addition to the general
 #	rules:
@@ -35,17 +36,15 @@ GMAKE_REALCLEAN_INIT += "*.s" "*.i" "*.ss" "*.ii"
 
 endif
 
-#	search paths
+#	search paths and options
 #
 CC_INCLUDE_DIRS=$(patsubst %,-I % ,$(subst ",,$(CC_INCLUDE_PATH)))
 CC_LIBRARY_DIRS=$(patsubst %,-L % ,$(subst ",,$(CC_LIBRARY_PATH)))
+CC_LINK_LIBS=$(patsubst %,-l% ,$(subst ",,$(CC_LIBS)))
 
 CXX_INCLUDE_DIRS=$(patsubst %,-I % ,$(subst ",,$(CXX_INCLUDE_PATH)))
 CXX_LIBRARY_DIRS=$(patsubst %,-L % ,$(subst ",,$(CXX_LIBRARY_PATH)))
-
-#	configuration defines
-#
-CC_OPT_CONFIG += -DHOST_OS=HOST_OS_$(HOST_OS) -DHOST_CPU=HOST_CPU_$(HOST_CPU)
+CXX_LINK_LIBS=$(patsubst %,-l% ,$(subst ",,$(CXX_LIBS)))
 
 #	the whole command line
 #
@@ -197,20 +196,33 @@ CXX = $(CXX_BIN) $(CC_OPT_WARN) $(CC_OPT_DEBUG) $(CC_OPT_OPTIMIZE) $(CC_OPT_TARG
 
 #	C shared library from objects
 %.so: %.o
-	$(CC) $(CC_LIBS) $(CC_LIBRARY_DIRS) $(CFLAGS) -shared $^ -o $@
+	eval `$(DIR_TOOLS)/??cc/apiversion.sh $(DIR_SOURCE)/$*.api $(DIR_TOP_BUILD)/lib`; \
+	$(CC) $(CC_LIBRARY_DIRS) $(CC_LINK_LIBS) $(CFLAGS) -shared -Wl,-soname=$$SONAME $^ -o $@; \
+	ln -sf $(DIR_BUILD)/$@ $(DIR_TOP_BUILD)/lib/$$SONAME
+
+%.a:
+	rm -f $@; $(AR) rcs $@ $^
+
 
 #	C exectutable from objects
 %: %.o
-	$(CC) $(CC_LIBS) $(CC_LIBRARY_DIRS) $(CFLAGS) $^ -o $@
+	$(CC) $(CC_LIBRARY_DIRS) $(CC_LINK_LIBS) $(CFLAGS) $^ -o $@
 
 
 #	C++ shared library from objects
 %.so: %.oo
-	$(CXX) $(CXX_LIBS) $(CXX_LIBRARY_DIRS) $(CFLAGS) -shared $^ -o $@
+	eval `$(DIR_TOOLS)/??cc/apiversion.sh $(DIR_SOURCE)/$*.api $(DIR_TOP_BUILD)/lib`; \
+	$(CXX) $(CXX_LIBRARY_DIRS) $(CXX_LINK_LIBS) $(CFLAGS) -shared --Wl,-soname=$$SONAME $^ -o $@; \
+	ln -sf $(DIR_BUILD)/$@ $(DIR_TOP_BUILD)/lib/$$SONAME
 
 #	C++ exectutable from objects
 %: %.oo
-	$(CXX) $(CXX_LIBS) $(CXX_LIBRARY_DIRS) $(CFLAGS) $^ -o $@
+	$(CXX) $(CXX_LIBRARY_DIRS) $(CXX_LINK_LIBS) $(CFLAGS) $^ -o $@
+
+%.aa:
+	rm -f $@; $(AR) rcs $@ $^
+
 
 #
 # -----------------------------------------------------------------------------
+
