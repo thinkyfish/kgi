@@ -7,6 +7,8 @@ then
 	source .config
 fi
 
+Revision="revision"
+
 source $HTF_SOURCE > /dev/null
 
 #	document header
@@ -57,10 +59,10 @@ then
 	cat <<end-of-trailer
 
 <p><hr noshade>
-<table cols=3 width="100%"><tr valign=top>
-<td align=left><i><a target="_top" href="${HTF_BACKLINK:-$HTF_AUTO_BACKLINK}">$HTF_BACK</a></i></td>
-<td align=center><i>\$Revision ${HTF_REVISION:-&nbsp;}</i></td>
-<td align=right><i>$HTF_MAINTAINED1 <a href="$HTF_MAINTAINER_URL">$HTF_MAINTAINER</a>$HTF_MAINTAINED2</i></td>
+<table width="100%" nosave><tr valign=top nosave>
+<td align=left nosave><i><a target="_top" href="${HTF_BACKLINK:-$HTF_AUTO_BACKLINK}">$HTF_BACK</a></i></td>
+<td align=center nosave><i>${HTF_REVISION:-&nbsp;}</i></td>
+<td align=right nosave><i>$HTF_MAINTAINED1 <a href="$HTF_MAINTAINER_URL">$HTF_MAINTAINER</a>$HTF_MAINTAINED2</i></td>
 </tr></table>
 </body></html>
 end-of-trailer
