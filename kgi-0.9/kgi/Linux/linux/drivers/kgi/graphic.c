@@ -14,6 +14,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.5  2001/09/17 20:35:01  seeger_s
+**	- updated according to kgi_accel_buffer_s changes
+**	
 **	Revision 1.4  2001/09/15 21:42:37  skids
 **	
 **	Changes for compiling with 2.4.x kernel.  These could use a lot
@@ -618,12 +621,8 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 		return NOPAGE_SIGBUS_RETVAL;
 	}
 
-	if (map->buf->next->execution.state != KGI_AS_IDLE) {
-
-		KRN_DEBUG(1, "next buffer is not IDLE, stalling");
-		sleep_on(map->buf->next->executed);
-		KRN_ASSERT(KGI_AS_IDLE == map->buf->next->execution.state);
-	}
+	wait_event( (*(map->buf->next->executed)),
+		(map->buf->next->execution.state == KGI_AS_IDLE));
 
 	if (map->mstart) {
 
@@ -685,11 +684,7 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 
 		buf = buf->next;
 	}
-	if (buf->execution.next) {
-
-		KRN_DEBUG(1, "waiting for accelerator to complete");
-		sleep_on(buf->executed);
-	}
+	wait_event( (*(buf->executed)), (NULL == buf->execution.next));
 
 	if (map->mstart) {
 
