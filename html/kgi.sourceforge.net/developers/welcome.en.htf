@@ -3,6 +3,7 @@ HTF_TITLE="KGI Developer's Home"
 HTF_DESCRIPTION="The developer homepage collects links to resources for KGI developers."
 HTF_KEYWORDS="KGI Project; development"
 HTF_AUTHOR="Steffen Seeger"
+HTF_REVISION="$Revision: $" 
 
 cat <<end-of-htf
 <h2>Developer Resources</h2>

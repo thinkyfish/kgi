@@ -3,6 +3,7 @@ HTF_TITLE="Developer Resources"
 HTF_DESCRIPTION="How to become a developer, report bugs and get the latest sources."
 HTF_KEYWORDS="KGI Project; Developer Resources"
 HTF_AUTHOR="Steffen Seeger"
+HTF_REVISION="$Revision: $" 
 
 cat <<end-of-htf
 <h2><a name="cvs"></a>CVS Repository</h2>
