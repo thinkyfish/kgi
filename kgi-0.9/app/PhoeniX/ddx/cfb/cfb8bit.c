@@ -30,8 +30,7 @@ from The Open Group.
  * 8 bit color frame buffer utility routines
  */
 
-
-#if PSZ == 8
+#define	PSZ	8
 
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
@@ -459,5 +458,3 @@ cfb8ComputeClipMasks32 (pBox, numRects, x, y, w, h, clips)
     }
     return result;
 }
-
-#endif /* PSZ == 8 */

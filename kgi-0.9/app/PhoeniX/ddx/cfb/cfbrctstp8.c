@@ -28,7 +28,7 @@ Author: Keith Packard, MIT X Consortium
 
 /* $TOG: cfbrctstp8.c /main/18 1998/02/09 14:07:10 kaleb $ */
 
-#if PSZ == 8
+#define	PSZ	8
 
 #include "X11/X.h"
 #include "X11/Xmd.h"
@@ -44,7 +44,7 @@ Author: Keith Packard, MIT X Consortium
 #include "cfb8bit.h"
 
 #define MFB_CONSTS_ONLY
-#include "maskbits.h"
+#include "ddx/mfb/maskbits.h"
 
 void
 cfb8FillRectOpaqueStippled32 (pDrawable, pGC, nBox, pBox)
@@ -583,5 +583,3 @@ cfb8FillRectStippledUnnatural (pDrawable, pGC, nBox, pBox)
 	}
     }
 }
-
-#endif /* PSZ == 8 */

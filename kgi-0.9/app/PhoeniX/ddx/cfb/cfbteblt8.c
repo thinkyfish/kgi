@@ -27,13 +27,13 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbteblt8.c /main/26 1998/02/09 14:07:48 kaleb $ */
 
-#if PSZ == 8
+#define	PSZ	8
 
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
 #include	"X11/Xproto.h"
 #include	"cfb.h"
-#include	"fontstruct.h"
+#include	"X11/fonts/fontstruct.h"
 #include	"dixfontstr.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
@@ -577,4 +577,3 @@ CFBTEGBLT8 (pDrawable, pGC, xInit, yInit, nglyph, ppci, pglyphBase)
 	}
     }
 }
-#endif /* PSZ == 8 */

@@ -26,7 +26,7 @@ in this Software without prior written authorization from The Open Group.
 */
 /* $TOG: cfbpush8.c /main/18 1998/02/09 14:07:04 kaleb $ */
 
-#if PSZ == 8
+#define PSZ	8
 
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
@@ -40,7 +40,7 @@ in this Software without prior written authorization from The Open Group.
 #include	"cfbmskbits.h"
 #include	"cfb8bit.h"
 #define MFB_CONSTS_ONLY
-#include	"maskbits.h"
+#include	"ddx/mfb/maskbits.h"
 
 void
 cfbPushPixels8 (pGC, pBitmap, pDrawable, dx, dy, xOrg, yOrg)
@@ -178,5 +178,3 @@ cfbPushPixels8 (pGC, pBitmap, pDrawable, dx, dy, xOrg, yOrg)
 	psrcLine += srcWidth;
     }
 }
-
-#endif
