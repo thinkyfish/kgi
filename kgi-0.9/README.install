@@ -11,6 +11,7 @@
 	don't hesitate to contribute (the /dev/vcs emulator might be a
 	simple but useful project)
 
+	- get PhoeniX operational in 8bpp
 	- finish TI ramdac driver	
 	- enable Permedia2 accelerator
 		- solve issue of drivers using wait-queues
@@ -18,12 +19,20 @@
 	  like the test-{master/slave} demos
 	- accelerator performance tests
 	- make Permedia driver load as boot display substitute
-	- libGGI/XGGI port
+	- libGGI port
 	- /dev/vcs emulator implementation
 
 
 1)	CHANGES
 ===============
+
+20000919:
+	- added /dev/event interface
+	- PhoeniX X server added
+		- it compiles
+		- it initializes the graphics card
+		- it responds to mouse and key events
+	- some minor macro cleanups (E split into KGI_ERRNO and KII_ERRNO)
 
 20000418:
 	- it compiles again (except the X server), also in a separate
@@ -87,16 +96,6 @@
 	- module binding added
 	- cleanup of the module configuration/linking process
 
-19990727:
-	- overall name-space cleanup. The system layer definition headers have
-	  been relocated as well.
-	- patches 2.2.0-2.2.10
-	- mouse support & 'midnight-commander leaves console blank' fixed.
-	- Unified Input Device layer support by Brian S. Julian
-	- keyboard and mouse detection fixes by Brian S. Julin
-	  (please report your experience!)
-	- OSF1 support and portability enhancements by Marcus Sundberg
-
 2)	INSTALLATION INSTRUCTIONS
 =================================
 
@@ -150,7 +149,9 @@ given below.
 		./configure
 
 	You may build the KGI package in a separate directory tree,
-	e.g. ~/build. If you want do that, simply make this your
+	e.g. ~/build. However, this feature is not available if the
+	kernel source tree is not in tar.gz form but extracted.
+	If you want build in a separate directory, simply make this your
 	working directory and execute the kgi-0.9/configure script:
 
 		cd ~/kgi-0.9-build
@@ -172,6 +173,8 @@ given below.
 	disabled. The KGI patches replace the virtual terminal
 	code completely, so you must not enable CONFIG_VT because
 	otherwise the kernel compilation step below will fail.
+	Also, using the "version info on module symbols" should not
+	be enabled.
 
 2.1.2) Kernel compilation & Installation
 
@@ -256,6 +259,10 @@ multi-head to work with the KGI kernel patches and XFree-4.0 servers
 only.
 
 !!!!!	EXPLAIN HOW TO GET XFREE-4.0 RUNNING TRUE MULTI-HEAD   !!!!!
+[	Well, actually it doesn't work. At least I had problems		]
+[	getting XFree86 to work on two video cards. The machine		]
+[	ended up with a messed up PCI configuration, which would	]
+[	usually cause a hardlock on less forgiving hardware.		]
 
 2.3) Display driver installation
 --------------------------------
@@ -267,19 +274,17 @@ organized. See the driver/graphic/*/3Dlabs subdirectories.
 If you want to test this driver, follow the instructions below.
 Please report your experience to seeger@physik.tu-chemnitz.de.
 
-1)	After booting the kernel above, go to driver/graphic and execute
+1)	After booting the kernel above, go to drv/display and execute
 
 		make clean; make
 
 2)	This results in two modules that need to be inserted into the kernel:
 
 		insmod system/Linux/kgim-0.9.o
-		insmod modules/ELSA/WinnerOffice2000.o pcibus=1 pcidev=0 display=1
-
-	Substitute the correct pcibus and pcidev values for your installation.
-	NOTE: You have to give the pcibus and pcidev arguments otherwise you
-		will trigger a known bug and module loading will not work.
-
+		insmod modules/ELSA/WinnerOffice2000.o pcibus=1 pcidev=0 display=3
+	The pcibus and pcidev values have to be adjusted for your configuration
+	and need only be given if multiple cards of this type are installed.
+	
 	Then you can start playing with the /dev/graphic mapper.
 
 NOTE:	The driver works only with a Permedia2, TVP4020 or TVP4020A.
@@ -288,16 +293,48 @@ NOTE:	The driver works only with a Permedia2, TVP4020 or TVP4020A.
 	and set
 		CONFIG_BOARD_VENDOR=3Dlabs
 		CONFIG_BOARD_MODEL=Permedia2v
+		CONFIG_RAMDAC_VENDOR=3Dlabs
+		CONFIG_RAMDAC_MODEL=Permedia2v
+		CONFIG_CLOCK_VENDOR=3Dlabs
+		CONFIG_CLOCK_MODEL=Permedia2v
 	then proceed with step 1).
 
 NOTE:	The board needs to be the second VGA board installed (not the boot-VGA).
 
-NOTE:	You have to create a graphic special file with the command
 
-		mknod /dev/graphic c 60 17
 
-	that gets mapped on display 1.
+	Next you have to create a some special files with the commands
 
+		mknod /dev/graphic c 60 16
+		mknod /dev/event c 61 16
+
+	so that these devices get mapped on display 3/focus 0.
+
+
+
+	Finally insert the event device mapper module
+
+		insmod ~build/kgi/Linux/linux/drivers/kgi/event.o
+
+	if you have selected this driver to be compiled as a module.
+
+
+
+	Now you are ready to compile the PhoeniX server. As a preparation
+	you need to have the XFree 4.0 header files and libraries installed
+	in /usr/X11R6.4. Please see http://www.xfree86.org for information
+	on how to obtain and install the XFree-4.0 package. Done that,
+	you just do
+
+		cd ~/build/app/PhoeniX
+		make
+
+	and if all went right, you can start the PhoeniX server with
+
+		./phoenix
+
+	Have fun playing with it, and let me know if the above procedure
+	worked for you.
 
 3) KNOWN BUGS/MISSING FEATURES
 ==============================
@@ -355,6 +392,7 @@ NOTE:	You have to create a graphic special file with the command
 	on pointer port.
 	-- bug. This has been reported but I had no time to verify 
 	   the validity of this report.
+	   -- I fear AT scancode conversion isn't possible on the pointer port.
 
 15)	Check if ANSI-CPP can handle {KRN,LIB,APP}_DEBUG macros in
 	debug.h
