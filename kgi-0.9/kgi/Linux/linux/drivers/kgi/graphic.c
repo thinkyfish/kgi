@@ -14,6 +14,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.2  2001/07/03 08:52:36  seeger_s
+**	- mode commands removed (will be replaced by image resource mapping)
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:48  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -554,7 +557,8 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 		KRN_DEBUG(1, "unmap & exec buffer %.8lx, %.8lx-%.8lx",
 			map->buf->aperture.phys, map->mstart, map->mend);
 		fast_unmap_page_range(map->vma->vm_mm, map->mstart, map->mend);
-		map->buf->exec_size = offset - map->buffer;
+		map->buf->exec_size = 
+			(offset == nstart) ? map->buf_size : (offset - nstart);
 		accel->Exec(accel, map->buf);
 	}
 
