@@ -43,6 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mfbimage.c /main/19 1998/02/09 14:39:19 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 
 #include "windowstr.h"

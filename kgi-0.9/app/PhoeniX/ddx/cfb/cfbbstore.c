@@ -16,7 +16,7 @@
  *
  */
 /* $TOG: cfbbstore.c /main/18 1998/02/17 11:03:44 kaleb $ */
-
+#include "config.h"
 #include    "cfb.h"
 #include    "X11/X.h"
 #include    "mi/mibstore.h"

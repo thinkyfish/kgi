@@ -23,6 +23,7 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbpolypnt.c /main/19 1998/02/09 14:06:58 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 #include "gcstruct.h"
 #include "windowstr.h"

@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbtile.c /main/13 1998/02/09 14:40:25 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 
 #include "windowstr.h"

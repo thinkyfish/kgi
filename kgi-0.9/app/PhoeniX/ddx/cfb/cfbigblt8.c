@@ -24,6 +24,7 @@ in this Software without prior written authorization from The Open Group.
 
 /* $XFree86: xc/programs/Xserver/cfb/cfbigblt8.c,v 1.3 1998/10/04 09:37:44 dawes Exp $ */
 
+#include "config.h"
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
 #include	"X11/Xproto.h"

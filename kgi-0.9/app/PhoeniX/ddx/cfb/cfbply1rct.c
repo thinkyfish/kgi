@@ -23,6 +23,7 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/Xserver/cfb/cfbply1rct.c,v 3.6 2000/02/12 03:39:28 dawes Exp $ */
 
+#include "config.h"
 #include "X11/X.h"
 
 #include "gcstruct.h"

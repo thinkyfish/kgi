@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbgetsp.c /main/19 1998/02/09 14:39:09 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 

@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: cfbbres.c /main/16 1998/02/09 14:04:53 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "misc.h"
 #include "cfb.h"

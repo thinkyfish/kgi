@@ -43,6 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbtegblt.c,v 3.3 2000/02/12 03:39:32 dawes Exp $ */
 
+#include "config.h"
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
 #include	"X11/Xproto.h"

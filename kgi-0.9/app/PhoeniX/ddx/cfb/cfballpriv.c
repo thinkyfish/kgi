@@ -22,7 +22,7 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Keith Packard, MIT X Consortium
  */
 /* $XFree86: xc/programs/Xserver/cfb/cfballpriv.c,v 1.9 1999/12/13 02:13:06 robin Exp $ */
-
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "servermd.h"

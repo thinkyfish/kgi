@@ -42,7 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbplygblt.c /main/21 1998/02/09 14:39:46 kaleb $ */
-
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "X11/Xproto.h"

@@ -28,7 +28,7 @@ Author: Keith Packard
 
 */
 /* $TOG: cfbbitblt.c /main/73 1998/05/14 14:41:31 msr $ */
-
+#include "config.h"
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
 #include	"X11/Xproto.h"

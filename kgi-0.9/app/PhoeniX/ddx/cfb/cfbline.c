@@ -42,6 +42,8 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: cfbline.c /main/25 1998/02/09 14:06:12 kaleb $ */
+
+#include "config.h"
 #include "X11/X.h"
 
 #include "gcstruct.h"

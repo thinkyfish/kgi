@@ -24,6 +24,7 @@ in this Software without prior written authorization from The Open Group.
 /* $XFree86: xc/programs/Xserver/cfb/cfbsolid.c,v 3.4 2000/02/12 03:39:31 dawes Exp $ */
 
 
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "servermd.h"

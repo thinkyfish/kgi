@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbcmap.c /main/13 1998/02/09 14:38:42 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "scrnintstr.h"
 #include "colormapst.h"

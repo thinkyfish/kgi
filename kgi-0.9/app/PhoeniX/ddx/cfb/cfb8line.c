@@ -25,8 +25,8 @@ in this Software without prior written authorization from The Open Group.
  * Jeff Anton'x fixes: cfb8line.c   97/02/07
  */
 
+#include "config.h"
 #include "X11/X.h"
-
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmapstr.h"

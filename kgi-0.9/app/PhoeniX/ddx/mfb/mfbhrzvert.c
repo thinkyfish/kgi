@@ -43,6 +43,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbhrzvert.c /main/9 1998/02/09 14:39:14 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 
 #include "gc.h"

@@ -44,6 +44,7 @@ SOFTWARE.
 
 /* $TOG: cfbgc.c /main/92 1998/02/09 14:05:32 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "X11/Xproto.h"

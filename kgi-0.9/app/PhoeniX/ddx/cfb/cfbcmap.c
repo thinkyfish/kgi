@@ -29,7 +29,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ********************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbcmap.c,v 3.12 2000/02/12 03:39:23 dawes Exp $ */
 
-
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xproto.h"
 #include "scrnintstr.h"

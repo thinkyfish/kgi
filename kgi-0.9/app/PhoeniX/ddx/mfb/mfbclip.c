@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbclip.c /main/15 1998/02/09 14:38:38 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "miscstruct.h"
 #include "pixmapstr.h"

@@ -48,6 +48,7 @@ bit index 32-n in a longword
 
    see also cfbmskbits.h
 */
+#include "config.h"
 #include	"X11/X.h"
 #include	"X11/Xmd.h"
 #include	"servermd.h"

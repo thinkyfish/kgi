@@ -46,6 +46,8 @@ SOFTWARE.
 */
 /* $XFree86: xc/programs/Xserver/mfb/maskbits.c,v 1.4 2000/02/12 03:39:59 dawes Exp $ */
 
+#include "config.h"
+
 #include "maskbits.h"
 #include "servermd.h"
 

@@ -43,6 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/cfb/cfbpntwin.c,v 3.3 2000/02/12 03:39:28 dawes Exp $ */
 
+#include "config.h"
 #include "X11/X.h"
 
 #include "windowstr.h"

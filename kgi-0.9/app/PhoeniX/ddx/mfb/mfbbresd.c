@@ -42,6 +42,8 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbbresd.c /main/11 1998/02/09 14:38:23 kaleb $ */
+
+#include "config.h"
 #include "X11/X.h"
 #include "misc.h"
 #include "mfb.h"

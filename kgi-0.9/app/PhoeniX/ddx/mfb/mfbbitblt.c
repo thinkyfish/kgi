@@ -43,6 +43,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbbitblt.c /main/47 1998/02/09 14:38:09 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xprotostr.h"
 

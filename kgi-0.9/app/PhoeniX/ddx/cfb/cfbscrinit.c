@@ -29,6 +29,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ********************************************************/
 /* $TOG: cfbscrinit.c /main/60 1998/02/09 14:07:30 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "servermd.h"

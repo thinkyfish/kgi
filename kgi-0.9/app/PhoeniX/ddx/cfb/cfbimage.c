@@ -43,6 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: cfbimage.c /main/20 1998/02/09 14:06:06 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 #include "windowstr.h"
 #include "pixmapstr.h"

@@ -27,6 +27,7 @@ in this Software without prior written authorization from The Open Group.
 
 /* $TOG: cfbtile32.c /main/9 1998/02/09 14:08:01 kaleb $ */
 
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "servermd.h"

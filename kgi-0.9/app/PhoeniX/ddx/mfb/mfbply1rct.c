@@ -24,6 +24,7 @@ in this Software without prior written authorization from The Open Group.
 
 /* $XFree86: xc/programs/Xserver/mfb/mfbply1rct.c,v 1.4 1999/03/06 13:12:49 dawes Exp $ */
 
+#include "config.h"
 #include "X11/X.h"
 
 #include "gcstruct.h"

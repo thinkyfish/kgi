@@ -43,6 +43,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbfillsp.c /main/26 1998/02/09 14:38:54 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 #include "X11/Xmd.h"
 #include "gcstruct.h"

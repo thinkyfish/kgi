@@ -42,6 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbline.c /main/28 1998/02/09 14:39:27 kaleb $ */
+#include "config.h"
 #include "X11/X.h"
 
 #include "gcstruct.h"

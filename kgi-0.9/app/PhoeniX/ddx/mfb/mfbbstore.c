@@ -24,6 +24,7 @@ from The Open Group.
 
 */
 
+#include "config.h"
 #include    "mfb.h"
 #include    "X11/X.h"
 #include    "mi/mibstore.h"
