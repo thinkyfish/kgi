@@ -4,7 +4,7 @@ HTF_LONG_TITLE="White Paper on KGI, the  Kernel Graphics Interface"
 HTF_DESCRIPTION="This article gives and a short introduction to the KGI project, its goals and design concepts."
 HTF_KEYWORDS="KGI Project; introduction"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.1.1.1 $"
+HTF_REVISION="$Revision: 1.3 $"
 
 cat <<end-of-htf
 
@@ -334,7 +334,7 @@ Subregions may be exported to application or other drivers, e.g. a&nbsp;
 driver may claim a region of 64MB, containing 32MB frame buffer and 32MB
 control registers and export only 32MB to the application using
 <br>a memory mapped I/O resource. For details of the definitions, see 
-<a href="$KGI_SOURCE_URL/kgi/include/kgi/io.h"><tt>file:kgi-0.9/kgi/include/kgi/io.h</tt></a>
+<a href="$KGI_SOURCE_URL/kgi-0.9/kgi/include/kgi/io.h"><tt>file:kgi-0.9/kgi/include/kgi/io.h</tt></a>
 </ul>
 </blockquote>
 
