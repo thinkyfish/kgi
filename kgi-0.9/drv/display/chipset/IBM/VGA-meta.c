@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-meta.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:21  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -209,21 +212,12 @@ static void vga_chipset_adjust_timing(vga_chipset_mode_t *vga_mode,
 
 
 /* ----	text16 context operations ----------------------------------------------
-**
-**	We use the meta_mode and meta_object fields of kgic_mode_text16context
-**	to store a reference to our kgim_display_t and kgim_display_mode_t.
 */
-#define	VGA_CHIPSET_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, chipset)
-
-#define	VGA_CHIPSET_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, chipset)
-
 static void vga_text16_hc_show(kgic_mode_text16context_t *ctx, 
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_chipset_io_t    *vga_io   = VGA_CHIPSET_IO(ctx);
-	vga_chipset_mode_t  *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_io_t	*vga_io	  = KGIM_TEXT16_IO(ctx, chipset);
+	vga_chipset_mode_t	*vga_mode = KGIM_TEXT16_MODE(ctx);
 
 	kgi_u_t pos = vga_mode->orig_offs  +  x  +  y * ctx->virt.x;
 	
@@ -244,7 +238,7 @@ static void vga_text16_hc_show(kgic_mode_text16context_t *ctx,
 
 static void vga_text16_hc_hide(kgic_mode_text16context_t *ctx)
 {
-	vga_chipset_io_t *vga_io = VGA_CHIPSET_IO(ctx);
+	vga_chipset_io_t	*vga_io = KGIM_TEXT16_IO(ctx, chipset);
 
 	KRN_DEBUG(2,"vga_text16_hc_hide()");
 
@@ -260,7 +254,7 @@ static void vga_text16_hc_hide(kgic_mode_text16context_t *ctx)
 static void vga_text16_sc_show(kgic_mode_text16context_t *ctx, 
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->text16fb.win.virt;
 	kgi_u32_t new = vga_mode->orig_offs + x + y * ctx->virt.x;
@@ -300,7 +294,7 @@ static void vga_text16_sc_show(kgic_mode_text16context_t *ctx,
 
 static void vga_text16_sc_hide(kgic_mode_text16context_t *ctx)
 {
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->text16fb.win.virt;
 
@@ -323,7 +317,7 @@ static void vga_text16_sc_hide(kgic_mode_text16context_t *ctx)
 static void vga_text16_sp_show(kgic_mode_text16context_t *ctx, 
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->text16fb.win.virt;
 	kgi_u32_t new, old;
@@ -367,7 +361,7 @@ static void vga_text16_sp_show(kgic_mode_text16context_t *ctx,
 
 static void vga_text16_sp_hide(kgic_mode_text16context_t *ctx)
 {
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->text16fb.win.virt;
 
@@ -406,7 +400,7 @@ static void vga_text16_sp_hide(kgic_mode_text16context_t *ctx)
 static void vga_text16_put_text16(kgic_mode_text16context_t *ctx,
 	kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count)
 {
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u16_t *fb = (kgi_u16_t *) vga_mode->text16fb.win.virt;
 
@@ -420,8 +414,8 @@ static void vga_text16_put_text16(kgic_mode_text16context_t *ctx,
 static void vga_text16_set_tlut(kgic_mode_text16context_t *ctx,
 	kgi_u_t table, kgi_u_t index, kgi_u_t slots, void *tdata)
 {
-	vga_chipset_io_t   *vga_io   = VGA_CHIPSET_IO(ctx);
-	vga_chipset_mode_t *vga_mode = VGA_CHIPSET_MODE(ctx);
+	vga_chipset_io_t   *vga_io   = KGIM_TEXT16_IO(ctx, chipset);
+	vga_chipset_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, chipset);
 
 	kgi_u8_t *data = tdata;
 	kgi_u8_t *fbuf = (kgi_u8_t *) vga_mode->text16fb.win.virt;
@@ -520,9 +514,6 @@ static void vga_text16_set_tlut(kgic_mode_text16context_t *ctx,
 	VGA_GRC_OUT8(vga_io, GR6,  0x06);
 	VGA_CRT_OUT8(vga_io, CR3A, 0x3A);
 }
-
-#undef	VGA_CHIPSET_MODE
-#undef	VGA_CHIPSET_IO
 
 /*  ---- end of text16 context functions ------------------------------------ */
 
