@@ -42,44 +42,7 @@ typedef struct {
     Bool                found;
 } OptionInfoRec, *OptionInfoPtr;
 
-#if 0
-int xf86SetIntOption(pointer optlist, const char *name, int deflt);
-char *xf86SetStrOption(pointer optlist, const char *name, char *deflt);
-int xf86SetBoolOption(pointer list, const char *name, int deflt );
-pointer xf86AddNewOption(pointer head, char *name, char *val );
-pointer xf86NewOption(char *name, char *value );
-pointer xf86NextOption(pointer list );
-pointer xf86OptionListCreate(const char **options, int count, int used);
-pointer xf86OptionListMerge(pointer head, pointer tail);
-void xf86OptionListFree(pointer opt);
-char *xf86OptionName(pointer opt);
-char *xf86OptionValue(pointer opt);
-void xf86OptionListReport(pointer parm);
-pointer xf86FindOption(pointer options, const char *name);
-char *xf86FindOptionValue(pointer options, const char *name);
-void xf86MarkOptionUsed(pointer option);
-void xf86MarkOptionUsedByName(pointer options, const char *name);
-Bool xf86CheckIfOptionUsed(pointer option);
-Bool xf86CheckIfOptionUsedByName(pointer options, const char *name);
-void xf86ShowUnusedOptions(int scrnIndex, pointer options);
-#endif
 void xf86ProcessOptions(int scrnIndex, pointer options, OptionInfoPtr optinfo);
-#if 0
-OptionInfoPtr xf86TokenToOptinfo(OptionInfoPtr table, int token);
-const char *xf86TokenToOptName(OptionInfoPtr table, int token);
-#endif
 Bool xf86IsOptionSet(OptionInfoPtr table, int token);
-#if 0
-char *xf86GetOptValString(OptionInfoPtr table, int token);
-Bool xf86GetOptValInteger(OptionInfoPtr table, int token, int *value);
-Bool xf86GetOptValULong(OptionInfoPtr table, int token, unsigned long *value);
-Bool xf86GetOptValReal(OptionInfoPtr table, int token, double *value);
-Bool xf86GetOptValFreq(OptionInfoPtr table, int token,
-			OptFreqUnits expectedUnits, double *value);
-Bool xf86GetOptValBool(OptionInfoPtr table, int token, Bool *value);
-Bool xf86ReturnOptValBool(OptionInfoPtr table, int token, Bool def);
-int xf86NameCmp(const char *s1, const char *s2);
-char *xf86NormalizeName(const char *s);
-#endif
 
 #endif

@@ -45,7 +45,9 @@ OBJECTS = xaaInit.o	\
 	xaaDashSeg.o	\
 	xaaOverlay.o	\
 	xaaOffscreen.o	\
-	xaaOverlayDF.o
+	xaaOverlayDF.o	\
+	xf86.o		\
+	xf86fbman.o
 
 ../xaa.o: $(OBJECTS)		\
 	$(OBJECTS_LSB_FIRST)	\

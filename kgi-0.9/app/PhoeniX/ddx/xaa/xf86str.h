@@ -116,7 +116,7 @@ typedef struct {
 typedef struct _ScrnInfoRec {
     ScreenPtr		pScreen;		/* Pointer to the ScreenRec */
     int			scrnIndex;		/* Number of this screen */
-
+#if 0
     /* Display-wide screenInfo values needed by this screen */
     int			imageByteOrder;
     int			bitmapScanlineUnit;
@@ -124,17 +124,20 @@ typedef struct _ScrnInfoRec {
     int			bitmapBitOrder;
     int			numFormats;
     PixmapFormatRec	formats[MAXFORMATS];
-
+#endif
     int			bitsPerPixel;		/* fb bpp */
     int			depth;			/* depth of default visual */
+#if 0
     rgb			weight;			/* r/g/b weights */
     rgb			mask;			/* rgb masks */
     rgb			offset;			/* rgb offsets */
     int			rgbBits;		/* Number of bits in r/g/b */
     int			defaultVisual;		/* default visual class */
+#endif
     int			virtualX;		/* Virtual width */
     int			virtualY; 		/* Virtual height */
     int			displayWidth;		/* memory pitch */
+#if 0
     int			frameX0;		/* viewport position */
     int			frameY0;
     int			frameX1;
@@ -147,16 +150,18 @@ typedef struct _ScrnInfoRec {
     int			xDpi;			/* width DPI */
     int			yDpi;			/* height DPI */
     pointer		driverPrivate;		/* Driver private area */
+#endif
     DevUnion		*privates;		/* other driver privates may
 						** hook in here */
 
     int			colorKey;
     int			overlayFlags;
-
+#if 0
     /* Some of these may be moved out of here into the driver private area */
 
     unsigned long	memPhysBase;		/* Physical address of FB */
     Bool		flipPixels;		/* swap default black/white */
+#endif
     pointer		options;
 
     /* Allow screens to be enabled/disabled individually */
