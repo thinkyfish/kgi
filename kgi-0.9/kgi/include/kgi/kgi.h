@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: kgi.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:43  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _kgi_kgi_h
 #define _kgi_kgi_h
@@ -42,6 +45,7 @@ typedef void *kgi_wait_queue_t;
 typedef struct { kgi_u8_t major, minor, patch, extra; } kgi_version_t;
 typedef struct { kgi_s_t x,y; }		kgi_scoord_t;
 typedef struct { kgi_u_t x,y; }		kgi_ucoord_t;
+typedef struct { kgi_u8_t x,y; }	kgi_u8_coord_t;
 typedef struct { kgi_s_t min, max; }	kgi_srange_t;
 typedef struct { kgi_u_t min, max; }	kgi_urange_t;
 
@@ -54,8 +58,6 @@ typedef union {
 
 } kgi_color_t;
 
-typedef kgi_error_t (kgi_command_fn)(void *ctx, kgi_u_t cmd, 
-	void *in, void **out_buffer, kgi_size_t *out_size);
 
 #define	KGI_MAX_NR_FOCUSES	CONFIG_KGII_MAX_NR_FOCUSES
 #define	KGI_MAX_NR_CONSOLES	CONFIG_KGII_MAX_NR_CONSOLES
@@ -72,26 +74,88 @@ typedef kgi_error_t (kgi_command_fn)(void *ctx, kgi_u_t cmd,
 #define	KGI_INVALID_DISPLAY	INVALID_DISPLAY
 #define	KGI_INVALID_DEVICE	INVALID_DEVICE
 
-/*
-**	common information for all subsystems
-*/
-#define	__KGI_SUBSYSTEM_INFO	\
-	kgi_u_t		revision;	/* KGI/driver revision 	*/\
-	kgi_ascii_t	vendor[64];	/* manufacturer		*/\
-	kgi_ascii_t	model[64];	/* model/trademark	*/\
-	kgi_u32_t	flags;		/* special capabilities	*/\
-	kgi_u_t		mode_size;	/* private mode size	*/\
-	kgi_command_fn	*Command;	/* command function	*/
-
 /* ----------------------------------------------------------------------------
 **	mode handling
 ** ----------------------------------------------------------------------------
 */
 
+/* 	Attributes
+** NOTE	Attribute ordering __must__ not be changed! 
+*/
+typedef enum
+{
+	KGI_A_COLOR1,		/* intensity of color channel 1	*/
+	KGI_A_COLOR2,		/* intensity of color channel 2 */
+	KGI_A_COLOR3,		/* intensity of color channel 3	*/
+	KGI_A_COLOR_INDEX,	/* color index value		*/
+	KGI_A_ALPHA,		/* alpha value			*/
+	KGI_A_PRIVATE,		/* hardware or driver private	*/
+	KGI_A_APPLICATION,	/* store what you want here	*/
+
+	KGI_A_STENCIL,		/* stencil buffer		*/
+	KGI_A_Z,		/* z-value			*/
+
+	KGI_A_FOREGROUND_INDEX,	/* foreground color index	*/
+	KGI_A_TEXTURE_INDEX,	/* texture index		*/
+	KGI_A_BLINK,		/* blink bit/frequency		*/
+
+	KGI_A_LAST,
+	__KGI_MAX_NR_ATTRIBUTES = 32
+
+} kgi_attribute_t;
+
+#define	__KGI_AM(x)	KGI_AM_##x = (1 << KGI_A_##x)
+typedef enum
+{
+	__KGI_AM(PRIVATE),
+	__KGI_AM(APPLICATION),
+	__KGI_AM(STENCIL),
+	__KGI_AM(Z),
+	__KGI_AM(COLOR_INDEX),
+	__KGI_AM(ALPHA),
+	__KGI_AM(COLOR1),
+	__KGI_AM(COLOR2),
+	__KGI_AM(COLOR3),
+	__KGI_AM(FOREGROUND_INDEX),
+	__KGI_AM(TEXTURE_INDEX),
+	__KGI_AM(BLINK),
+
+	KGI_AM_COLORS = KGI_AM_COLOR1 | KGI_AM_COLOR2 | KGI_AM_COLOR3,
+	KGI_AM_ALL = (1 << KGI_A_LAST) - 1
+
+} kgi_attribute_mask_t;
+#undef __KGI_AM
+#define	KGI_ATTRIBUTE_MASK(attr)	(1 << (attr))
+
+#define	KGI_AM_TEXT	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX | KGI_AM_FOREGROUND_INDEX | KGI_AM_TEXTURE_INDEX)
+#define	KGI_AM_I	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX)
+#define	KGI_AM_RGB	(kgi_attribute_mask_t)(KGI_AM_COLORS)
+#define	KGI_AM_RGBI	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_COLOR_INDEX)
+#define	KGI_AM_RGBA	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_ALPHA)
+#define	KGI_AM_RGBX	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_APPLICATION)
+#define	KGI_AM_RGBP	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_PRIVATE)
+
+/*	attribute strings
+*/
+#define	KGI_AS_8888	((const kgi_u8_t[]) { 8,8,8,8,0 })
+#define	KGI_AS_4444	((const kgi_u8_t[]) { 4,4,4,4,0 })
+#define	KGI_AS_5551	((const kgi_u8_t[]) { 5,5,5,1,0 })
+#define	KGI_AS_2321	((const kgi_u8_t[]) { 2,3,2,1,0 })
+#define	KGI_AS_4642	((const kgi_u8_t[]) { 4,6,4,3,0 })
+#define	KGI_AS_AAA2	((const kgi_u8_t[]) { 10,10,10,2,0 })
+#define	KGI_AS_332	((const kgi_u8_t[]) { 3,3,2,0 })
+#define	KGI_AS_565	((const kgi_u8_t[]) { 5,6,5,0 })
+#define	KGI_AS_448	((const kgi_u8_t[]) { 4,4,8,0 })
+#define	KGI_AS_664	((const kgi_u8_t[]) { 6,6,4,0 })
+#define	KGI_AS_888	((const kgi_u8_t[]) { 8,8,8,0 })
+#define	KGI_AS_ACA	((const kgi_u8_t[]) { 10,12,10,0 })
+#define	KGI_AS_8	((const kgi_u8_t[]) { 8,0 })
+#define	KGI_AS_4	((const kgi_u8_t[]) { 4,0 })
+
+
 /*
 **	Resources
 */
-
 typedef struct
 {
 	kgi_size_t	size;		/* aperture size		*/
@@ -156,6 +220,13 @@ typedef enum
 	KGI_RT_ACCEL	= 0x40000000,
 		KGI_RT_ACCELERATOR,
 
+	KGI_RT_COMMAND	= 0x60000000,
+		KGI_RT_CURSOR_CONTROL,
+		KGI_RT_POINTER_CONTROL,
+		KGI_RT_ILUT_CONTROL,
+		KGI_RT_ALUT_CONTROL,
+		KGI_RT_TLUT_CONTROL,
+		KGI_RT_TEXT16_CONTROL,
 
 	KGI_RT_MASK	= 0x70000000,	/* WARNING: offset encoding depends! */
 
@@ -169,7 +240,7 @@ typedef enum
 	void		*meta_io;	/* meta language I/O context	*/\
 	kgi_resource_type_t	type;	/* type ID			*/\
 	kgi_protection_flags_t	prot;	/* protection info		*/\
-	const kgi_ascii_t	*name;	/* name identified		*/
+	const kgi_ascii_t	*name;	/* name/identifier		*/
 
 typedef struct
 {
@@ -196,7 +267,6 @@ struct kgi_mmio_region_s
 
 	kgi_size_t	offset;		/* window device-local address  */
 	kgi_mmio_set_offset_fn	(*SetOffset);
-
 };
 
 /*	Accelerators
@@ -309,78 +379,76 @@ struct kgi_shmem_s
 	kgi_shmem_art_fn		*ARTUnmapPages;
 };
 
-/* 	Attributes
-** NOTE	Attribute ordering __must__ not be changed! 
+/*
+**	command resources
 */
 typedef enum
 {
-	KGI_A_COLOR1,		/* intensity of color channel 1	*/
-	KGI_A_COLOR2,		/* intensity of color channel 2 */
-	KGI_A_COLOR3,		/* intensity of color channel 3	*/
-	KGI_A_COLOR_INDEX,	/* color index value		*/
-	KGI_A_ALPHA,		/* alpha value			*/
-	KGI_A_PRIVATE,		/* hardware or driver private	*/
-	KGI_A_APPLICATION,	/* store what you want here	*/
+	KGI_MM_TEXT16	= 0x00000001,
+	KGI_MM_WINDOWS	= 0x00000002,
+	KGI_MM_X11	= 0x00000004,
+	KGI_MM_3COLOR	= 0x00000008
 
-	KGI_A_STENCIL,		/* stencil buffer		*/
-	KGI_A_Z,		/* z-value			*/
+} kgi_marker_mode_t;
 
-	KGI_A_FOREGROUND_INDEX,	/* foreground color index	*/
-	KGI_A_TEXTURE_INDEX,	/* texture index		*/
-	KGI_A_BLINK,		/* blink bit/frequency		*/
-
-	KGI_A_LAST,
-	__KGI_MAX_NR_ATTRIBUTES = 32
-
-} kgi_attribute_t;
-
-#define	__KGI_AM(x)	KGI_AM_##x = (1 << KGI_A_##x)
-typedef enum
+typedef struct kgi_marker_s kgi_marker_t;
+struct kgi_marker_s
 {
-	__KGI_AM(PRIVATE),
-	__KGI_AM(APPLICATION),
-	__KGI_AM(STENCIL),
-	__KGI_AM(Z),
-	__KGI_AM(COLOR_INDEX),
-	__KGI_AM(ALPHA),
-	__KGI_AM(COLOR1),
-	__KGI_AM(COLOR2),
-	__KGI_AM(COLOR3),
-	__KGI_AM(FOREGROUND_INDEX),
-	__KGI_AM(TEXTURE_INDEX),
-	__KGI_AM(BLINK),
+	__KGI_RESOURCE
 
-	KGI_AM_COLORS = KGI_AM_COLOR1 | KGI_AM_COLOR2 | KGI_AM_COLOR3,
-	KGI_AM_ALL = (1 << KGI_A_LAST) - 1
+	kgi_marker_mode_t	modes;	/* possible operation modes	*/
+	kgi_u8_t		shapes;	/* number of shapes		*/
+	kgi_u8_coord_t		size;	/* pattern size			*/
 
-} kgi_attribute_mask_t;
-#undef __KGI_AM
-#define	KGI_ATTRIBUTE_MASK(attr)	(1 << (attr))
+	void (*SetMode)(kgi_marker_t *marker, kgi_marker_mode_t mode);
+	void (*Select)(kgi_marker_t *marker, kgi_u_t shape);
+	void (*SetShape)(kgi_marker_t *marker, kgi_u_t shape,
+		kgi_u_t hot_x, kgi_u_t hot_y, const void *data,
+		const kgi_rgb_color_t *color);
 
-#define	KGI_AM_TEXT	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX | KGI_AM_FOREGROUND_INDEX | KGI_AM_TEXTURE_INDEX)
-#define	KGI_AM_I	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX)
-#define	KGI_AM_RGB	(kgi_attribute_mask_t)(KGI_AM_COLORS)
-#define	KGI_AM_RGBI	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_COLOR_INDEX)
-#define	KGI_AM_RGBA	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_ALPHA)
-#define	KGI_AM_RGBX	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_APPLICATION)
-#define	KGI_AM_RGBP	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_PRIVATE)
+	void (*Show)(kgi_marker_t *marker, kgi_u_t x, kgi_u_t y);
+	void (*Hide)(kgi_marker_t *marker);
+	void (*Undo)(kgi_marker_t *marker);
+};
 
-/*	attribute strings
-*/
-#define	KGI_AS_8888	((const kgi_u8_t[]) { 8,8,8,8,0 })
-#define	KGI_AS_4444	((const kgi_u8_t[]) { 4,4,4,4,0 })
-#define	KGI_AS_5551	((const kgi_u8_t[]) { 5,5,5,1,0 })
-#define	KGI_AS_2321	((const kgi_u8_t[]) { 2,3,2,1,0 })
-#define	KGI_AS_4642	((const kgi_u8_t[]) { 4,6,4,3,0 })
-#define	KGI_AS_AAA2	((const kgi_u8_t[]) { 10,10,10,2,0 })
-#define	KGI_AS_332	((const kgi_u8_t[]) { 3,3,2,0 })
-#define	KGI_AS_565	((const kgi_u8_t[]) { 5,6,5,0 })
-#define	KGI_AS_448	((const kgi_u8_t[]) { 4,4,8,0 })
-#define	KGI_AS_664	((const kgi_u8_t[]) { 6,6,4,0 })
-#define	KGI_AS_888	((const kgi_u8_t[]) { 8,8,8,0 })
-#define	KGI_AS_ACA	((const kgi_u8_t[]) { 10,12,10,0 })
-#define	KGI_AS_8	((const kgi_u8_t[]) { 8,0 })
-#define	KGI_AS_4	((const kgi_u8_t[]) { 4,0 })
+
+typedef struct kgi_text16_s kgi_text16_t;
+struct kgi_text16_s
+{
+	__KGI_RESOURCE
+	
+	kgi_ucoord_t	size;	/* visible text cells	*/
+	kgi_ucoord_t	virt;	/* virtual text cells	*/
+	kgi_ucoord_t	cell;	/* dots per text cell	*/
+	kgi_ucoord_t	font;	/* dots per font cell	*/
+	
+	void (*PutText16)(kgi_text16_t *text16, kgi_u_t offset,
+		const kgi_u16_t *text, kgi_u_t count);
+};
+
+
+typedef struct kgi_clut_s kgi_ilut_t;
+typedef struct kgi_clut_s kgi_alut_t;
+
+typedef struct kgi_clut_s kgi_clut_t;
+struct kgi_clut_s
+{
+	__KGI_RESOURCE
+
+	void (*Select)(kgi_clut_t *lut, kgi_u_t table);
+	void (*Set)(kgi_clut_t *lut, kgi_u_t table, kgi_u_t index,
+		kgi_u_t count, kgi_attribute_mask_t am, const kgi_u16_t *data);
+};
+
+typedef struct kgi_tlut_s kgi_tlut_t;
+struct kgi_tlut_s
+{
+	__KGI_RESOURCE
+
+	void (*Select)(kgi_tlut_t *tlut, kgi_u_t table);
+	void (*Set)(kgi_tlut_t *tlut, kgi_u_t table, kgi_u_t index,
+		kgi_u_t count, const void *data);
+};
 
 /*
 **	timing/modes
@@ -470,6 +538,7 @@ typedef enum
 
 } kgi_image_flags_t;
 
+#define	__KGI_MAX_NR_IMAGE_RESOURCES	16
 typedef struct
 {
 	kgi_dot_port_mode_t *out;
@@ -489,20 +558,24 @@ typedef struct
 	kgi_u8_t		bpfa[__KGI_MAX_NR_ATTRIBUTES];
 	kgi_u8_t		bpca[__KGI_MAX_NR_ATTRIBUTES];
 
+	kgi_resource_t	*resource[__KGI_MAX_NR_IMAGE_RESOURCES];
+
 } kgi_image_mode_t;
+
 
 #define	KGI_MODE_REVISION	0x00010000
 typedef struct
 {
-	kgi_u_t		revision;	/* data structure revision	*/
-	void	*dev_mode;	/* device dependent mode	*/
+	kgi_u_t			revision;  /* data structure revision	*/
+	void			*dev_mode; /* device dependent mode	*/
 
 	const kgi_resource_t	*resource[__KGI_MAX_NR_RESOURCES];
 
-	kgi_u_t		images;		/* number of images		*/
-	kgi_image_mode_t img[1];	/* image(s)			*/
+	kgi_u_t			images;	   /* number of images		*/
+	kgi_image_mode_t	img[1];	   /* image(s)			*/
 
 } kgi_mode_t;
+
 
 /*
 **	displays
@@ -513,15 +586,25 @@ typedef struct
 typedef struct kgi_display_s kgi_display_t;
 
 typedef void kgi_display_refcount_fn(kgi_display_t *);
+
 typedef kgi_error_t kgi_display_check_mode_fn(kgi_display_t *dpy,
 		kgi_timing_command_t cmd, kgi_image_mode_t *img, kgi_u_t images,
 		void *dev_mode, const kgi_resource_t **r, kgi_u_t rsize);
+
 typedef	void kgi_display_set_mode_fn(kgi_display_t *dpy,
 		kgi_image_mode_t *img, kgi_u_t images, void *dev_mode);
 
+typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy,
+		kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size);
+
 struct kgi_display_s
 {		
-	__KGI_SUBSYSTEM_INFO
+	kgi_u_t		revision;	/* KGI/driver revision 	*/
+	kgi_ascii_t	vendor[64];	/* manufacturer		*/
+	kgi_ascii_t	model[64];	/* model/trademark	*/
+	kgi_u32_t	flags;		/* special capabilities	*/
+	kgi_u_t		mode_size;	/* private mode size	*/
+
 
 	kgi_mode_t	*mode;	/* currently set mode			*/
 
@@ -529,19 +612,18 @@ struct kgi_display_s
 	kgi_u_t	graphic;	/* non-console devices attached		*/
 	struct kgi_display_s *prev; /* previous driver 		*/
 
-	kgi_display_refcount_fn	*IncRefcount, *DecRefcount;
+	kgi_display_refcount_fn		*IncRefcount;
+	kgi_display_refcount_fn		*DecRefcount;
 
 	kgi_display_check_mode_fn	*CheckMode;
-	kgi_display_set_mode_fn		*SetMode, *UnsetMode;
-	kgi_command_fn			*ModeCommand;	/* !!! */
+	kgi_display_set_mode_fn		*SetMode;
+	kgi_display_set_mode_fn		*UnsetMode;
+	kgi_display_command_fn		*Command;
 
 	struct kgi_device_s	*focus;
 };
 
 #include <kgi/cmd.h>
-
-#define	__KGI_SUBSYSTEM_MODE	\
-	kgic_mode_command_fn	*Command;
 
 /*
 **	KGI events
@@ -558,7 +640,9 @@ typedef union
 
 } kgi_event_t;
 
-
+/*
+**	devices
+*/
 typedef enum
 {
 	KGI_DF_FOCUSED			= 0x00000001,
@@ -604,8 +688,6 @@ extern void kgidev_show_gadgets(kgi_device_t *dev);
 extern void kgidev_undo_gadgets(kgi_device_t *dev);
 
 extern kgi_error_t kgidev_display_command(kgi_device_t *dev,
-	kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size);
-extern kgi_error_t kgidev_mode_command(kgi_device_t *dev,
 	kgi_u_t cmd, void *in, void **out, kgi_size_t *out_size);
 
 #endif
