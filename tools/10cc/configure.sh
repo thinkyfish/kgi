@@ -10,16 +10,17 @@ function cc_gnuc() {
 	#
 	CC_BIN=${CC_BIN:-"gcc"}
 	CC_LIBS=${CC_LIBS}
+	CC_OPT=${CC_OPT:-""}
+#	former value of CC_OPT: -ansi -traditional-cpp"}
 
-	CC_OPT_C=${CC_OPT_C:-"# -ansi -traditional-cpp"}
-	CC_OPT_CXX=${CC_OPT_CXX}
-	CC_OPT_WARN=${CC_OPT_WARN:-"-W -Wall -pedantic"}
+	CC_OPT_WARN=${CC_OPT_WARN:-"-W -Wall"}
 	CC_OPT_DEBUG=${CC_OPT_DEBUG:-"-g"}
 	CC_OPT_OPTIMIZE=${CC_OPT_OPTIMIZE:-"-O2"}
 	CC_OPT_PIC=${CC_OPT_PIC:-"-fPIC"}
 
 	CXX_BIN=${CXX_BIN:-"g++"}
 	CXX_LIBS=${CXX_LIBS}
+	CXX_OPT=${CXX_OPT}
 
 	CC_RULES=cc++
 
@@ -35,16 +36,18 @@ function cc_sgic() {
 	#
 	CC_BIN=${CC_BIN:-"cc"}
 	CC_LIBS=${CC_LIBS}
+	CC_OPT=${CC_OPT:-""}
+#	former value of CC_OPT: -ansi -traditional-cpp
 
-	CC_OPT_C=${CC_OPT_C:-"# -ansi -traditional-cpp"}
-	CC_OPT_CXX=${CC_OPT_C}
-	CC_OPT_WARN=${CC_OPT_WARN:-"-fullwarn # -pedantic"}
+	CC_OPT_WARN=${CC_OPT_WARN:-"-fullwarn"}
+#	additional value possible: -pedantic"
 	CC_OPT_DEBUG=${CC_OPT_DEBUG:-"-g3"}
 	CC_OPT_OPTIMIZE=${CC_OPT_OPTIMIZE:-"-O2"}
 	CC_OPT_PIC=${CC_OPT_PIC:-"-KPIC"}
 
 	CXX_BIN=${CXX_BIN:-"CC"}
 	CXX_LIBS=$CXX_LIBS
+	CXX_OPT=${CXX_OPT}
 
 	CC_RULES=cc++
 
@@ -61,9 +64,8 @@ function cc_mwcc() {
 	#
 	CC_BIN=${CC_BIN:-"cc -dialect c"}
 	CC_LIBS=${CC_LIBS}
+	CC_OPT=${CC_OPT:-"# -ansi strict -D__STRICT_ANSI__"}
 
-	CC_OPT_C=${CC_OPT_C:-"# -ansi strict -D__STRICT_ANSI__"}
-	CC_OPT_CXX= ${CC_OPT_CXX:-""}
 	CC_OPT_WARN=${CC_OPT_WARN:-"-w all,nounusedargs"}
 	CC_OPT_DEBUG=${CC_OPT_DEBUG:-"-g"}
 	CC_OPT_OPTIMIZE=${CC_OPT_OPTIMIZE:-"-opt cse,size,speed,loop"}
@@ -71,6 +73,7 @@ function cc_mwcc() {
 
 	CXX_BIN=${CXX_BIN:-"cc -dialect cplus"}
 	CXX_LIBS=${CXX_LIBS:-""}
+	CXX_OPT= ${CXX_OPT:-""}
 
 	CC_RULES=mwcc
 
@@ -89,7 +92,9 @@ case $CONFIG_ACTION in
 help-syntax)
 	echo -n " [--cc-compiler={gnuc|egcs|mwcc|sgic}]"
 	echo -n " [--cc-bin=<cc>] [--cc-libs=<libs>]"
+	echo -n " [--cc-library-path=<path>] [--cc-include-path=<path>]"
 	echo -n " [--cxx-bin=<c++>] [--cxx-libs=<libs>]"
+	echo -n " [--cxx-library-path=<path>] [--cxx-include-path=<path>]"
 	echo -n " [--cc-opt-warn=<warn>] [--cc-opt-debug=<debug>]"
 	echo -n " [--cc-opt-optimize=<optimize>] [--cc-opt-target=<target>]"
 	echo -n " [--cc-opt-pic=<pic>]"
@@ -114,6 +119,18 @@ help-options)
 		optional, default: "" (empty string)
 		Set libraries to link with when building C programs or
 		libraries.
+
+	--cc-library-path=<path>
+		optional, default: "" (empty string)
+		Set path to search libraries in. This is a space
+		separated list of directories (absolute path names!) to	
+		search for libraries when linking.
+
+	--cc-include-path=<path>
+		optional, default: ". DIR_TOP_BUILD/include" (empty string)
+		Set path to search headers in. This is a space
+		separated list of directories (absolute path names!) to
+		search for includes when compiling C code.
 
 	--cc-opt-warn=<warn>
 		optional, default: compiler dependent
@@ -147,6 +164,18 @@ help-options)
 		Set libraries to link with when building C++ programs or
 		libraries.
 
+	--cxx-library-path=<path>
+		optional, default: CC_LIBRARY_PATH
+		Set path to search libraries in. This is a space
+		separated list of directories (absolute path names!) to	
+		search for libraries when linking.
+
+	--cxx-include-path=<path>
+		optional, default: CC_LIBRARY_PATH
+		Set path to search headers in. This is a space
+		separated list of directories (absolute path names!) to
+		search for includes when compiling C code.
+
 end-of-options
 	;;
 
@@ -166,6 +195,8 @@ config-parse)
 
 	--cc-bin=*)		CC_BIN=`configure_arg $ARG` ;;
 	--cc-libs=*)		CC_LIBS=`configure_arg $ARG` ;;
+	--cc-library-path=*)	CC_LIBRARY_PATH=`configure_arg $ARG` ;;
+	--cc-include-path=*)	CC_INCLUDE_PATH=`configure_arg $ARG` ;;
 
 	--cc-opt-warn=*)	CC_OPT_WARN=`configure_arg $ARG` ;;
 	--cc-opt-debug=*)	CC_OPT_DEBUG=`configure_arg $ARG` ;;
@@ -175,6 +206,8 @@ config-parse)
 
 	--cxx-bin=*)		CXX_BIN=`configure_arg $ARG` ;;
 	--cxx-libs=*)		CXX_LIBS=`configure_arg $ARG` ;;
+	--cxx-library-path=*)	CXX_LIBRARY_PATH=`configure_arg $ARG` ;;
+	--cxx-include-path=*)	CXX_INLCUDE_PATH=`configure_arg $ARG` ;;
 
 	--cc-*|--cxx-*)
 		echo "cc/configure.sh: unknown module option '$ARG'"
@@ -193,8 +226,11 @@ config-parse)
 config-help)
 	cat <<end-of-config-help
 C compiler options (cc/configure.sh):
+	CC_OPT				Compiler options to compile C
 	CC_BIN				C compiler binary to use
 	CC_LIBS				additional libraries for C programs
+	CC_INCLUDE_PATH			search path for C includes
+	CC_LIBRARY_PATH			search path for C libraries
 
 C/C++ compiler (cc/configure.sh):
 	CC_COMPILER			compiler system to use
@@ -205,16 +241,38 @@ C/C++ compiler (cc/configure.sh):
 	CC_OPT_PIC			position independent code options
 
 C++ compiler (cc/configure.sh):
+	CXX_OPT				compiler options to compile C++
 	CXX_BIN				C++ compiler binary to use
 	CXX_LIBS			additional libraries for C++ programs
+	CXX_INCLUDE_PATH		search path for C++ includes
+	CXX_LIBRARY_PATH		search path for C++ libraries
 
 end-of-config-help
 	;;
 
 config-file)
+	mkdir -p $DIR_TOP_BUILD/include
+
 	cat <<end-of-config-file
-MODULE_OPTION=${MODULE_OPTION:-not-set}
-MODULE_ARG=${MODULE_ARG:-arg-default}
+#	C/C++ compiler package
+#
+CC_BIN="$CC_BIN"
+CC_LIBS="$CC_LIBS"
+CC_OPT="$CC_OPT"
+CC_INCLUDE_PATH="${CC_INCLUDE_PATH:-$DIR_TOP_BUILD/include}"
+CC_LIBRARY_PATH="${CC_LIBRARY_PATH}"
+
+CC_OPT_WARN="$CC_OPT_WARN"
+CC_OPT_DEBUG="$CC_OPT_DEBUG"
+CC_OPT_OPTIMIZE="$CC_OPT_OPTIMIZE"
+CC_OPT_TARGET="$CC_OPT_TARGET"
+CC_OPT_PIC="$CC_OPT_PIC"
+
+CXX_BIN="$CXX_BIN"
+CXX_LIBS="$CXX_LIBS"
+CXX_OPT="$CXX_OPT"
+CXX_INCLUDE_PATH="${CXX_INCLUDE_PATH:-${CC_INCLUDE_PATH:-$DIR_TOP_BUILD/include}}"
+CXX_LIBRARY_PATH="${CXX_LIBRARY_PATH:-$CC_LIBRARY_PATH}"
 end-of-config-file
 	;;
 

@@ -95,6 +95,14 @@ source $FILE_CONFIG
 FILE_GNUMAKEFILE=$DIR_TOP_BUILD/GNUmakefile
 CONFIG_ACTION=config-makefile
 configure_modules "$@" > $FILE_GNUMAKEFILE
+cat >> $FILE_GNUMAKEFILE <<-end-of-trailer
+
+#       user defined dependencies
+#
+-include \$(DIR_SOURCE)/Makefile
+-include \$(DIR_BUILD)/Makefile 
+
+end-of-trailer
 
 #
 #	Now that all tools are configured we have the top-level
@@ -127,7 +135,7 @@ function do_recursion () {
 
 	if test -x $DIR_SOURCE/.configure
 	then
-		$DIR_SOURCE/.configure $DIR_SOURCE $CONFIG_OPTIONS
+		$DIR_SOURCE/.configure "$@"
 		do_reconfig
 	else
 		source $DIR_SOURCE/.configure
@@ -137,7 +145,7 @@ function do_recursion () {
 	if test -x $DIR_SOURCE/.configure.c
 	then
 		cc $DIR_SOURCE/.configure.c -o $DIR_BUILD/.configure
-		$DIR_BUILD/.configure $DIR_SOURCE $CONFIG_OPTIONS
+		$DIR_BUILD/.configure "$@"
 		do_reconfig
 	fi
 
@@ -166,6 +174,6 @@ function do_recursion () {
 DIR_BUILD=$DIR_TOP_BUILD
 DIR_SOURCE=$DIR_TOP_SOURCE
 
-do_recursion " |" "$*"
+do_recursion " |" "$@"
 
 echo "done."

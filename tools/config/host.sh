@@ -56,6 +56,10 @@ config-parse)
 	--host-*)
 		echo "host.sh: unknown host configuration option"
 	esac; done
+	if [ "x$HOST_NAME" = "x" ]; then HOST_NAME=$HOST_BUILD_NAME; fi
+	if [ "x$HOST_CPU" = "x" ]; then HOST_CPU=$HOST_BUILD_CPU; fi
+	if [ "x$HOST_OS" = "x" ]; then HOST_OS=$HOST_BUILD_OS; fi
+	if [ "x$HOST_OS_RELEASE" = "x" ]; then HOST_NAME=$HOST_BUILD_OS_RELEASE; fi
 	;;
 
 config-help)

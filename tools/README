@@ -1,0 +1,21 @@
+		config
+
+0 - System Tool
+
+	00	gmake
+	01	uudecode
+	02	awk
+
+1 - Compilers
+
+	10	cc
+
+2 - Text Tools
+
+	20	html
+	21	htf
+	22	tex	(tex, latex, dvips)
+	25	sgml	
+	26	jade	(jade,jadetex)
+
+4 - Image Tools

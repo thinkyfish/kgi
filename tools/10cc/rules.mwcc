@@ -24,8 +24,11 @@
 
 #	search paths
 #
-CC_PATH_INCLUDES = $(patsubst %,-I % ,$(PATH_INCLUDES))
-CC_PATH_LIBS = $(patsubst %,-L % ,$(PATH_LIBRARIES))
+CC_INCLUDE_DIRS=$(patsubst %,-I % ,$(subst ",,$(CC_INCLUDE_PATH)))
+CC_LIBRARY_DIRS=$(patsubst %,-L % ,$(subst ",,$(CC_LIBRARY_PATH)))
+
+CXX_INCLUDE_DIRS=$(patsubst %,-I % ,$(subst ",,$(CXX_INCLUDE_PATH)))
+CXX_LIBRARY_DIRS=$(patsubst %,-L % ,$(subst ",,$(CXX_LIBRARY_PATH)))
 
 #	configuration defines
 #
@@ -74,7 +77,7 @@ endif
 
 #	preprocessed C from C
 %.i: %.c $(DEPEND_c)
-	$(CC) $(CC_PATH_INCLUDES) $(CFLAGS) -E $< > $@
+	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -E $< > $@
 
 
 # (n/a)	generated C assembly from preprocessed C with C
@@ -83,7 +86,7 @@ endif
 
 # (n/a)	generated C assembly from C
 # %.s: %.c $(DEPEND_c)
-#	rm -f $@; $(CC) $(CC_PATH_INCLUDES) $(CFLAGS) -S $< -o $@
+#	rm -f $@; $(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -S $< -o $@
 
 
 # (n/a)	object from generated C assembly with preprocessed C with C
@@ -96,16 +99,16 @@ endif
 
 #	object from preprocessed C with C
 %.o: %.i %.c $(DEPEND_c)
-	$(CC) $(CC_OPT_C) $(CFLAGS) -c $< -o $@
+	$(CC) $(CC_OPT) $(CFLAGS) -c $< -o $@
 
 #	object from C
 %.o: %.c $(DEPEND_c)
-	$(CC) $(CC_OPT_C) $(CC_PATH_INCLUDES) $(CFLAGS) -c $< -o $@
+	$(CC) $(CC_OPT) $(CC_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
 
 #	dependencies from C
 .%.c.d: %.c
-	$(CC) $(CC_OPT_C) $(CC_PATH_INCLUDES) $(CFLAGS) -M $< | \
+	$(CC) $(CC_OPT) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | \
 	sed 's/$*\.o/$*\.o \.$*\.c\.d/' > $@
 
 
@@ -118,11 +121,11 @@ endif
  
 #	object from hand-made assembly
 # %.o: %.S $(DEPEND_S)
-#	$(CC) $(CC_PATH_INCLUDES) $(CFLAGS) -c $< -o $@
+#	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
 #	dependencies from hand-made assembly
 # .%.S.d: %.S
-#	$(CC) $(CC_PATH_INCLUDES) $(CFLAGS) -M $< | \
+#	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | \
 #	sed 's/$*\.o/$*\.o \.$*\.S\.d/' > $@
 
 
@@ -135,7 +138,7 @@ endif
 
 #	preprocessed C++ from C++
 %.i: %.cc $(DEPEND_cc)
-	$(CXX) $(CC_OPT_CXX) $(CC_PATH_INCLUDES) $(CFLAGS) -E $< > $@
+	$(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -E $< > $@
 
 
 # (n/a)	generated C++ assembly from preprocessed C++ with C++
@@ -144,7 +147,7 @@ endif
 
 # (n/a)	generated C++ assembly from C++
 # %.s: %.cc $(DEPEND_cc)
-#	rm -f $@; $(CXX) $(CC_OPT_CXX) $(CC_PATH_INCLUDES) $(CFLAGS) -S $< -o $@
+#	rm -f $@; $(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -S $< -o $@
 
 
 # (n/a)	object from generated C++ assembly with preprocessd C++ with C++
@@ -157,16 +160,16 @@ endif
 
 #	object from preprocessed C++ with C++
 %.oo: %.i %.cc $(DEPEND_cc)
-	$(CXX) $(CC_OPT_CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXX_OPT) $(CFLAGS) -c $< -o $@
 
 #	object from C++
 %.oo: %.cc $(DEPEND_cc)
-	$(CXX) $(CC_OPT_CXX) $(CC_PATH_INCLUDES) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
 
 #	dependencies from C++
 .%.cc.d: %.cc
-	$(CXX) $(CC_PATH_INCLUDES) $(CFLAGS) -M $< | \
+	$(CXX) $(CXX_INCLUDE_DIRS) $(CFLAGS) -M $< | \
 	sed 's/$*\.o/$*\.oo \.$*\.cc\.d/' > $@
 
 
@@ -176,17 +179,17 @@ endif
 
 #	C shared library from objects
 %.so: %.o
-	$(CC) $(CC_LIBS) $(CC_PATH_LIBS) $(CFLAGS) -xms $^ -o $@
+	$(CC) $(CC_LIBS) $(CC_LIBRARY_DIRS) $(CFLAGS) -xms $^ -o $@
 
 #	C exectutable from objects
 %: %.o
-	$(CC) $(CC_LIBS) $(CC_PATH_LIBS) $(CFLAGS) $^ -xma $@
+	$(CC) $(CC_LIBS) $(CC_LIBRARY_DIRS) $(CFLAGS) $^ -xma $@
 
 
 #	C++ shared library from objects
 %.so: %.oo
-	$(CXX) $(CXX_LIBS) $(CXX_PATH_LIBS) $(CFLAGS) -xms $^ -o $@
+	$(CXX) $(CXX_LIBS) $(CXX_LIBRARY_DIRS) $(CFLAGS) -xms $^ -o $@
 
 #	C++ exectutable from objects
 %: %.oo
-	$(CXX) $(CXX_LIBS) $(CXX_PATH_LIBS) $(CFLAGS) $^ -xma $@
+	$(CXX) $(CXX_LIBS) $(CXX_LIBRARY_DIRS) $(CFLAGS) $^ -xma $@

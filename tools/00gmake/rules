@@ -86,11 +86,6 @@ include .depend
 
 endif
 
-#	user defined dependencies
-#
--include $(DIR_SOURCE)/Makefile
--include $(DIR_BUILD)/Makefile
-
 #
 # -----------------------------------------------------------------------------
 

@@ -9,5 +9,5 @@ include .config
 
 DIR_BUILD=$(CURDIR)
 DIR_SOURCE=$(patsubst $(DIR_TOP_BUILD)%,$(DIR_TOP_SOURCE)%,$(CURDIR))
-VPATH=$(DIR_SOURCE) $(DIR_BUILD)      
+VPATH=$(DIR_SOURCE) $(DIR_BUILD)
 

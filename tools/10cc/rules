@@ -2,25 +2,27 @@
 #	C/C++ compiler
 # -----------------------------------------------------------------------------
 
-CC_BIN = ${CC_BIN:-cc}
-CXX_BIN = ${CXX_BIN:-c++}
 LD_BIN = ld
 CP_BIN = cp
 
-#	GCC options
-#
-CC_OPT_C += ${CC_OPT_C}
-CC_OPT_CXX += ${CC_OPT_CXX}
-CC_OPT_WARN += ${CC_OPT_WARN}
-CC_OPT_DEBUG += ${CC_OPT_DEBUG}
-CC_OPT_OPTIMIZE += ${CC_OPT_OPTIMIZE}
-CC_OPT_TARGET += ${CC_OPT_TARGET}
-CC_OPT_PIC += ${CC_OPT_PIC}
+CC_BIN:=$(subst ",,$(CC_BIN))
+CC_LIBS:=$(subst ",,$(CC_LIBS))
+CC_OPT:=$(subst ",,$(CC_OPT))
+# CC_INCLUDE_PATH:=$(subst ",,$(CC_INCLUDE_PATH))
+# CC_LIBRARY_PATH:=$(subst ",,$(CC_LIBRARY_PATH))
 
-#	libraries to link
-#
-CC_LIBS += ${CC_LIBS}
-CXX_LIBS += ${CXX_LIBS}
+CC_OPT_WARN:=$(subst ",,$(CC_OPT_WARN))
+CC_OPT_DEBUG:=$(subst ",,$(CC_OPT_DEBUG))
+CC_OPT_OPTIMIZE:=$(subst ",,$(CC_OPT_OPTIMIZE))
+CC_OPT_TARGET:=$(subst ",,$(CC_OPT_TARGET))
+CC_OPT_PIC:=$(subst ",,$(CC_OPT_PIC))
+
+CXX_BIN:=$(subst ",,$(CXX_BIN))
+CXX_LIBS:=$(subst ",,$(CXX_LIBS))
+CXX_OPT:=$(subst ",,$(CXX_OPT))
+
+# CXX_INCLUDE_PATH:=$(subst ",,$(CXX_INCLUDE_PATH))
+# CXX_LIBRARY_PATH:=$(subst ",,$(CXX_LIBRARY_PATH))
 
 #	common dependencies
 #
@@ -42,7 +44,7 @@ default.common:
 #
 ifeq ($(MAKELEVEL),0)
 
-GMAKE_CLEAN+="*.o" "*.oo" "*.s" "*.i" "*.ss" "*.ii"
+GMAKE_CLEAN_INIT +="*.o" "*.oo" "*.s" "*.i" "*.ss" "*.ii"
 
 endif
 
