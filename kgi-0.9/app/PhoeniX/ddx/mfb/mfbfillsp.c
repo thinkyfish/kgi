@@ -43,8 +43,8 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbfillsp.c /main/26 1998/02/09 14:38:54 kaleb $ */
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "gcstruct.h"
 #include "window.h"
 #include "pixmapstr.h"
@@ -56,8 +56,8 @@ SOFTWARE.
 #include "mergerop.h"
 
 #include "servermd.h"
-#include "mi.h"
-#include "mispans.h"
+#include "mi/mi.h"
+#include "mi/mispans.h"
 
 /* scanline filling for monochrome frame buffer
    written by drewry, oct 1986

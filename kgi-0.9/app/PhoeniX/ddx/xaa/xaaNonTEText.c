@@ -23,8 +23,8 @@
 #include "xf86_ansic.h"
 #include "xf86_OSproc.h"
 
-#include "X.h"
-#include "font.h"
+#include "X11/X.h"
+#include "X11/fonts/font.h"
 #include "scrnintstr.h"
 #include "dixfontstr.h"
 #include "xf86str.h"

@@ -42,14 +42,14 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbclip.c /main/15 1998/02/09 14:38:38 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 #include "miscstruct.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 #include "regionstr.h"
 #include "gc.h"
 #include "maskbits.h"
-#include "mi.h"
+#include "mi/mi.h"
 #include "mfb.h"
 
 #define ADDRECT(reg,r,fr,rx1,ry1,rx2,ry2)			\

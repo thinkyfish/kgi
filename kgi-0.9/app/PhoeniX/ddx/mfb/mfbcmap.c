@@ -42,11 +42,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbcmap.c /main/13 1998/02/09 14:38:42 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "colormapst.h"
 #include "resource.h"
-#include "micmap.h"
+#include "mi/micmap.h"
 
 /* A monochrome frame buffer is a static gray colormap with two entries.
  * We have a "required list" of length 1.  Because we can only support 1

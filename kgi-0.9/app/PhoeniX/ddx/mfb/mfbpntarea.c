@@ -42,7 +42,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbpntarea.c /main/13 1998/02/09 14:39:50 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 
 #include "windowstr.h"
 #include "regionstr.h"

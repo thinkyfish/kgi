@@ -5,7 +5,7 @@
 #include "xf86_ansic.h"
 #include "xf86_OSproc.h"
 
-#include "X.h"
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "windowstr.h"
 #include "xf86str.h"
@@ -14,7 +14,7 @@
 #include "xaawrap.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"
-#include "mioverlay.h"
+#include "mi/mioverlay.h"
 
 #ifdef PANORAMIX
 #include "panoramiX.h"

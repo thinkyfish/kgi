@@ -48,13 +48,13 @@ SOFTWARE.
    on a monchrome device, a pixmap is a bitmap.
 */
 
-#include "Xmd.h"
+#include "X11/Xmd.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "maskbits.h"
 
 #include "mfb.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 #include "servermd.h"
 

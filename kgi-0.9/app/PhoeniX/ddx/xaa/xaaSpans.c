@@ -5,12 +5,12 @@
 #include "xf86_ansic.h"
 #include "xf86_OSproc.h"
 
-#include "X.h"
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "xf86str.h"
-#include "mi.h"
-#include "mispans.h"
+#include "mi/mi.h"
+#include "mi/mispans.h"
 #include "xaa.h"
 #include "xaalocal.h"
 

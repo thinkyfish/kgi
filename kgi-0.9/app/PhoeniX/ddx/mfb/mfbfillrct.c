@@ -43,8 +43,8 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbfillrct.c /main/19 1998/02/09 14:38:50 kaleb $ */
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "pixmapstr.h"
 #include "gcstruct.h"
 #include "windowstr.h"

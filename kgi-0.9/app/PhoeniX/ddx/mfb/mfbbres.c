@@ -43,11 +43,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbbres.c /main/13 1998/02/09 14:38:29 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 #include "mfb.h"
 #include "maskbits.h"
-#include "miline.h"
+#include "mi/miline.h"
 
 /* Solid bresenham line */
 /* NOTES

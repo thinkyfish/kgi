@@ -43,11 +43,11 @@ SOFTWARE.
 
 ******************************************************************/
 
-#include "X.h"
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "windowstr.h"
 #include "mfb.h"
-#include "mistruct.h"
+#include "mi/mistruct.h"
 #include "regionstr.h"
 #include "maskbits.h"
 

@@ -41,7 +41,7 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbmisc.c /main/8 1998/02/09 14:39:32 kaleb $ */
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 #include "cursor.h"
 #include "scrnintstr.h"

@@ -43,8 +43,8 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mfbbitblt.c /main/47 1998/02/09 14:38:09 kaleb $ */
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 
 #include "miscstruct.h"
 #include "regionstr.h"
@@ -53,7 +53,7 @@ SOFTWARE.
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 
-#include "mi.h"
+#include "mi/mi.h"
 
 #include "mfb.h"
 #include "maskbits.h"

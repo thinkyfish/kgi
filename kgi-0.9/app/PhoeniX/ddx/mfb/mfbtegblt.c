@@ -45,11 +45,11 @@ SOFTWARE.
 
 /* $XFree86: xc/programs/Xserver/mfb/mfbtegblt.c,v 1.6 2000/02/12 03:40:03 dawes Exp $ */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"mfb.h"
-#include	"fontstruct.h"
+#include	"X11/fonts/fontstruct.h"
 #include	"dixfontstr.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"

@@ -44,8 +44,8 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mfbsetsp.c /main/15 1998/02/09 14:40:16 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
 
 #include "misc.h"
 #include "regionstr.h"

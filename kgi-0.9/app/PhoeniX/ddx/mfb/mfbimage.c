@@ -43,7 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mfbimage.c /main/19 1998/02/09 14:39:19 kaleb $ */
 
-#include "X.h"
+#include "X11/X.h"
 
 #include "windowstr.h"
 #include "pixmapstr.h"
@@ -51,8 +51,8 @@ SOFTWARE.
 #include "gcstruct.h"
 
 #include "mfb.h"
-#include "mi.h"
-#include "Xmd.h"
+#include "mi/mi.h"
+#include "X11/Xmd.h"
 
 #include "maskbits.h"
 

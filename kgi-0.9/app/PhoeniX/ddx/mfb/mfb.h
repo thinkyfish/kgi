@@ -59,7 +59,7 @@ SOFTWARE.
 #include "gc.h"
 #include "colormap.h"
 #include "miscstruct.h"
-#include "mibstore.h"
+#include "mi/mibstore.h"
 
 extern int InverseAlu[];
 

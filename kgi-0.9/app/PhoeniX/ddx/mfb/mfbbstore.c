@@ -25,8 +25,8 @@ from The Open Group.
 */
 
 #include    "mfb.h"
-#include    "X.h"
-#include    "mibstore.h"
+#include    "X11/X.h"
+#include    "mi/mibstore.h"
 #include    "regionstr.h"
 #include    "scrnintstr.h"
 #include    "pixmapstr.h"

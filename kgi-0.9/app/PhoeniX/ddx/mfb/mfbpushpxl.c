@@ -43,7 +43,7 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mfbpushpxl.c /main/11 1998/02/09 14:40:03 kaleb $ */
 
-#include "X.h"
+#include "X11/X.h"
 #include "gcstruct.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"

@@ -1,6 +1,6 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/xaa/xaaLine.c,v 1.4 1999/05/30 03:03:32 dawes Exp $ */
 
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 #include "xf86.h"
 #include "xf86_ansic.h"
@@ -8,7 +8,7 @@
 
 #include "scrnintstr.h"
 #include "pixmapstr.h"
-#include "miline.h"
+#include "mi/miline.h"
 #include "xf86str.h"
 #include "xaa.h"
 #include "xaalocal.h"

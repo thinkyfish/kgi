@@ -43,7 +43,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-#include "X.h"
+#include "X11/X.h"
 
 #include "windowstr.h"
 #include "regionstr.h"
@@ -52,7 +52,7 @@ SOFTWARE.
 
 #include "mfb.h"
 #include "maskbits.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 void
 mfbPaintWindow(pWin, pRegion, what)

@@ -43,20 +43,20 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mfbscrinit.c /main/28 1998/02/09 14:40:11 kaleb $ */
 
-#include "X.h"
-#include "Xproto.h"	/* for xColorItem */
-#include "Xmd.h"
+#include "X11/X.h"
+#include "X11/Xproto.h"	/* for xColorItem */
+#include "X11/Xmd.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "windowstr.h"
 #include "resource.h"
 #include "colormap.h"
 #include "mfb.h"
-#include "mistruct.h"
+#include "mi/mistruct.h"
 #include "dix.h"
-#include "mi.h"
-#include "mibstore.h"
-#include "migc.h"
+#include "mi/mi.h"
+#include "mi/mibstore.h"
+#include "mi/migc.h"
 #include "servermd.h"
 
 #ifdef PIXMAP_PER_WINDOW

@@ -10,7 +10,7 @@
 #include "regionstr.h"
 #include "xf86fbman.h"
 #include "xaa.h"
-#include "mi.h"
+#include "mi/mi.h"
 
 #define GCWhenForced		(GCArcMode << 1)
 

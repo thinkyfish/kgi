@@ -28,9 +28,9 @@ Author: Keith Packard
 */
 /* $TOG: mfbblt.c /main/12 1998/02/09 14:38:17 kaleb $ */
 
-#include	"X.h"
-#include	"Xmd.h"
-#include	"Xproto.h"
+#include	"X11/X.h"
+#include	"X11/Xmd.h"
+#include	"X11/Xproto.h"
 #include	"mfb.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
