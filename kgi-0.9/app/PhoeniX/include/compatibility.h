@@ -6,6 +6,10 @@
 #ifndef	_compatibility_h
 #define	_compatibility_h
 
+#define	VENDOR_STRING	"The KGI Project"
+#define	VENDOR_RELEASE	1
+
+
 #ifdef	PIXMAP_PRIVATES
 #	define	PIXPRIV
 #endif
@@ -227,6 +231,5 @@
 **	AIXrt
 **	AIX386
 */
-
 
 #endif	/* #ifdef _compatibility_h	*/
