@@ -1,23 +1,13 @@
-# -----------------------------------------------------------------------------
+#	-----------------------------------------------------------------------
 #	generic C/C++ compiler rules
-# -----------------------------------------------------------------------------
+#	-----------------------------------------------------------------------
 #
-#	These rules assume a compiler that takes the following options/files:
-#
-#	File suffixes:
-#
-#		.c	C
-#	.cc	C++
-#		.i	reprocessed C/C++ source
-#		.s	assembly generated from preprocessed C/C++
-#		.o	C object
-#		.oo	C++ object
-#
-#		.S	assembly that must be preprocessed
+#	These rules assume a compiler that recogninzes the following options
+#	and shows the expected behaviour:
 #
 #	Compiler Options:
 #
-#		-o <file>	file to write output in
+#		-o <file>	file to write output in (not for -E or -M)
 #		-E		preprocess C/C++ and output result to *stdout*
 #		-M		preprocess and output dependencies to *stdout*
 #		-S		produce assembly code in file named with -o
@@ -26,8 +16,24 @@
 #		-I <dir> ...	search includes in <dir> too. (may be repeated)
 #		-L <dir> ...	search libraries in <dir> too. (may be repeated)
 #		-D<define>	add <define> to preprocessor variables
+#		-l<lib>		link in library <lib>
 #
-# -----------------------------------------------------------------------------
+#	The following file name conventions apply in addition to the general
+#	rules:
+#
+#		.s	assembly code from C - generated upon request
+#		.ss	assembly code from C++ - generated upon request
+#		.i	preprocessed C - generated upon request
+#		.ii	preprocessed C++ - generated upon request
+#
+
+#	default clean-up actions
+#
+ifeq ($(MAKELEVEL),0)
+
+GMAKE_REALCLEAN_INIT += "*.s" "*.i" "*.ss" "*.ii"
+
+endif
 
 #	search paths
 #
@@ -46,143 +52,148 @@ CC_OPT_CONFIG += -DHOST_OS=HOST_OS_$(HOST_OS) -DHOST_CPU=HOST_CPU_$(HOST_CPU)
 CC = $(CC_BIN) $(CC_OPT_WARN) $(CC_OPT_DEBUG) $(CC_OPT_OPTIMIZE) $(CC_OPT_TARGET) $(CC_OPT_MACHINE) $(CC_OPT_CONFIG)
 CXX = $(CXX_BIN) $(CC_OPT_WARN) $(CC_OPT_DEBUG) $(CC_OPT_OPTIMIZE) $(CC_OPT_TARGET) $(CC_OPT_MACHINE) $(CC_OPT_CONFIG)
 
+#	C source
 #
-#	The rules
-#
-
-ifdef FLAG_BUILD_DEPENDENCIES
-DEPEND_c = .%.c.d
-DEPEND_S = .%.S.d
-DEPEND_cc = .%.cc.d
-endif
-
-#
-#	clear build-in dependencies
-#
-
-%.i: %.cc
-%.i: %.c
-
-%.s: %.cc
-%.s: %.c
-%.s: %.i
-
-%.o: %.cc
-%.o: %.c
-%.o: %.i
-%.o: %.s
-
-%: %.cc
 %: %.c
 %: %.s
 %: %.i
 %: %.o
 
-#
-#	C
+%.i: %.c
+
+%.s: %.i
+%.s: %.c
+
+%.o: %.s
+%.o: %.i
+%.o: %.c
+
+#	C rules to generate ...
 #
 
-#	preprocessed C from C
-%.i: %.c $(DEPEND_c)
+#	... dependencies from source
+.%.c.d: %.c
+	$(CC) $(CC_OPT) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | sed 's/$*\.o/$*\.o \.$*\.c\.d/' > $@
+
+
+#	... preprocessor output from source
+%.i: %.c
 	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -E $< > $@
 
 
-#	generated C assembly from preprocessed C with C
-%.s: %.i %.c $(DEPEND_c)
+#	... assembler code from preprocessor output
+%.s: %.i
 	rm -f $@; $(CC) $(CFLAGS) -S $< -o $@
 
-#	generated C assembly from C
-%.s: %.c $(DEPEND_c)
+#	... assembler code from source
+%.s: %.c
 	rm -f $@; $(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -S $< -o $@
 
 
-#	object from generated C assembly with preprocessed C with C
-%.o: %.s %.i %.c $(DEPEND_c)
+#	... object from assembler code
+%.o: %.s
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#	object from generated C assembly with C
-%.o: %.s %.c $(DEPEND_c)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-#	object from preprocessed C with C
-%.o: %.i %.c $(DEPEND_c)
+#	... object from preprocessor output
+%.o: %.i
 	$(CC) $(CC_OPT) $(CFLAGS) -c $< -o $@
 
-#	object from C
-%.o: %.c $(DEPEND_c)
+#	... object from source
+%.o: %.c
 	$(CC) $(CC_OPT) $(CC_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
 
-#	dependencies from C
-.%.c.d: %.c
-	$(CC) $(CC_OPT) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | \
-	sed 's/$*\.o/$*\.o \.$*\.c\.d/' > $@
-
-
+#	C Assembler
 #
-#	Assembly
-#
-
 %.o: %.S
 %: %.S
 
-#	object from hand-made assembly
-%.o: %.S $(DEPEND_S)
+#	Assembler rules to generated ...
+#
+
+#	... dependencies from source code
+.%.S.d: %.S
+	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | sed 's/$*\.o/$*\.o \.$*\.S\.d/' > $@
+
+
+#	... object from source code
+%.o: %.S
 	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
-#	dependencies from hand-made assembly
-.%.S.d: %.S
-	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | \
-	sed 's/$*\.o/$*\.o \.$*\.S\.d/' > $@
 
-
+#	C++ source
 #
-#	C++
-#
-
-%.oo: %.cc
 %: %.cc
+%: %.ss
+%: %.ii
+%: %.oo
 
-#	preprocessed C++ from C++
-%.i: %.cc $(DEPEND_cc)
+%.ii: %.cc
+
+%.ss: %.ii
+%.ss: %.cc
+
+%.oo: %.ss
+%.oo: %.ii
+%.oo: %.cc
+
+#	C++ rules to generate ...
+#
+
+#	... dependencies from C++
+.%.cc.d: %.cc
+	$(CXX) $(CXX_INCLUDE_DIRS) $(CFLAGS) -M $< | sed 's/$*\.o/$*\.oo \.$*\.cc\.d/' > $@
+
+
+#	... preprocessor output from source
+%.ii: %.cc
 	$(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -E $< > $@
 
 
-#	generated C++ assembly from preprocessed C++ with C++
-%.s: %.i %.cc $(DEPEND_cc)
+#	... assembler code from preprocessor output
+%.ss: %.ii
 	rm -f $@; $(CXX) $(CFLAGS) -S $< -o $@
 
-#	generated C++ assembly from C++
-%.s: %.cc $(DEPEND_cc)
+#	... assembler code from source
+%.ss: %.cc
 	rm -f $@; $(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -S $< -o $@
 
 
-#	object from generated C++ assembly with preprocessd C++ with C++
-%.oo: %.s %.i %.cc $(DEPEND_cc)
+#	... object from assembler code
+%.oo: %.ss
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#	object from generated C++ assembly with C++
-%.oo: %.s %.cc $(DEPEND_cc)
+#	... object from preprocessd source
+%.oo: %.ii
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#	object from preprocessed C++ with C++
-%.oo: %.i %.cc $(DEPEND_cc)
-	$(CXX) $(CXX_OPT) $(CFLAGS) -c $< -o $@
-
-#	object from C++
+#	... object from source
 %.oo: %.cc $(DEPEND_cc)
 	$(CXX) $(CXX_OPT) $(CXX_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
 
 
-#	dependencies from C++
-.%.cc.d: %.cc
-	$(CXX) $(CXX_INCLUDE_DIRS) $(CFLAGS) -M $< | \
-	sed 's/$*\.o/$*\.oo \.$*\.cc\.d/' > $@
+#	C++ Assembler
+#
+%.oo: %.SS
+%: %.SS
+
+#	Assembler rules to generated ...
+#
+
+#	... dependencies from source code
+.%.SS.d: %.SS
+	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -M $< | sed 's/$*\.o/$*\.oo \.$*\.SS\.d/' > $@
 
 
+#	... object from source code
+%.oo: %.SS
+	$(CC) $(CC_INCLUDE_DIRS) $(CFLAGS) -c $< -o $@
+
+
+#	Linker
 #
-#	linking
-#
+
+#	Linker rules
 
 #	C shared library from objects
 %.so: %.o
@@ -201,20 +212,5 @@ endif
 %: %.oo
 	$(CXX) $(CXX_LIBS) $(CXX_LIBRARY_DIRS) $(CFLAGS) $^ -o $@
 
-
 #
-#	binary distributions
-#
-
-#	object from binary distributed object
-%.o: %.bdo
-	$(CP_BIN) $< $@
-
-%.oo: %.bdoo
-	$(CB_BIN) $< $@
-
-#	C shared object from binary distributed object
-%.so: %.bdso
-	$(CP_BIN) $< $@
-
-
+# -----------------------------------------------------------------------------

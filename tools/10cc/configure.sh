@@ -58,39 +58,13 @@ function cc_sgic {
 	fi
 }
 
-function cc_mwcc {
-	#
-	#	Metrowerks (BeOS) C/C++ compiler settings 
-	#
-	CC_BIN=${CC_BIN:-"cc -dialect c"}
-	CC_LIBS=${CC_LIBS}
-	CC_OPT=${CC_OPT:-"# -ansi strict -D__STRICT_ANSI__"}
-
-	CC_OPT_WARN=${CC_OPT_WARN:-"-w all,nounusedargs"}
-	CC_OPT_DEBUG=${CC_OPT_DEBUG:-"-g"}
-	CC_OPT_OPTIMIZE=${CC_OPT_OPTIMIZE:-"-opt cse,size,speed,loop"}
-	CC_OPT_PIC=${CC_OPT_PIC:-""}
-
-	CXX_BIN=${CXX_BIN:-"cc -dialect cplus"}
-	CXX_LIBS=${CXX_LIBS:-""}
-	CXX_OPT= ${CXX_OPT:-""}
-
-	CC_RULES=mwcc
-
-	if [ "$HOST_CPU" != "$HOST_BUILD_CPU" ]
-	then
-		echo "cc/configure.sh: cross-compile not (yet) supported for Metrowerks compilers"
-		exit 1
-	fi
-}
-
 #
 #	the actual compiler configuration module
 #
 case $CONFIG_ACTION in
 
 help-syntax)
-	echo -n " [--cc-compiler={gnuc|egcs|mwcc|sgic}]"
+	echo -n " [--cc-compiler={gnuc|egcs|sgic}]"
 	echo -n " [--cc-bin=<cc>] [--cc-libs=<libs>]"
 	echo -n " [--cc-library-path=<path>] [--cc-include-path=<path>]"
 	echo -n " [--cxx-bin=<c++>] [--cxx-libs=<libs>]"
@@ -102,12 +76,11 @@ help-syntax)
 
 help-options)
 	cat <<end-of-options
-	--cc-compiler={gnuc|egcs|mwcc|sgic}
+	--cc-compiler={gnuc|egcs|sgic}
 		optional, default: build host OS dependent
 		C/C++ compiler to use. Currently recognized compilers are:
 		gnuc	GNU-C/C++ compiler
 		egcs	Experimental GNU compiler system
-		mwcc	Metrowerks C/C++ compiler
 		sgic	SGI C/C++ compiler that ships with IRIX
 
 	--cc-bin=<cc>
@@ -184,7 +157,6 @@ config-parse)
 	Linux)	CC_COMPILER=gnuc ;;
 	Hurd)	CC_COMPILER=gnuc ;;
 	IRIX)	CC_COMPILER=sgic ;;
-	BeOS)	CC_COMPILER=mwcc ;;
 	*)	echo "cc/configure.sh: Error: no default C/C++ compiler for $HOST_BUILD_OS"
 		exit 1
 	esac
@@ -217,7 +189,6 @@ config-parse)
 	case $CC_COMPILER in 
 	gnuc|egcs)	cc_gnuc ;;
 	sgic)		cc_sgic ;;
-	mwcc)		cc_mwcc ;;
 	*)	echo "cc/configure.sh: unknown compiler system $CC_COMPILER"
 		exit 1
 	esac
