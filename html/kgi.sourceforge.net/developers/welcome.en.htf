@@ -1,0 +1,12 @@
+HTF_LANGUAGE=en
+HTF_TITLE="KGI Developer's Home"
+HTF_DESCRIPTION="The developer homepage collects links to resources for KGI developers."
+HTF_KEYWORDS="KGI Project; development"
+HTF_AUTHOR="Steffen Seeger"
+
+cat <<end-of-htf
+<h2>Developer Resources</h2>
+	<blockquote>The <a href="resources/index.en.html" target="_top">Developer Resources</a> page gives information on how to obtain the latest source code
+	snapshot via CVS and how to subscribe to the developers mailing list.
+	</blockquote>
+end-of-htf

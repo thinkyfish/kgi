@@ -1,0 +1,32 @@
+HTF_LANGUAGE=en
+HTF_TITLE="Thanks from the KGI Project"
+HTF_DESCRIPTION="People, Companies and Institutions the KGI Project likes to thank."
+HTF_KEYWORDS="KGI Project; Thanks; Credits"
+HTF_AUTHOR="Steffen Seeger"
+HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
+
+cat <<end-of-htf
+The KGI project likes to thank the following people, companies and institutions
+for their support of development boards:
+<ul>
+	<li>The Freiburger Linux Users Group</li>
+	<li>3Dlabs Incorporated</li>
+	<li>AEON Technologies</li>
+</ul>
+Also, we would like to thank
+<ul>
+	<li>VA Research for hosting the KGI project.</li>
+	<li>University of Technology Chemnitz for providing hosting in
+		the very early project stage.</li>
+</ul>
+Additional thanks go to all people who directly or indirectly contributed
+to the KGI Project, namely
+<ul>	<li>Andreas Beck</li>
+	<li>Steve Cheng</li>
+	<li>Emmanuel Marty</li>
+	<li>Jason McMullan<li>
+	<li>Paul Sargent</li>
+	<li>Marcus Sundberg</li>
+	<li>all other people who contributed but not (yet) listed here.</li>
+</ul>
+end-of-htf

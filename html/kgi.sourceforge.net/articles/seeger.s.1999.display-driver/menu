@@ -1,0 +1,7 @@
+title	en	"Display Drivers"
+rel	en	"Abstract"	welcome.en.html#abstract
+rel	en	"General Overview"	welcome.en.html#overview
+rel	en	"Portability Layer"	welcome.en.html#portability-layer
+rel	en	"Display Hardware"	welcome.en.html#display-hardware
+rel	en	"Modular Driver"	welcome.en.html#modular-driver
+rel	en	"Summary"		welcome.en.html#summary

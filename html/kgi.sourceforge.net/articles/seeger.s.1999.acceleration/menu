@@ -1,0 +1,7 @@
+title	en	"Acceleration"
+rel	en	"Introduction"	welcome.en.html#introduction
+rel	en	"Commands"	welcome.en.html#commands
+rel	en	"MMIO Regions"	welcome.en.html#mmio
+rel	en	"Accelerators"	welcome.en.html#accel
+rel	en	"Shared Memory"	welcome.en.html#shmem
+rel	en	"Implementation"	welcome.en.html#implementation

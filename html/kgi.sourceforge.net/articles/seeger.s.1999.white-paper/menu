@@ -1,0 +1,14 @@
+title	en	"White Paper"
+rel	en	"Abstract"	welcome.en.html#abstract
+rel	en	"Introduction"	welcome.en.html#introduction
+rel	en	"Design Implications"	welcome.en.html#design-implications
+rel	en	"KGI Architecture"	welcome.en.html#kgi-architecture
+list	ul	begin
+rel	en	"Interaction Model"	welcome.en.html#interaction
+rel	en	"Display Hardware"	welcome.en.html#display-hardware
+rel	en	"Display Drivers"	welcome.en.html#display-drivers
+rel	en	"The KGI Environment"	welcome.en.html#environment
+rel	en	"Input Drivers"	welcome.en.html#input-drivers
+rel	en	"Application Interface"	welcome.en.html#api
+list	ul	end
+rel	en	"Summary"	welcome.en.html#summary

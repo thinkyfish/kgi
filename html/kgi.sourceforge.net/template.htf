@@ -1,0 +1,10 @@
+HTF_LANGUAGE=en
+HTF_TITLE=""
+HTF_DESCRIPTION=""
+HTF_KEYWORDS="KGI Project; homepage"
+HTF_AUTHOR="Steffen Seeger"
+HTF_DOCUMENT_TITLE=""
+HTF_BACKLINK=""
+
+cat <<end-of-htf
+end-of-htf

@@ -1,0 +1,2 @@
+
+default.entry:	index.var

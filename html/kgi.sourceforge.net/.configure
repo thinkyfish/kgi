@@ -1,0 +1,15 @@
+
+cp $DIR_BUILD/.config $DIR_BUILD/.config.tmp
+
+cat >> $DIR_BUILD/.config.tmp <<end-of-config
+HTF_MAINTAINER="Steffen Seeger"
+HTF_MAINTAINER_URL="mailto:seeger@physik.tu-chemnitz.de"
+HTF_ABOUT="About this Site"
+HTF_ABOUT_URL="http://kgi.sourceforge.net/about"
+HTML_SITE_NAME="The KGI Project"
+HTML_SITE_URL="http://kgi.sourceforge.net"
+HTML_PROVIDER_URL="http://www.sourceforge.net"
+HTML_PROVIDER_LOGO="<img src=\"http://sourceforge.net/sflogo.php?group_id=3788&amp;type=1\" width=\"88\" height=\"31\" alt=\"SourceForge Logo\"></a>"
+KGI_DOWNLOAD_URL="http://kgi.sourceforge.net/download"
+KGI_SOURCE_URL="http://kgi.sourceforge.net/source"
+end-of-config

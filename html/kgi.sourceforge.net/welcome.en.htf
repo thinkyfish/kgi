@@ -1,0 +1,129 @@
+HTF_LANGUAGE=en
+HTF_TITLE="KGI Project"
+HTF_DESCRIPTION="Welcome to the Kernel Graphics Interface Project."
+HTF_KEYWORDS="KGI Project; homepage"
+HTF_AUTHOR="Steffen Seeger"
+HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
+HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
+
+cat <<end-of-htf
+<h1><u>Welcome to the KGI Project</u></h1><hr noshade>
+This is our new project home page. Things you have heard in the past about
+KGI might have been a bit fuzzy as the temporary project logo above, but
+I hope the documents made available here in the future will help you to 
+get a clearer view of KGI as this site develops.
+You are invited to visit this page regularly and to enjoy reading the documents
+and trying the software that will be made available here. If you spot any
+bugs, design errors or other issues you think not being correct, please
+let the maintainer of the corresponding section know about what's wrong,
+so it can be fixed. On a final note, please be aware that there are a lot
+of things to be done, so please be patient with us as we struggle to get
+things documented. -- <i>Steffen Seeger</i>
+<hr NOSHADE WIDTH="100%">
+
+
+<center><table WIDTH="100%">
+<tr VALIGN=TOP BGCOLOR="#CCFFFF">
+	<td rowspan="2"><b>News</b></td>
+	<td>2000-04-04</td>
+	<td>KGI Mailing lists available<br>
+		web-site update</td>
+</tr> 
+<tr valign=top bgcolor="#CCFFFF">
+	<td>2000-03-20</td>
+	<td>SourceForge account created</td>
+</tr>
+
+
+<tr VALIGN=TOP BGCOLOR="#FFFFCC">
+	<td ROWSPAN="2"><b>Download</b></td>
+	<td><b>Snapshots</b></td>
+	<td><b>Release Notes</b></td>
+</tr>
+<tr VALIGN=TOP BGCOLOR="#FFFFCC">
+	<td><a href="$KGI_DOWNLOAD_URL/kgi-0.9-20000222.tar.gz">2000-02-22</a></td>
+	<td><ul>
+		<li>merged jmt3 branch by Jon M. Taylor</li>
+			<ul>
+			<li>added generic VGA driver framework</li>
+			<li>added nVidia TNT2 driver framework</li>
+			<li>added fixed clock driver</li>
+			</ul>
+		<li>added ViRGE driver framework by Jos Hulzink</li>
+		<li>merged Matrox Gx00 driver by Johann Karlberg</li>
+		<li>added XGGI framework</li>
+		<li>simplified patching and build process for Linux kernel and XGGI</li>
+	</ul></td>
+</tr>
+
+<tr bgcolor="#99FFCC">
+	<td rowspan="5" valign=top><b>Site Index</b></td>
+	<td><a href="articles/index.en.html" target="_top">Articles</a></td>
+	<td>Articles currently available about KGI.</td>
+</tr>
+<tr bgcolor="#99FFCC" valign=top>
+	<td><a href="download/index.en.html" target="_top">Download</a></td>
+	<td>Here you may download the last few snapshots.</td>
+</tr>
+<tr bgcolor="#99FFCC" valign=top>
+	<td><a href="support/index.en.html" target="_top">Support</a></td>
+	<td>installation guides, frequently asked questions, how to contact developers etc.</td>
+</tr>
+<tr bgcolor="#99FFCC" valign=top>
+	<td><a href="developers" target="_top">Developers</a></td>
+	<td>In the developers section there will make available<dl>
+		<dt>Specifications<dd>
+			Kernel Graphics Interface API<br>
+			Display Hardware Driver API<br>
+			Kernel Input Interface API<br>
+		</dt>
+		<dt>Implementations currently under development<dd>
+			Currently there is a sample implementation for 
+			Linux available
+			<li>Installation Guide</li>
+			<li>linux-2.2.x modifications</li>
+			<li>KGI System Layer Services</li>
+			<li>Display and Input Hardware Management</li>
+			<li>Boot Display Hardware Drivers</li>
+			<li>Boot Input Hardware Drivers</li>
+			<li>Console Mapper</li>
+			<li>Graphical Console Mapper</li>
+			<li>Configuration Defaults</li>
+		</dt>
+	</dl></td>
+</tr>
+<tr bgcolor="#99FFCC" valign=top>
+	<td><a href="source/index.en.html">Sources</a></td>
+	<td>Here you may browse the KGI sources online.</td>
+</tr>
+
+<tr VALIGN=TOP BGCOLOR="#CCCCCC">
+	<td ROWSPAN="6"><b>Related Projects</b></td>
+	<td><a href="http://www.ggi-project.org" target="_top">The GGI Project</a></td>
+	<td>KGI is primarily developed to support the development of a 
+		fast, secure and portable General Graphics Interface.</td>
+</tr>
+<tr VALIGN=TOP BGCOLOR="#CCCCCC">
+	<td><a href="http://www.project-udi.org" target="_top">Project UDI</a></td>
+	<td>Project UDI works on the definition of a portable
+		driver programming API to write highly portable drivers.</td>
+</tr>
+<tr VALIGN=TOP BGCOLOR="#CCCCCC">
+	<td><a href="http://linuxconsole.sourceforge.net" target="_top">linux-console</a></td>
+	<td>An attempt to re-implement the Linux console subsystem</td>
+</tr>
+
+<tr BGCOLOR="#CCCCCC">
+	<td><a href="http://www.linux-fbdev.org" target="_top">linux-fbdev</a></td>
+	<td>A device driver for frame buffer devices</td>
+</tr>
+<tr BGCOLOR="#CCCCCC">
+	<td><a href="http://linuxgfx.sourceforge.net" target="_top">linux-gfx</a></td>
+	<td>An attempt to implement display hardware virtualization</td>
+</tr>
+<tr BGCOLOR="#CCCCCC">
+	<td><a href="http://dri.sourceforge.net" target="_top">DRI</a></td>
+	<td>A "Direct Rendering Infrastructure"</td>
+</tr>
+</table></center>
+end-of-htf

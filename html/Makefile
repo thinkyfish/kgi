@@ -1,0 +1,4 @@
+
+default-config:
+
+	./configure

@@ -1,0 +1,3 @@
+
+default.init: index.var
+

@@ -1,0 +1,18 @@
+HTF_LANGUAGE=en
+HTF_TITLE="Developer Resources"
+HTF_DESCRIPTION="How to become a developer, report bugs and get the latest sources."
+HTF_KEYWORDS="KGI Project; Developer Resources"
+HTF_AUTHOR="Steffen Seeger"
+
+cat <<end-of-htf
+<h2><a name="cvs"></a>CVS Repository</h2>
+	We use the Concurent Version System (CVS) for strong version control
+	of our code.
+
+<h2><a name="mailing-list"></a>Mailing List</h2>
+	There is a mailing list for discussion of KGI development related
+	issues. The mailing list address is 
+	<tt>kgi-develop@lists.sourceforge.net</tt>.
+	Detailed information how to subscribe can be found at
+	<a href="http://">http://</a>.
+end-of-htf
