@@ -7,6 +7,9 @@
 **	Copyright (C) 1999-2000	Steffen Seeger
 **
 **	$Log: phoenixOutput.c,v $
+**	Revision 1.2  2000/09/21 11:16:49  seeger_s
+**	- first somewhat working version
+**	
 **	Revision 1.1  2000/07/04 11:01:52  seeger_s
 **	- added PhoeniX DDX stubs and included in build system
 **	
@@ -23,6 +26,9 @@
 #include "colormapst.h"
 #include "mi/mi.h"
 #include "mi/mipointer.h"
+
+#include "ddx/xaa/xf86.h"
+#include "ddx/xaa/xaa.h"
 
 #include "types.h"
 #include "phoenix.h"
@@ -104,6 +110,11 @@ static Bool PhoenixSaveScreen(ScreenPtr screen, int on)
 
 extern void *kgiInitFramebuffer(kgi_u_t sizex, kgi_u_t sizey);
 
+static void PhoenixXAA_Sync(ScrnInfoPtr pScrn)
+{
+
+}
+
 static int PhoenixScreenInit(int id, ScreenPtr screen, 
 	int idx, char **argv)
 {
@@ -147,6 +158,27 @@ static int PhoenixScreenInit(int id, ScreenPtr screen,
 
 		APP_DEBUG("cfbScreenInit() failed for screen %i "
 			"(index %i).\n", id, idx);
+		return FALSE;
+	}
+
+	output->xf86 = xf86CreateScreenInfoRec();
+	if (! xf86Init(output->x11, output->xf86)) {
+	
+		APP_DEBUG("failed to initialize XF86 compatibility layer for"
+			"screen %i (index %i)\n", id, idx);
+		xf86DestroyScreenInfoRec(output->xf86);
+		output->xf86 = NULL;
+		return FALSE;
+	}
+
+	output->xaa = XAACreateInfoRec();
+	output->xaa = PhoenixXAA_Sync;
+	if (! XAAInit(output->x11, output->xaa)) {
+
+		APP_DEBUG("failed to initialize XAA for screen %i (index %i)\n",
+			id, idx);
+		XAADestroyInfoRec(output->xaa);
+		output->xaa = NULL;
 		return FALSE;
 	}
 

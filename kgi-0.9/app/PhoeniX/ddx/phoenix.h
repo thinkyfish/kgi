@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: phoenix.h,v $
+**	Revision 1.1  2000/09/21 11:21:04  seeger_s
+**	- added phoenix global definitions
+**	
 */
 #ifndef	_ddx_phoenix_h
 #define	_ddx_phoenix_h
@@ -29,6 +32,9 @@ typedef enum
 typedef struct
 {
 	ScreenPtr		x11;	/* server visible data		*/
+
+	xf86ScreenPtr		xf86;	/* XFree86 compatibility data	*/
+	XAAInfoRecPtr		xaa;	/* XAA info rec pointer		*/
 
 	/*	these need to be configured
 	*/

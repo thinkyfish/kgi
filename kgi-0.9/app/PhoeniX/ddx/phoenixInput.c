@@ -6,6 +6,9 @@
 **			1998-2000	Steffen Seeger
 **
 **	$Log: phoenixInput.c,v $
+**	Revision 1.2  2000/09/21 11:17:11  seeger_s
+**	- first somewhat working version
+**	
 **	Revision 1.1  2000/07/04 11:01:52  seeger_s
 **	- added PhoeniX DDX stubs and included in build system
 */
@@ -23,6 +26,9 @@ extern int x2unicode(int xkeysym);
 extern int unicode2x(int unicode);
 
 #include "types.h"
+
+#include "xaa/xf86.h"
+#include "xaa/xaa.h"
 #include "phoenix.h"
 
 #include <X11/keysym.h>
