@@ -3,7 +3,7 @@ HTF_TITLE="Developer Resources"
 HTF_DESCRIPTION="How to become a developer, report bugs and get the latest sources."
 HTF_KEYWORDS="KGI Project; Developer Resources"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.2 $" 
+HTF_REVISION="$Revision: 1.3 $" 
 
 cat <<end-of-htf
 <h2><a name="cvs"></a>CVS Repository</h2>
@@ -73,6 +73,31 @@ cat <<end-of-htf
 		allows you to examine the CVS Repository online.
 		</dd>
 	</dl>
+	</blockquote>
+
+<a name="get-sources"></a>
+<h2>How To Obtain The Sources</h2>
+	<blockquote>
+		To obtain a working source tree from the CVS repository, you
+		need to check out the <tt>kgi-0.9</tt> and the <tt>tools</tt>
+		module from the CVS repository.
+		The first module contains all sources neccessary to build the
+		KGI sample implementation, and the second contains 
+		configuration tools and build rules.
+		With the preparations described in the previous section, just
+		execute the commands:
+		<blockquote><tt>
+			cvs -z3 co kgi-0.9<br>
+			cd kgi-0.9<br>
+			cvs -z3 co tools
+		</tt></blockquote>
+		This should leave you with a working source just as 
+		distributed in the snapshots.
+		Of course, you can also checkout the tools in a separate
+		directory and then just place a symbolic link 
+		<tt>kgi-0.9/tools</tt> pointing to that directory.
+		Just make sure the <tt>kgi-0.9/configure</tt> shell
+		script finds the tools at this place.
 	</blockquote>
 
 <h2><a name="mailing-lists"></a>Mailing Lists</h2>
