@@ -12,6 +12,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: kii.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:45  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _KII_KII_H
 #define _KII_KII_H
@@ -19,12 +22,15 @@
 #include <kgi/system.h>
 KGI_SYS_DECLARE_INTEGRAL_TYPES(kii)
 
+#include <kii/errno.h>
 
 typedef struct { kii_s_t x,y; } kii_scoord_t;
+typedef struct { kii_u8_t major, minor, patch, extra; } kii_version_t;
+
 
 #define	KII_EOK		0
 
-#define	KII_REVISION	"$Revision: 1.18 $"
+#define	KII_REVISION	"$Revision: 1.1.1.1 $"
 
 #ifndef	KII_NEED_MODIFIER_KEYSYMS
 #	define KII_NEED_MODIFIER_KEYSYMS
@@ -92,6 +98,8 @@ typedef enum
 typedef enum
 {
 	KII_KBD_KEYMAP0		= 0x00000000,
+	KII_KBD_KEYMAP_FIRST	= 0x00000000,
+	KII_KBD_KEYMAP_LAST	= 0x000000FF,
 	KII_KBD_MIN_KEYCODE	= 0x00000100,
 	KII_KBD_MAX_KEYCODE	= 0x00000102,
 	KII_KBD_MAX_MAPSIZE	= 0x00000103,
@@ -297,6 +305,8 @@ typedef union
 
 } kii_event_t;
 
+#ifdef	__KERNEL__
+
 
 #define	KII_MAX_KEYMAP_MEMORY	32768	/* bytes			*/
 #define	KII_MAX_NR_FOCUSES	CONFIG_KGII_MAX_NR_FOCUSES
@@ -325,7 +335,6 @@ struct kii_input_s
 	int	(*Command)(kii_input_t *, kii_u_t cmd, void *);
 
 	kii_private_t	priv;
-
 };
 
 #define	KII_VALID_FOCUS_ID(x)	((x) < KII_MAX_NR_FOCUSES)
@@ -447,7 +456,7 @@ typedef enum
 
 } kii_sync_flags_t;
 
-#ifdef __KERNEL__
+
 
 extern kii_device_t *kiidevice[KII_MAX_NR_DEVICES];
 
@@ -485,7 +494,29 @@ extern kii_error_t keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, const kii_a
 
 extern kii_keymap_t default_kii_keymap;
 
+#else	/* #ifdef __KERNEL__	*/
+
+typedef struct kii_context_s kii_context_t;
+
+extern kii_error_t kiiInit(kii_context_t **ctx);
+extern kii_error_t kiiMapDevice(kii_context_t *ctx);
+extern int kiiEventDeviceFD(kii_context_t *ctx);
+
+#define	KII_DEVICE_KEYBOARD	1
+#define	KII_DEVICE_POINTER	2
+extern kii_u_t kiiLegalModifier(kii_context_t *ctx, kii_u_t device, kii_u32_t key);
+
+extern void kiiGetu(kii_context_t *ctx, kii_enum_t var, kii_u_t *val);
+extern kii_error_t kiiGetKeymap(kii_context_t *ctx, kii_unicode_t *map,
+	kii_u_t keymap, kii_u_t keymin, kii_u_t keymax);
+
+extern kii_u_t kiiEventAvailable(kii_context_t *ctx);
+extern const kii_event_t *kiiNextEvent(kii_context_t *ctx);
+
+extern void kiiPrintEvent(kii_context_t *ctx, FILE *f, const kii_event_t *ev);
+
 #endif	/* #ifdef __KERNEL__	*/
 
+#include <kii/cmd.h>
 
 #endif	/* #ifdef _KII_KII_H */
