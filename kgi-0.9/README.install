@@ -33,6 +33,7 @@
 		- it initializes the graphics card
 		- it responds to mouse and key events
 	- some minor macro cleanups (E split into KGI_ERRNO and KII_ERRNO)
+	- DisplayDDK documentation enhanced
 
 20000418:
 	- it compiles again (except the X server), also in a separate
@@ -159,10 +160,16 @@ given below.
 
 	This configures the KGI package, patches the sources if not
 	already done and sets a working standard configuration for 
-	the new kernel. If you have to customize your kernel 
-	configuration, follow the instructions in 
-	file:~/kgi-0.9-build/kgi/Linux/linux/README. For instance you might
-	want to do 
+	the new kernel.
+	If this fails due to a missing tools/ directory, you have probably
+	obtained the sources via CVS and did not get the tools module as well.
+	Please refer to the following URL for information how to get a
+	working source tree via CVS:
+	http://kgi.sourceforge.net/developers/resources/index.en.html
+
+	If you have to customize your kernel configuration, follow the 
+	instructions in file:~/kgi-0.9-build/kgi/Linux/linux/README.
+	For instance you might want to do 
 
 		cd ~/kgi-0.9-build/kgi/Linux/linux
 		make menuconfig
