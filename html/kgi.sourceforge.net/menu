@@ -4,5 +4,5 @@ rel	en	"Download"	ftp://kgi.sourceforge.net/pub/kgi
 abs	en	"Driver Status"	source/index.en.html
 abs	en	"Support"	support/index.en.html
 abs	en	"Developers"	developers/index.en.html
-rel	en	"Source Online"	http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=kgi
+abs	en	"Source Online"	http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/kgi
 abs	en	"Thanks"	thanks/index.en.html
