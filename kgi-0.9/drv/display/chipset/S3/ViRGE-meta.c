@@ -10,6 +10,11 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-meta.c,v $
+**	Revision 1.2  2000/08/04 11:39:08  seeger_s
+**	- merged version posted by Jos to kgi-develop
+**	- transferred maintenance to Steffen_Seeger
+**	- status is reported to be 30% by Jos.
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:27  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -18,7 +23,7 @@
 #include <kgi/maintainers.h>
 #define	DEBUG_LEVEL 	4	
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.8 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -531,7 +536,7 @@ kgi_error_t virge_chipset_init(virge_chipset_t *virge, virge_chipset_io_t *virge
 		 * for this chipset, so we have to abort.
 		 */
 		KRN_NOTICE ("Sorry, your ViRGE is in a state that only should occur when another driver is   present. Bailing out to prevent problems."); 
-		return -E(CHIPSET, FAILED);
+		return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 	
 	if (virge->pci.Command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) 
@@ -569,11 +574,11 @@ kgi_error_t virge_chipset_init(virge_chipset_t *virge, virge_chipset_io_t *virge
 		if IS_VIRGE_DXGX (virge)
 		{
 			KRN_ERROR ("ViRGE: The ViRGE DX / GX doesn't work as secondary display adapter.");
-			return -E(CHIPSET,NOSUP);
+			return -KGI_ERRNO(CHIPSET,NOSUP);
 		}
 		
 		KRN_NOTICE("Sorry, getting the ViRGE alive as secondary adapter is not possible yet.");
-		return -E(CHIPSET,NOSUP); 
+		return -KGI_ERRNO(CHIPSET,NOSUP); 
 		KRN_DEBUG(2, "Chipset not initialized, starting wakeup sequence.");
 		/* First enable memory access through the PCI bus */
 		pcicfg_out32 ((virge->pci.Command  | PCI_COMMAND_MEMORY) & 
@@ -853,7 +858,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 	case  2:	
 	case  4:	
 		/*return vga_chipset_mode_check(&virge->vga, &virge_io->vga, &virge_mode->vga, cmd, img, images);*/
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	case  8:		
 	case 16:	
 	case 24:	
@@ -862,14 +867,14 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 
 	default:	
 		KRN_DEBUG(0, "%i bpd not supported", bpd);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/* Only one image is enough for the good old ViRGE :) */
 	if (images != 1) 
 	{
 		KRN_DEBUG(2, "%i images not supported.", images);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/* And some more unsupported stuff. If you really want tiled images
@@ -879,7 +884,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 	{
 		KRN_DEBUG(2, "Image flags %.8x not supported", img[0].flags);
 		
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* Check if common attributes are supported */
@@ -894,7 +899,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		if ((1 != img[0].bpca[0]) || (15 != img[0].bpca[1])) 
 		{
 			KRN_DEBUG(2, "S%iZ%i local buffer not supported", img[0].bpca[0], img[0].bpca[1]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		break;
 
@@ -902,12 +907,12 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		if (16 != img[0].bpca[1]) 
 		{
 			KRN_DEBUG(2, "Z%i local buffer not supported", img[0].bpca[0]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		
 	default:
 		KRN_DEBUG(2, "Common attributes %.8x not supported", img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* total bits per dot */
@@ -978,7 +983,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		{
 			KRN_DEBUG(2, "%i (%i) horizontal pixels are too many", 
 				  img[0].size.x, img[0].virt.x);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].size.y >= virge->chipset.maxdots.y) || 
@@ -987,14 +992,14 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 
 			KRN_DEBUG(2, "%i (%i) vertical pixels are too many", 
 				  img[0].size.y, img[0].virt.y);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > 
 		    (8 * virge->chipset.memory)) 
 		{
 			KRN_DEBUG(2, "not enough memory for (%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames, bpc, img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET,NOMEM);
+			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
 
 		/* Set CRT visible fields */
@@ -1015,7 +1020,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 			{
 				/* Sorry, we can't go below 300 pixels hor.
 				 */
-				return -E(CHIPSET,INVAL);
+				return -KGI_ERRNO(CHIPSET,INVAL);
 			}
 		}
 		
@@ -1026,7 +1031,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 			{
 				/* Nor 175 pixels vertically
 				 */
-				return -E(CHIPSET,INVAL);
+				return -KGI_ERRNO(CHIPSET,INVAL);
 			}
 			
 		}
@@ -1046,7 +1051,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 			if (dpm->dclk < virge->chipset.dclk.min) 
 			{
 				KRN_DEBUG(1, "DCLK = %i Hz is too low", dpm->dclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 
 			if (lclk > 50000000) 
@@ -1059,7 +1064,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 			if (lclk > 50000000) 
 			{
 				KRN_DEBUG(1, "LCLK = %i Hz is too high", lclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 		}
 		
@@ -1074,18 +1079,18 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		     (8 * virge->chipset.memory))) 
 		{
 			KRN_DEBUG(1, "Resolution too high: %ix%i (%ix%i)", img[0].size.x, img[0].size.y, img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		if (lclk > 50000000) 
 		{
 			KRN_DEBUG(1, "LCLK = %i Hz is too high\n", lclk);
-			return -E(CHIPSET, CLK_LIMIT);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
 		}
 
 		if (img[0].flags & KGI_IF_STEREO) 
 		{
 			KRN_DEBUG(1, "stereo modes not supported on virge");
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 		}
 		
 		virge_adjust_timing (crt_mode, DCLKdiv);
@@ -1094,7 +1099,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 
@@ -1116,7 +1121,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 			break;
 		default:
 			KRN_ERROR("Unsupported dclk / cclk ratio.");
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 	
 	/* Based on CCLKs (DCLK / 8 (Or 9, depends on SR1 bit 0)) */
@@ -1214,7 +1219,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		{
 			/* Uh ? */
 			KRN_ERROR("Illegal dot attribute mask for 8 bpd!");
-			return -E(CHIPSET,NOSUP);
+			return -KGI_ERRNO(CHIPSET,NOSUP);
 		}	
 		break;	
 	case 16:
@@ -1237,7 +1242,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		{
 			/* Uh ? */
 			KRN_ERROR("Illegal dot attribute mask for 16 bpd!");
-			return -E(CHIPSET,NOSUP);
+			return -KGI_ERRNO(CHIPSET,NOSUP);
 		}
 		break;
 	case 24:	
@@ -1251,7 +1256,7 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		{
 			/* Uh ? */
 			KRN_ERROR("Illegal dot attribute mask for 24 bpd!");
-			return -E(CHIPSET,NOSUP);
+			return -KGI_ERRNO(CHIPSET,NOSUP);
 		}
 		break;
 	case 32:
@@ -1266,12 +1271,12 @@ kgi_error_t virge_chipset_mode_check(virge_chipset_t *virge, virge_chipset_io_t 
 		{
 			/* Uh ? */
 			KRN_ERROR("Illegal dot attribute mask for 32 bpd!");
-			return -E(CHIPSET,NOSUP);
+			return -KGI_ERRNO(CHIPSET,NOSUP);
 		}			
 		break;
 	default:	
 		KRN_ERROR("Driver should have bailed out already.");
-		return -E(CHIPSET, FAILED);
+		return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 	virge_mode->virge.PrimaryStreamControl 	  = psc & 0x77000000;
 	virge_mode->virge.ColorChromaKeyControl	  = 0;

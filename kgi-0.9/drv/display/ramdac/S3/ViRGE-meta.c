@@ -11,13 +11,18 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-meta.c,v $
+**	Revision 1.2  2000/08/04 11:57:50  seeger_s
+**	- merged code posted by Jos Hulzink to kgi-develop
+**	- transferred maintenance to Steffen_Seeger
+**	- driver status 30% is reported by Jos Hulzink
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 0.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #define	DEBUG_LEVEL	255
 
@@ -315,7 +320,7 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 	if (rec == NULL) 
 	{
 		KRN_DEBUG(2, "could not handle dot attributes (dam %.8x)", dpm->dam);
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 
 	switch (cmd) 
@@ -345,7 +350,7 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 		if ((lclk < virge->ramdac.lclk.min) || (dpm->dclk < virge->ramdac.dclk.min)) 
 		{
 			KRN_DEBUG(2, "%i Hz DCLK is too low", dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		
 		if ((lclk > virge->ramdac.lclk.max) || (dpm->dclk > virge->ramdac.dclk.max)) 
@@ -365,7 +370,7 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 		if ((lclk > virge->ramdac.lclk.max) || (dpm->dclk > virge->ramdac.dclk.max)) 
 		{
 			KRN_DEBUG(2, "%i Hz DCLK is too high", dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		
 		if ((lclk < virge->ramdac.lclk.min) || (dpm->dclk < virge->ramdac.dclk.min)) 
@@ -383,7 +388,7 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 		if (! ((dpm->lclk.mul == rec->best_lclk.mul) && (dpm->lclk.div == rec->best_lclk.div))) 
 		{
 			KRN_DEBUG(2, "Unsupported lclk mul or div");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 
 		lclk = dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
@@ -391,13 +396,13 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 		if ((dpm->dclk < virge->ramdac.dclk.min) || (virge->ramdac.dclk.max < dpm->dclk) || (lclk < virge->ramdac.lclk.min) || (virge->ramdac.lclk.max < lclk)) {
 
 			KRN_DEBUG(2, "%i Hz DCLK (%i Hz LCLK) is out of bounds", dpm->dclk, lclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 
                 if (virge_mode->kgim.crt->sync & (KGIM_ST_SYNC_ON_RED | KGIM_ST_SYNC_ON_BLUE)) 
 		{
 			KRN_DEBUG(2, "can't do red or blue composite sync");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
                 }
 
 		/*	Now everything is checked and should be sane.
@@ -427,7 +432,7 @@ kgi_error_t virge_ramdac_mode_check(virge_ramdac_t *virge, virge_ramdac_io_t *vi
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 }
 

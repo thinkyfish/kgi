@@ -11,6 +11,11 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.2  2000/08/04 11:39:08  seeger_s
+**	- merged version posted by Jos to kgi-develop
+**	- transferred maintenance to Steffen_Seeger
+**	- status is reported to be 30% by Jos.
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:25  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -19,7 +24,7 @@
 #include <kgi/maintainers.h>
 #define	DEBUG_LEVEL	255
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 0.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -447,7 +452,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
 
 			KRN_DEBUG(2, "No supported device found!");
 			
-			return -E(CHIPSET,INVAL);
+			return -KGI_ERRNO(CHIPSET,INVAL);
 		}
 	}
 	
@@ -527,7 +532,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
         default:
                 KRN_ERROR("Device not yet supported (vendor %.4x device %.4x).",
                         virge->chipset.vendor_id, virge->chipset.device_id);
-                return -E(CHIPSET, NOSUP);
+                return -KGI_ERRNO(CHIPSET, NOSUP);
         }
 
 	subvendor = pcicfg_in16(pcidev + PCI_SUBSYSTEM_VENDOR_ID);
@@ -585,7 +590,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
 
 			KRN_ERROR("%s region served (maybe another driver?).", 
 				virge_io->vga.ports);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
@@ -593,7 +598,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
 
 		KRN_ERROR("%s region already served!", 
 			virge_io->vga.aperture.name);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	if (virge->pci.Command & PCI_COMMAND_MEMORY) {
@@ -602,7 +607,7 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
 
 			KRN_ERROR("%s region already served!",
 				virge_io->aperture.name);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		
 	}
@@ -625,13 +630,13 @@ kgi_error_t virge_chipset_init_module(virge_chipset_t *virge, virge_chipset_io_t
 	if (mem_check_region(&virge_io->aperture)) {
 
 		KRN_ERROR("Check of ViRGE PCI LAW region failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	if (mem_check_region(&virge_io->vga.aperture)) {
 
 		KRN_ERROR("Check of ViRGE VGA memory region failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	/*	Claim the regions 
