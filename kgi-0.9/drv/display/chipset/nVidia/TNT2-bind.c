@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: TNT2-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:28  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -391,7 +394,7 @@ kgi_error_t tnt2_chipset_init_module(tnt2_chipset_t *tnt2,
 
 			KRN_DEBUG(2, "No supported device found!");
 			
-			return -E(CHIPSET,INVAL);
+			return -KGI_ERRNO(CHIPSET,INVAL);
 		}
 	}
 	
@@ -419,7 +422,7 @@ kgi_error_t tnt2_chipset_init_module(tnt2_chipset_t *tnt2,
 
 	default:
 		KRN_ERROR("Device not yet supported (vendor %.4x device %.4x).", tnt2->chipset.vendor_id, tnt2->chipset.device_id);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	subvendor = pcicfg_in16(pcidev + PCI_SUBSYSTEM_VENDOR_ID);
@@ -472,14 +475,14 @@ kgi_error_t tnt2_chipset_init_module(tnt2_chipset_t *tnt2,
 
 			KRN_ERROR("%s region served (maybe another driver?).",
 				tnt2_io->vga.ports);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
 	if (mem_check_region(&tnt2_io->vga.aperture)) {
 
 		KRN_ERROR("%s region already served!", tnt2_io->control.name);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	if (tnt2->pci.command & PCI_COMMAND_MEMORY) {
@@ -488,14 +491,14 @@ kgi_error_t tnt2_chipset_init_module(tnt2_chipset_t *tnt2,
 
 			KRN_ERROR("%s region already served!",
 				tnt2_io->control.name);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		
 		if (mem_check_region(&tnt2_io->framebuffer)) {
 
 			KRN_ERROR("%s region already served!",
 				tnt2_io->framebuffer.name);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
@@ -517,19 +520,19 @@ kgi_error_t tnt2_chipset_init_module(tnt2_chipset_t *tnt2,
 	if (mem_check_region(&tnt2_io->control)) {
 
 		KRN_ERROR("check of TNT2 control region failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	if (mem_check_region(&tnt2_io->framebuffer)) {
 
 		KRN_ERROR("check of TNT2 framebuffer region failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	if (mem_check_region(&tnt2_io->vga.aperture)) {
 
 		KRN_ERROR("check of TNT2 I/O and memory regions failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	/* Claim the regions */

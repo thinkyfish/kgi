@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-text-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:19  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.7 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -439,7 +442,7 @@ static kgi_error_t vga_text16_command(kgic_mode_context_t *ctx, kgi_u_t cmd,
 			if (in->image) {
 
 				KRN_DEBUG(1, "invalid image %i", in->image);
-				return -E(DRIVER, INVAL);
+				return -KGI_ERRNO(DRIVER, INVAL);
 			}
 
 			out->revision    = KGIC_MODE_TEXT16CONTEXT_REVISION;
@@ -467,7 +470,7 @@ static kgi_error_t vga_text16_command(kgic_mode_context_t *ctx, kgi_u_t cmd,
 
 	default:
 		KRN_DEBUG(1, "unknown/unsupported mode command %.8x", cmd);
-		return -E(DRIVER, INVAL);
+		return -KGI_ERRNO(DRIVER, INVAL);
 	}
 }
 
@@ -549,7 +552,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 	if (images != 1) {
 
 		KRN_DEBUG(1, "%i images are not supported.", images);
-		return -E(CHIPSET,NOSUP);
+		return -KGI_ERRNO(CHIPSET,NOSUP);
 	}
 
 	/*	for unsupported image flags, bail out
@@ -558,7 +561,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 		KGI_IF_STEREO)) {
 
 		KRN_DEBUG(1, "image flags %.8x not supported", img[0].flags);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	common attributes are not possible
@@ -567,7 +570,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 		KRN_DEBUG(1, "common attributes %.8x not supported",
 			img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	frame attributes must be Index4 Foreground4 Texture8
@@ -576,7 +579,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 		kgim_strcmp(img[0].bpfa, vga_text_chipset_448)) {
 
 		KRN_DEBUG(1, "pixel attributes not supported");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	KRN_ASSERT(img[0].frames);
 	bpp = img[0].frames * 16;
@@ -597,7 +600,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 	if ((dpm->flags & KGI_DPF_TP_MASK) == KGI_DPF_TP_LRTB_I1) {
 
 		KRN_DEBUG(1, "interlaced modes not supported.");
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 	switch (cmd) {
@@ -646,20 +649,20 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 			KRN_DEBUG(1, "%i (%i) horizontal pixels are too many.",
 				img[0].size.x, img[0].virt.x);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		if ((img[0].size.y > maxsize.y) ||
 			(img[0].virt.y > maxsize.y)) {
 
 			KRN_DEBUG(1, "%i (%i) vertical pixels are too many.",
 				img[0].size.y, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > 8*vga->textmemory) {
 
 			KRN_DEBUG(1, "no text memory (%i byte) for %ix%i");
-			return -E(CHIPSET, NOMEM);
+			return -KGI_ERRNO(CHIPSET, NOMEM);
 		}
 
 		if (((text.x != 8) && (text.x != 9)) || 
@@ -667,7 +670,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 			KRN_DEBUG(1, "invalid text font size (%ix%i)",
 				text.x, text.y);
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 		}
 
 		dpm->dots.x = img[0].size.x * text.x;
@@ -681,7 +684,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 		if (dpm->dclk < vga->chipset.dclk.min) {
 
 			KRN_DEBUG(1, "%i Hz DCLK is too low.", dpm->dclk);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		dpm->dclk = (dpm->dclk > vga->chipset.dclk.max)
@@ -695,7 +698,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 		if (dpm->dclk > vga->chipset.dclk.max) {
 
 			KRN_DEBUG(1, "%i Hz DCLK is too high.", dpm->dclk);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		dpm->dclk = (dpm->dclk < vga->chipset.dclk.min)
@@ -711,14 +714,14 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 			KRN_DEBUG(1, "dot port attributes %.8x not supported",
 				dpm->dam);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		if ((dpm->dclk > vga->chipset.dclk.max) ||
 			(dpm->dclk < vga->chipset.dclk.min)) {
 
 			KRN_DEBUG(1, "DCLK %i Hz is out of limits.",
 				dpm->dclk);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if (((8 != text.x) && (9 != text.x)) || 
@@ -726,14 +729,14 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 			KRN_DEBUG(1, "font size %ix%i not supported",
 				text.x, text.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) < vga->textmemory) {
 
 			KRN_DEBUG(1, "not enough text memory for %ix%i virt.",
 				img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 #		define TM(X) \
@@ -744,7 +747,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 				TM(syncend) || TM(blankend) || TM(total)) {
 
 				KRN_DEBUG(1, "timing check failed");
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 #		undef TM
 
@@ -753,7 +756,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 	/*	Now everthing is checked and should be sane.
@@ -825,7 +828,7 @@ kgi_error_t vga_text_chipset_mode_check(vga_text_chipset_t *vga,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	vga_mode->CRT[0x09] |= img[0].out->dots.y/img[0].size.y - 1;

@@ -14,10 +14,13 @@
 **	Please check your manual for further reference.
 ** ----------------------------------------------------------------------------
 **	$Log: pll-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:13  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.6 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -88,7 +91,7 @@ static kgi_error_t pll_clock_best_mode(pll_clock_t *pll,
 
 			KRN_DEBUG(1, "fvco = %i Hz, p = %i is out of range!", \
 				pll_mode->fvco, pll_mode->p);
-			return -E(CLOCK, INVAL);
+			return -KGI_ERRNO(CLOCK, INVAL);
 		}
 
 	} else {
@@ -136,7 +139,7 @@ static kgi_error_t pll_clock_best_mode(pll_clock_t *pll,
 	if (0 == ratio.mul  ||  0 == ratio.div) {
 
 		KRN_DEBUG(0, "bad parameter set!!");
-		return -E(CLOCK, INVAL);
+		return -KGI_ERRNO(CLOCK, INVAL);
 	}
 
 	/*	now determine the best mul and div values.
@@ -207,7 +210,7 @@ static kgi_error_t pll_clock_best_mode(pll_clock_t *pll,
 		pll_mode->div < pll->div.min || pll->div.max < pll_mode->div) {
 
 		KRN_DEBUG(1, "parameters out of range");
-		return -E(CLOCK, INVAL);
+		return -KGI_ERRNO(CLOCK, INVAL);
 	}
 
 	pll_mode->f = pll->fref * pll_mode->mul / pll_mode->div;
@@ -247,7 +250,7 @@ kgi_error_t pll_clock_mode_check(pll_clock_t *pll, pll_clock_io_t *pll_io,
 
 			KRN_DEBUG(1, "DCLK = %i Hz, CLK = %i Hz is too low",
 				dpm->dclk, newfreq);
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 
 		if (newfreq > max_freq) {
@@ -259,7 +262,7 @@ kgi_error_t pll_clock_mode_check(pll_clock_t *pll, pll_clock_io_t *pll_io,
 
 			KRN_DEBUG(1, "lower failed: DCLK = %i Hz, CLK = %i Hz",
 				dpm->dclk, newfreq);
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 
 		dpm->dclk = pll_mode->f * dpm->rclk.div / dpm->rclk.mul;
@@ -271,7 +274,7 @@ kgi_error_t pll_clock_mode_check(pll_clock_t *pll, pll_clock_io_t *pll_io,
 
 			KRN_DEBUG(1, "DCLK = %i Hz, CLK = %i Hz is too high",
 				dpm->dclk, newfreq);
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 
 		if (newfreq < min_freq) {
@@ -283,7 +286,7 @@ kgi_error_t pll_clock_mode_check(pll_clock_t *pll, pll_clock_io_t *pll_io,
 
 			KRN_DEBUG(1, "raise failed: DCLK = %i Hz, CLK = %i Hz",
 				dpm->dclk, newfreq);
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 
 		dpm->dclk = pll_mode->f * dpm->rclk.div / dpm->rclk.mul;
@@ -297,12 +300,12 @@ kgi_error_t pll_clock_mode_check(pll_clock_t *pll, pll_clock_io_t *pll_io,
 
 			KRN_DEBUG(1, "check failed: DCLK = %i Hz, CLK = %i Hz",
 				dpm->dclk, newfreq);
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 		return KGI_EOK;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CLOCK, UNKNOWN);
+		return -KGI_ERRNO(CLOCK, UNKNOWN);
 	}
 }

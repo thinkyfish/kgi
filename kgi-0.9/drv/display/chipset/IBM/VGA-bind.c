@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:20  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -257,20 +260,20 @@ kgi_error_t vga_chipset_init_module(vga_chipset_t *vga,
 
 		KRN_ERROR("%s region served (maybe another driver?).",
 			vga_io->ports);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	if (mem_check_region(&vga_io->text16fb)) {
 
 		KRN_ERROR("%s region already served!",
 			vga_io->text16fb.name);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	if (mem_check_region(&vga_io->pixelfb)) {
 
 		KRN_ERROR("%s region already served!", vga_io->pixelfb.name);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 	
 	/*	Claim the regions

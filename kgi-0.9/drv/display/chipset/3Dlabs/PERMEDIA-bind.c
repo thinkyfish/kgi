@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:15  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.8 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -361,7 +364,7 @@ kgi_error_t pgc_chipset_init_module(pgc_chipset_t *pgc,
 		if (pcicfg_find_device(&pcidev, pgc_chipset_pcicfg)) {
 
 			KRN_ERROR("No supported device found!");
-			return -E(CHIPSET,INVAL);
+			return -KGI_ERRNO(CHIPSET,INVAL);
 		}
 	}
 
@@ -429,7 +432,7 @@ kgi_error_t pgc_chipset_init_module(pgc_chipset_t *pgc,
 	default:
 		KRN_ERROR("Device not yet supported (vendor %.4x device %.4x).",
 			pgc->chipset.vendor_id, pgc->chipset.device_id);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	subvendor = pcicfg_in16(pcidev + PCI_SUBSYSTEM_VENDOR_ID);
@@ -515,7 +518,7 @@ kgi_error_t pgc_chipset_init_module(pgc_chipset_t *pgc,
 
 			KRN_ERROR("%s region served (maybe another driver?).",
 				pgc_io->vga.ports);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 	if (pgc->pci.Command & PCI_COMMAND_MEMORY) {
@@ -524,7 +527,7 @@ kgi_error_t pgc_chipset_init_module(pgc_chipset_t *pgc,
 
 			KRN_ERROR("%s region already served!",
 				pgc_io->control.name);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
@@ -559,7 +562,7 @@ kgi_error_t pgc_chipset_init_module(pgc_chipset_t *pgc,
 		))) {
 
 		KRN_ERROR("check of PERMEDIA io and memory regions failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	claim the regions

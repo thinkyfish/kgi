@@ -11,10 +11,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: fixed-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:12  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Jon_Taylor
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -117,7 +120,7 @@ kgi_error_t fixed_clock_mode_check(fixed_clock_t *fixed,
 				!fixed->clock.dclk.freq[best]) {
 
 				KRN_DEBUG(2, "Unable to lower clock");
-				return -E(CLOCK, UNKNOWN);
+				return -KGI_ERRNO(CLOCK, UNKNOWN);
 			}
 		}
 
@@ -139,7 +142,7 @@ kgi_error_t fixed_clock_mode_check(fixed_clock_t *fixed,
 			if (best < 0) {
 
 				KRN_DEBUG(1, "Could not find a new best freq");
-				return -E(CLOCK, UNKNOWN);
+				return -KGI_ERRNO(CLOCK, UNKNOWN);
 			}
 		}
 
@@ -175,14 +178,14 @@ kgi_error_t fixed_clock_mode_check(fixed_clock_t *fixed,
 			fixed_mode->reg0 = 0;
 			dpm->dclk = FIXED_INVALID_CLK;
 			
-			return -E(CLOCK, UNKNOWN);
+			return -KGI_ERRNO(CLOCK, UNKNOWN);
 		}
 
 	default:
 		/*	This should not happen ...
 		*/
 		KRN_INTERNAL_ERROR;
-		return -E(CLOCK, UNKNOWN);
+		return -KGI_ERRNO(CLOCK, UNKNOWN);
 	}
 }
 

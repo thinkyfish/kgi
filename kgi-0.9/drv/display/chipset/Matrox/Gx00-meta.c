@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:24  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -565,7 +568,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 	if (images != 1) {
 
 		KRN_DEBUG(1, "%i images not supported.", images);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/* for unsupported image flags, bail out. */
@@ -573,7 +576,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL))
 	{
 		KRN_DEBUG(1, "image flags %.8x not supported", img[0].flags);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* check if common attributes are supported. */
@@ -585,7 +588,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 	default:
 		KRN_DEBUG(1, "common attributes %.8x not supported", img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* total bits per dot */
@@ -611,7 +614,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 			break;
 
 	default:	KRN_DEBUG(0, "%i bpd not supported", bpd);
-			return -E(CHIPSET, FAILED);
+			return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 
 	lclk = (cmd == KGI_TC_PROPOSE) ? 0 : dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
@@ -660,21 +663,21 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 			KRN_DEBUG(1, "%i (%i) x pixels are too many", img[0].size.x, img[0].virt.x);
 
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].size.y >= mgag->chipset.maxdots.y) || (img[0].virt.y >= mgag->chipset.maxdots.y)) {
 
 			KRN_DEBUG(1, "%i (%i) y pixels are too many", img[0].size.y, img[0].virt.y);
 
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > (8 * mgag->chipset.memory)) {
 
 			KRN_DEBUG(1, "not enough memory (%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames, bpc, img[0].virt.x, img[0].virt.y);
 
-			return -E(CHIPSET,NOMEM);
+			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
 
 		/* set CRT visible fields */
@@ -697,7 +700,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 			if (dpm->dclk < mgag->chipset.dclk.min) {
 
 				KRN_DEBUG(1, "DCLK = %i Hz is too low", dpm->dclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 		}
 		return KGI_EOK;
@@ -710,7 +713,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 		if (width != img[0].virt.x) {
 
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if ((img[0].size.x >= mgag->chipset.maxdots.x) ||
@@ -723,14 +726,14 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 					img[0].size.y,
 					img[0].virt.x,
 					img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		break;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 	/* Now everything is checked and should be sane. proceed to setup device dependent mode. */

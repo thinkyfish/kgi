@@ -10,15 +10,18 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:17  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.9 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
 #ifndef	DEBUG_LEVEL
-#define	DEBUG_LEVEL	2
+#define	DEBUG_LEVEL	1
 #endif
 
 #define	__3Dlabs_Permedia
@@ -227,22 +230,29 @@ static kgi_u_t pgc_chipset_calc_partials(kgi_u_t width, kgi_u_t *pp)
 
 static inline void pgc_chipset_sync(pgc_chipset_io_t *pgc_io)
 {
-	kgi_u32_t count = 1;
+	kgi_u32_t count = 1, timeout = 10;
 
 	do {
 		while (count--);
 		count = PGC_CS_IN32(pgc_io, PGC_CS_DMACount);
+		KRN_DEBUG(1, "DMACount is %i", count);
 
-	} while (count);
+	} while (count && timeout--);
 
-	count = 1;
+	count = 1; timeout = 10;
 	do {
 		while (count++ < 255);
 		count = PGC_CS_IN32(pgc_io, PGC_CS_InFIFOSpace);
+		KRN_DEBUG(1, "DMACount is %i", count);
 
-	} while (count);
+	} while (count && timeout--);
 
-	while (PGC_CS_IN32(pgc_io, 0x068) & PGC_CS068_GraphicsProcessorActive);
+	count = 1; timeout = 10;
+	while (count && timeout--) {
+
+		count = PGC_CS_IN32(pgc_io, 0x068) &
+				PGC_CS068_GraphicsProcessorActive;
+	}
 }
 
 /*
@@ -1277,7 +1287,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 	if (images != 1) {
 
 		KRN_DEBUG(1, "%i images not supported.", images);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/*	for text16 support we fall back to VGA mode
@@ -1292,7 +1302,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL)) {
 
 		KRN_DEBUG(1, "image flags %.8x not supported", img[0].flags);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	check if common attributes are supported.
@@ -1307,7 +1317,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 			KRN_DEBUG(1, "S%iZ%i local buffer not supported",
 				img[0].bpca[0], img[0].bpca[1]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		break;
 
@@ -1316,12 +1326,12 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 			KRN_DEBUG(1,"Z%i local buffer not supported",
 				img[0].bpca[0]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	default:
 		KRN_DEBUG(1, "common attributes %.8x not supported",
 			img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	total bits per dot
@@ -1347,7 +1357,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			break;
 
 	default:	KRN_DEBUG(0, "%i bpd not supported", bpd);
-			return -E(CHIPSET, FAILED);
+			return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 
 	lclk = (cmd == KGI_TC_PROPOSE)
@@ -1402,7 +1412,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 			KRN_DEBUG(1, "%i (%i) horizontal pixels are too many",
 				img[0].size.x, img[0].virt.x);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].size.y >= pgc->chipset.maxdots.y) ||
@@ -1410,7 +1420,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 			KRN_DEBUG(1, "%i (%i) vertical pixels are too many",
 				img[0].size.y, img[0].virt.y);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > 
@@ -1419,7 +1429,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			KRN_DEBUG(1, "not enough memory for (%ipf*%if + %ipc)@"
 				"%ix%i", bpf, img[0].frames, bpc,
 				img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET,NOMEM);
+			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
 
 		/*	Take screen visible width up to next 32/64-bit word
@@ -1459,7 +1469,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 				KRN_DEBUG(1, "DCLK = %i Hz is too low",
 					dpm->dclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 
 			if (lclk > 50000000) {
@@ -1473,7 +1483,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			if (lclk > 50000000) {
 
 				KRN_DEBUG(1, "LCLK = %i Hz is too high", lclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 		}
 		return KGI_EOK;
@@ -1490,7 +1500,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 		if (width != img[0].virt.x) {
 
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		if ((img[0].size.x >= pgc->chipset.maxdots.x) ||
 			(img[0].size.y >= pgc->chipset.maxdots.y) || 
@@ -1501,7 +1511,7 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			KRN_DEBUG(1, "resolution too high: %ix%i (%ix%i)",
 				img[0].size.x, img[0].size.y,
 				img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if (((dpm->lclk.mul != 1) &&
@@ -1512,26 +1522,26 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			KRN_DEBUG(1, "invalid LCLK (%i:%i) or CLK (%i:%i)", 
 				dpm->lclk.mul, dpm->lclk.div,
 				dpm->rclk.mul, dpm->rclk.div);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if (lclk > 50000000) {
 
 			KRN_DEBUG(1, "LCLK = %i Hz is too high\n", lclk);
-			return -E(CHIPSET, CLK_LIMIT);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
 		}
 
 		if ((img[0].flags & KGI_IF_STEREO) &&
 			!(pgc->flags & PGC_CF_PERMEDIA2)) {
 
 			KRN_DEBUG(1, "stereo modes not supported on PERMEDIA");
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 		}
 		break;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 

@@ -13,7 +13,7 @@
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -1250,7 +1250,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 	if (images != 1) 
 	{
 		KRN_DEBUG(2, "%i images not supported.", images);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/*	for text16 support we fall back to VGA mode
@@ -1265,7 +1265,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 	{
 		KRN_DEBUG(2, "Image flags %.8x not supported", img[0].flags);
 		
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* Check if common attributes are supported */
@@ -1280,7 +1280,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 		if ((1 != img[0].bpca[0]) || (15 != img[0].bpca[1])) 
 		{
 			KRN_DEBUG(2, "S%iZ%i local buffer not supported", img[0].bpca[0], img[0].bpca[1]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		break;
 
@@ -1288,12 +1288,12 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 		if (16 != img[0].bpca[1]) 
 		{
 			KRN_DEBUG(2, "Z%i local buffer not supported", img[0].bpca[0]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		
 	default:
 		KRN_DEBUG(2, "Common attributes %.8x not supported", img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* total bits per dot */
@@ -1318,7 +1318,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 
 	default:	
 		KRN_DEBUG(0, "%i bpd not supported", bpd);
-		return -E(CHIPSET, FAILED);
+		return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 
 	lclk = (cmd == KGI_TC_PROPOSE) ? 0 : dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
@@ -1374,20 +1374,20 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 		if ((img[0].size.x >= tnt2->chipset.maxdots.x) || (img[0].virt.x >= tnt2->chipset.maxdots.x)) 
 		{
 			KRN_DEBUG(2, "%i (%i) horizontal pixels are too many", img[0].size.x, img[0].virt.x);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].size.y >= tnt2->chipset.maxdots.y) || (img[0].virt.y >= tnt2->chipset.maxdots.y)) 
 		{
 
 			KRN_DEBUG(2, "%i (%i) vertical pixels are too many", img[0].size.y, img[0].virt.y);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > (8 * tnt2->chipset.memory)) 
 		{
 			KRN_DEBUG(2, "not enough memory for (%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames, bpc, img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET,NOMEM);
+			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
 
 		/* Take screen visible width up to next 32/64-bit word */
@@ -1429,7 +1429,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 			if (dpm->dclk < tnt2->chipset.dclk.min) 
 			{
 				KRN_DEBUG(1, "DCLK = %i Hz is too low", dpm->dclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 
 			if (lclk > 50000000) 
@@ -1442,7 +1442,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 			if (lclk > 50000000) 
 			{
 				KRN_DEBUG(1, "LCLK = %i Hz is too high", lclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 		}
 		
@@ -1461,7 +1461,7 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 		if (width != img[0].virt.x) 
 		{
 			KRN_DEBUG(2, "Invalid width!");
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		
 		if ((img[0].size.x >= tnt2->chipset.maxdots.x) ||
@@ -1471,31 +1471,31 @@ kgi_error_t tnt2_chipset_mode_check(tnt2_chipset_t *tnt2,
 		     (8 * tnt2->chipset.memory))) 
 		{
 			KRN_DEBUG(1, "Resolution too high: %ix%i (%ix%i)", img[0].size.x, img[0].size.y, img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if (((dpm->lclk.mul != 1) && (dpm->lclk.div != 1 + pgm)) || ((dpm->rclk.mul != dpm->lclk.mul) && (dpm->rclk.div != dpm->lclk.div))) {
 
 			KRN_DEBUG(1, "invalid LCLK (%i:%i) or CLK (%i:%i)", dpm->lclk.mul, dpm->lclk.div, dpm->rclk.mul, dpm->rclk.div);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 		if (lclk > 50000000) 
 		{
 			KRN_DEBUG(1, "LCLK = %i Hz is too high\n", lclk);
-			return -E(CHIPSET, CLK_LIMIT);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
 		}
 
 		if (img[0].flags & KGI_IF_STEREO) 
 		{
 			KRN_DEBUG(1, "stereo modes not supported on TNT2");
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 		}
 		break;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 

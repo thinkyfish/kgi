@@ -10,11 +10,14 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -134,7 +137,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 			KRN_ERROR("No supported device found.");
 
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
@@ -195,7 +198,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 			break;
 		default:
 			KRN_INTERNAL_ERROR;
-			return -E(CHIPSET, NOSUP);
+			return -KGI_ERRNO(CHIPSET, NOSUP);
 		}
 
 		break;
@@ -237,7 +240,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/*	if MEMORY set, the board was initialized by the BIOS and 
@@ -292,7 +295,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 		KRN_ERROR("check of 1x64/Gx00 memory regions failed.");
 
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/* claim the regions */
