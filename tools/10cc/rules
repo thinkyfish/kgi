@@ -1,0 +1,69 @@
+# -----------------------------------------------------------------------------
+#	C/C++ compiler
+# -----------------------------------------------------------------------------
+
+CC_BIN = ${CC_BIN:-cc}
+CXX_BIN = ${CXX_BIN:-c++}
+LD_BIN = ld
+CP_BIN = cp
+
+#	GCC options
+#
+CC_OPT_C += ${CC_OPT_C}
+CC_OPT_CXX += ${CC_OPT_CXX}
+CC_OPT_WARN += ${CC_OPT_WARN}
+CC_OPT_DEBUG += ${CC_OPT_DEBUG}
+CC_OPT_OPTIMIZE += ${CC_OPT_OPTIMIZE}
+CC_OPT_TARGET += ${CC_OPT_TARGET}
+CC_OPT_PIC += ${CC_OPT_PIC}
+
+#	libraries to link
+#
+CC_LIBS += ${CC_LIBS}
+CXX_LIBS += ${CXX_LIBS}
+
+#	common dependencies
+#
+source_c=$(wildcard *.c)
+depend_c=$(patsubst %.c,.%.c.d,$(source_c))
+
+source_S=$(wildcard *.S)
+depend_S=$(patsubst %.S,.%.S.d,$(source_S))
+
+source_cc=$(wildcard *.cc)
+depend_cc=$(patsubst %.cc,.%.cc.d,$(source_cc))
+
+depend.common: $(depend_c) $(depend_S) $(depend_cc)
+	touch .depend
+
+default.common:
+
+#	cleanup need to be done before recursion
+#
+ifeq ($(MAKELEVEL),0)
+
+GMAKE_CLEAN+="*.o" "*.oo" "*.s" "*.i" "*.ss" "*.ii"
+
+endif
+
+#	generated dependencies
+#
+ifeq ($(wildcard .depend),.depend)
+
+FLAG_BUILD_DEPENDENCIES = 1
+include .depend
+
+ifneq ($(depend_c),)
+-include $(depend_c)
+endif
+
+ifneq ($(depend_S),)
+-include $(depend_S)
+endif
+
+ifneq ($(depend_cc),)
+-include $(depend_cc)
+endif
+
+endif
+

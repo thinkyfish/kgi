@@ -1,0 +1,25 @@
+# -----------------------------------------------------------------------------
+#	html rules
+#
+
+GMAKE_CLEAN_INIT+= ".htaccess" "index.var"
+
+HTML_LANGUAGE_LIST=$(subst ",,$(HTML_LANGUAGES))
+
+.htaccess: index.var
+	( echo "DirectoryIndex index.var"; 		\
+	  echo "Addhandler type-map var"; 		\
+	  echo "LanguagePriority $(HTML_LANGUAGE_LIST)"	\
+	) > $@
+
+index.var: $(patsubst %,index.%.html, $(HTML_LANGUAGE_LIST))
+	( for lang in $(HTML_LANGUAGE_LIST);		\
+	do						\
+		echo "URI: index.$$lang.html";		\
+		echo "Content-Type: text/html";		\
+		echo "Content-Language: $$lang";	\
+		echo;					\
+	done ) > $@
+#
+# -----------------------------------------------------------------------------
+

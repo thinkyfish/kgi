@@ -1,0 +1,16 @@
+# ----------------------------------------------------------------------------
+#	uudecode
+#
+#	The source tree must not contain binaries. Uuencode them before
+#	checking them into the repository. Simply append ".uue" to
+#	original filename to store the uuencoded version, add revision 
+#	control and copyright information and add the original filename 
+#	to the dependencies of your target.
+
+GMAKE_CLEAN_INIT+="*.jpeg" "*.png"
+
+%: %.uue
+	${UUDECODE} -o $@ $<
+
+# ----------------------------------------------------------------------------
+

@@ -1,0 +1,101 @@
+#!/bin/sh
+
+if test -f .config
+then
+	source .config
+fi
+
+HTF_LANGUAGE=$1
+HTF_MENU_FILE=$2
+
+function abs() {
+
+	if [ "$HTF_LANGUAGE" = "$1" ]
+	then
+		echo "<li><a href=\"$3\" target=\"_top\">$2</a></li>"
+	fi
+	if [ "all" = "$1" ]
+	then
+		echo "<li><a href=\"$3\" target=\"_top\">$2</a></li>"
+	fi
+}
+
+function rel() {
+
+	if [ "$HTF_LANGUAGE" = "$1" ]
+	then
+		echo "<li><a href=\"$3\" target=\"this-page\">$2</a></li>"
+	fi
+	if [ "all" = "$1" ]
+	then
+		echo "<li><a href=\"$3\" target=\"this-page\">$2</a></li>>"
+	fi
+}
+
+function title() {
+
+	if [ "$HTF_LANGUAGE" = "$1" ]
+	then
+		echo "<h2>$2</h2>"
+#		echo "<font size=+2><b><u>$2</u></b></font><ul>"
+	fi
+	if [ "all" = "$1" ]
+	then
+		echo "<h2>$2</h2>"
+#		echo "<font size=+2><b><u>$2</u></b></font><ul>"
+	fi
+}
+
+function list() {
+
+	case $2 in
+	begin)	echo "<$1>" ;;
+	end)	echo "</$1>" ;;
+	esac
+}
+
+function item() {
+
+	if [ "$HTF_LANGUAGE" = "$1" ]
+	then
+		echo "<li>$2</li>"
+	fi
+	if [ "all" = "$1" ]
+	then
+		echo "<li>$2</li>"
+	fi
+}
+
+
+if [ "$HTML_SITE_NAME" != "" ]
+then
+	HTF_SITE_HOME="<center><h1><a href=\"$HTML_SITE_URL\">$HTML_SITE_NAME</a></center></h1><hr noshade>"
+fi
+
+if [ "$HTML_PROVIDER_LOGO" != "" ]
+then
+	HTF_PROVIDER_LOGO="<center><a href=\"$HTML_PROVIDER_URL\">$HTML_PROVIDER_LOGO</a></center>"
+fi
+
+cat <<end-of-header
+<html><body text="${HTF_MENU_COLOR_TEXT:-#FFFF00}" bgcolor="${HTF_MENU_COLOR_BGCOLOR:-#0000FF}" link="${HTF_MENU_COLOR_LINK:-#FFFFFF}" vlink="${HTF_MENU_COLOR_VLINK:-#FFFFFF}" alink="${HTF_MENU_COLOR_ALINK:-#FFFFFF}" background="$HTF_MENU_IMAGE_BACKGROUND">
+$HTF_SITE_HOME
+end-of-header
+
+if test -f $HTF_MENU_PROLOG.$HTF_LANGUAGE
+then
+	cat $HTF_MENU_PROLOG.$HTF_LANGUAGE
+fi
+
+source $HTF_MENU_FILE
+
+if test -f $HTF_MENU_PROLOG.$HTF_LANGUAGE
+then
+	cat $HTF_MENU_EPILOG.$HTF_LANGUAGE
+fi
+
+cat <<end-of-trailer
+<hr noshade>
+$HTF_PROVIDER_LOGO
+</body></html>
+end-of-trailer

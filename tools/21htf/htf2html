@@ -1,0 +1,67 @@
+#!/bin/sh
+
+HTF_SOURCE=$1
+
+if test -f .config
+then
+	source .config
+fi
+
+source $HTF_SOURCE > /dev/null
+
+#	document header
+#
+if [ "$HTF_HEADER" != "no" ]
+then
+cat <<end-of-header
+<html><head>
+<title>${HTF_TITLE:-No title set}</title>
+<meta name="Description" content="$HTF_DESCRIPTION">
+<meta name="Keywords" content="$HTF_KEYWORDS">
+<meta name="Author" content="$HTF_AUTOR">
+</head><body text="${HTF_COLOR_TEXT:-#000000}" bgcolor="${HTF_COLOR_BGCOLOR:-#FFFFFF}" link="${HTF_COLOR_LINK:-#0000EE}" vlink="${HTF_COLOR_VLINK:-#551A8B}" alink="${HTF_COLOR_ALINK:-#FF0000}" background="$HTF_IMAGE_BACKGROUND">
+end-of-header
+fi
+
+echo ${HTF_DOCUMENT_TITLE:-"<h1><hr noshade>${HTF_LONG_TITLE:-$HTF_TITLE}<hr noshade></h1>"}
+
+#	document body
+#
+source $HTF_SOURCE 
+
+#	document trailer
+#
+if [ "$HTF_TRAILER" != "no" ]
+then
+	case $HTF_LANGUAGE in
+	en)	HTF_BACK="back"
+		HTF_MAINTAINED1="This page is maintained by "
+		HTF_MAINTAINED2="."
+		;;
+	de)	HTF_BACK="zur&uuml;ck"
+		HTF_MAINTAINED1="Diese Seite wird von "
+		HTF_MAINTAINED2=" betreut."
+		;;
+	*)	echo "htf2html/htf2html.sh: unknown language $HTF_LANGUAGE."
+		exit 1
+	esac
+	
+	case $HTF_SOURCE in
+	*welcome.[a-z]*.htf)
+		HTF_AUTO_BACKLINK="../index.$HTF_LANGUAGE.html"
+		;;
+	*)
+		HTF_AUTO_BACKLINK="index.$HTF_LANGUAGE.html"
+	esac
+
+	cat <<end-of-trailer
+
+<p><hr noshade>
+<table cols=3 width="100%"><tr valign=top>
+<td align=left><i><a target="_top" href="${HTF_BACKLINK:-$HTF_AUTO_BACKLINK}">$HTF_BACK</a></i></td>
+<td align=center><i>\$Revision ${HTF_REVISION:-&nbsp;}</i></td>
+<td align=right><i>$HTF_MAINTAINED1 <a href="$HTF_MAINTAINER_URL">$HTF_MAINTAINER</a>$HTF_MAINTAINED2</i></td>
+</tr></table>
+</body></html>
+end-of-trailer
+fi

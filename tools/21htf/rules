@@ -1,0 +1,33 @@
+# -----------------------------------------------------------------------------
+#	htf implicit rules
+#
+GMAKE_CLEAN_INIT+= "*.gif" "*.jpg" "*.html"
+
+#	*.html documents are generated from "HyperTextFragments" (htf).
+#	These are the part between the "<body>" and "</body>" directives. 
+#
+%.html: %.htf 
+	$(DIR_TOOLS)/??htf/htf2html $< > $@
+
+#	index.%.html files contain a frameset that needs welcome.%.html and 
+#	menu.%.html plus a no-frames version of welcome.%.html (with a 
+#	navigation bar at the beginning).
+#
+.SECONDARY: $(patsubst %,index.%.html,$(HTML_LANGUAGE_LIST))
+.SECONDARY: $(patsubst %,welcome.%.html,$(HTML_LANGUAGE_LIST))
+.SECONDARY: $(patsubst %,menu.%.html,$(HTML_LANGUAGE_LIST))
+index.%.html: welcome.%.htf welcome.%.html menu.%.html
+	$(DIR_TOOLS)/??htf/htf2index $< > $@
+
+#	menu.html is generated from the menu file in the local directory
+#	and (if present) those from the two upper directories.
+# NOTE	There must not be a menu file in the __two__ directories above
+# NOTE	the html pages source.
+#
+menu.%.html: menu \
+	$(wildcard $(DIR_SOURCE)/../menu) $(wildcard $(DIR_BUILD)/../menu) \
+	$(wildcard $(DIR_SOURCE)/../../menu) $(wildcard $(DIR_BUILD)/../../menu)
+	$(DIR_TOOLS)/??htf/menu2html $* $^ > $@
+#
+# -----------------------------------------------------------------------------
+
