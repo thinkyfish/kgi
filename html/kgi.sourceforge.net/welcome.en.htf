@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: 1.5 $" 
+HTF_REVISION="$Revision: 1.6 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -36,7 +36,7 @@ things documented. -- <i>Steffen Seeger</i>
 <tr valign=top bgcolor="#CCFFFF">
 	<td>2000-10-06</td>
 	<td>The project homepage may now be reached via the toplevel domain 
-		<a href="http://www.kgi-project.org"><tt>http://www.kgi-project.org</tt></a>
+		<a href="http://www.kgi-project.org" target="_top"><tt>http://www.kgi-project.org</tt></a>
 </tr>
 
 
@@ -112,7 +112,7 @@ things documented. -- <i>Steffen Seeger</i>
 	</dl></td>
 </tr>
 <tr bgcolor="#99FFCC" valign=top>
-	<td><a href="source/index.en.html">Sources</a></td>
+	<td><a href="source/index.en.html" target="_top">Sources</a></td>
 	<td>Here you may browse the KGI sources online.</td>
 </tr>
 
