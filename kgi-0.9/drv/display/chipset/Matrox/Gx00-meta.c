@@ -10,12 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id:$
+**	$Id: Gx00-meta.c,v 1.5 2001/09/12 20:55:52 ortalo Exp $
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.4 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.5 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -588,11 +588,11 @@ typedef struct
 
 } mgag_chipset_accel_context_t;
 
-static void mgag_chipset_accel_init(kgi_accel_t *accel, void *ctx)
+static void mgag_chipset_accel_init(kgi_accel_t *accel, void *context)
 {
   /* mgag_chipset_t *mgag = accel->meta; */
   /* mgag_chipset_io_t *mgag_io = accel->meta_io; */
-  mgag_chipset_accel_context_t *mgag_ctx = ctx;
+  mgag_chipset_accel_context_t *mgag_ctx = context;
   kgi_size_t offset;
   
   /* To be able to use ctx->primary_dma for DMA we precalculate the
@@ -619,12 +619,12 @@ static void mgag_chipset_accel_init(kgi_accel_t *accel, void *ctx)
   mgag_ctx->primary_dma.softrap = MGAG_SOFTRAP_MAGIC;
 }
 
-static void mgag_chipset_accel_done(kgi_accel_t *accel, void *ctx)
+static void mgag_chipset_accel_done(kgi_accel_t *accel, void *context)
 {
-  if (ctx == accel->ctx)
-    {
-      accel->ctx = NULL;
-    }
+	if (context == accel->context) {
+
+		accel->context = NULL;
+	}
 }
 
 /* TODO: remove this dependency needed for wake_up() */
@@ -634,7 +634,7 @@ static void mgag_chipset_accel_done(kgi_accel_t *accel, void *ctx)
 static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 {
   mgag_chipset_io_t *mgag_io = accel->meta_io;
-  kgi_accel_buffer_t *buffer = accel->exec_queue;
+  kgi_accel_buffer_t *buffer = accel->execution.queue;
   kgi_accel_buffer_t *to_wakeup = NULL;
 
 #if 0
@@ -644,14 +644,14 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
     return;
 #endif
 
-  switch (buffer->exec_state)
+  switch (buffer->execution.state)
     {
 
     case KGI_AS_EXEC:
       /*	Execution of the current buffer finished (one per one), so we 
       **	mark it KGI_AS_IDLE and advance the queue.
       */
-      buffer->exec_state = KGI_AS_IDLE;
+      buffer->execution.state = KGI_AS_IDLE;
 
 #warning wakeup buffer->executed portably!
       /* We delay the wakeup until we have finished scheduling buffers
@@ -661,15 +661,15 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 
       {
 	kgi_accel_buffer_t *cur = buffer->next;
-	while ((cur->exec_state != KGI_AS_WAIT)
+	while ((cur->execution.state != KGI_AS_WAIT)
 	       && (cur->next != NULL) && (cur != buffer))
 	  cur = cur->next;
-	if (cur->exec_state != KGI_AS_WAIT)
+	if (cur->execution.state != KGI_AS_WAIT)
 	  {
 	    /* no further buffers queued, thus we are done.
 	     */
 	    KRN_DEBUG(2,"No further buffers queued");
-	    accel->exec_queue = NULL;
+	    accel->execution.queue = NULL;
 #warning wakeup mgag_accel->idle
 	    /* Need to delay also ? */
 	    /* wake_up(accel->idle); */
@@ -677,7 +677,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	  }
 	KRN_DEBUG(2, "Proceeding to next buffer queued (%.8x)",cur);
 	buffer = cur;
-	accel->exec_queue = cur;
+	accel->execution.queue = cur;
       }
       /*
       ** FALL THROUGH! (to execute next WAIT buffer)
@@ -686,35 +686,35 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
       /* We do not do GP context switch on the Matrox.
       ** We swap the data structs and initiate the buffer transfer.
       */
-      if (accel->ctx != buffer->exec_ctx)
+      if (accel->context != buffer->context)
 	{
-	  accel->ctx = buffer->exec_ctx;
+	  accel->context = buffer->context;
 	}
       
-      buffer->exec_state = KGI_AS_EXEC;
+      buffer->execution.state = KGI_AS_EXEC;
 
-      if ((buffer->exec_size & 0x3) || (buffer->aperture.bus & 0x3))
+      if ((buffer->execution.size & 0x3) || (buffer->aperture.bus & 0x3))
 	{
 	  KRN_ERROR("Matrox: invalid buffer start adress (%.8x) or size (%.8x)",
-		    buffer->aperture.bus, buffer->exec_size);
+		    buffer->aperture.bus, buffer->execution.size);
 	  mgag_chipset_accel_schedule(accel); /* recurses */
 	  break;
 	}
       else
 	{
-	  mgag_chipset_accel_context_t *mgag_ctx = accel->ctx;
+	  mgag_chipset_accel_context_t *mgag_ctx = accel->context;
 
 	  /* Sets start adress and end address in the primary DMA list */
 	  mgag_ctx->primary_dma.secaddress = buffer->aperture.bus;
-	  mgag_ctx->primary_dma.secend = buffer->aperture.bus + buffer->exec_size;
+	  mgag_ctx->primary_dma.secend = buffer->aperture.bus + buffer->execution.size;
 	  KRN_DEBUG(2,"Executing one accel buffer "
 		    "(primaddress=%.8x,primend=%.8x,"
 		    "secaddress=%8.x,secend=%.8x,size=%.4x)",
 		    mgag_ctx->aperture.bus,
 		    mgag_ctx->aperture.bus + mgag_ctx->aperture.size,
 		    buffer->aperture.bus,
-		    buffer->aperture.bus + buffer->exec_size,
-		    buffer->exec_size);
+		    buffer->aperture.bus + buffer->execution.size,
+		    buffer->execution.size);
 	  /* Starts execution of the context primary dma (precomputed area) */
 	  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
 			| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
@@ -727,7 +727,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 
     default:
       KRN_ERROR("PERMEDIA: invalid state %i for queued buffer",
-		buffer->exec_state);
+		buffer->execution.state);
       KRN_INTERNAL_ERROR;
       break;
     }
@@ -750,10 +750,10 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 
 #warning check/validate validate data stream!!!
 
-  KRN_ASSERT(KGI_AS_FILL == buffer->exec_state);
+  KRN_ASSERT(KGI_AS_FILL == buffer->execution.state);
 
 #warning fix the exec size offset!!!
-  buffer->exec_size &= 0xFFF; /* Limit to 4KB currently */
+  buffer->execution.size &= 0xFFF; /* Limit to 4KB currently */
 
   if (mgag->flags & MGAG_CF_1x64)
     {
@@ -763,8 +763,8 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       ** We directly write the given buffer to the pseudo-dma
       ** window of the chipset.
       */
-      /* buffer->exec_state = KGI_AS_QUEUED; */
-      /* buffer->exec_state = KGI_AS_EXEC; */
+      /* buffer->execution.state = KGI_AS_QUEUED; */
+      /* buffer->execution.state = KGI_AS_EXEC; */
       /* Resets pseudo-DMA, selects General Purpose Write */
       MGAG_GC_OUT32(mgag_io,
 		    (MGAG_GC_IN32(mgag_io, OPMODE) & ~OPMODE_DMAMOD_MASK)
@@ -776,13 +776,13 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       ** TODO: of PCI bursts ?
       */
       mem_outs32(mgag_io->iload.base_virt,
-		 buffer->aperture.virt, (buffer->exec_size >> 2));
+		 buffer->aperture.virt, (buffer->execution.size >> 2));
       /* Again */
       MGAG_GC_OUT32(mgag_io,
 		    (MGAG_GC_IN32(mgag_io, OPMODE) & ~OPMODE_DMAMOD_MASK)
 		    | OPMODE_DMAMOD_GENERAL_WRITE,
 		    OPMODE);
-      buffer->exec_state = KGI_AS_IDLE;
+      buffer->execution.state = KGI_AS_IDLE;
     }
   else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G400))
     {
@@ -794,16 +794,16 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       mgag_chipset_irq_block(mgag_io, &irq_state);
 
 #warning should not this be KGI_AS_QUEUED ?
-      buffer->exec_state = KGI_AS_WAIT;
+      buffer->execution.state = KGI_AS_WAIT;
 
-      if (accel->exec_queue)
+      if (accel->execution.queue)
 	{
-	  kgi_accel_buffer_t *cur = accel->exec_queue;
+	  kgi_accel_buffer_t *cur = accel->execution.queue;
 	  /* No need to start the accel queue. We just check that this
 	  ** buffer is on the list.
 	  */
 	  while ((cur->next != NULL) && (cur != buffer)
-		 && (cur->next != accel->exec_queue))
+		 && (cur->next != accel->execution.queue))
 	    cur = cur->next;
 	  if (cur != buffer)
 	    KRN_ERROR("buffer %.8x not on the list of the accelerator!", buffer);
@@ -811,7 +811,7 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       else
 	{
 	  /* Points the beginning of the exec queue on this buffer */
-	  accel->exec_queue = buffer;
+	  accel->execution.queue = buffer;
 	  /* Starts execution if no other buffer running */
 	  mgag_chipset_accel_schedule(accel);
 	}
@@ -1717,9 +1717,9 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 	a->flags |= KGI_AF_DMA_BUFFERS;
 	a->buffers = 3;
 	a->buffer_size = 8 KB; /* TODO: Should be 7 KB ? */
-	a->ctx = NULL;
-	a->ctx_size = sizeof(mgag_chipset_accel_context_t);
-	a->exec_queue = NULL;
+	a->context = NULL;
+	a->context_size = sizeof(mgag_chipset_accel_context_t);
+	a->execution.queue = NULL;
 #warning initialize a->idle!!!
 	a->Init = mgag_chipset_accel_init;
 	a->Done = mgag_chipset_accel_done;
