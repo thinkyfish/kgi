@@ -13,6 +13,10 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: dpy-i386.c,v $
+**	Revision 1.4  2001/09/09 23:42:11  skids
+**	
+**	Move around some init calls when compiling for 2.4.x kernels
+**	
 **	Revision 1.3  2001/07/03 08:51:17  seeger_s
 **	- text16 handling now via image resources
 **	
@@ -584,24 +588,24 @@ typedef struct
 
 } blubber_context_t;
 
-static void blubber_accel_init(kgi_accel_t *accel, void *ctx)
+static void blubber_accel_init(kgi_accel_t *accel, void *context)
 {
 	kgi_u8_t *blubber = accel->meta;
-	blubber_context_t *blubber_ctx = ctx;
+	blubber_context_t *blubber_ctx = context;
 
 	strncpy(blubber_ctx->color, "initial", sizeof(blubber_ctx->color));
 	KRN_DEBUG(0, "%s accel context initialized (%s color)",
 		blubber, blubber_ctx->color);
 }
 
-static void blubber_accel_done(kgi_accel_t *accel, void *ctx)
+static void blubber_accel_done(kgi_accel_t *accel, void *context)
 {
 	kgi_u8_t *blubber = accel->meta;
-	blubber_context_t *blubber_ctx = ctx;
+	blubber_context_t *blubber_ctx = context;
 
-	if (accel->ctx == ctx) {
+	if (accel->execution.context == context) {
 
-		accel->ctx = NULL;
+		accel->execution.context = NULL;
 	}
 	KRN_DEBUG(0, "%s accel context destroyed (%s color)",
 		blubber, blubber_ctx->color);
@@ -610,24 +614,24 @@ static void blubber_accel_done(kgi_accel_t *accel, void *ctx)
 static void blubber_accel_exec(kgi_accel_t *accel, kgi_accel_buffer_t *buffer)
 {
 	kgi_ascii_t *action = buffer->aperture.virt;
-	blubber_context_t *ctx = accel->ctx;
+	blubber_context_t *context = accel->execution.context;
 
-	if (ctx != buffer->exec_ctx) {
+	if (accel->execution.context != buffer->context) {
 
-		if (ctx) {
+		if (accel->execution.context) {
 
-			KRN_DEBUG(0, "%s accel saved %s color", accel->meta,
-				ctx ? ctx->color : "no");
+			KRN_DEBUG(0, "%s accel saved %s color",
+				accel->meta, context->color);
 		}
-		accel->ctx = ctx = buffer->exec_ctx;
-		KRN_DEBUG(0, "%s accel loaded %s color", accel->meta,
-			ctx ? ctx->color : "no");
+		accel->execution.context = context = buffer->context;
+		KRN_DEBUG(0, "%s accel loaded %s color",
+			accel->meta, context->color);
 	}
 
-	action[(buffer->exec_size > 20) ? buffer->exec_size : 20] = 0;
+	action[(buffer->execution.size > 20) ? buffer->execution.size : 20] = 0;
 	KRN_DEBUG(0, "%s accel executed %s with %s color",
-		accel->meta, action, ctx->color);
-	buffer->exec_state = KGI_AS_IDLE;
+		accel->meta, action, context->color);
+	buffer->execution.state = KGI_AS_IDLE;
 }
 
 
@@ -741,9 +745,9 @@ kgi_display_t *text16_malloc_display(unsigned long fb, kgi_u_t fb_size,
 	text16->accel.name = "blubber accel";
 	text16->accel.buffers = 2;	
 	text16->accel.buffer_size = PAGE_SIZE;
-	text16->accel.ctx = NULL;
-	text16->accel.ctx_size = sizeof(blubber_context_t);
-	text16->accel.exec_queue = NULL;
+	text16->accel.context_size = sizeof(blubber_context_t);
+	text16->accel.execution.context = NULL;
+	text16->accel.execution.queue = NULL;
 	text16->accel.Init = blubber_accel_init;
 	text16->accel.Done = blubber_accel_done;
 	text16->accel.Exec = blubber_accel_exec;

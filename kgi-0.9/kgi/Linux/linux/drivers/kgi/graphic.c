@@ -14,6 +14,14 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.4  2001/09/15 21:42:37  skids
+**	
+**	Changes for compiling with 2.4.x kernel.  These could use a lot
+**	of cleaning, plus many of these changes are turned on for
+**	all 2.4.0 series when the actual revision the change took place
+**	may have been earlier or later.  I have no time for archeology
+**	right now, so I am leaving that up to the great spirit of TODO.
+**	
 **	Revision 1.3  2001/09/13 08:48:00  seeger_s
 **	- bugfix: calculation of exec_size wrong in graph_accel_nopage()
 **	
@@ -597,7 +605,7 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 	KRN_ASSERT(vma == map->vma);
 
 	accel = (kgi_accel_t *) map->resource;
-	KRN_ASSERT(accel->type == KGI_RT_ACCELERATOR);
+	KRN_ASSERT(KGI_RT_ACCELERATOR == accel->type);
 
 	KRN_DEBUG(1, "accel_nopage @%.8lx, vma %p, %x", addr, vma, write);
 
@@ -610,26 +618,27 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 		return NOPAGE_SIGBUS_RETVAL;
 	}
 
-	if (map->buf->next->exec_state != KGI_AS_IDLE) {
+	if (map->buf->next->execution.state != KGI_AS_IDLE) {
 
 		KRN_DEBUG(1, "next buffer is not IDLE, stalling");
 		sleep_on(map->buf->next->executed);
-		KRN_ASSERT(map->buf->next->exec_state == KGI_AS_IDLE);
+		KRN_ASSERT(KGI_AS_IDLE == map->buf->next->execution.state);
 	}
 
 	if (map->mstart) {
 
-		KRN_ASSERT(map->buf->exec_state == KGI_AS_FILL);
+		KRN_ASSERT(KGI_AS_IDLE == map->buf->execution.state);
 		KRN_DEBUG(1, "unmap & exec buffer %.8lx, %.8lx-%.8lx",
 			map->buf->aperture.phys, map->mstart, map->mend);
 		fast_unmap_page_range(map->vma->vm_mm, map->mstart, map->mend);
-		map->buf->exec_size = 
+		map->buf->execution.size = 
 			(offset == nstart) ? map->buf_size : (offset - nstart);
 		accel->Exec(accel, map->buf);
 	}
 
 	map->buf = map->buf->next;
-	map->buf->exec_state = KGI_AS_FILL;
+	KRN_ASSERT(KGI_AS_IDLE == map->buf->execution.state);
+	map->buf->execution.state = KGI_AS_FILL;
 	map->buffer = nstart;
 	map->mstart = VM(start) + nstart;
 	map->mend = VM(start) + nend;
@@ -667,29 +676,28 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 	KRN_ASSERT(map->vma == vma);
 
 	accel = (kgi_accel_t *) map->resource;
-	KRN_ASSERT(accel->type == KGI_RT_ACCELERATOR);
+	KRN_ASSERT(KGI_RT_ACCELERATOR == accel->type);
 
 	KRN_DEBUG(1, "accel_unmap vma %p, map %p", vma, map);
 
 	buf = map->buf->next;
-	while ((buf->exec == NULL) && (buf != map->buf)) {
+	while ((buf->execution.next == NULL) && (buf != map->buf)) {
 
 		buf = buf->next;
 	}
-	if (buf->exec) {
+	if (buf->execution.next) {
 
 		KRN_DEBUG(1, "waiting for accelerator to complete");
 		sleep_on(buf->executed);
 	}
 
-
 	if (map->mstart) {
 
 		fast_unmap_page_range(map->vma->vm_mm, map->mstart, map->mend);
-		KRN_TRACE(1, map->buf->exec_state = KGI_AS_IDLE);
+		KRN_TRACE(1, map->buf->execution.state = KGI_AS_IDLE);
 	}
 
-	accel->Done(accel, buf->exec_ctx);
+	accel->Done(accel, buf->context);
 
 #	if DEBUG_LEVEL > 0
 	{
@@ -697,9 +705,9 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 
 		while (foo->next != map->buf) {
 
-			KRN_ASSERT(foo->exec_state == KGI_AS_IDLE);
-			KRN_ASSERT(foo->exec == NULL);
-			KRN_ASSERT(accel->ctx != foo->exec_ctx);
+			KRN_ASSERT(KGI_AS_IDLE == foo->execution.state);
+			KRN_ASSERT(NULL == foo->execution.next);
+			KRN_ASSERT(accel->execution.context != foo->context);
 			foo = foo->next;
 		}
 	}
@@ -709,27 +717,32 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 	**	free context, buffers and buffer infos
 	*/
 	buf = map->buf;
-	kfree(buf->exec_ctx);
+	kfree(buf->context);
 
 	KRN_ASSERT(buf);
 	KRN_ASSERT(buf->next);
 	KRN_ASSERT(buf->next != map->buf);
 	do {
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 /* What version? */
 		struct page *page;
 		kgi_accel_buffer_t *next = buf->next;
 
-		for (page = virt_to_page(buf->aperture.virt); page <= virt_to_page(buf->aperture.virt + map->buf_size); page++)
+		for (page = virt_to_page(buf->aperture.virt);
+			page <= virt_to_page(buf->aperture.virt+map->buf_size);
+			page++) {
+
 			mem_map_unreserve(page);
+		}
 #else
 		unsigned long mstart = MAP_NR(buf->aperture.phys);
 		unsigned long mend = MAP_NR(buf->aperture.phys + map->buf_size);
 		unsigned int i;
 		kgi_accel_buffer_t *next = buf->next;
 
-
 		for (i = mstart; i < mend; i++) {
+
 			mem_map_unreserve(i);
 		}
 #endif
@@ -826,13 +839,13 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 		goto no_memory;
 	}
 	memset(map, 0, sizeof(*map));
-	if (! (context = kmalloc(accel->ctx_size, GFP_KERNEL))) {
+	if (! (context = kmalloc(accel->context_size, GFP_KERNEL))) {
 
 		KRN_DEBUG(1, "failed to allocate accelerator context");
 		goto no_memory; 
 	}
-	memset(context, 0, accel->ctx_size);
-	context->aperture.size = accel->ctx_size;
+	memset(context, 0, accel->context_size);
+	context->aperture.size = accel->context_size;
 	context->aperture.virt = (void *) context;
 	context->aperture.bus  = virt_to_bus(context);
 	context->aperture.phys = virt_to_phys(context);
@@ -906,11 +919,12 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 
 #endif
 		buf[i]->next = buf[((i + 1) < buffers) ? (i + 1) : 0];
-		buf[i]->exec = NULL;
+		buf[i]->priority = priority;
+		buf[i]->context  = context;
 
-		buf[i]->exec_pri = priority;
-		buf[i]->exec_ctx = context;
-		buf[i]->exec_state = KGI_AS_IDLE;
+		buf[i]->execution.next	= NULL;
+		buf[i]->execution.state	= KGI_AS_IDLE;
+		buf[i]->execution.size	= 0;
 
 		buf[i]->aperture.size = 1 << (order + PAGE_SHIFT);
 		buf[i]->aperture.phys = virt_to_phys(buf[i]->aperture.virt);
@@ -947,7 +961,7 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 
 	graph_add_mapping(file, (graph_mapping_t *) map);
 
-	map->buf->exec_state = KGI_AS_FILL;
+	map->buf->execution.state = KGI_AS_FILL;
 	fast_unmap_page_range(VM(mm), VM(start), VM(end));
 	map->mstart = VM(start);
 	map->mend   = VM(start) + map->buf_size;
