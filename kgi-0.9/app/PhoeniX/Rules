@@ -2,8 +2,6 @@
 #	PhoeniX X server specific rules
 # -----------------------------------------------------------------------------
 
-X11R6_DIR = /usr/X11R6.4
-
 CC_INCLUDE_PATH += $(X11_TOP_DIR) $(X11_TOP_DIR)/include $(X11R6_DIR)/include
 
 LD = ld

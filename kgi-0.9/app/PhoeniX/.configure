@@ -1,5 +1,10 @@
 
+#
+#	extend .config file
+#
 cp .config .config.tmp
+
+X11R6_DIR=${X11R6_DIR:-/usr/X11R6.4}
 
 cat >> .config.tmp <<-end-of-config
 #
@@ -8,8 +13,12 @@ cat >> .config.tmp <<-end-of-config
 CC_OPT_DEBUG=""
 CC_OPT_WARN=""
 X11_TOP_DIR=$DIR_SOURCE
+X11R6_DIR=$X11R6_DIR
 
 end-of-config
 
+#
+#	add X11R6.4 server section to GNUmakefile
+#
 cp GNUmakefile GNUmakefile.tmp
 cat $DIR_SOURCE/Rules >> GNUmakefile.tmp
