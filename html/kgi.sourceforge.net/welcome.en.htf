@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: 1.6 $" 
+HTF_REVISION="$Revision: 1.7 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -46,7 +46,7 @@ things documented. -- <i>Steffen Seeger</i>
 	<td><b>Release Notes</b></td>
 </tr>
 <tr valign=top bgcolor="#FFFFCC">
-	<td><a href="$KGI_DOWNLOAD_URL/kgi-0.9-20001011.tar.gz">2000-10-11</a></td>
+	<td><a href="$KGI_DOWNLOAD_URL/0.9/kgi-0.9-20001011.tar.gz">2000-10-11</a></td>
 	<td><ul>
 	<li>/dev/event mapper implemented</li>
 	<li>PhoeniX X server added to source tree. Status:
@@ -61,7 +61,7 @@ things documented. -- <i>Steffen Seeger</i>
 	</ul></td>
 </tr>
 <tr VALIGN=TOP BGCOLOR="#FFFFCC">
-	<td><a href="$KGI_DOWNLOAD_URL/kgi-0.9-20000418.tar.gz">2000-04-18</a></td>
+	<td><a href="$KGI_DOWNLOAD_URL/0.9/kgi-0.9-20000418.tar.gz">2000-04-18</a></td>
 	<td><ul>
 		<li>it compiles again (except the X server), also in a 
 			separate build tree.</li>
