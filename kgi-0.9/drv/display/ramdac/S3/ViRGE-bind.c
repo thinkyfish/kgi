@@ -2,6 +2,7 @@
 **	S3 ViRGE ramdac meta binding
 ** ----------------------------------------------------------------------------
 **	Copyright (C)	1999-2000	Jon Taylor
+**			2000		Jos Hulzink
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
@@ -10,12 +11,17 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
-#define	MAINTAINER		Jon_Taylor
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	MAINTAINER	Steffen_Seeger
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 0.1 $"
 
-#define	DEBUG_LEVEL	2
+#ifndef DEBUG_LEVEL
+#define	DEBUG_LEVEL	255
+#endif
 
 #include <kgi/module.h>
 #define	__S3_ViRGE
@@ -23,8 +29,7 @@
 #include "ramdac/S3/ViRGE.h"
 #include "ramdac/S3/ViRGE-meta.h"
 
-kgi_error_t virge_ramdac_init_module(virge_ramdac_t *virge, 
-	virge_ramdac_io_t *virge_io, const kgim_options_t *options)
+kgi_error_t virge_ramdac_init_module(virge_ramdac_t *virge, virge_ramdac_io_t *virge_io, const kgim_options_t *options)
 {
 	kgi_u16_t vendor_id, device_id;
 
@@ -48,17 +53,12 @@ kgi_error_t virge_ramdac_init_module(virge_ramdac_t *virge,
 
 	virge->ramdac.maxdots.x	= 0x07FF;
 	virge->ramdac.maxdots.y	= 0x07FF;
-	virge->ramdac.lclk.min = options->ramdac->lclk_min 
-		? options->ramdac->lclk_min : 0;
-	virge->ramdac.lclk.max = options->ramdac->lclk_max 
-		? options->ramdac->lclk_max : 135000000;
-	virge->ramdac.dclk.min = options->ramdac->dclk_min 
-		? options->ramdac->dclk_min : 0;
-	virge->ramdac.dclk.max = options->ramdac->dclk_max 
-		? options->ramdac->dclk_max : 135000000;
+	virge->ramdac.lclk.min = options->ramdac->lclk_min ? options->ramdac->lclk_min : 0;
+	virge->ramdac.lclk.max = options->ramdac->lclk_max ? options->ramdac->lclk_max : 135000000;
+	virge->ramdac.dclk.min = options->ramdac->dclk_min ? options->ramdac->dclk_min : 0;
+	virge->ramdac.dclk.max = options->ramdac->dclk_max ? options->ramdac->dclk_max : 135000000;
 
-	KRN_NOTICE("%s %s driver " KGIM_RAMDAC_DRIVER, 
-		virge->ramdac.vendor, virge->ramdac.model);
+	KRN_NOTICE("%s %s driver " KGIM_RAMDAC_DRIVER, virge->ramdac.vendor, virge->ramdac.model);
 
 	return KGI_EOK;
 }

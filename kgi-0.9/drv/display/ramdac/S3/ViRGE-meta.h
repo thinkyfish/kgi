@@ -2,15 +2,19 @@
 **	S3 ViRGE ramdac meta definition
 ** ----------------------------------------------------------------------------
 **	Copyright (C)	1999-2000	Jon Taylor
+**			2000		Jos Hulzink
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
 **	with this software for details of these terms and conditions.
 **
 ** ----------------------------------------------------------------------------
-**	MAINTAINER	Jon_Taylor
+**	MAINTAINER	Steffen_Seeger
 **
 **	$Log: ViRGE-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_ramdac_S3_ViRGE_meta_h
 #define	_ramdac_S3_ViRGE_meta_h
@@ -50,8 +54,7 @@ typedef struct
 
 	kgi_u_t	rev;
 	
-	/*	Initial state
-	*/
+	/* Initial state */
 	struct 
 	{ 
 		kgi_u8_t

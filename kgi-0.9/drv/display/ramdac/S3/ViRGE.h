@@ -2,20 +2,22 @@
 **	S3 ViRGE ramdac register definitions
 ** -----------------------------------------------------------------------------
 **	Copyright (C)	2000	Jon Taylor
+**			2000	Jos Hulzink
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
 **	with this software for details of these terms and conditions.
 **
 ** -----------------------------------------------------------------------------
-**	MAINTAINER	Jon_Taylor
+**	MAINTAINER	Steffen_Seeger
 **
 **	$Log: ViRGE.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_ramdac_S3_VIRGE_h
 #define	_ramdac_S3_VIRGE_h
-
-#warning add real S3 ViRGE register definitions here!
 
 #if 0
 
