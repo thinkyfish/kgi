@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: default.c,v $
+**	Revision 1.2  2001/07/03 08:48:41  seeger_s
+**	- added default pointer shape and color lookup table
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:47  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -43,6 +46,7 @@ kgi_console_font_t *default_font[CONFIG_KGII_MAX_NR_DEFFONTS] =
 };
 
 #define	CONFIG_KGII_KEYMAP	"default-keymap-de"
+/* #define	CONFIG_KGII_KEYMAP	"default-keymap-us" */
 #include CONFIG_KGII_KEYMAP
 
 #include "default-ptr"
