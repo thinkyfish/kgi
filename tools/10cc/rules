@@ -1,15 +1,24 @@
 # -----------------------------------------------------------------------------
-#	C/C++ compiler
-# -----------------------------------------------------------------------------
-
-LD_BIN = ld
-CP_BIN = cp
+#	C/C++ compiler rules
+#
+#	We stick to the following file name conventions:
+#
+#	suffixes for files preserved when cleaning up:
+#
+#		.c	C source
+#		.cc	C++ source
+#		.S	C assembler source (to be preprocessed)
+#		.SS	C++ assembler source (to be preprocessed)
+#
+#       suffixes for files removed when cleaning up:
+#
+#		.o	C object file
+#               .oo     C++ object file
+#
 
 CC_BIN:=$(subst ",,$(CC_BIN))
 CC_LIBS:=$(subst ",,$(CC_LIBS))
 CC_OPT:=$(subst ",,$(CC_OPT))
-# CC_INCLUDE_PATH:=$(subst ",,$(CC_INCLUDE_PATH))
-# CC_LIBRARY_PATH:=$(subst ",,$(CC_LIBRARY_PATH))
 
 CC_OPT_WARN:=$(subst ",,$(CC_OPT_WARN))
 CC_OPT_DEBUG:=$(subst ",,$(CC_OPT_DEBUG))
@@ -21,51 +30,43 @@ CXX_BIN:=$(subst ",,$(CXX_BIN))
 CXX_LIBS:=$(subst ",,$(CXX_LIBS))
 CXX_OPT:=$(subst ",,$(CXX_OPT))
 
-# CXX_INCLUDE_PATH:=$(subst ",,$(CXX_INCLUDE_PATH))
-# CXX_LIBRARY_PATH:=$(subst ",,$(CXX_LIBRARY_PATH))
-
-#	common dependencies
+#	automatically generate and check dependencies for source files
 #
-source_c=$(wildcard *.c)
-depend_c=$(patsubst %.c,.%.c.d,$(source_c))
+CC_DEPEND_C = $(patsubst %.c,.%.c.d,$(notdir $(wildcard $(DIR_SOURCE)/*.c)))
+CC_DEPEND_S = $(patsubst %.S,.%.S.d,$(notdir $(wildcard $(DIR_SOURCE)/*.S)))
+CC_DEPEND_CC = $(patsubst %.cc,.%.cc.d,$(notdir $(wildcard $(DIR_SOURCE)/*.cc)))
+CC_DEPEND_SS = $(patsubst %.ss,.%.ss.d,$(notdir $(wildcard $(DIR_SOURCE)/*.ss)))
 
-source_S=$(wildcard *.S)
-depend_S=$(patsubst %.S,.%.S.d,$(source_S))
+depend.exit:: $(CC_DEPEND_C) $(CC_DEPEND_S) $(CC_DEPEND_CC) $(CC_DEPEND_SS)
 
-source_cc=$(wildcard *.cc)
-depend_cc=$(patsubst %.cc,.%.cc.d,$(source_cc))
+ifeq ($(GMAKE_FULL_DEPENDENCIES),yes)
 
-depend.common: $(depend_c) $(depend_S) $(depend_cc)
-	touch .depend
+GNUmakefile: $(CC_DEPEND_C) $(CC_DEPEND_S) $(CC_DEPEND_CC) $(CC_DEPEND_SS)
 
-default.common:
+ifneq ($(CC_DEPEND_C),)
+-include $(CC_DEPEND_C)
+endif
 
-#	cleanup need to be done before recursion
-#
+ifneq ($(CC_DEPEND_S),)
+-include $(CC_DEPEND_S)
+endif
+
+ifneq ($(CC_DEPEND_CC),)
+-include $(CC_DEPEND_CC)
+endif
+
+ifneq ($(CC_DEPEND_SS),)
+-include $(CC_DEPEND_SS)
+endif
+
+endif
+
+#	default clean-up actions
+
 ifeq ($(MAKELEVEL),0)
 
-GMAKE_CLEAN_INIT +="*.o" "*.oo" "*.s" "*.i" "*.ss" "*.ii"
+GMAKE_CLEAN_INIT += "*.o" "*.oo"
 
 endif
 
-#	generated dependencies
-#
-ifeq ($(wildcard .depend),.depend)
-
-FLAG_BUILD_DEPENDENCIES = 1
-include .depend
-
-ifneq ($(depend_c),)
--include $(depend_c)
-endif
-
-ifneq ($(depend_S),)
--include $(depend_S)
-endif
-
-ifneq ($(depend_cc),)
--include $(depend_cc)
-endif
-
-endif
 
