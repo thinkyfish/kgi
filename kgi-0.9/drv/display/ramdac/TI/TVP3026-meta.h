@@ -11,12 +11,14 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: TVP3026-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_ramdac_TI_TVP3026_meta_h
 #define	_ramdac_TI_TVP3026_meta_h
 
 typedef kgim_chipset_io_t tvp3026_ramdac_io_t;
-#define	TVP3026_PCIDEV(ctx)			KGIM_PCIDEV(ctx)
 #define	TVP3026_DAC_OUTS8(ctx, r, b, c)		KGIM_DAC_OUTS8(ctx, r, b, c)
 #define	TVP3026_DAC_INS8(ctx, r, b, c)		KGIM_DAC_INS8(ctx, r, b, c)
 #define	TVP3026_DAC_OUT8(ctx, val, reg)		KGIM_DAC_OUT8(ctx, val, reg)

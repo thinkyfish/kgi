@@ -10,10 +10,13 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: TVP3026-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:05  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -304,6 +307,8 @@ kgi_error_t tvp3026_ramdac_init(tvp3026_ramdac_t *tvp3026,
 
 #undef	TVP3026_SAVE
 
+#warning save Loop PLL registers
+
 	TVP3026_DAC_OUT8(tvp3026_io, 0x00, TVP3026_DAC_PR_INDEX);
 	TVP3026_DAC_INS8(tvp3026_io, TVP3026_DAC_P_DATA,
 		tvp3026->clut, sizeof(tvp3026->clut));
@@ -339,6 +344,8 @@ void tvp3026_ramdac_done(tvp3026_ramdac_t *tvp3026,
 	TVP3026_DAC_OUT8(tvp3026_io, 0x00, TVP3026_DAC_PW_INDEX);
 	TVP3026_DAC_OUTS8(tvp3026_io, TVP3026_DAC_CURSOR_RAM_DATA,
 		tvp3026->cursor_data, sizeof(tvp3026->cursor_data));
+
+#warning restore loop PLL registers
 
 #define	TVP3026_RESTORE(reg)	\
 	TVP3026_EDAC_OUT8(tvp3026_io, tvp3026->reg, TVP3026_EDAC_##reg)
