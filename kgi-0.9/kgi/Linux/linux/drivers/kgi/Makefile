@@ -74,7 +74,7 @@ O_TARGET	:= kgi.a
 
 # Objects that export symbols.
 
-export-objs	:=
+export-objs	:= system.o kgi.o kii.o
 
 # Object file lists.
 
