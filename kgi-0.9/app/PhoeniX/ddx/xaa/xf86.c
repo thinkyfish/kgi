@@ -61,7 +61,7 @@ Bool xf86Init(ScreenPtr pScreen, xf86ScreenPtr xf86)
 	xf86->pScreen = pScreen;
 
 	xf86PrivateIndex = AllocateScreenPrivateIndex();
-	if (xf86PrivateIndex > 0) {
+	if (xf86PrivateIndex < 0) {
 	
 		return FALSE;
 	}
