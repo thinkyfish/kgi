@@ -171,7 +171,7 @@ XAAInitDualFramebufferOverlay(
     ScreenPtr pScreen, 
     DepthChangeFuncPtr callback
 ){
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = XF86_SCREEN_PTR(pScreen);
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_SCREEN(pScreen);
     XAAOverlayPtr pOverPriv;
 

@@ -634,7 +634,7 @@ XAAInitPixmapCache(
     RegionPtr areas,
     pointer data
 ) {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = XF86_SCREEN_PTR(pScreen);
    XAAInfoRecPtr infoRec = (XAAInfoRecPtr)data;
    XAAPixmapCachePrivatePtr pCachePriv;
    BoxPtr pBox = REGION_RECTS(areas);

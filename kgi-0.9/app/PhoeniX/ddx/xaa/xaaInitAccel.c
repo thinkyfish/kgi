@@ -89,7 +89,7 @@ Bool
 XAAInitAccel(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
 {
     int index = pScreen->myNum;
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    ScrnInfoPtr pScrn = XF86_SCREEN_PTR(pScreen);
     Bool HaveScreenToScreenCopy = FALSE;
     Bool HaveColorExpansion = FALSE;
     Bool HaveScanlineColorExpansion = FALSE;
