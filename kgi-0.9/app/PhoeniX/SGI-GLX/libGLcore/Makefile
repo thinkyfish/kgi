@@ -1,0 +1,117 @@
+# -----------------------------------------------------------------------------
+#	SGI OpenGL Sample Implementation -- GLcore library
+# -----------------------------------------------------------------------------
+
+default.exit:: libGLcore.so
+
+# Remove -D__GL_SUPPORT_ARB_IMAGING_SUBSET if no ARB_imaging features
+# are wanted.
+
+CC_OPT += -D_LANGUAGE_C -Dunix 
+# -D__GL_SUPPORT_ARB_IMAGING_SUBSET
+
+libGLcore.so: 		\
+	libGLcore.o 	\
+	dl_block.o	\
+	dl_heap.o	\
+	dl_init.o	\
+	dl_list.o	\
+	dl_mopt.o	\
+	dl_opt.o	\
+	dl_pplst.o	\
+	dl_splc.o	\
+	dl_splst.o	\
+	dl_table.o	\
+	px_api.o	\
+	px_cmatrix.o	\
+	px_convol.o	\
+	px_hist.o	\
+	px_mod.o	\
+	px_pack.o	\
+	px_paths.o	\
+	px_read.o	\
+	px_rend.o	\
+	px_upack.o	\
+	s_accum.o	\
+	s_atest.o	\
+	s_attrib.o	\
+	s_bitmap.o	\
+	s_blend.o	\
+	s_btdraw.o	\
+	s_buffer.o	\
+	s_capi.o	\
+	s_ci.o		\
+	s_clear.o	\
+	s_clip.o	\
+	s_contxt.o	\
+	s_convol.o	\
+	s_cpydsp.o	\
+	s_ctable.o	\
+	s_depth.o	\
+	s_dlist.o	\
+	s_eval.o	\
+	s_export.o	\
+	s_feed.o	\
+	s_finish.o	\
+	s_fog.o		\
+	s_get.o		\
+	s_global.o	\
+	s_hist.o	\
+	s_image.o	\
+	s_lcache.o	\
+	s_lcomp.o	\
+	s_light.o	\
+	s_lnclip.o	\
+	s_lndraw.o	\
+	s_lnfast.o	\
+	s_lnfin.o	\
+	s_lnspan.o	\
+	s_math.o	\
+	s_memmgr.o	\
+	s_names.o	\
+	s_napi.o	\
+	s_pgaa.o	\
+	s_pgclip.o	\
+	s_pgdraw.o	\
+	s_pgfin.o	\
+	s_pgmode.o	\
+	s_pgspan.o	\
+	s_pick.o	\
+	s_prim.o	\
+	s_ptaa.o	\
+	s_ptdraw.o	\
+	s_ptfin.o	\
+	s_rapi.o	\
+	s_rect.o	\
+	s_rgb.o		\
+	s_rpos.o	\
+	s_select.o	\
+	s_size.o	\
+	s_span.o	\
+	s_sten.o	\
+	s_store.o	\
+	s_tapi.o	\
+	s_tex.o		\
+	s_texel.o	\
+	s_texextr.o	\
+	s_texfmt.o	\
+	s_texmgr.o	\
+	s_trap.o	\
+	s_vapi.o	\
+	s_varray.o	\
+	s_vertex.o	\
+	s_xform.o	\
+	s_zfuncs.o	\
+	vc_cache.o	\
+	vc_line.o	\
+	vc_point.o	\
+	vc_poly.o	\
+	g_api.o		\
+	g_disp.o	\
+	g_lcmpex.o	\
+	g_lcomp.o	\
+	g_lexec.o	\
+	g_ltab.o	\
+	g_noptab.o	\
+	g_splcmp.o
+
