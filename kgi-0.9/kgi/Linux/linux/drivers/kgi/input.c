@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-**	KII shim for linux unified input drivers
+**	input-linux --> KII event translator
 ** ---------------------------------------------------------------------------
 **	Copyright (C)	1999-2000	Brian S. Julin
 **
@@ -13,46 +13,39 @@
 ** -------------------------------------------------------------------------
 **
 **	$Log: input.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:51  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
-#include <ggi/maintainers.h>
+#include <kgi/maintainers.h>
 #define	MAINTAINER	Brian_S_Julin
 
-#define DRIVER_NAME	"linux input driver"
-#define DRIVER_REV	"$Revision: 1.2 $"
+#define DRIVER_NAME	"input-linux driver"
+#define DRIVER_REV	"$Revision: 1.1.1.1 $"
 #define	DEBUG_LEVEL	1
 
 #include <linux/config.h>
+#include <linux/version.h>
+#include <linux/init.h>
 #include <linux/module.h>
+
+MODULE_LICENSE("MIT/X");
+MODULE_AUTHOR("Maintainer: " MAINTAINER);
+MODULE_DESCRIPTION(DRIVER_NAME);
+
+/* TODO: use slab.h come 2.4.15 */
+#include <linux/malloc.h>
+
 #include <linux/types.h>
 #include <linux/sched.h>
 #include <linux/random.h>
 #include <linux/input.h>
 #include <linux/kgii.h>
-#include <linux/malloc.h>
-#include <linux/version.h>
 
 #include <kgi/debug.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,2)  /* 2.3.1 ??? */
 struct pt_regs *kbd_pt_regs;
-#endif
-
-#ifndef	MODULE
-static int input_init_handlers(void)
-#else
-int init_module(void)
-#endif
-{
-	return KII_EOK;
-}
-
-#ifdef	MODULE
-void cleanup_module(void)
-{
-
-}
-#else	/* #ifdef MODULE	*/
 
 /* for raw keycode emulation... */
 static unsigned char raw_emu_e0s[] = 
@@ -61,17 +54,12 @@ static unsigned char raw_emu_e0s[] =
 	0x49, 0x4b, 0x4d, 0x4f, 0x50, 0x51, 0x52, 0x53
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,2)  /* 2.3.1 ??? */
-void kii_kbd_event (struct input_handle *handle, int type, int code, 
-	int value)
-#else
 void kii_kbd_event (struct input_handle *handle, unsigned int type, 
-	unsigned int code, int value)
-#endif
+		    unsigned int code, int value)
 {
-	kii_event event;
-	kii_u keycode;
-	kii_input *kbd;
+	kii_event_t event;
+	kii_u_t keycode;
+	kii_input_t *kbd;
 
         if (type != EV_KEY) {
 
@@ -80,7 +68,7 @@ void kii_kbd_event (struct input_handle *handle, unsigned int type,
 	keycode = code & 0xff;
 	add_keyboard_randomness(keycode | ((!value) << 7));
 
-	kbd = (kii_input *)(handle->private);
+	kbd = (kii_input_t *)(handle->private);
 	event.any.focus  = kbd->focus;
 	event.any.device = kbd->id;
 	event.any.time   = jiffies;
@@ -88,7 +76,7 @@ void kii_kbd_event (struct input_handle *handle, unsigned int type,
 	if (kbd->report & KII_EM_RAW_DATA) {
 	  
 		event.raw.type	  = KII_EV_RAW_DATA;
-		event.raw.size	  = sizeof(kii_any_event) + 1;
+		event.raw.size	  = sizeof(kii_any_event_t) + 1;
 	  
 		/* following adapted from Vojtech's code
 		*/
@@ -126,7 +114,7 @@ void kii_kbd_event (struct input_handle *handle, unsigned int type,
 		}
 	}
 	
-	event.key.size = sizeof(kii_key_event);
+	event.key.size = sizeof(kii_key_event_t);
 	event.key.code = keycode;
 
 	switch (value) {
@@ -146,74 +134,74 @@ void kii_kbd_event (struct input_handle *handle, unsigned int type,
 	}
 }
 
-int kii_kbd_connect(struct input_handler *handler, struct input_dev *dev)
+struct input_handle *kii_kbd_connect(struct input_handler *handler, 
+				     struct input_dev *dev)
 {
 	struct input_handle *handle;
+	kii_input_t *ptr;
 
 	/* Test that it's a keyboard
 	*/
-	if (!test_bit(EV_KEY, dev->evbit) || !test_bit(KEY_A, dev->keybit) ||
-		!test_bit(KEY_Z, dev->keybit)) {
-
-		return -1;
-	}
+	if (!test_bit(EV_KEY, dev->evbit) || 
+	    !test_bit(KEY_A, dev->keybit) ||
+	    !test_bit(KEY_Z, dev->keybit)) 
+		goto err0;
   
-	if (!(handle = kmalloc(sizeof(struct input_handle), GFP_KERNEL))) {
+	if (!(handle = kmalloc(sizeof(struct input_handle), GFP_KERNEL)))
+		goto err0;
 
-		 return -1;
-	}
 	memset(handle, 0, sizeof(struct input_handle));
-	if (!(handle->private = kmalloc(sizeof(kii_input), GFP_KERNEL))) {
+	if (!(ptr = kmalloc(sizeof(kii_input_t), GFP_KERNEL)))
+		goto err1;
 
-		kfree(handle);
-		return -1;
-	}
-	memset(handle->private, 0, sizeof(kii_input));
+	memset(ptr, 0, sizeof(kii_input_t));
 
-	((kii_input *)(handle->private))->events = KII_EM_KEY | KII_EM_RAW_DATA;
-	((kii_input *)(handle->private))->report = KII_EM_KEY | KII_EM_RAW_DATA;
-	kii_register_input((~0), (kii_input *)(handle->private));
-  
+	ptr->events = KII_EM_KEY | KII_EM_RAW_DATA;
+	ptr->report = KII_EM_KEY | KII_EM_RAW_DATA;
+	(kii_input_t *)handle->private = ptr;
+	if (kii_register_input((~0), ptr)) goto err2;
 	handle->dev = dev;
 	handle->handler = handler;
 	input_open_device(handle);
 	KRN_NOTICE("Adding KII keyboard on input%d", dev->number);
-	return 0;
+	return handle;
+
+ err2:
+	kfree(ptr);
+ err1:
+	kfree(handle);
+ err0:
+	return NULL;
 }
 
 struct input_kii_ptr_priv
 { 
-	kii_u           butn;
-	kii_s           dx, dy, dz;
+	kii_u_t           butn;
+	kii_s_t           dx, dy, dz;
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,2) /* 2.3.1 ??? */
-void kii_ptr_event (struct input_handle *handle, int type, int code, 
-	int value)
-#else
 void kii_ptr_event (struct input_handle *handle, unsigned int type,
-	unsigned int code, int value)
-#endif
+		    unsigned int code, int value)
 {
 	struct input_kii_ptr_priv *this;
-	kii_event event;
-	kii_input *ptr;
-	kii_u butnbit;
+	kii_event_t event;
+	kii_input_t *ptr;
+	kii_u_t butnbit;
 
 	add_mouse_randomness(value);
 
-	ptr = (kii_input *)(handle->private);
+	ptr = (kii_input_t *)(handle->private);
 	event.any.focus  = ptr->focus;
 	event.any.device = ptr->id;
 	event.any.time   = jiffies;
 
-	this = (struct input_kii_ptr_priv *)(ptr->priv);
+	this = (struct input_kii_ptr_priv *)(ptr->priv.priv_ptr);
 
 	if (type == EV_REL) {
 
 		event.any.type = KII_EV_PTR_RELATIVE;
 		event.pmove.y = event.pmove.x = event.pmove.wheel = 0;
-		event.pmove.size = sizeof(kii_pmove_event);
+		event.pmove.size = sizeof(kii_pmove_event_t);
 		event.pmove.dummy[0] = event.pmove.dummy[1] = 0;    
 		switch (code) {
 		case REL_X:
@@ -247,103 +235,102 @@ void kii_ptr_event (struct input_handle *handle, unsigned int type,
 			return;
 		}
 		switch (code) {
-		case BUTTON_LEFT:	butnbit = 0x0001; break;
-		case BUTTON_RIGHT:	butnbit = 0x0002; break;
-		case BUTTON_MIDDLE:	butnbit = 0x0004; break;
-		case BUTTON_SIDE:	butnbit = 0x0008; break;
-		case BUTTON_EXTRA:	butnbit = 0x0010; break;
-		case BUTTON_FORWARD:	butnbit = 0x0020; break;
-		case BUTTON_BACK:	butnbit = 0x0040; break;
-
-		default:
- 			butnbit = 0x0080;
+		case BTN_LEFT:		butnbit = 0x0001; break;
+		case BTN_RIGHT:		butnbit = 0x0002; break;
+		case BTN_MIDDLE:	butnbit = 0x0004; break;
+		case BTN_SIDE:		butnbit = 0x0008; break;
+		case BTN_EXTRA:		butnbit = 0x0010; break;
+		case BTN_FORWARD:	butnbit = 0x0020; break;
+		case BTN_BACK:		butnbit = 0x0040; break;
+		default:		butnbit = 0x0080;
 		}
 
 		if (value) {
-
 			this->butn |= butnbit; 
-
 		} else {
-
 			this->butn &= ~butnbit;
 		}
 		event.pbutton.state = this->butn;
 		if (ptr->report & (1 << event.pbutton.type)) {
-
 			KRN_DEBUG(2, "%s",
 				(event.pbutton.type == KII_EV_PTR_BUTTON_PRESS)
-					? "KII_EV_PTR_BUTTON_PRESS" 
-					: "KII_EV_PTR_BUTTON_RELEASE");
+				  ? "KII_EV_PTR_BUTTON_PRESS" 
+				  : "KII_EV_PTR_BUTTON_RELEASE");
 			kii_handle_input(&event, NULL);
 		}
 	}
 }
 
-int kii_ptr_connect(struct input_handler *handler, struct input_dev *dev)
+struct input_handle *kii_ptr_connect(struct input_handler *handler, 
+				     struct input_dev *dev)
 {
 	struct input_handle *handle;
-	kii_input *ptr;
+	kii_input_t *ptr;
 
 	if (!(test_bit(EV_KEY, dev->evbit) && test_bit(EV_REL, dev->evbit))) {
 
 		KRN_DEBUG(2, "device doesn't have both rels and keys");
-		return -1;
+		goto err0;
 	}
   
 	if (!(test_bit(REL_X, dev->relbit) && test_bit(REL_Y, dev->relbit))) {
 
 		KRN_DEBUG(2, "device isn't a pointer device");
-		return -1;
+		goto err0;
 	}
   
-	if (!test_bit(BUTTON_LEFT, dev->keybit)) {
+	if (!test_bit(BTN_LEFT, dev->keybit)) {
 
 		KRN_DEBUG(2, "device has no mouse button");
-		return -1;
+		goto err0;
 	}
   
 	if (!(handle = kmalloc(sizeof(struct input_handle), GFP_KERNEL))) {
 
 		KRN_DEBUG(2, "failed to allocate input_handle");
-		return -1;
+		goto err0;
 	}
 	memset(handle, 0, sizeof(struct input_handle));
 	
-	if (!(handle->private = kmalloc(sizeof (kii_input), GFP_KERNEL))) {
+	if (!(ptr = kmalloc(sizeof (kii_input_t), GFP_KERNEL))) {
 
-		KRN_DEBUG(2, "failed to allocate kii_input");
-		kfree(handle);
-		return -1;
+		KRN_DEBUG(2, "failed to allocate kii_input_t");
+		goto err1;
 	}
-	ptr = (kii_input *)(handle->private);
-	memset(ptr, 0, sizeof(kii_input));
+	memset(ptr, 0, sizeof(kii_input_t));
 
-	if (!(ptr->priv = kmalloc(sizeof(struct input_kii_ptr_priv), 
-		GFP_KERNEL))) {
+	if (!(ptr->priv.priv_ptr = kmalloc(sizeof(struct input_kii_ptr_priv), 
+					   GFP_KERNEL))) {
 
 		KRN_DEBUG(2, "failed to allocate private data");
-		kfree(ptr);
-		kfree(handle);
-		return -1;
+		goto err2;
 	}
-	memset(ptr->priv, 0, sizeof(struct input_kii_ptr_priv));
+	memset(ptr->priv.priv_ptr, 0, sizeof(struct input_kii_ptr_priv));
   
 	ptr->events = KII_EM_POINTER & ~KII_EM_PTR_ABSOLUTE;
 	ptr->report = KII_EM_PTR_RELATIVE | KII_EM_PTR_BUTTON;
 
+	(kii_input_t *)(handle->private) = ptr;
 	kii_register_input((~0), ptr);
   
 	handle->dev = dev;
 	handle->handler = handler;
 	input_open_device(handle);
 	KRN_NOTICE("Adding KII pointer on input%d", dev->number);
-	return 0;
+	return handle;
+ err2:
+	kfree(ptr);
+ err1:
+	kfree(handle);
+ err0:
+	return NULL;
+
 }
 
 void kii_kbd_disconnect(struct input_handle *handle)
 {
 	KRN_NOTICE("Removing KII keyboard from input%d", handle->dev->number);
-	kii_unregister_input((kii_input *)handle->private);
+	kii_unregister_input((kii_input_t *)handle->private);
 	kfree(handle->private);
 	handle->private = NULL;
 	input_close_device(handle);
@@ -353,7 +340,7 @@ void kii_kbd_disconnect(struct input_handle *handle)
 void kii_ptr_disconnect(struct input_handle *handle) 
 {
 	KRN_NOTICE("Removing KII pointer from input%d", handle->dev->number);
-	kii_unregister_input((kii_input *)handle->private);
+	kii_unregister_input((kii_input_t *)handle->private);
 	kfree(handle->private);
 	handle->private = NULL;
 	input_close_device(handle);
@@ -372,40 +359,38 @@ int focus_init(void)
 		KRN_DEBUG(2, "failed to allocate kbd input handler");
 		return 0;
 	}
-	kbd->connect = *kii_kbd_connect;
-	kbd->disconnect = *kii_kbd_disconnect;
-	kbd->event = *kii_kbd_event;
+	kbd->connect	= kii_kbd_connect;
+	kbd->disconnect = kii_kbd_disconnect;
+	kbd->event	= kii_kbd_event;
 
 	input_register_handler(kbd); /* Assigns one handle to each kbd. */
-#if 0  
-	while (kiifocus[nr_focus] != NULL) {
 
-		nr_focus++;
-	}
-	KRN_NOTICE("%i focuses exist after keyboards added", nr_focus);
-#endif
 	nr_focus = 1;
 
 	ptr = (struct input_handler *)kmalloc(sizeof (struct input_handler),
-		GFP_KERNEL);
+					      GFP_KERNEL);
 	if (!ptr) {
 
 		KRN_DEBUG(2, "failed to allocate pointer input handler");
 		return(nr_focus);
 	}
-	ptr->connect = *kii_ptr_connect;
-	ptr->disconnect = *kii_ptr_disconnect;
-	ptr->event = *kii_ptr_event;
+	ptr->connect	= kii_ptr_connect;
+	ptr->disconnect	= kii_ptr_disconnect;
+	ptr->event	= kii_ptr_event;
 
 	input_register_handler(ptr); /* Assigns one handle to each ptr. */
-#if 0
-	while (kiifocus[nr_focus] != NULL) {
 
-		nr_focus++;
-	}
-	KRN_NOTICE("%i focuses exist after pointers added", nr_focus);
-#endif
 	return nr_focus;
 }
 
-#endif	/* #ifdef MODULE	*/
+static int __init kii_input_linux_init(void)
+{
+  return 0;
+}
+
+static void __exit kii_input_linux_exit(void)
+{
+}
+
+module_init(kii_input_linux_init);
+module_exit(kii_input_linux_exit);
