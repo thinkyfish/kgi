@@ -21,7 +21,7 @@ fi
 
 if test -f $DIR_TOP_SOURCE/tools/config/main.sh
 then
-	source $DIR_TOP_SOURCE/tools/config/main.sh
+	. $DIR_TOP_SOURCE/tools/config/main.sh
 else
 	echo "Tools directory not found. Please refer to README.install for details."
 fi
