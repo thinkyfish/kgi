@@ -13,6 +13,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: event.c,v $
+**	Revision 1.1  2000/09/21 09:14:34  seeger_s
+**	- added first version of /dev/event mapper
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -351,6 +354,14 @@ static kii_s_t event_unmap_kii(kii_device_t *dev)
 	return KII_EOK;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,2)
+		struct wait_queue wait = { current, NULL };
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+		DECLARE_WAIT_QUEUE(wait, current);
+#else
+		DECLARE_WAIT_QUEUE_HEAD(waitqueue);
+#endif
+
 static void event_handle_event(kii_device_t *dev, kii_event_t *ev)
 {
 	event_device_t *device = dev->priv.priv_ptr;
@@ -408,7 +419,11 @@ static void event_handle_event(kii_device_t *dev, kii_event_t *ev)
 
 	KRN_ASSERT(device->files);
 
-	wake_up_interruptible(&(event_dev[device->files->device_id].proc_list));
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+	wake_up_interruptible((&(event_dev[device->files->device_id].proc_list)));
+#else
+	wake_up_interruptible(&waitqueue);
+#endif
 }
 
 /*
@@ -421,14 +436,17 @@ static ssize_t event_read(struct file *kfile, char *buffer,
 	event_file_t *file = kfile->private_data;
 	kii_event_t *event;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	DECLARE_WAITQUEUE(wait, current);
 	if (file->queue.head == file->queue.tail) {
-
+		add_wait_queue(&waitqueue, &wait);
+#else
+	if (file->queue.head == file->queue.tail) {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,2)
 		struct wait_queue wait = { current, NULL };
-#else
-		DECLARE_WAIT_QUEUE(wait, current);
 #endif
-		add_wait_queue(&event_dev[file->device_id].proc_list, &wait);
+		add_wait_queue(&(event_dev[file->device_id].proc_list), &wait);
+#endif
 		current->state = TASK_INTERRUPTIBLE;
 		retval = 0;
 
@@ -445,9 +463,13 @@ static ssize_t event_read(struct file *kfile, char *buffer,
 		}
 
 		current->state = TASK_RUNNING;
-		remove_wait_queue(&event_dev[file->device_id].proc_list,
-			&wait);
-
+		
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+		remove_wait_queue(&event_dev[file->device_id].proc_list, &wait);
+#else
+		remove_wait_queue(&waitqueue, &wait);
+#endif
+		
 		if (retval) {
 
 			return retval;
@@ -484,7 +506,11 @@ static unsigned int event_poll(struct file *kfile, poll_table *wait)
 {
 	event_file_t *file = kfile->private_data;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 	poll_wait(kfile, &(event_dev[file->device_id].proc_list), wait);
+#else
+	poll_wait(kfile, &waitqueue, wait);
+#endif
 
 	return (file->queue.tail == file->queue.head)
 		? 0 : (POLLIN | POLLRDNORM);
@@ -558,7 +584,12 @@ static int event_device_init(int device_id)
 		kfree(device);
 		return -ENOMEM;
 	}
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 	device->cmd_mutex = MUTEX;
+#else
+	init_MUTEX(&device->cmd_mutex);
+#endif
 
 	event_dev[device_id].pid = current->pid;
 	event_dev[device_id].gid = current->gid;
@@ -706,24 +737,18 @@ static int event_release(struct inode *inode, struct file *kfile)
 	return KII_EOK;
 }
 
-static struct file_operations event_fops =
-{
-	NULL,			/* llseek	*/
-	event_read,		/* read		*/
-	NULL,			/* write	*/
-	NULL,			/* readdir	*/
-	event_poll,		/* poll		*/
-	event_ioctl,		/* ioctl	*/
-	NULL,			/* mmap		*/
-	event_open,		/* open		*/
-	NULL,			/* flush	*/
-	event_release,		/* release	*/
-	NULL,			/* fsync	*/
-	event_fasync,		/* fasync	*/
-	NULL,			/* check_media_change	*/
-	NULL,			/* revalidate		*/
-	NULL			/* lock		*/
+static struct file_operations event_fops = {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	owner:          THIS_MODULE,
+#endif
+	read:           event_read,
+	poll:           event_poll,
+	ioctl:          event_ioctl,
+	open:           event_open,
+	release:        event_release,
+	fasync:		event_fasync
 };
+
 
 /*
 **	Kernel Interface
