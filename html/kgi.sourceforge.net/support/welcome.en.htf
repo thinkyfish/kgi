@@ -1,0 +1,35 @@
+HTF_LANGUAGE=en
+HTF_TITLE="KGI Help &amp; Support"
+HTF_DESCRIPTION="The help and support page collects answers to frequently asked questions."
+HTF_KEYWORDS="KGI Project; development"
+HTF_AUTHOR="Steffen Seeger"
+HTF_REVISION="$Revision: 1.2 $" 
+
+cat <<end-of-htf
+<a name="faq"></a>
+<h2>Frequently Asked Questions</h2>
+	<blockquote>Sorry, there is no FAQ available. However, if you think
+	you may want to maintain this document or have suggestions what
+	what questions and answers to add, please mail the maintainer of this
+	document.
+	</blockquote>
+
+<a name="support-manager"></a>
+<h2>Support Manager</h2>
+	<blockquote>If you have not been able to solve problems consulting
+	the documentation that comes with the distributions, you may want to
+	check the 
+	<a href="http://sourceforge.net/support/?group_id=3788">support manager</a>
+	if the problem you might have is is already known and if there
+	are instructions how to fix it.
+	</blockquote>
+
+<a name="submit-request"></a>
+<h2>Submit a Support Request</h2>
+	<blockquote>If you have still not been able to get an answer to your
+	particular problem, please post your question to one of our
+	mailing lists or 
+	<a href="http://sourceforge.net/support/?func=addsupport&group_id=3788">submit a support request via an online-from.</a>
+	The developers will then get back to you as soon as possible.
+	</blockquote>
+end-of-htf
