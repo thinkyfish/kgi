@@ -1,0 +1,26 @@
+<!doctype linuxdoc system>
+<article>
+
+<title>KGI Glossary
+<author>Steffen Seeger
+<date>$Date: 1998/08/07 14:46:41 $
+
+<abstract>
+What's in it?
+</abstract>
+<toc>
+<sect> Dots
+<p>
+<descrip>
+<tag/dot/
+	The smallest unit a display (CRT, LCD, TFT, ...) can control
+	independently. This unit is determined by the dot clock rate
+	and the total lines per frame. It should not be confused with
+	the dot pitch size. It is mode dependent.
+
+<tag/dot pitch/
+	The smalles unit a display can physically resolve. This is 
+	determined mainly by the CRT amplifier bandwith, LCD/TFT physical
+	resolution, etc. This is a physical characteristica of the display.
+</descrip>
+</article>

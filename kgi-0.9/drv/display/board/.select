@@ -1,0 +1,13 @@
+#!/bin/sh
+
+for vendor in `echo */.vendor | sed "s%/.vendor%%g"`
+do
+	VENDOR_NAME=`cat $vendor/vendor`
+	for model in $vendor/*.spec
+	do
+		MODEL_NAME=`grep Model $model | sed -e "s/Model(//" -e "s/)//"`
+		echo $model $MODEL_NAME
+	done
+done
+
+

@@ -1,0 +1,11 @@
+OBJECTS = ##META##.o
+
+##META##.o:	##META##-meta.o ##META##-bind.o
+
+all.entry: $(OBJECTS)
+
+ifeq ($(CONFIG_RAMDAC_VENDOR),##VENDOR##)
+default.entry: $(CONFIG_RAMDAC_MODEL).o
+else
+default.entry:
+endif

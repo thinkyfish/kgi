@@ -1,0 +1,181 @@
+SUBSECTION	Device Classification
+
+	Input devices are classified into device classes, that give
+	a rough estimate what a particular input device is intended for.
+	Each device is associated a type identifier, which has a 'class'
+	field and a 'type' field that specifies a subclass.
+	You can extract the class information from a type identifier
+	<input_type> by evluating the expression <input_type & IC_MASK>.
+
+	Currently the types and classes listed in table 
+	[tab_input_device_classes] are defined.
+begin[tab_input_device_class]
+	device class	| subclass	| 
+	----------------+---------------+-----------------------------------
+	IC_NULL		| 		| invalid device class identifier
+
+	IC_KEYBOARD	| 		| alpha numerical (character) input
+			| IT_KEYBOARD	| a simple keyboard
+			| IT_VOICE	| voice recognition (hypothetic)
+
+	IC_KEYPAD	| 		| collection of switches
+
+	IC_2DPOINTER	| 		| 2D pointing device
+			| IT_MOUSE	| all kinds of mice
+			| IT_TRACKBALL	| all kinds of trackballs
+			| IT_DIGITIZER	| digitizer tablets
+			| IT_LIGHTPEN	| lightpen, touchscreens, ...
+			| IT_JOYSTICK	| 2D joystick
+
+	IC_3DPOINTER	| 		| 3D pointing device
+			| IT_3DMOUSE	| SpaceOrb, SpaceBall, ...
+
+	IC_CONTROLLER	| 		| any other stuff
+			| IT_DATAGLOVE	| datagloves
+			| IT_VR_HELMET	| VR helmet with feedback
+			| IT_MOTIONCAP	| motion capture devices
+end[tab_input_device_class]
+
+
+
+SUBSECTION	Event types
+
+	Events are distinguished by a type reported with each event.
+	Unless you don't know the event's type, you should always check
+	whether the event matches a certain category or type. This is
+	either done using an explicit compare of the field <any.type>
+	against the types listed in table [tab_input_types], or using
+	performing logical testing of the expression (1 << any.type)
+	against event masks. Each type listed in table [tab_input_types]
+	is associated a mask consistent to the expression given earlier.
+	The names of the event masks are derived from type by substituting
+	"EV" with "EM". Additionally event masks are defined that are 
+	the bitwise <or> of the event masks listed in table[tab_input_masks].
+
+begin[tab_input_types]
+	Type			| value	| Meaning
+	------------------------+-------+-----------------------------
+	EV_NOTHING		| 0	| event is not valid. (this is zero)
+	EV_COMMAND		| 1	| report command/do action
+	EV_BROADCAST		| 2	| notification of general interest
+	EV_DEVICE_INFO		| 3	| report input device information
+
+	EV_RAW_DATA		| 4	| raw data received from device
+
+	EV_KEY_PRESS		| 5	| key has been pressed
+	EV_KEY_RELEASE		| 6	| key has been released
+	EV_KEY_REPEAT		| 7	| automatically repeated keypress
+	EV_KEY_STATE		| 8	| resynchronize keys state
+
+	EV_PTR_RELATIVE		| 9	| pointer movements reported relative
+	EV_PTR_ABSOLUTE		| 10	| pointer movements reported absolute
+	EV_PTR_BUTTON_PRESS	| 11	| pointer button pressed
+	EV_PTR_BUTTON_RELEASE	| 12	| pointer button released
+	EV_PTR_STATE		| 13	| resynchronize pointer state
+
+	EV_VAL_RELATIVE		| 14	| valuator change (reported relative)
+	EV_VAL_ABSOLUTE		| 15	| valuator change (reported absolute)
+	EV_VAL_STATE		| 16	| resynchronize valuator state
+
+	EV_LAST			| 17	| the last type defined
+end[tab_input_types]
+
+begin[tab_input_masks]
+	Mask		| value
+	----------------+----------------------------------------------------
+	EM_KEY		| EM_KEY_PRESS or EM_KEY_RELEASE or EM_KEY_REPEAT
+	EM_KEYBOARD	| EM_KEY or EM_KEY_STATE
+
+	EM_PTR_MOVE	| EM_PTR_RELATIVE or EM_PTR_ABSOLUTE
+	EM_PTR_BUTTON	| EM_PTR_BUTTON_PRESS or EM_PTR_BUTTON_RELEASE
+	EM_POINTER	| EM_PTR_MOVE or EM_PTR_BUTTON or EM_PTR_STATE
+
+	EM_VALUATOR	| EM_VAL_RELATIVE or EM_VAL_ABSOLUTE or EM_VAL_STATE
+
+	EM_ALL		| ((1 << EV_LAST) - 1) & ~EM_NOTHING
+end[tab_input_masks]
+
+
+
+
+SUBSECTION	Event reporting
+
+	The application receives events as structs of type gii_event.
+	The structs have varying size, but are at maximum 256 bytes.
+	There are some fields common to all structs, which may be accessed
+	using the <any> view of the data structure. Data that reported
+	common to all events is listed in table[tab_events_common].
+
+begin[tab_events_common]
+	name	| type	| meaning
+	--------+-------+------------------------------------------------
+	size	| u8	| size of the event structure in bytes
+	type	| u8	| type of the event
+	focus	| u8	| focus this is reported from
+	device	| u8	| device this event originated from
+	time	| u32	| timestamp
+end[tab_events_common]
+
+	Depending on the type of the event, the subfields listed in table
+	[tab_events_special] are available. For events where modifiers
+	are reported too, four modifier fields are reported: <effect>,
+	<normal>, <locked> and <sticky>. They have the following meaning:
+
+	<effect>	effective modifiers are the bitwise exclusive or of
+			all (<normal>, <locked> and <sticky>) other modifiers.
+
+	<normal>	normal modifiers go in effect when pressed and go
+			out of effect when released.
+
+	<locked>	locked modifiers toggle effect when pressed only,
+			and are cleared when the corresponding normal modifier
+			is pressed.
+
+	<sticky>	sticky modifiers toggle effect when pressed.
+
+	There are up to 16 modifiers possible, the first 8 of which are 
+	assigned the arbitrary names <SHIFT>, <CTRL>, <ALT>, <ALTGR>, 
+	<SHIFT_L>, <SHIFT_R>, <CTRL_L>, <CTRL_R>. Despite these names 
+	do not have any meaning at all, it is recommended to map them
+	to the corresponding keys. However, applications should not
+	rely on that. Any key that sends 'press' and 'release' Events
+	may be mapped to an modifier.
+
+	When clearing a event, any references to it will become invalid.
+	The recipient must copy any data items needed for later reference.
+
+begin[tab_events_special]
+	type		| field	| subfield	| meaning
+	----------------+-------+---------------+---------------------------
+	EV_ANY		| any	| type		| type of the event
+
+	EV_COMMAND	| cmd	| code		| request code
+			|	| data		| command related data
+
+	EV_RAW		| raw	| data		| data received
+
+	EV_KEY_PRESS	| key	| effect	| modifiers in effect
+	EV_KEY_RELEASE	|	| normal	| normal modifiers
+	EV_KEY_REPEAT	|	| locked	| locked modifiers
+			|	| sticky	| sticky modifiers
+			|	| sym		| action/glyph code
+			|	| code		| key code
+
+	EV_PTR_RELATIVE	| pmove	| effect	| modifiers in effect
+			|	| normal	| normal modifiers
+			|	| locked	| locked modifiers
+			|	| sticky	| sticky modifiers
+			|	| x,y		| position (change)
+			|	| wheel		| wheel position (change)
+
+	EV_PTR_BUTTON	|pbutton| effect	| effective modifiers
+			|	| normal	| normal modifiers
+			|	| locked	| locked modifiers
+			|	| sticky	| sticky modifiers
+			|	| state		| new button state
+			|	| button	| button(s) that caused event
+
+	EV_VAL_ABSOLUTE	| val	| first		| first valuator reported
+			|	| changed	| valuators reported
+			|	| value[]	| valuator value (changes)
+

@@ -1,0 +1,374 @@
+<!doctype linuxdoc system>
+<article>
+
+<title>KGI System Guide
+<author>Steffen Seeger
+<date>$Date: 1999/10/17 16:59:39 $
+
+<abstract>
+What's in it?
+</abstract>
+<toc>
+<sect>Attributes
+<p>
+
+	KGI handles attributes just as GGI, but to allow independent
+	development of GGI and KGI, both have their own attribute and
+	attribute mask definitions.
+
+	Attributes are further divided in attributes stored per (left and
+	eventually right) frame and attributes stored common to all frames.
+	Sometimes the number of bits stored per attribute has to be given,
+	which is done by a bit mask (kgi_attr_mask_t) and a zero-terminated,
+	packed array of (kgi_u8_t) the bits per attribute. For example:
+<code>
+	KGI_AM_COLORS			{ 8,8,8,0 }	R8G8B8
+	KGI_AM_COLORS | KGI_AM_ALPHA	{ 5,5,5,1,0 }	R5G5B5A1
+	KGI_AM_COLOR_INDEX		{ 8,0 }		CI8
+</code>
+	The ordering of the array entries is the same as for the attribute 
+	definitions.
+
+<sect>Mode Handling
+<p>
+
+	Each display driver has to export means to check and set a certain
+	mode. Basically, a &lt;kgi_mode_t&gt> describes the properties of the 
+        viewable image required by the application. A viewable image may be
+	composed from several images that are overlaid on each other. For 
+	each image there may be several buffers that store the pixel 
+	attributes. KGI does not assume these buffers to be generated or
+	overlaid by the same device as each image generation or
+	overlay process may be done by a different hardware device 
+	(from a different vendor).
+
+	To keep the low-level drivers system-independent, the display drivers
+	have to be passed structures that are independent of the number
+	of image layers.
+
+	To alter these buffers, two methods are specified up to now: direct
+	access to the buffer and accelerators.
+
+<sect>Images and Dot Ports
+<p>
+	
+	Images are stored as an array of unsigned integers. However, not
+	all of the bits stored may control the properties of the visible
+	image elements (e.g. z-values). Thus, selected attribute values
+	are read from the buffer in a certain order (determined by the
+	transfer-protocol) and control the visible attributes of a
+	given viewable image dot. This dot-stream may pass through
+	some conversion devices before being converted into a sensable
+	physical property. These devices are referred to as &lt;dot stream
+	converters&gt; and are connected through dot ports. These dot stream
+	converters may e.g. do an digital-analog conversion or blend/overlay
+	two (digital or analog) dot streams, etc.
+
+	<sect1>struct kgi_dot_port_mode_t
+	<p>
+	<descrip>
+	<tag/kgi_dot_port_flags_t flags;/
+		A bitmask indicating the expected color space, properties
+		that can be changed and the transfer protocol.
+
+	<tag/kgi_ucoord_t dots;/
+		The size of the image in dots. 
+		&lt;dots.x&gt;*&lt;dots.y&gt; dots are
+		converted and transferred to the port once per frame.
+
+	<tag/kgi_u_t dclk;/
+		The number of dots converted per second.
+
+	<tag/kgi_ratio_t lclk;/
+		The ratio of the Load CLocK (LCLK) compared to the 
+		Dot CLocK (DCLK). Data is fetched once per LCLK, and 
+		converted once per DCLK. For example, with 8bit per
+		dot and a 32bit data bus, LCLK would be 1:4, indicating
+		there is once fetch every four DCLK cycles.
+
+	<tag/kgi_ratio_t rclk;/
+		The Reference CLocK (RCLK) compared to DCLK. Usually this
+		is either 1:1 or lclk.
+
+	<tag/kgi_attr_mask_t dam;/
+		The Dot Attribute Mask. This indicates the attributes 
+		accepted and converted.
+
+	<tag/kgi_u8_t *bpda;/
+		This stores the bits transfered per dot and attribute.
+	</descrip>	
+
+	<sect1>kgi_image_mode_t
+	<p>
+
+	As introduced, an image is a rectangular array of pixels, for each 
+	of which a certain number of bits is stored per attribute, frame 
+	and common to all frames. The mode of an image is completely 
+	described by a &lt;kgi_image_mode_t&gt;, holding the following fields:
+
+	<descrip>
+	<tag/kgi_dot_port_mode_t *out;/
+		The visible part of the image is transfered to the dot port
+		once per frame. This is done by transfering 
+		&lt;out&rarr;dots.x&gt;*&lt;out&rarr;dots.y&gt; 
+		dots to the dotport. As this
+		corresponds to &lt;visible.x&gt;*&lt;visible.y&gt; pixels, 
+		the serializing
+		unit may have to perform interpolation/replication.
+
+	<tag/kgi_image_flags_t flags;/
+		This indicates the changeable properties of the image.
+		E.g. if the size, origin, etc of the visible part can be
+		changed. See <tt>kgi/kgi.h</tt> for details.
+
+	<tag/kgi_ucoord_t virt;/<p>
+	<tag/kgi_ucoord_t size;/
+		The total virtual (&lt;virt&gt;) 
+		and visible (&lt;size&gt;) size in pixels of the image.
+
+	<tag/kgi_u8_t frames;/
+		The number of frames stored per image;
+
+	<tag/kgi_u8_t iluts, aluts;/<p>
+	<tag/kgi_attribute_mask_t ilutm, alutm;/
+		Before the attribute bits are transferred to the DAC,
+		look-up-operations may be performed, converting attribute 
+		values into new values. The Index-Look-Up-Table converts
+		the color index into a set of attribute values indicated by
+		the &lt;ilutm&gt; attribute mask, and the 
+		Attribute-Look-Up-Tables
+		convert the attribute values into new values of the same
+		attribute. For example, if &lt;ilutm&gt; is KGI_AM_COLORS, 
+		a COLOR triple is determined from a table for each dot.
+		If &lt;alutm&gt; is KGI_AM_COLORS, the device will look up a
+		new value for each of the color values (also known as
+		gamma correction or true-color mode).
+
+	<tag/kgi_attribute_mask_t fam, cam;/<p>
+	<tag/kgi_u8_t bpfa&lsqb;&rsqb;, bpca&lsqb;&rsqb;;/
+		This gives the required number of bits stored per attribute,
+		per frame (f) or common to all frames (c). If 
+		the &lt;flags&gt; field
+		indicates a stereo image, the per-frame attributes are stored
+		independently per left and right frame.
+	</descrip>		
+
+<sect>Display Resources
+<p>
+
+	While &lt;kgi_image_mode_t&gt; and &lt;kgi_dot_port_mode_t&gt; 
+	describe the 
+	transformation process from the buffer representation of an 
+	image to the viewable image, resources provide means how to
+	alter these buffers. Currently MMIO regions and acclerators
+	are specified. Some information is stored common to all
+	resources, and may be accessed through a kgi_resource:
+
+	<sect1>kgi_resource_t
+	<p>
+
+	These fields are common to all resources: 
+
+	<descrip>
+	<tag/kgi_display_t *dpy;/
+		The display this resource belongs to.
+
+	<tag/kgi_resource_type_t type;/
+		The type of this particular resource. See kgi/kgi.h for
+		details.
+
+	<tag/kgi_protection_flags_t flags;/
+		This describes the access policy for this resource.
+		E.g some may only be controlled by the session leader (e.g.
+		a window server), some may be accessed only by trusted 
+		applications (e.g. local clients) and some may be accessed
+		by any clients, e.g. video decoders.
+	</descrip>
+
+	<sect1>kgi_mmio_region_t
+	<p>
+
+	This is indicated by a non-zero (type & KGI_RT_MMIO). A MMIO region
+	is a mechanism to access display-local address spaces (mainly
+	local memory buffers) through (several) physical windows in the
+	CPU physical address space. The window may have a size less than
+	the display-local buffer. In this case the MMU is used to present
+	it as a virtually contigous region to the application.
+
+	The following fields are defined in addition to the common fields:
+
+	<descrip>
+	<tag/kgi_u_t access;/
+		Allowed access widths. If bit &lt;n&gt; of this field is set,
+		access with CPU native load/store instructions of width
+		1 << &lt;n&gt; bits is possible. Accesses with different width
+		will have undefined but 'harmless' effects. E.g. if 8, 16 and
+		32 bit wide access is possible, the value of &lt;access&gt;
+		would be 8+16+32 = 56.
+
+	<tag/kgi_u_t align;/
+		If bit &lt;n&gt; of this field is set, 
+		accesses with width greater than 1 << &lt;n&gt;
+		have to be aligned at least to (1 << &lt;n&gt;) 
+		bit units. If they are not, the result will be undefined.
+		E.g. if 8 bit and 32 bit accesses have to be aligned
+		to 8/32 bit boundaries, but 16 bit access may be at 8 bit
+		boundaries, the value of this field would be
+		8+32 = 40.
+
+	<tag/kgi_u_t size;/
+		The total size (in bytes). 
+
+	<tag/kgi_u_t win_size;/
+		The size of the physical window.
+
+	<tag/kgi_u_t win_bus, win_phys; void *win_virt;/
+		The bus address (to be used by busmaster devices), the
+		CPU physical address (to be used by the CPU), and the 
+		_driver_ virtual address of the window.
+
+	<tag/kgi_u_t offset;/<p>
+	<tag/void (*SetOffset)(kgi_mmio_region_t *r, kgi_u_t offset);/
+		The current offset of the window origin in display-local
+		address space and a function to move it. This function
+		may alter the win_bus, win_phys and win_virt fields.
+	</descrip>
+
+	<sect1>kgi_accel_buffer_t
+	<p>
+
+	An accelerator buffer is not a resource, but needed to define
+	the accelerator resource. Basically it is a physically contigous
+	region in memory, that can be used for DMA. (E.g. is never swapped
+	out.) It is represented by a kgi_accel_buffer struct with the
+	following fields:
+
+	<descrip>
+	<tag/kgi_accel_buffer_t *next;/
+		An accelerator mapping has two or more kgi_accel_buffers.
+		Ideally there is one that is filled by the application
+		and one that is executed by the graphics device. The buffers
+		that make up the same mapping are kept in a circular linked
+		list, &lt;*next&gt; being the next buffer in the list.
+
+	<tag/kgi_accel_buffer_t *exec;/
+		A accelerator may queue buffers sent to it for execution if
+		it is currently busy executing another buffer. This points
+		to the next buffer scheduled for execution.
+
+	<tag/kgi_u_t exec_pri;/
+		The execution priority for this buffer. Buffers with higher
+		priority will be queued before buffers with lower priority.
+		For buffers with equal priority temprorary order is preserved.
+		This allows to force higher interactivity for certain 
+		acclerator mappings (e.g. animations may be given higher
+		priority than window manager operations).
+
+	<tag/void *exec_ctx;/
+		The execution context for this buffer. All buffers that
+		belong to the same mapping will share the same context.
+		(e.g. clipping region, buffer update operations, ...)
+		Before executing a buffer, the accelerator driver has 
+		to make sure the context of the buffer matches the 
+		current accelerator context.
+
+	<tag/kgi_u_t exec_size;/
+		From the start of the buffer, &lt;exec_size&gt; 
+		bytes have to be
+		executed. After execution, &lt;exec_size&gt; has to be set
+		to 0 if execution was successful, or to the position where
+		the error occurred if not.
+
+	<tag/kgi_accel_state_t exec_state;/
+		The execution state is one of the following, indicating the
+		current operation performed with the buffer:
+		<descrip>
+		<tag/KGI_AS_IDLE/Nothing is done with it.
+		<tag/KGI_AS_FILL/The application is filling the buffer.
+		<tag/KGI_AS_EXEC/The accelerator is executing the buffer.
+		<tag/KGI_AS_WAIT/The buffer is full and queued for execution.
+		</descrip>
+
+	<tag/kgi_u_t buf_size;/
+		The size of the buffer in bytes.
+
+	<tag/kgi_u_t buf_bus, buf_phys;/<p>
+	<tag/void *buf_virt;/
+		The bus address (to be used by bus master devices), the 
+		phyiscal address (to be used by the MMU) and the virtual
+		address (in the _drivers_ virtual address space) used
+		to access the buffer.
+
+	<tag/kgi_wait_queue_t complete;/
+		A list of processes waiting for completion of the buffer
+		execution. 
+	</descrip>
+
+
+	<sect1>kgi_accel_t
+	<p>
+
+	This is the resource describing an accelerator. If shared mapping
+	is allowed with this resource, proper context handling should
+	be implemented. The following fields are defined in addition
+	to the common ones:
+
+	<descrip>
+	<tag/kgi_u_t buffers, buffer_size;/
+		The (recommended) number of buffers and the size of each
+		buffer.
+
+	<tag/void *ctx;/
+		The current context.
+
+	<tag/kgi_u_t ctx_size;/
+		The size (in bytes) of a context.
+
+	<tag/kgi_accel_buffer_t *exec_queue;/
+		A linked list of kgi_accel_buffers queued for execution.
+		Buffers are queued with high priority buffers first.
+
+	<tag/void (*Init)(kgi_accel_t *accel, void *ctx);/
+		Initialize the context structure given by &lt;ctx&gt;.
+
+	<tag/void (*Done)(kgi_accel_t *accel, void *ctx);/
+		This function is called before a accelerator mapping is
+		destroyed to make sure no buffers with this context are
+		queued for execution. The driver should wait for
+		completion of the current buffer if it has the same
+		context. After this, it should remove all buffers with
+		this context from it's exection queue.
+
+	<tag/void (*Exec)(kgi_accel_t *accel, kgi_accel_buffer_t *buf);/
+		(Queue) the buffer &lt;buf&gt; for execution or execute it.
+
+	<tag/void (*Wait)(kgi_accel_t *accel);/
+		Wait until all buffers queued are executed.
+	</descrip>
+
+<sect>KGI Modes
+<p>
+
+	<sect1>kgi_mode_t
+	<p>
+
+	Image modes, dot-stream converter modes and the available resources
+	are together referred to as the mode of a display. A mode description
+	consists of a display device dependent part and a device independent
+	part. The device independent part has the following fields:
+
+	<descrip>
+	<tag/void *dev_mode;/
+		Pointer to the device dependent part.
+
+	<tag/kgi_resource[__KGI_MAX_NR_RESOURCES];/
+		Pointers to the available resources. Currently 
+		__KGI_MAX_NR_RESOURCES is defined as 16.
+
+	<tag/kgi_u_t images;/
+		The number of images in the img field.
+
+	<tag/kgi_image_mode_t img[];/
+		The images that make up the viewable image.
+	</descrip>
+</article>

@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+#	Copyright (C)	2000	Steffen Seeger
+#
+#	This file is distributed under the terms and conditions of the 
+#	MIT/X public licence. Please see the file COPYRIGHT.MIT included
+#	with this software for details of these terms and conditions.
+#
+
+if test -f .config
+then
+	echo "NOTE: using old .config file."
+	echo
+	. .config
+else
+	DIR_TOP_BUILD=$PWD
+
+	cd `echo $0 | sed 's%/[^/]*$%%'`
+	DIR_TOP_SOURCE=$PWD
+fi
+
+if test -f $DIR_TOP_SOURCE/tools/config/main.sh
+then
+	source $DIR_TOP_SOURCE/tools/config/main.sh
+else
+	echo "Tools directory not found. Please refer to README.install for details."
+fi
+

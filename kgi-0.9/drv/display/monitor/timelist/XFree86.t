@@ -1,0 +1,76 @@
+#######	These are some standard timings taken from XFree86.
+
+# XFree "640x400", 69.9 Hz, 31.469 kHz
+dclk	25.175
+htiming	640	640	664	760	800	800
+vtiming	400	400	409	411	450	450
+
+# XFree "640x480", 59.9 Hz, 31.469 kHz
+dclk	25.175
+htiming	640	640	664	760	800	800
+vtiming	480	480	491	493	525	525
+
+# XFree "1024x768", 43.5 Hz, 35.522 kHz
+dclk	44.900
+interlaced
+htiming	1024	1024	1048	1208	1264	1264
+vtiming	768	768	776	784	817	817
+
+# XFree "640x480", 70.0 Hz, 36.458 kHz
+dclk	31.500
+htiming	640	640	680	720	864	864
+vtiming	480	480	488	491	521	521
+
+# XFree "800x600", 60.3 Hz, 37.879 kHz
+dclk	40.000
+hsync	+
+vsync	+
+htiming	800	800	840	968	1056	1056
+vtiming	600	600	601	605	628	628
+
+# XFree "800x600", 72.2 Hz, 48.077 kHz
+dclk	50.000
+hsync	+
+vsync	+
+htiming	800	800	856	976	1040	1040
+vtiming	600	600	637	643	666	666
+
+# XFree "1024x768", 60.0 Hz, 48.363 kHz
+dclk	65.000
+hsync	-
+vsync	-
+htiming	1024	1024	1032	1176	1344	1344
+vtiming	768	768	771	777	806	806
+
+# XFree "1024x768", 70.1 Hz, 56.476 kHz
+dclk	75.000
+hsync	-
+vsync	-
+htiming	1024	1024	1048	1184	1328	1328
+vtiming	768	768	771	777	806	806
+
+# XFree "1280x1024", 43.8 Hz, 51.020 kHz
+dclk	80.000
+interlaced
+htiming	1280	1280	1296	1512	1568	1568
+vtiming	1024	1024	1025	1037	1165	1165
+
+# XFree "1024x768", 75.9 Hz, 62.500 kHz
+dclk	85.000
+htiming	1024	1024	1032	1152	1360	1360
+vtiming	768	768	784	787	823	823
+
+# XFree "1280x1024", 61.0 Hz, 64.252 kHz
+dclk	110.000
+htiming	1280	1280	1328	1512	1712	1712
+vtiming	1024	1024	1025	1028	1054	1054
+
+# XFree "1280x1024", 74.1 Hz, 78.855 kHz
+dclk	135.000
+htiming	1280	1280	1312	1456	1712	1712
+vtiming	1024	1024	1027	1030	1064	1064
+
+# XFree "1280x1024", 76.2 Hz, 81.130 kHz
+dclk	135.000
+htiming	1280	1280	1312	1416	1664	1664
+vtiming	1024	1024	1027	1030	1064	1064

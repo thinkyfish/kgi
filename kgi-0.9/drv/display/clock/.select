@@ -1,0 +1,29 @@
+#!/bin/sh
+
+VENDORS=`echo */vendor | sed "s%/vendor%%g"`
+
+if [ -x `which dialog` ]
+then
+	(
+	echo "dialog --menu \"Please select a clock specification:\" 23 70 16 \\"
+	for vendor in $VENDORS; do
+		VENDOR_NAME=`cat $vendor/vendor`
+		for model in $vendor/*.spec; do
+			MODEL_NAME=`grep Model $model`
+			MODEL_NAME=`echo $MODEL_NAME | sed -e "s/Model(\"//" -e "s/\")//"`
+			echo "$model \"$MODEL_NAME\" \\"
+		done
+	done 
+	echo
+	) > .select-clock
+	(/bin/sh ./.select-clock) 2> .clock
+	CLOCK_SPEC=`cat ./.clock`
+	if [ "x$CLOCK_SPEC" = "x" ]
+	then
+		rm -f fixed-bind.spec
+	else
+		ln -sf `cat ./.clock` fixed-bind.spec
+	fi
+else 
+	ln -sf Fixed/fixed-bind.spec fixed-bind.spec
+fi

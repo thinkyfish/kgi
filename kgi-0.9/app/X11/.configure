@@ -1,0 +1,80 @@
+
+X11_VERSIONFILE=xc/programs/Xserver/hw/xfree86/xf86Version.h
+if [ ! -f $X11_VERSIONFILE ]
+then
+	X11_ARCHIVE=`echo $DIR_SOURCE/X*src-1.tgz`
+	if [ -f $X11_ARCHIVE ]
+	then
+		echo -n "$1 Extracting $X11_ARCHIVE ... "
+		gunzip -c $X11_ARCHIVE | tar xf -
+		echo done.
+	fi
+
+	if [ ! -f $X11_VERSIONFILE ]
+	then
+		echo "$1 X11 sources not detected. X-server build not enabled."
+		exit 0
+	fi
+fi
+
+#
+#	determine XFree86 source version
+#
+eval `awk -f $DIR_SOURCE/version.awk < $X11_VERSIONFILE`
+
+case $X11_XC_PATCH in
+
+notanylonger)
+	echo "$1 XFree86-$X11_VERSION is not supported any longer."
+	exit 1;
+	;;
+
+notyet)
+	echo "$1 XFree86-$X11_VERSION is not yet supported."
+	exit 1;
+	;;
+
+*)
+	echo "$1 XFree86-$X11_VERSION sources found."
+	X11_XC_PATCH=$DIR_SOURCE/patches/XFree86-$X11_XC_PATCH.diff
+	;;
+esac
+
+cp .config .config.tmp
+cat >> .config.tmp <<-end-of-config
+X11_VERSION=$X11_VERSION
+X11_MAJOR=$X11_MAJOR
+X11_MINOR=$X11_MINOR
+X11_PATCH=$X11_PATCH
+X11_EXTRA=$X11_EXTRA
+X11_XC_PATCH=$X11_XC_PATCH
+end-of-config
+
+#
+#	apply patches if not yet done.
+#
+if [ ! -f xc/config/cf/xggi.cf ]
+then
+	echo -n "$1 Applying $X11_XC_PATCH ... "
+	(cd xc; patch $PATCH_OPTION -p1) < $X11_XC_PATCH &> patch.log
+	echo done.
+
+	if grep FAIL patch.log
+	then
+		echo
+		echo "Error: failed applying patches."
+		echo "Please make sure you have unmodified XFree 4.0 sources."
+		exit 1
+	fi
+
+	if grep alformed patch.log
+	then
+		echo
+		echo "Error: malformed patch, may be the patches are broken?"
+		exit 1
+	fi
+fi
+
+cat > xc/config/cf/host.def <<-end-of-host-def
+XGGI_INCLUDE_PATH=$DIR_TOP_BUILD/include
+end-of-host-def

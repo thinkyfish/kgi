@@ -1,0 +1,106 @@
+#
+#	check for kernel source version
+#
+LINUX_VERSIONFILE=$DIR_BUILD/linux/Makefile
+if [ ! -f $LINUX_VERSIONFILE ]
+then
+	LINUX_SRC=`echo $DIR_SOURCE/linux-2.2.*.tar.gz`
+	if [ -f $LINUX_SRC ]
+	then
+		echo -n "$1 Extracting $LINUX_SRC, "
+		gunzip -c $LINUX_SRC | tar xf -
+		echo "done."
+	fi
+
+	if [ ! -f $LINUX_VERSIONFILE ]
+	then
+		echo "$1 Linux sources not detected. Kernel build not enabled."
+		exit 0
+	fi
+fi
+
+#
+#	get linux kernel source version
+#
+eval `awk -f $DIR_SOURCE/version.awk < $LINUX_VERSIONFILE`
+
+case $PATCH in
+
+notanylonger)
+	echo "$1 linux-$LINUX_VERSION is not supported any longer."
+	exit 1;
+	;;
+
+notyet)
+	echo "$1 linux-$LINUX_VERSION is not yet supported."
+	exit 1;
+	;;
+
+*)
+	echo "$1 linux-$LINUX_VERSION sources found."
+	PATCH=$DIR_SOURCE/patches/$PATCH.diff
+	PMAKE=$DIR_SOURCE/patches/$PMAKE-char-Makefile.diff
+	;;
+esac
+
+cp .config .config.tmp
+cat >> .config.tmp <<-end-of-config
+LINUX_VERSION=$LINUX_VERSION
+LINUX_MAJOR=$LINUX_MAJOR
+LINUX_MINOR=$LINUX_MINOR
+LINUX_PATCH=$LINUX_PATCH
+LINUX_EXTRA=$LINUX_EXTRA
+PATCH=$PATCH
+PMAKE=$PMAKE
+end-of-config
+
+#
+#	apply patches if not yet done.
+#
+if [ ! -f linux/include/linux/kgii.h ]
+then
+	echo -n "$1 Applying $PATCH, "
+		(cd linux; patch $PATCH_OPTION -p1) < $PATCH &> patch.log
+	echo "done."
+
+
+	echo -n "$1 Applying $PMAKE, "
+		(cd linux; patch $PATCH_OPTION -p1) < $PMAKE &> pmake.log
+	echo "done."
+
+	if grep FAIL patch.log pmake.log
+	then
+		echo
+		echo "Error: failed applying patches."
+		echo "Please make sure you have an unmodified kernel."
+		exit 1
+	fi
+
+	if grep alformed patch.log pmake.log
+	then
+		echo
+		echo "Error: malformed patch, may be the patches are broken?"
+		exit 1
+	fi
+
+	echo -n "$1 Linking KGI includes, "
+		ln -fs $DIR_TOP_BUILD/include/kii linux/include/kii
+		ln -fs $DIR_TOP_BUILD/include/kgi linux/include/kgi
+	echo "done."
+
+	if [ "$DIR_BUILD" != "$DIR_SOURCE" ]
+	then
+		mkdir -p $DIR_BUILD/linux/drivers/kgi
+		(
+			cd $DIR_BUILD/linux/drivers/kgi
+			for file in $DIR_SOURCE/linux/drivers/kgi/*
+			do
+				ln -sf $file
+			done
+		)
+	fi
+fi
+
+echo -n "$1 Configuring kernel via 'yes | make oldconfig', "
+	(cd linux; yes | make oldconfig) &> make-oldconfig.log
+echo "done."

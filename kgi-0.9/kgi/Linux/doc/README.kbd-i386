@@ -1,0 +1,21 @@
+The ps2kbd driver
+=================
+
+This driver serves the devices connected to the keyboard (kbd port) 
+and PS/2 auxiliary pointing device (ptr port) port.
+
+You may connect a PS/2 pointing device or a keyboard to either of the ports,
+the driver will autodetect what devices are connected.
+
+The following configurations have been tested:
+
+	* keyboard on kbd port
+	* keyboard on kbd port, mouse on ptr port
+	* keyboard on kbd port, keyboard on ptr port
+		NOTE:	I had to reboot twice after connecting these.
+		NOTE:	It seems some BIOSes get confused when a keyboard
+		NOTE:	is on the ptr port. However, after the second boot
+		NOTE:	everything worked fine.
+
+NOTE: some PS/2 mice may not be detected properly. Please report any success
+or failure!

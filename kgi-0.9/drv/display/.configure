@@ -1,0 +1,41 @@
+
+cp .config .config.tmp
+
+CONFIG_SYSTEM_VENDOR=$HOST_OS
+case $HOST_OS in
+	*BeOS)
+		CONFIG_SYSTEM_MODEL=R3
+		;;
+
+	*Linux)
+		CONFIG_SYSTEM_MODEL=kgim-0.9
+		;;
+	*)
+		echo "Unkown HOST_OS '$HOST_OS'. Can't choose system layer!"
+		exit 1
+		;;
+esac
+
+cat >> .config.tmp <<-end-of-config
+#
+#	KGI module configuration
+#
+CC_OPT_TARGET="-D__KERNEL__ -D__MODULE__ -Wno-unused"
+KGIM_INCLUDE=$DIR_SOURCE
+CONFIG_BOARD_VENDOR=ELSA
+CONFIG_BOARD_MODEL=WinnerOffice2000
+CONFIG_CHIPSET_VENDOR=3Dlabs
+CONFIG_CHIPSET_MODEL=PERMEDIA
+CONFIG_CLOCK_VENDOR=3Dlabs
+CONFIG_CLOCK_MODEL=PERMEDIA2
+CONFIG_RAMDAC_VENDOR=3Dlabs
+CONFIG_RAMDAC_MODEL=PERMEDIA2
+CONFIG_MONITOR=Standard/VGA
+CONFIG_MONITOR_VENDOR=monosync
+CONFIG_MONITOR_MODEL=SVGA
+CONFIG_SYSTEM_VENDOR=$CONFIG_SYSTEM_VENDOR
+CONFIG_SYSTEM_MODEL=$CONFIG_SYSTEM_MODEL
+end-of-config
+
+cp GNUmakefile GNUmakefile.tmp
+cat $DIR_SOURCE/Rules >> GNUmakefile.tmp

@@ -1,0 +1,9 @@
+
+cat .config > .config.tmp
+echo DIR_LIBGGI_TOPLEVEL=`pwd` >> .config.tmp
+echo PATH_INCLUDES=$PATH_INCLUDES `pwd`/include >> .config.tmp
+cat >> .config.tmp <<end-project
+libGGI_MAJOR=1
+libGGI_MINOR=1
+libGGI_PATCH=1
+end-project

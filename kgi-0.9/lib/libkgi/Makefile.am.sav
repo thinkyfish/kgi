@@ -1,0 +1,10 @@
+AUTOMAKE_OPTIONS = 1.4 foreign
+
+SUBDIRS = include lib default demos doc m4
+
+kgiconfdatadir = @kgi_confdir@
+kgiconfdata_DATA = libkgi.conf
+
+DISTCLEANFILES = libkgi.conf
+
+EXTRA_DIST = autogen.sh

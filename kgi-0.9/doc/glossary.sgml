@@ -1,0 +1,15 @@
+
+
+machine
+	all the hardware used to operate the add-on card. Typically this
+	includes CPU, motherboard (PCI) chipset, etc.
+
+system
+	The software environment we have to run/compile under. Mainly this 
+	will include compilers, assemblers, linkers, operating systems,...
+
+workplace
+	A set of output devices (displays) and input devices operated
+	by one user. A user is not allowed to use input and output 
+	resources that do not belong to his/her workplace.
+

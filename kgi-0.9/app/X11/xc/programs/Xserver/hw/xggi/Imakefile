@@ -1,0 +1,38 @@
+XCOMM $XConsortium: Imakefile,v 1.5 94/01/21 22:04:27 dpw Exp $
+XCOMM $XFree86: xc/programs/Xserver/hw/ggi/Imakefile,v 3.1 1995/07/05 12:36:57 dawes Exp $
+#include <Server.tmpl>
+
+#define	IHaveSubdirs
+
+SRCS = 	xggiOutput.c xggiInput.c xggiKeycodes.c
+ 
+OBJS = 	xggiOutput.o xggiInput.o xggiKeycodes.o
+
+INCLUDES = -I$(SERVERSRC)/cfb -I$(SERVERSRC)/mfb -I$(SERVERSRC)/mi \
+	-I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(FONTINCSRC) \
+	-I$(XGGI_SRC)/include
+
+DEFINES = ServerOSDefines $(SHMDEF) $(MMAPDEF) -DHOST_OS=HOST_OS_Linux -DHOST_CPU=HOST_CPU_i386
+
+CCOPTIONS=
+
+#if	XGGI_XAA
+	XGGI_XAA_DIR	= xaa
+#endif
+
+SUBDIRS = $(XGGI_XAA_DIR)
+
+DONES =
+
+#if HasGnuMake
+$(DONES): $(SUBDIRS)
+#endif
+
+all:: $(OBJS)
+
+NormalLibraryObjectRule()
+
+DependTarget()
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

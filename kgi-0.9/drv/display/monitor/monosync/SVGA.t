@@ -1,0 +1,11 @@
+# SVGA 56.474 kHz
+htiming	13653	13653	13973	15786	17707	17707
+hsync	-
+vsync	-
+vtiming	768	768	771	777	806	806
+
+# SVGA 48.076 kHz
+htiming	16000	16000	17120	19520	20800	20800
+hsync	-
+vsync	+
+vtiming	600	600	637	643	666	666

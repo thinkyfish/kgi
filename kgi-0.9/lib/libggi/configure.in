@@ -1,0 +1,95 @@
+dnl $Id: configure.in,v 1.1 2000/02/22 11:12:18 taylor_j Exp $
+dnl Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.13)
+
+AC_INIT(display/kgi/mode.c)
+
+AM_INIT_AUTOMAKE(kgi,0.5,-)
+
+AM_MAINTAINER_MODE
+AM_DISABLE_STATIC
+
+dnl ========================================================================
+dnl Set some defaults
+
+PATHTAG="pAtHTAg"
+TAGLEN="7"
+DLLEXT="so"
+
+use_debug="no"
+
+
+dnl ========================================================================
+dnl Checks for programs.
+
+AC_PROG_CC
+AM_PROG_LIBTOOL
+AC_PROG_INSTALL
+
+
+dnl ========================================================================
+dnl User selectable options
+
+AC_ARG_ENABLE(debug,
+[  --disable-debug         don't build with run-time debugging (speed freaks)],
+use_debug=$enableval)
+
+
+dnl ========================================================================
+dnl Checks for header files.
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS(kgi/kgi.h)
+
+
+dnl ========================================================================
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+AC_C_CONST
+AC_C_INLINE
+
+
+dnl ========================================================================
+dnl Finally add some flags
+
+dnl _THREAD_SAFE is used instead of _REENTRANT on some systems
+CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE"
+
+if test "x$use_debug" = "xyes"; then
+  AC_DEFINE(DEBUG)
+  if test "$ac_cv_prog_gcc" = "yes"; then
+    CFLAGS="$CFLAGS -g -Wall"
+  fi
+fi
+
+
+dnl ========================================================================
+dnl Write output
+
+AC_SUBST(DLLEXT)
+
+AC_SUBST(LIBSUBDIRS)
+
+dnl Bah! autoconf hasn't set prefix to it's default value yet!
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+
+eval foo="$libdir"
+eval kgi_libdir="$foo"
+
+AC_SUBST(kgi_libdir)
+AC_DEFINE_UNQUOTED(KGITAGLEN,$TAGLEN)
+AC_DEFINE_UNQUOTED(KGIPATHTAG,"$PATHTAG")
+
+AM_CONFIG_HEADER(config.h)
+
+AC_OUTPUT(
+Makefile
+include/Makefile
+include/ggi/Makefile
+include/ggi/display/Makefile
+display/Makefile
+display/kgi/Makefile
+m4/Makefile
+)

@@ -1,0 +1,492 @@
+XCOMM $XFree86: xc/config/cf/xggi.cf,v 1.0 seeger_s $
+/*	derived from
+**	$XFree86: xc/config/cf/xfree86.cf,v 3.246 1999/08/29 12:20:50 dawes Exp $
+*/
+
+/*
+ * This configuration file contains all of the configuration
+ * information for the XFree86 based X Servers.
+ *
+ * Most of these settings can be overridden in a vendor.cf or the
+ * BeforeVendor part of the site.def file.
+ */
+XCOMM $TOG: xggi.cf /main/38 1997/10/22 13:01:59 kaleb $
+
+/*
+ * Default settings for which X Servers to build.
+ */
+#ifndef XGGIServer
+#define XGGIServer		YES
+#endif
+/* 1bpp module */
+#ifndef XGGI_1BPP
+#define XGGI_1BPP		YES
+#endif
+/* 4bpp module */
+#ifndef XGGI_4BPP
+#define XGGI_4BPP		YES
+#endif
+/* 8/32bpp overlay module */
+#ifndef XGGI_8_32BPP
+#define XGGI_8_32BPP		YES
+#endif
+/* 8/16bpp dual fb module */
+#ifndef XGGI_8_16BPP
+#define XGGI_8_16BPP		YES
+#endif
+/* 24/32bpp conversion module */
+#ifndef XGGI_24_32BPP
+#define XGGI_24_32BPP		YES
+#endif
+/* XAA module */
+#ifndef XGGI_XAA
+#define XGGI_XAA		YES
+#endif
+
+/*
+ * The server-side of PEX is not 64-bit clean.
+ */
+#if !defined(BuildPexExt)
+#if XF86Server && !defined(AlphaArchitecture)
+#define BuildPexExt		YES
+#else
+#define BuildPexExt		NO
+#endif
+#endif
+
+
+/*
+ * Build GLX server interface
+ *   --- Doesn't work for 1-bit and 4-bit servers
+ */
+#ifndef BuildGlxExt
+#  define BuildGlxExt    YES
+#endif
+
+/*
+ * XIE
+ */
+#ifndef	BuildXIE
+#define BuildXIE	NO
+#endif
+
+#ifndef	BuildXIElib
+#define BuildXIElib	YES
+#endif
+
+#ifndef BuildDBElib
+#define BuildDBElib	YES
+#endif
+
+#ifndef BuildRECORDlib
+#define BuildRECORDlib	YES
+#endif
+
+#ifndef BuildXKBlib
+#define BuildXKBlib	YES
+#endif
+
+#ifndef BuildScreenSaverExt
+#define BuildScreenSaverExt	YES
+#endif
+
+/*
+ * Build XInput support
+ */
+#ifndef BuildXInputExt
+#define BuildXInputExt		YES
+#endif
+
+/* Build Xinerama (aka panoramiX) extension */
+#ifndef BuildXinerama
+#define BuildXinerama		YES
+#endif
+
+/*
+ * Build the extra extension libs even when not including the extra extensions
+ * in the servers
+ */
+#ifndef BuildScreenSaverLibrary
+#define BuildScreenSaverLibrary	YES
+#endif
+#ifndef BuildXF86MiscLibrary
+#define BuildXF86MiscLibrary	YES
+#endif
+#ifndef BuildXF86DGALibrary
+#define BuildXF86DGALibrary	YES
+#endif
+#ifndef BuildXvLibrary
+#define BuildXvLibrary		YES
+#endif
+#ifndef BuildGLXLibrary
+#define BuildGLXLibrary		YES
+#endif
+
+
+/* Don't build this now because the interface hasn't been done yet */
+/*
+ * Build the XFree86-Misc extension
+ */
+#ifndef BuildXF86MiscExt
+#define BuildXF86MiscExt		NO
+#endif
+
+/*
+ * Build the XFree86 DGA support
+ */
+#ifndef BuildXF86DGA
+#define BuildXF86DGA			YES
+#endif
+
+/*
+ * Build the DPMS extension support
+ */
+#ifndef BuildDPMSExt
+#define BuildDPMSExt			YES
+#endif
+
+/*
+ * Build the X Video Extension 
+ */
+#ifndef BuildXvExt
+#define BuildXvExt			YES
+#endif
+
+/*
+ * Build the Antialiased Font Extension (this has been abandoned, at least
+ * temporarily)
+ */
+#ifndef BuildXantiExt
+#define BuildXantiExt			NO
+#endif
+
+
+
+#if Malloc0ReturnsNull
+#ifndef XtMalloc0ReturnsNullDefines
+#define XtMalloc0ReturnsNullDefines	Malloc0ReturnsNullDefines -DXTMALLOC_BC
+#endif
+#endif
+
+#ifndef UseInternalMalloc
+#define UseInternalMalloc	YES
+#endif
+
+#ifndef HasDlsymBug
+#define HasDlsymBug		NO
+#endif
+
+#ifndef HasMTRRSupport
+#define HasMTRRSupport		NO
+#endif
+
+/*
+ * The expiry date for beta versions
+ *
+ * 853286400 is Wed Jan 15 00:00:00 1997 GMT
+ * 855964800 is Sat Feb 15 00:00:00 1997 GMT
+ * 866332800 is Sun Jun 15 00:00:00 1997 GMT
+ */
+#ifndef XF86ServerExpiry
+#define XF86ServerExpiry 866332800
+#endif
+
+/*
+ * Build the font server
+ */
+#ifndef BuildFontServer
+#define BuildFontServer		YES
+#endif
+
+/*
+ * Include fonts support
+ */
+#ifndef BuildSpeedo
+#define BuildSpeedo		YES
+#endif
+
+#ifndef BuildType1
+#define BuildType1		YES
+#endif
+
+#ifndef BuildCID
+#define BuildCID		YES
+#endif
+
+#ifndef BuildFreeType
+#define BuildFreeType		YES
+#endif
+
+#ifndef BuildXTT
+#define BuildXTT		YES
+#endif
+
+/*
+ * By default, build all of the fonts.
+ */
+#ifndef Build75DpiFonts
+#define Build75DpiFonts		YES
+#endif
+#ifndef Build100DpiFonts
+#define Build100DpiFonts	YES
+#endif
+#ifndef BuildSpeedoFonts
+#define BuildSpeedoFonts	YES
+#endif
+#ifndef BuildType1Fonts
+#define BuildType1Fonts		YES
+#endif
+#ifndef BuildCIDFonts
+#define BuildCIDFonts		YES
+#endif
+#ifndef BuildCyrillicFonts
+#define BuildCyrillicFonts	YES
+#endif
+#ifndef BuildLatin2Fonts
+#define BuildLatin2Fonts	YES
+#endif
+#ifndef UseKoi8RForCyrillic
+#define UseKoi8RForCyrillic	YES
+#endif
+
+/*
+ * By default, create the local font directory
+ */
+#ifndef MakeLocalFontDir
+#define MakeLocalFontDir	YES
+#endif
+
+#ifndef CompressAllFonts
+#define CompressAllFonts	YES
+#endif
+
+#ifndef GzipFontCompression
+#define GzipFontCompression	YES
+#endif
+
+#ifndef StripInstalledPrograms
+#define StripInstalledPrograms	YES
+#endif
+
+#ifndef InstallJapaneseDocs
+#define InstallJapaneseDocs	NO
+#endif
+
+#if BuildXF86DGA
+#define XFree86DGADefines	-DXFreeXDGA
+#else
+#define XFree86DGADefines	/**/
+#endif
+
+#if BuildXvExt
+#define XFree86XvDefines	-DXvExtension
+#else
+#define XFree86XvDefines	/**/
+#endif
+
+#ifndef DlopenHack
+#define DlopenHack		-DDLOPEN_HACK
+#endif
+
+#ifndef LoaderDefines
+#if MakeDllModules
+#define ExtraLoaderDefines	DlopenHack
+#else
+#define ExtraLoaderDefines	/**/
+#endif
+#endif
+
+#if DoLoadableServer
+#define XFree86LoaderDefines	-DXFree86LOADER ExtraLoaderDefines
+#else
+#define XFree86LoaderDefines	/**/
+#endif
+
+#ifndef MakeHasPosixVariableSubstitutions
+#if !HasBsdMake && !defined(SunArchitecture)
+#define MakeHasPosixVariableSubstitutions	NO
+#else
+#define MakeHasPosixVariableSubstitutions	YES
+#endif
+#endif
+
+/* A temporary addition for testing the new input device code. */
+#ifndef NewInputDefines
+#if NewInput
+#define NewInputDefines -DNEW_INPUT
+#else
+#define NewInputDefines /**/
+#endif
+#endif
+
+#if !HasSnprintf
+#define ServerSnprintfDefines -DNEED_SNPRINTF
+#else
+#define ServerSnprintfDefines /**/
+#endif
+
+/* Server defines required for all OSs */
+#ifndef XFree86ServerDefines
+#define XFree86ServerDefines	-DAVOID_GLYPHBLT -DPIXPRIV -DSINGLEDEPTH \
+				XFree86DGADefines XFree86XvDefines \
+				XFree86LoaderDefines -DXFree86Server \
+				VidModeExtensionDefines \
+				ServerSnprintfDefines \
+				-DX_BYTE_ORDER=ByteOrder NewInputDefines
+#endif
+
+#ifndef XFree86ServerOSDefines
+#define XFree86ServerOSDefines	-DDDXOSINIT -DSERVER_LOCK -DDDXOSFATALERROR \
+				-DDDXOSVERRORF
+#endif
+
+#ifndef XFree86ConsoleDefines
+#ifdef i386BsdArchitecture
+#define XFree86ConsoleDefines	-DPCCONS_SUPPORT -DSYSCONS_SUPPORT -DPCVT_SUPPORT
+#else
+#define XFree86ConsoleDefines	/**/
+#endif
+#endif
+
+#ifndef UseServerLock
+#define UseServerLock	YES
+#endif
+
+#ifndef XnestServer
+#define XnestServer			YES
+#endif
+#ifndef XVirtualFramebufferServer
+#define XVirtualFramebufferServer	YES
+#endif
+#ifndef XprtServer
+#define XprtServer			YES
+#endif
+
+#ifndef ServerExtraDefines
+#define ServerExtraDefines	XFree86ServerDefines
+#endif
+
+#ifndef ServerOSDefines
+#define ServerOSDefines		XFree86ServerOSDefines
+#endif
+
+#ifndef DriverSDKDir
+#define DriverSDKDir     $(USRLIBDIR)/Server
+#endif
+
+#ifndef DriverSDKModuleDir
+#define DriverSDKModuleDir     $(USRLIBDIR)/Server/modules
+#endif
+
+#ifndef DriverSDKIncludeDir
+#define DriverSDKIncludeDir     $(USRLIBDIR)/Server/include
+#endif
+
+DRIVERSDKDIR = DriverSDKDir
+DRIVERSDKMODULEDIR = DriverSDKModuleDir
+DRIVERSDKINCLUDEDIR = DriverSDKIncludeDir
+
+/*
+**	Globally needed directories
+*/
+XGGI_SRC	= $(SERVERSRC)/hw/xggi
+
+/*
+ * Installed location of the XFree86 documentation
+ */
+
+        XFREE86DOCDIR = $(DOCDIR)
+      XFREE86PSDOCDIR = $(DOCPSDIR)
+    XFREE86HTMLDOCDIR = $(DOCHTMLDIR)
+XFREE86JAPANESEDOCDIR = $(DOCDIR)/Japanese
+
+/*
+ * Other stuff used in the X Server source.
+ */
+
+#ifndef AsmDefines
+#define AsmDefines /**/
+#endif
+
+#ifndef OtherIConfigFiles
+#define OtherIConfigFiles $(IRULESRC)/xfree86.cf $(IRULESRC)/xf86.rules
+#endif
+
+#ifndef XFree86Version
+#define XFree86Version	3916
+#endif
+
+#ifndef XVendorString
+#define XVendorString	"XGGI - The GGI Project"
+#endif
+
+#ifndef XVendorRelease
+#define XVendorRelease	XFree86Version
+#endif
+
+#ifndef UseRgbTxt
+#define UseRgbTxt	YES
+#endif
+
+#ifndef ManSuffix
+#define ManSuffix	1
+#endif
+
+/*
+ * GNU Compiler stuff
+ */
+#ifndef HasGcc2
+#define HasGcc2 NO
+#endif
+#ifndef HasGcc
+#define HasGcc HasGcc2
+#endif
+#ifndef HasGcc2ForCplusplus
+#define HasGcc2ForCplusplus HasGcc2
+#endif
+
+#if HasGcc
+#ifndef GccWarningOptions
+#define GccWarningOptions -Wall -Wpointer-arith -Wstrict-prototypes \
+			  -Wmissing-prototypes -Wmissing-declarations \
+			  -Wredundant-decls -Wnested-externs
+#endif
+#ifndef DefaultCCOptions
+#if defined(UseInstalled)
+#define DefaultCCOptions /* -ansi */
+#else
+#define DefaultCCOptions -ansi -pedantic GccWarningOptions
+#endif
+#endif
+#if defined(UseInstalled)
+#ifndef UseGccMakeDepend
+#define UseGccMakeDepend YES
+#endif
+#endif
+#endif
+
+#if HasGcc2 && defined(i386Architecture)
+#ifndef DefaultGcc2i386Opt
+#define DefaultGcc2i386Opt -O2 -fno-strength-reduce
+#endif
+#endif
+
+#if HasGcc2 && defined(AlphaArchitecture)
+#ifndef DefaultGcc2AxpOpt
+#define DefaultGcc2AxpOpt -O2
+#endif
+#endif
+
+#ifndef DefaultGcc2DebugOpt
+#define DefaultGcc2DebugOpt -g
+#endif
+
+#if HasGcc2 && DebuggableLibraries
+#define LibraryDebugOpt DefaultGcc2DebugOpt
+#endif
+
+#ifndef DontDefineXF86Contrib
+#define XF86Contrib
+#endif
+
+#include <xf86.rules>

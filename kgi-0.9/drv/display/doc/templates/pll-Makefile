@@ -1,0 +1,11 @@
+OBJECTS = ##META##.o
+
+##META##.o:	##META##-meta.o ##META##-bind.o ../pll-meta.o
+
+all.entry: $(OBJECTS)
+
+ifeq ($(CONFIG_CLOCK_VENDOR),##VENDOR##)
+default.entry: $(CONFIG_CLOCK_MODEL).o
+else
+default.entry:
+endif

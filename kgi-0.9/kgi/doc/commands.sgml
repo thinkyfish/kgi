@@ -1,0 +1,122 @@
+This should document the KGI commands someday. It's a working document.
+Not even real sgml yet...
+
+
+MAPPER COMMANDS
+===============
+
+	- implement mapper functionality.
+
+	KGIC_MAPPER_IDENTIFY
+		- client sends ID string and version information to mapper.
+		- client receives mapper ID string, version information
+		  and protocol info.
+
+		return codes:
+			EINVAL	if the client is not supported by mapper
+			EPROTO	if the client identified already
+
+
+	KGIC_MAPPER_SET_IMAGES
+		- client sends number of image layers required
+
+		return codes:
+			EOK	if the requested number images is supported
+				(by the mapper)
+			EPROTO	if the client is not yet identfied.
+				if mode is already checked successfully
+			ENOMEM	if the requested number of images is not
+				supported by the mapper
+
+	KGIC_MAPPER_GET_IMAGES
+		- client receives the number of image layers set.
+		  (0 if not yet set).
+
+		return codes:
+			EOK	result valid
+
+	KGIC_MAPPER_SET_IMAGE_MODE
+		- client sends mode info for a particular image
+
+		return codes:
+			EOK	if image mode set
+			EPROTO	if client is not session leader
+				if client is not identified yet
+				if mode is already checked successfully
+			EINVAL	if request is invalid (e.g. image not present)
+
+	KGIC_MAPPER_GET_IMAGE_MODE
+		- client sends image index
+		- client receives image mode info
+
+		return codes:
+			EOK	if result is valid
+			EINVAL	if index is out of range
+			EPROTO	if images not (yet) set
+
+	KGIC_MAPPER_MODE_CHECK
+		- mapper registers device with central management
+		- mapper checks if the mode is valid.
+
+		return codes:
+			EOK	if everything went ok
+			EBUSY	if there is another device registered already
+			EINVAL	if the requested mode is invalid
+			ENODEV	if there is no hardware to map on
+			EPROTO	if client is not session leader
+				if number of images isn't set (yet)
+				if client did not identify yet
+
+	KGIC_MAPPER_MODE_SET
+		- mapper maps the device on the display hardware (unmapping
+		  other devices and setting the desired operation mode)
+
+		return codes:
+			EOK	if everything went all right
+			EPROTO	if client is not yet identified
+				if client is not session leader
+				if mode is not checked
+
+	KGIC_MAPPER_MODE_UNSET
+		- mapper unmaps the device from the display hardware
+
+		return codes:
+			EOK	if everything went all right
+			EPROTO	if client is not yet identified
+				if client is not session leader
+				if mode is not checked
+
+	KGIC_MAPPER_MODE_DONE
+		- mapper unmaps the device from the display mode if mapped
+		- mapper unregisters device, and sets the mode as 'unchecked'
+
+		return codes:
+			EOK	if everything went ok
+			EPROTO	if client is not yet identified
+				if client is not session leader
+				if mode is not checked
+
+	KGIC_MAPPER_RESOURCE_INFO
+		- returns detailed information about a particular resource
+
+		return codes:
+			EOK	if the returned info is valid
+			ENXIO	if a resource with requested ID doesn't exist
+			EINVAL	if the resource with requested ID cannot exist
+			EAGAIN	if session leader hasn't checked the mode yet
+
+MODE COMMANDS
+=============
+
+	- specific to a particular operation mode
+
+	return code common to all these commands:
+		EPROTO	if mode is not checked.
+		ENXIO	if request is not supported.
+
+	KGIC_MODE_TEXT16CONTEXT
+		- client specifies image it wants to render text into
+		- client receives text16 rendering context
+
+		return code:
+			EOK	if everything went ok.

@@ -1,0 +1,6 @@
+G100 boards can probably be added easily, but are undocumented, and the only
+reference is XFree source. I rahter hold off on that for now.
+
+the 2x64 series can probable be integrated with a minimum of fuzz, but
+requires proper handling of the lclk, which we can blissfully ignore
+currently.

@@ -1,0 +1,28 @@
+
+#	symlink public headers into DIR_TOP_BUILD/include
+#
+(
+	cd $DIR_SOURCE/include
+	for dir in `find -type d -print | grep -v "CVS"`
+	do
+		mkdir -p $DIR_TOP_BUILD/include/$dir
+	done
+	for file in `find -type f -print | grep -v "CVS/"`
+	do
+		ln -sf $DIR_SOURCE/include/$file $DIR_TOP_BUILD/include/$file
+	done
+)
+
+cat > $DIR_TOP_BUILD/include/kgi/config.h <<-end-of-config
+/*
+**	WARNING	This file has been generated automatically! Do not edit!
+*/
+#ifndef _kgi_config_h
+
+#define	HOST_OS		HOST_OS_$HOST_OS
+#define	HOST_CPU	HOST_CPU_$HOST_CPU
+
+#endif /* _kgi_config_h */
+end-of-config
+
+

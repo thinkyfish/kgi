@@ -1,0 +1,262 @@
+
+
+Hi all,
+
+after some final investigations, DEGAS´s home blueprints are almost ready.
+This is the only and final opportunity for the subproject leaders
+to spot flaws in the overal structure.
+
+First some organizational stuff:
+
+	A "Lord of the Files" needs to be named. This almighty person 
+	will be responsible for making sure the developers stick to
+	the rules written herein. He is given all power to punish
+	violations of these rules. He may give parts of his power
+	to assisting Devils, who will execute the tasks of 
+	investigation and punishment.
+
+	For now, I take this job (both Lord and Devil).
+	(So beware, little terrorists) :-)
+
+Ok, now for the serious part:
+
+This draft tries to arrange DEGAS´ sources in a way to have maximum
+flexibility. Sources are split in several modules that people can work on.
+I tried to arrange them so that they do not disturb each other too much.
+
+Philosophy is that parts that do not depend very much on each other
+can be checked out separately, e.g. to let the Doc people do their
+job almost apart from the coding people but have all efforts in one tree.
+Therefore DEGAS is split into several modules and each module can be 
+checked out as a separate tree. But, you may need some modules 
+installed before you can compile others.
+
+To guarantee consistent documentation, but let the "Wizards of Documentation"
+do their jobs easily, some symlinks are done inside the repository that
+have some consequences people should be aware of.
+
+So, here is how the tree should look like:
+
+degas				(renamed to ggi once DEGAS is build)
+|
+
+
+The Config Module
+=================
+
+|-- config			(system and arch configuration stuff)
+|   `-- include
+|       `-- ggi			(programming environment definitions)
+
+All the system (hardware, CPU, motherboard,...) and architecture (operating
+system, compiler, software tools...) dependent stuff goes in here, in order
+to provide easy porting. [we should add these terms to the glossary]
+
+The goals are:
+
+	To port GGI, the config system has made to work on the new
+	system/architecture and all the rest compiles flawlessly.
+
+There will be conformity checks the source has to pass, to be performed
+by the Lord of the Files. 
+
+The Documentation Module
+========================
+
+These are the lands where the magic of the Wizards of Documentation
+is creating the view the public will have.
+
+This is meant to be checked out by persons that like to get an overview,
+or for our web pages. It´s up to the "Wizards of Documentation" to agree
+on a common format, that allows generation of html, printable *and* readable
+(after printed) postscript, man pages and optionally info packages.
+The doc/ module should only contain documentation sources, all other 
+files have to be generated.
+
+|-- doc
+|   |-- kgi			KGI / EvStack docs
+|   |-- driver			driver docs, details to be figured out
+|   |-- libggi			the same as ../lib/libggi/doc
+|   `-- libgii			the same as ../lib/libgii/doc
+
+	GENERAL NOTES:	Each doc/ subdirectory should contain the files 
+	needed to generate all the documentation about the corresponding
+	subsystem. There may be further subdirectories where needed.
+	A ´make´ system is to be established, so that one can generate
+	arbitrary documentation formats (HTML, ps, TeX, ... whatever is
+	possible from SMGL). I need the help of our documentation writers
+	and SMGL gurus here. 
+
+	WARNING: YOU MUST NOT CHANGE THE TOPLEVEL DIRECTORY STRUCTURE 
+	(adding new subdirectories) USING CVS. THE LORD OF THE FILES 
+	NEEDS TO DO THIS INSIDE THE FORBIDDEN LANDS, OR SERIOUS TROUBLE
+	WILL COME OVER THE WHOLE UNIVERSE.
+
+This results in the nice behaviour, that the global and lib specific 
+documentation is both up-to-date. But, you may have some trouble with
+CVS commiting/releasing the whole tree, as it may complain about locks.
+Also, you may need to checkin/update cycles to have it consistent again.
+
+The magic words to get and build documentation will be
+
+	cvs checkout doc
+	cd doc
+	cvs checkout config
+	make; make
+
+
+The Driver Module
+=================
+
+These are the lands where the magic of the "Wizards of Drivers" is developed.
+
+This holds all the files neccessary to build, optimize and create hardware
+drivers for a certain rendering device. (CPU included). It´s split into
+hardware drivers, made of the chipset, clock, graphic, system, ramdac 
+and monitor modules. These do all the low-level stuff, mainly 
+mode setup and access control.
+
+For each library, there are drivers too, so a vendor only needs to worry
+about the driver/ sub directory.
+
+QUESTION --------------------------------------
+Should we here rather use a structure like 
+
+driver
+	graphics
+	[sound]
+	input
+
+This could allow other projects (GSDK, this other Sound Project, etc)
+to easily blend in...
+QUESTION --------------------------------------
+
+
+|-- driver
+|   |-- input			(input hardware drivers. to be specified)
+|   |-- chipset
+|   |   |-- S3
+|   |   `-- ...
+|   |-- clock			(there is a change to come here - see below)
+|   |   |-- S3			
+|   |   |-- ...	
+|   |   |-- fixed		(drivers herein will be spread across the)
+|   |   `-- prog		(vendor subdirs, and shared code to ../include)
+|   |-- graphic
+|   |   |-- S3
+|   |   `-- ...
+|   |-- include			(hardware specific includes only)
+|   |   |-- S3
+|   |   `-- module.h		(module internal interface)
+|   |       
+|   |-- system
+|   |   |-- Linux
+|   |   `-- ...
+|   |-- monitor
+|   |   |-- monosync
+|   |   |-- multisync
+|   |   `-- timelist
+|   |-- ramdac
+|   |   |-- S3
+|   |   `-- ...
+|   |-- monitor
+|   |   |-- monosync
+|   |   `-- ...
+|   | 			(up to here are the KGI/trusted parts, below follow)
+|   |			(their library equivalents)
+|   |-- libggi
+|   |   |-- include		(requires lib/libggi or libggi installed)
+|   |   |   `-- libggi
+|   |   |       `-- module.h	(libggi driver interface)
+|   |   |-- generic		(pure and portable C)
+|   |   |-- i386		(i386 optimized Assembly, C, ...)
+|   |   |-- S3			(hardware/target specific)
+|   |   |-- SVGA
+|   |   `-- ...
+|   |-- libxaa
+|   |   |-- include
+|   |   |   `-- libxaa
+|   |   |       `-- module.h	(libxaa module interface)
+|   |   |-- S3
+|   |   `-- ...
+|   |-- libsvga
+|   |   |-- generic		(pure and portable C)
+|   |   |			(no include, as it fully relies on libggi)
+|   |   `-- ...			(you got the point)
+|   `-- ...		(further library drivers to follow)
+
+
+	For the lib*/include directories, the same symlink trick is used,
+	so that library and driver interfaces are derived from the same
+	source. Thus we have to give another
+
+        WARNING: YOU MUST NOT CHANGE THE DIRECTORY STRUCTURE
+        (adding new subdirectories) USING CVS. THE LORD OF THE FILES
+        NEEDS TO DO THIS INSIDE THE FORBIDDEN LANDS, OR SERIOUS TROUBLE
+        WILL COME OVER THE WHOLE UNIVERSE.
+
+
+The Library Module
+==================
+
+These are the lands where the magic of the "Wizards of Libraries" performs
+it´s job to give you blazingly fast and easy graphics.
+
+The idea behind is to have general library stuff in here, and force 
+library designers to define clear driver interfaces. It makes library
+development harder first time, but will result it a very modular library
+design. Beside, hardware vendors can be given a Driver Development pack,
+that plugs into the driver subdir only, not all the various lib
+directories too.
+
+Beside that, people will be forced to compile consistent drivers from
+the driver/ package.
+
+|-- lib
+|   |-- libggi
+|   |   |-- doc			(the same as in degas/doc/libsvga)
+|   |   |-- demos		(the same as in degas/demos/libggi)
+|   |   |-- include		(library internal definitions only)
+|   |   |   `-- libggi		(the same as in degas/driver/include)
+|   |   `-- ...
+|   |-- libsvga
+|   |   |-- doc			(the same as in degas/doc/libsvga)
+|   |   |-- demos		(the same as in degas/demos/libggi)
+|   |   |-- include
+|   |   |-- drivers		(if appropriate)
+|   |   `-- ...
+
+	NOTE: There are no drivers in the lib/ directories. This is to 
+	force people to compile consistent drivers from the driver/ package.
+
+	NOTE: If GGI meant General Gaming Interface, libGSI could go in here
+	easily, as well as the drivers for libGSI could blend into driver.
+	[we may have to deal with this once graphics cards do full MPEG	
+	video and sound decoding, but there is some time until then.]
+
+The KGI Module
+==============
+
+Here the powerful "Wizards of the Kernel" brew the magic drinks that
+prevent hickups due to bad hardware magic from userland.
+
+All the patches to the target operating architecture needed to make the
+hardware drivers run are collected. This includes kernel modifications,
+fixes to utilities, and so on.
+
+|-- kgi
+|   |-- Linux
+|   |   |-- src			(symlinked, should reflect the target tree)
+|   |   |-- patches		(to be applied after symbolic linkage)
+|   |   `-- utils
+|   |       |-- patches		(fixes to broken utilites)
+|   |       `-- src		(sources for new utilities)
+|   |-- XFree
+|   |   |-- src			(symlinked, should reflect the target tree)
+|   |   |-- patches		(patches to be applied after symlink)
+
+
+So, this is the general draft I would like to setup. We should have
+sorted this out by Friday, so we can start the move on Weekend.
+
+

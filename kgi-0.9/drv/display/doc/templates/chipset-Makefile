@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------------
+#	##VENDOR## chipset Makefile
+# -----------------------------------------------------------------------------
+
+OBJECTS = ##meta##.o
+
+##meta##.o:	##meta##-meta.o ##meta##-bind.o ../IBM/VGA-text-meta.o
+
+all.entry: $(OBJECTS)
+
+ifeq ($(CONFIG_CHIPSET_VENDOR),##VENDOR##)
+default.entry: $(CONFIG_CHIPSET_MODEL).o
+else
+default.entry:
+endif

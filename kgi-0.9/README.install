@@ -1,0 +1,360 @@
+0)	Still to do
+1)	Changes since last version
+2)	Installation instructions
+3)	Known bugs
+
+0)	TO-DO
+============
+
+	I will address the problems below in the order they are mentioned.
+	However, if you spot an area where you think you may help, please
+	don't hesitate to contribute (the /dev/vcs emulator might be a
+	simple but useful project)
+
+	- finish TI ramdac driver	
+	- enable Permedia2 accelerator
+		- solve issue of drivers using wait-queues
+	- test virtualization of Permedia2 accelerator
+	  like the test-{master/slave} demos
+	- accelerator performance tests
+	- make Permedia driver load as boot display substitute
+	- libGGI/XGGI port
+	- /dev/vcs emulator implementation
+
+
+1)	CHANGES
+===============
+
+20000418:
+	- it compiles again (except the X server), also in a separate
+	  build tree.
+	- moved source tree to SourceForge, this opportunity has been
+	  used to clean the tree, unify the build/configuration process
+	  and make some minor clean-ups
+	- added first version of a driver development SDK
+	- added TI TVP3026 ramdac driver (PLL still missing)
+
+20000222:
+	- merged jmt3 branch by Jon M. Taylor:
+		- added generic VGA driver framework by Jon M. Taylor
+		- added nVidia TNT2 driver framework by Jon M. Taylor
+		- added S3 ViRGE driver framework by Jos Hulzink
+		- added fixed clock driver
+	- merged Matrox Gx00 driver by Johan Karlberg:
+		- added Gx00 driver framework
+	- added XGGI framework, simplified build and patching process
+	- simplified build process for kernels
+
+19991208:
+	- installation bug: /dev/graphic needs to have minor 17 in order for
+	  the demos to work with the setup described below!
+	- added TO-DO section in README.install
+	- PERMEDIA-meta driver handles IRQs now
+	- first version of a fully featured accelerator implementation
+	  for the PERMEDIA chipset family. However, this needs some minor
+	  fixes and improvements before it can be tested but should give
+	  an idea how the driver side of acceleration may look like.
+	- the two points above made changes of the mode_set() functions
+	  necessary. In order to have understandable function names,
+	  mode_setup() in the driver API has been renamed to mode_enter()
+	  and the newly introduced function is mode_leave(). Better we
+	  change a handful drivers now.
+	- debugged accelerator mapping code. Ping-pong buffers work with
+	  a primitive debugging accelerator now.
+	- fixed bug 13) (pci arguments required, otherwise page-fault of
+	  insmod)
+	- null displays (CONFIG_KGI_DPY_NULL) added. If you enable this 
+	  feature, KGI will register dummy display drivers at boot so that 
+	  open() on /dev/tty will not fail. This is only useful if you
+	  want to use KGI's multi-head capabilities with XFree86:
+	  Plug in two keyboards and enable null displays. Then
+	  start the first server on the first display using VT /dev/tty7
+	  (e.g. you can do this via XDM) and the second server on the second
+	  display using VT /dev/tty17 (via XDM).
+	
+19991108:
+	- added Permedia2v ramdac and clock driver
+	- attribute mask ordering has changed to allow better attribute string
+	  sharing. You have to recompile everything!
+	- added patches for 2.2.13 kernel.
+	- some of my test programs have been added to illustrate KGI-0.9
+	  application/library coding.
+
+19991017:
+	- the Permedia2 driver is semi-working now
+	- debugged /dev/graphic mapper. You can now actually talk to the
+	  a Permedia2 frame-buffer
+	- module binding added
+	- cleanup of the module configuration/linking process
+
+19990727:
+	- overall name-space cleanup. The system layer definition headers have
+	  been relocated as well.
+	- patches 2.2.0-2.2.10
+	- mouse support & 'midnight-commander leaves console blank' fixed.
+	- Unified Input Device layer support by Brian S. Julian
+	- keyboard and mouse detection fixes by Brian S. Julin
+	  (please report your experience!)
+	- OSF1 support and portability enhancements by Marcus Sundberg
+
+2)	INSTALLATION INSTRUCTIONS
+=================================
+
+NOTE	The installation instructions below assume the KGI-0.9 snapshot 
+NOTE	to reside in ~/kgi-0.9. If they do not, you have to substitute
+NOTE	this path with the real location on your system.
+
+2.1)	KGI enabled kernel installation
+---------------------------------------
+
+In order to use KGI, you have to build a kernel with support for KGI.
+This is done almost automatically for you if you follow the steps
+given below.
+
+2.1.0) Kernel Source Preparation
+
+	Get a fresh Linux source archive, and copy (or symlink) the
+	gzip'ed tar-archive to kgi-0.9/kgi/Linux/linux-v.e.r.tar.gz,
+	where v.e.r is the appropriate version information. Assuming
+	there is a 2.2.13 Linux kernel archive in the directory
+	~/Linux, you would do
+
+		cd ~/kgi-0.9/kgi/Linux
+		ln -sf ~/Linux/linux-2.2.13.tar.gz
+
+	Alternatively you may want to extract the sources in that 
+	directory and apply additional patches before you attempt 
+	to configure kgi-0.9. Please note that this may cause
+	the application of the KGI patch to fail, so I assume you 
+	know what you are doing.
+
+	NOTE	Kernel 2.2.8 should not be used due to
+	NOTE	a very bad bug in the disk buffer code!
+
+	NOTE	There is also a patch to work with the linux
+	NOTE	unified input drivers. First apply the patch
+	NOTE	that may be found at
+	NOTE	ftp://atrey.karlin.mff.cuni.cz/pub/local/vojtech/input/
+	NOTE	to your fresh kernel source.
+	NOTE
+	NOTE	2.2.7-input-23 and kernel 2.2.7
+	NOTE	2.3.0-input-26 and kernel 2.3.0
+	NOTE	2.3.2-input-29 and kernel 2.3.2
+
+2.1.1) KGI-0.9 configuration
+
+	Having prepared the Linux kernel sources, you have to configure 
+	the KGI package. Simply do
+
+		cd ~/kgi-0.9
+		./configure
+
+	You may build the KGI package in a separate directory tree,
+	e.g. ~/build. If you want do that, simply make this your
+	working directory and execute the kgi-0.9/configure script:
+
+		cd ~/kgi-0.9-build
+		~/kgi-0.9/configure
+
+	This configures the KGI package, patches the sources if not
+	already done and sets a working standard configuration for 
+	the new kernel. If you have to customize your kernel 
+	configuration, follow the instructions in 
+	file:~/kgi-0.9-build/kgi/Linux/linux/README. For instance you might
+	want to do 
+
+		cd ~/kgi-0.9-build/kgi/Linux/linux
+		make menuconfig
+
+	Note that loading a saved configuration from a standard
+	kernel might override the CONFIG_VT option to be set.
+	Please make sure CONFIG_KGI is enabled and CONFIG_VT is
+	disabled. The KGI patches replace the virtual terminal
+	code completely, so you must not enable CONFIG_VT because
+	otherwise the kernel compilation step below will fail.
+
+2.1.2) Kernel compilation & Installation
+
+	If you finished to configure your kernel you are prepared
+	to build, install and boot the new kernel with KGI support.
+
+	To build the kernel, you have to compile the kernel image 
+	and the modules by executing the commands
+	
+		cd ~/kgi-0.9-build/kgi/Linux 
+		make all
+
+	To activate the KGI changes to the kernel on your system
+	you need to boot the new kernel. There are several methods
+	to do this as described in file:~/kgi-0.9/kgi/Linux/linux/README.
+
+	Installing the just compiled kernel requires superuser (root)
+	rights, so you have to aquire these e.g. with the 'su' command.
+	Assuming you would like to boot the KGI kernel from your
+	hard-disk using lilo, you have to add an appropriate
+	entry to /etc/lilo.conf for the to-be-installed
+	/vmlinuz kernel image, e.g. add a section like
+
+		# KGI kernel
+		image=/vmlinuz
+			label=KGI
+			read-only
+
+		# old kernel
+		image=/vmlinuz.old
+			label=old
+			read-only
+
+	The second image allows you to boot the previously installed
+	/vmlinuz kernel, in case anything goes wrong. Your original
+	kernel usually resides in /boot and will be available too.
+	Now install the kernel image and the modules by
+
+		make modules_install
+		make zlilo
+
+	If the last command fails because the kernel image is too
+	big, try
+
+		make bzlilo
+
+	to install the kernel.
+
+2.1.3) Booting the KGI kernel
+
+	If everything went well, lilo will be run as the last command
+	and it should tell you that a KGI and a old option
+	(among others) have been added to the lilo boot menu.
+	Now you can reboot the machine to activate the changes.
+	Though X should start up as usual you might want to set
+	the default runlevel such that only multiuser and network
+	are enabled (in file /etc/inittab, entry initdefault).
+	To reboot, press CTRL-ALT-DEL at the console or execute
+
+		reboot
+
+	as root and don't forget to select the KGI kernel at the
+	lilo prompt.
+
+
+2.2) Multi-head setups with the KGI enabled kernel
+-------------------------------------------------
+
+If you followed the instructions in the previous section you should
+have a text mode console system now that behaves just as the 'normal'
+linux console system except for a non-blinking white cursor.
+There might be some limitations due to features not yet implemented,
+please see the KNOWN BUGS section at the end of this document for
+details.
+
+However the KGI modifications allow you to setup true multi-head
+systems, so that two (or more) people can work on the same machine.
+Though native video drivers and a adopted X server -- which are
+currently under development -- are required to fully exploit this
+feature of KGI, you might have some success in getting true
+multi-head to work with the KGI kernel patches and XFree-4.0 servers
+only.
+
+!!!!!	EXPLAIN HOW TO GET XFREE-4.0 RUNNING TRUE MULTI-HEAD   !!!!!
+
+2.3) Display driver installation
+--------------------------------
+
+This release includes a first (somewhat-working) KGI-0.9 driver for
+the 3Dlabs PERMEDIA2 chipset. This is not yet a perfectly working
+driver, but it gives you an impression how the drivers will be
+organized. See the driver/graphic/*/3Dlabs subdirectories.
+If you want to test this driver, follow the instructions below.
+Please report your experience to seeger@physik.tu-chemnitz.de.
+
+1)	After booting the kernel above, go to driver/graphic and execute
+
+		make clean; make
+
+2)	This results in two modules that need to be inserted into the kernel:
+
+		insmod system/Linux/kgim-0.9.o
+		insmod modules/ELSA/WinnerOffice2000.o pcibus=1 pcidev=0 display=1
+
+	Substitute the correct pcibus and pcidev values for your installation.
+	NOTE: You have to give the pcibus and pcidev arguments otherwise you
+		will trigger a known bug and module loading will not work.
+
+	Then you can start playing with the /dev/graphic mapper.
+
+NOTE:	The driver works only with a Permedia2, TVP4020 or TVP4020A.
+	It does especially not work with a Permedia2v.
+	If you need a Permedia2v driver, edit kgi-0.9/driver/graphic/.config
+	and set
+		CONFIG_BOARD_VENDOR=3Dlabs
+		CONFIG_BOARD_MODEL=Permedia2v
+	then proceed with step 1).
+
+NOTE:	The board needs to be the second VGA board installed (not the boot-VGA).
+
+NOTE:	You have to create a graphic special file with the command
+
+		mknod /dev/graphic c 60 17
+
+	that gets mapped on display 1.
+
+
+3) KNOWN BUGS/MISSING FEATURES
+==============================
+
+0)	some keyboards and some PS/2 mice might not be detected properly.
+	-- The keyboard/ps2aux port driver (linux/driver/kgi/kbd-i386.c)
+	   tries to auto-detect what device (keyboard or console) is connected
+	   to the pointer/keyboard port. It does this by generating a
+	    signature from the device's answer to a reset.
+
+	    Thanks to Brian S. Julin this should be fixed now. However,
+	    some Laptop keyboards may still have problems, so please export
+	    your experience.
+
+1)	console LED's and keyboard bell don't work
+	-- missing feature
+
+5)	The cursor is blinking too fast and the white block is 'annoying'.
+	-- This is twofold. 'blinking too fast' refers to the characters
+	   under the cursor. This is hardware generated and the 
+	   blink-frequency is hardwired to the vertical refresh rate, 
+	   so it cannot be changed.
+	-- The white block is due to the KGI boot display driver using
+	   a software cursor in order to avoid touching the display 
+	   hardware registers. Blinking would require to add some 
+	   timer handling to drivers/kgi/dpy-i386.c. It's not annoying
+	   to me, so if you don't like it, feel free to implement this
+	   missing feature and send patches to seeger@physik.tu-chemnitz.de.
+	   
+6)	The console scroll-back buffer size should be an config option
+	-- this is a missing feature.
+
+7)	On some machines, it does not reboot properly.
+	Also, CTRL-ALT-DEL doesn't work at early boot time. (compared to
+	original kernels.)
+	-- The first is a bug, the second may be a missing feature.
+
+8)	The keymap setting code needs to be enhanced to handle
+	dynamic resizing of the keymap->keysym array.
+
+9)	Binding function key strings doesn't work yet.
+
+10)	configure fails on some architectures
+	-- bug
+
+11)	When the X-server quits for the first time, you won't get back 
+	to the console you expect. After that it works.
+	-- bug
+
+12)	GPM and selection doesn't work.
+	-- missing feature. There is no GPM support yet, also a /dev/vcs
+	   emulation isn't implemented yet. Your help is welcome.
+
+14)	The keyboard driver does not activate AT scan-code conversion
+	on pointer port.
+	-- bug. This has been reported but I had no time to verify 
+	   the validity of this report.
+
+15)	Check if ANSI-CPP can handle {KRN,LIB,APP}_DEBUG macros in
+	debug.h

@@ -1,0 +1,186 @@
+--- linux-2.2.7/drivers/char/Makefile	Fri Apr  2 08:27:32 1999
++++ linux/drivers/char/Makefile	Fri Apr  2 08:52:46 1999
+@@ -28,6 +28,92 @@
+ LX_OBJS += console.o selection.o
+ endif
+ 
++#	The various input devices are (to be) replaced by the KGI input layer
++ifndef CONFIG_KGI
++	ifndef CONFIG_SUN_KEYBOARD
++		ifdef CONFIG_VT
++			L_OBJS += keyboard.o
++		endif
++		ifneq ($(ARCH),m68k)
++			L_OBJS += pc_keyb.o defkeymap.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_ATIXL_BUSMOUSE),y)
++		L_OBJS += atixlmouse.o
++	else
++		ifeq ($(CONFIG_ATIXL_BUSMOUSE),m)
++			M_OBJS += atixlmouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_BUSMOUSE),y)
++		L_OBJS += busmouse.o
++	else
++		ifeq ($(CONFIG_BUSMOUSE),m)
++			M_OBJS += busmouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_JOYSTICK),y)
++		L_OBJS += joystick/js.o
++		SUB_DIRS += joystick
++		MOD_SUB_DIRS += joystick
++	else
++		ifeq ($(CONFIG_JOYSTICK),m)
++			MOD_SUB_DIRS += joystick
++		endif
++	endif
++
++	ifeq ($(CONFIG_MS_BUSMOUSE),y)
++		L_OBJS += msbusmouse.o
++	else
++		ifeq ($(CONFIG_MS_BUSMOUSE),m)
++			M_OBJS += msbusmouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_82C710_MOUSE),y)
++		L_OBJS += qpmouse.o
++	else
++		ifeq ($(CONFIG_82C710_MOUSE),m)
++			M_OBJS += qpmouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_AMIGAMOUSE),y)
++		L_OBJS += amigamouse.o
++	else
++		ifeq ($(CONFIG_AMIGAMOUSE),m)
++			M_OBJS += amigamouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_ATARIMOUSE),y)
++		L_OBJS += atarimouse.o
++	else
++		ifeq ($(CONFIG_ATARIMOUSE),m)
++			M_OBJS += atarimouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_ADBMOUSE),y)
++		L_OBJS += adbmouse.o
++	else
++		ifeq ($(CONFIG_ADBMOUSE),m)
++			M_OBJS += adbmouse.o
++		endif
++	endif
++
++	ifeq ($(CONFIG_PC110_PAD),y)
++		L_OBJS += pc110pad.o
++	else
++		ifeq ($(CONFIG_PC110_PAD),m)
++			M_OBJS += pc110pad.o
++		endif
++	endif
++endif
++
+ ifeq ($(CONFIG_SERIAL),y)
+   ifeq ($(CONFIG_SUN_SERIAL),)
+     ifeq ($(CONFIG_SGI_SERIAL),)
+@@ -52,29 +138,9 @@
+   endif
+ endif
+ 
+-ifndef CONFIG_DECSTATION
+-ifndef CONFIG_BAGET_MIPS
+-ifndef CONFIG_SUN_KEYBOARD
+-ifdef CONFIG_VT
+-LX_OBJS += keyboard.o
+-endif
+- ifneq ($(ARCH),m68k)
+-  ifneq ($(ARCH),s390)
+-   L_OBJS += pc_keyb.o defkeymap.o
+- endif
+- endif
+-else
+-ifdef CONFIG_PCI
+-L_OBJS += defkeymap.o
+-LX_OBJS += keyboard.o
+-endif
+-endif
+-
+ ifdef CONFIG_MAGIC_SYSRQ
+ LX_OBJS += sysrq.o
+ endif
+-endif
+-endif
+ 
+ ifeq ($(CONFIG_ATARI_DSP56K),y)
+ L_OBJS += dsp56k.o
+@@ -206,22 +272,6 @@
+   endif
+ endif
+ 
+-ifeq ($(CONFIG_ATIXL_BUSMOUSE),y)
+-L_OBJS += atixlmouse.o
+-else
+-  ifeq ($(CONFIG_ATIXL_BUSMOUSE),m)
+-  M_OBJS += atixlmouse.o
+-  endif
+-endif
+-
+-ifeq ($(CONFIG_BUSMOUSE),y)
+-L_OBJS += busmouse.o
+-else
+-  ifeq ($(CONFIG_BUSMOUSE),m)
+-  M_OBJS += busmouse.o
+-  endif
+-endif
+-
+ ifeq ($(CONFIG_PRINTER),y)
+ L_OBJS += lp.o
+ else
+@@ -230,37 +280,11 @@
+   endif
+ endif
+ 
+-ifeq ($(CONFIG_JOYSTICK),y)
+-L_OBJS += joystick/js.o
+-SUB_DIRS += joystick
+-MOD_SUB_DIRS += joystick
+-else
+-  ifeq ($(CONFIG_JOYSTICK),m)
+-  MOD_SUB_DIRS += joystick
+-  endif
+-endif
+-
+ ifeq ($(CONFIG_DTLK),y)
+ L_OBJS += dtlk.o
+ else
+   ifeq ($(CONFIG_DTLK),m)
+   M_OBJS += dtlk.o
+-  endif
+-endif
+-
+-ifeq ($(CONFIG_MS_BUSMOUSE),y)
+-L_OBJS += msbusmouse.o
+-else
+-  ifeq ($(CONFIG_MS_BUSMOUSE),m)
+-  M_OBJS += msbusmouse.o
+-  endif
+-endif
+-
+-ifeq ($(CONFIG_82C710_MOUSE),y)
+-L_OBJS += qpmouse.o
+-else
+-  ifeq ($(CONFIG_82C710_MOUSE),m)
+-  M_OBJS += qpmouse.o
+   endif
+ endif
+ 

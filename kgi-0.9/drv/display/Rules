@@ -1,0 +1,31 @@
+# -------------------------------------------------------------------------
+#	KGI display driver specific rules
+# -------------------------------------------------------------------------
+#	We choose to collect all subsystem specific implicit rules here
+#	so that all subdirectories can share the same .config and 
+#	GNUmakefile files.
+#
+
+#	generate driver object from metalanguage and bindings.
+#
+%.o:	%-meta.o
+	$(LD_BIN) -o $@ -r $^
+
+CC_INCLUDE_PATH += $(KGIM_INCLUDE)
+
+#	convert spec to object file using board-bind.c
+#
+%.o: ../board-bind.c %.spec
+	$(CC) $(CFLAGS) $(CC_INCLUDE_DIRS) -DBOARD_SPEC=\"$(DIR_SOURCE)/$*.spec\" -c $< -o $@
+
+#	convert fixed clock spec to object file using fixed-bind.c
+#
+%.o: ../fixed-bind.c %.spec
+	$(CC) $(CFLAGS) $(CC_INCLUDE_DIRS) -DFIXED_CLOCK_SPEC=\"$(DIR_SOURCE)/$*.spec\" -c $< -o $@
+
+#	convert monitor spec to object file using monitor-bind.c
+#
+%.o: ../monitor-bind.c %.spec
+	$(CC) $(CFLAGS) $(CC_INCLUDE_DIRS) -DMONITOR_SPEC=\"$(DIR_SOURCE)/$*.spec\" -c $< -o $@
+
+# -------------------------------------------------------------------------

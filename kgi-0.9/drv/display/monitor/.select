@@ -1,0 +1,29 @@
+#!/bin/sh
+
+VENDORS=`echo */vendor | sed "s%/vendor%%g"`
+
+if [ -x `which dialog` ]
+then
+	(
+	echo "dialog --menu \"Please select a monitor specification:\" 23 70 16 \\"
+	for vendor in $VENDORS; do
+		VENDOR_NAME=`cat $vendor/vendor`
+		for model in $vendor/*.spec; do
+			MODEL_NAME=`grep Model $model`
+			MODEL_NAME=`echo $MODEL_NAME | sed -e "s/Model(\"//" -e "s/\")//"`
+			echo "$model \"$MODEL_NAME\" \\"
+		done
+	done 
+	echo
+	) > $DIR_BUILD/.select-monitor
+	(/bin/sh $DIR_BUILD/.select-monitor) 2> $DIR_BUILD/.monitor
+	MONITOR_SPEC=`cat $DIR_BUILD/.monitor`
+	if [ "x$MONITOR_SPEC" = "x" ]
+	then
+		rm -f monitor-bind.spec
+	else
+		ln -sf $DIR_SOURCE/`cat $DIR_BUILD/.monitor` $DIR_BUILD/monitor-bind.spec
+	fi
+else 
+	ln -sf $DIR_SOURCE/Standard/VGA.spec $DIR_BUILD/monitor-bind.spec
+fi
