@@ -5,6 +5,6 @@ Begin
 	Model("VGA")
 	Driver(chipset,	IBM/VGA, vga_chipset)
 	Driver(ramdac,	IBM/VGA, vga_ramdac)
-	Driver(clock,	Fixed/VGA, fixed_clock)
+	Driver(clock,	IBM/VGA, fixed_clock)
 End
 #endif
