@@ -10,11 +10,14 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: IDAC-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
-#define	MAINTAINER	Jos_Hulzink
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
-#define	DEBUG_LEVEL	1
+#define	MAINTAINER	Steffen_Seeger
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.0 $"
+#define	DEBUG_LEVEL	255
 
 #include <kgi/module.h>
 #include "clock/S3/IDAC-bind.h"
@@ -40,10 +43,10 @@ kgi_error_t idac_clock_init_module(idac_clock_t *idac, idac_clock_io_t *idac_io,
 	idac->pll.fvco.max = KGIM_DEFAULT(options->clock->fvco_max, 270000000);
 	idac->pll.p.min = 0;
 	idac->pll.p.max = 3;		/* post-VCO divider range	*/
-	idac->pll.mul.min = 2;
-	idac->pll.mul.max = 127;	/* dividend range		*/
-	idac->pll.div.min = 2;
-	idac->pll.div.max = 31;		/* divisor range		*/
+	idac->pll.mul.min = 3;
+	idac->pll.mul.max = 129;	/* dividend range		*/
+	idac->pll.div.min = 3;
+	idac->pll.div.max = 33;		/* divisor range		*/
 
 	KRN_NOTICE("%s %s driver " KGIM_CLOCK_DRIVER, 
 		idac->pll.clock.vendor, idac->pll.clock.model);

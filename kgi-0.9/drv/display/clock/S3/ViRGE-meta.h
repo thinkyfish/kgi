@@ -11,6 +11,9 @@
 **	MAINTAINER	Jon_Taylor
 **
 **	$Log: ViRGE-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _clock_S3_ViRGE_meta_h
 #define	_clock_S3_ViRGE_meta_h
@@ -34,10 +37,10 @@ typedef struct
 {
 	pll_clock_t	pll;
 
-/*	kgi_u8_t	PixelClockC1;
-**	kgi_u8_t	PixelClockC2;
-**	kgi_u8_t	PixelClockC3;
-*/
+//	kgi_u8_t	PixelClockC1;
+//	kgi_u8_t	PixelClockC2;
+//	kgi_u8_t	PixelClockC3;
+
 } virge_clock_t;
 
 KGIM_META_INIT_FN(virge_clock)

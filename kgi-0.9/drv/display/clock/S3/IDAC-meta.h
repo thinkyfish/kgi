@@ -11,8 +11,10 @@
 **	MAINTAINER	Jos_Hulzink
 **
 **	$Log: IDAC-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
-
 #ifndef _clock_S3_IDAC_meta_h
 #define	_clock_S3_IDAC_meta_h
 
@@ -23,7 +25,7 @@ typedef pll_clock_io_t idac_clock_io_t;
 #define	IDAC_DAC_OUT8(ctx, val, reg)	PLL_DAC_OUT8(ctx, val, reg)
 #define	IDAC_DAC_IN8(ctx, reg)		PLL_DAC_IN8(ctx, reg)
 #define	IDAC_CLK_OUT8(ctx, val, reg)	PLL_CLK_OUT8(ctx, val, reg)
-#define	IDAC_CLK_IN8(ctx, val, reg)	PLL_CLK_IN8(ctx, reg)
+#define	IDAC_CLK_IN8(ctx, reg)		PLL_CLK_IN8(ctx, reg)
 
 typedef struct
 {

@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------------
-**	S3 IDAC PLL meta language definition
+**	S3 IDAC PLL meta language
 ** -----------------------------------------------------------------------------
 **	Copyright (C)	1999-2000	Jos Hulzink
 **
@@ -10,26 +10,27 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: IDAC-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
-#define	MAINTAINER	Jos_Hulzink	
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
+#define	MAINTAINER	Steffen_Seeger
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.4 $"
+#define DEBUG_LEVEL 255
 
 #include <kgi/module.h>
-
 #include "clock/S3/IDAC-meta.h"
 
 kgi_error_t idac_clock_init(idac_clock_t *idac, idac_clock_io_t *idac_io,
 	const kgim_options_t *options)
 {
-#warning save initial state here!
 	return KGI_EOK;
 }
 
 void idac_clock_done(idac_clock_t *idac, idac_clock_io_t *idac_io,
 	const kgim_options_t *options)
 {
-#warning restore initial state here!
 }
 
 void idac_clock_mode_enter(idac_clock_t *idac, idac_clock_io_t *idac_io,
@@ -45,14 +46,12 @@ void idac_clock_mode_enter(idac_clock_t *idac, idac_clock_io_t *idac_io,
 	KRN_DEBUG (1,"S3 IDAC mode setup: m: %d, n: %d, r: %d",
 			idac_mode->pll.mul, idac_mode->pll.div,
 			idac_mode->pll.p);
-
-#warning use defines here!
-	IDAC_CLK_OUT8(idac_io, 3, 0); /* Enable programmable clock */
-	IDAC_CLK_OUT8(idac_io, (idac_mode->pll.p << 5) |
-		(idac_mode->pll.div-2), 3);
-	IDAC_CLK_OUT8(idac_io, (idac_mode->pll.mul-2), 4);
-	IDAC_CLK_OUT8(idac_io, 0, 5); /* Normal clock operation (no testing)*/
-	IDAC_CLK_OUT8(idac_io, 2, 6); /* Load new DCLK value */
+	
+	IDAC_CLK_OUT8(idac_io,3,0); /* Enable programmable clock */
+	IDAC_CLK_OUT8(idac_io,(idac_mode->pll.p<<5) | (idac_mode->pll.div-2),3);
+	IDAC_CLK_OUT8(idac_io,(idac_mode->pll.mul-2),4);
+	IDAC_CLK_OUT8(idac_io,0,5); /* Normal clock operation (no testing)*/
+	IDAC_CLK_OUT8(idac_io,2,6); /* Load new DCLK value */
 }
 
 void idac_clock_mode_leave(idac_clock_t *idac, idac_clock_io_t *idac_io,

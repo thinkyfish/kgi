@@ -8,9 +8,12 @@
 **	with this software for details of these terms and conditions.
 **
 ** -----------------------------------------------------------------------------
-**	MAINTAINER	Jos_Hulzink
+**	MAINTAINER	Steffen_Seeger
 **
 **	$Log: IDAC-bind.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _clock_S3_IDAC_bind_h
 #define	_clock_S3_IDAC_bind_h
