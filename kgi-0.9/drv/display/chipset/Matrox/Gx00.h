@@ -12,6 +12,9 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00.h,v $
+**	Revision 1.2  2001/08/31 23:56:32  ortalo
+**	/tmp/cvs46Wo9B
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -88,7 +91,7 @@
 #	define G200_O1_MEMCONFIG_SHIFT	10
 #	define G200_O1_MEMCONFIG_MASK	(0x07 << G200_O1_MEMCONFIG_SHIFT)
 #	define G200_O1_RFHCNT_SHIFT	15
-#	define G200_O1_RFHCNT_MASK	(0x2F << 200_O1_RFHCNT_SHIFT)
+#	define G200_O1_RFHCNT_MASK	(0x3F << G200_O1_RFHCNT_SHIFT)
 #	define G200_O1_ENHMEMACC	(0x01 << 22)
 
 /* G400 ONLY */
@@ -96,9 +99,8 @@
 #	define G400_O1_PLLSEL		(0x01 << 6)
 #	define G400_O1_MEMCONFIG_SHIFT	10
 #	define G400_O1_MEMCONFIG_MASK	(0x07 << G400_O1_MEMCONFIG_SHIFT)
-#	define G400_O1_HARDPWMSK	(0x01 << 14)
 #	define G400_O1_RFHCNT_SHIFT	15
-#	define G400_O1_RFHCNT_MASK	(0x2F << G400_O1_RFHCNT_SHIFT)
+#	define G400_O1_RFHCNT_MASK	(0x3F << G400_O1_RFHCNT_SHIFT)
 #	define G400_O1_ENHMEMACC	(0x01 << 22)
 #	define G400_O1_NOHIREQ		(0x01 << 28)
 
@@ -703,6 +705,7 @@
 #	define Gx00_MCTLWTST_BPLDELAY_MASK	(0x07 << Gx00_MCTLWTST_BPLDELAY_SHIFT)
 
 /* G400 specific (maybe good for G200?) */
+#define G200_MCTLWTST_RESET_VALUE 0x84A49921
 #define G400_MCTLWTST_RESET_VALUE 0x84A49921
 
 #define ZORG					(MGAG_DWGREG0+0x0C)	/* WO */

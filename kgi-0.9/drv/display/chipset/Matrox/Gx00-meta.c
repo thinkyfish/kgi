@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-meta.c,v $
+**	Revision 1.3  2001/08/31 23:56:32  ortalo
+**	/tmp/cvs46Wo9B
+**	
 **	Revision 1.2  2000/09/21 09:57:15  seeger_s
 **	- name space cleanup: E() -> KGI_ERRNO()
 **	
@@ -20,7 +23,7 @@
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -706,6 +709,7 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   ** Then, we select the PLLs. According to the documentation, the
   ** following steps will set:
   ** - G400: MCLK = 150MHz, GCLK = 90MHz, WCLK = 100, PIXCLK = 25.175MHz
+  ** - G200: MCLK = 143MHz, GCLK = 71.5MHz, PIXCLK = 25.175MHz
   ** - Mystique: MCLK = 66MHz, GCLK = 44MHz, PIXCLK = 25.175MHz
   ** NB: The 6 following steps must be done one after the other. They
   ** cannot be combined (according to the documentation).
@@ -723,7 +727,13 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 		   | M1x64_O1_SYSCLKSEL_SYS,
 		   pcidev + MGAG_PCI_OPTION1);
     }
-  /* TODO: G200 specific case */
+  else if (mgag->flags & MGAG_CF_G200)
+    {
+      /* Select the system PLL */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_SYSCLKSEL_MASK)
+		   | G200_O1_SYSCLKSEL_SYS,
+		   pcidev + MGAG_PCI_OPTION1);      
+    }
   else if (mgag->flags & MGAG_CF_G400)
     {
       /* Select the system PLL: MCLK, GCLK, WCLK */
@@ -772,17 +782,35 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 		     | MGAG_O1_HARDPWMSK, pcidev + MGAG_PCI_OPTION1);
       }
     }
-  else if (mgag->flags & MGAG_CF_G400)
+  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
     {
-      /* (Re)Writes the reset value into mem. control wait state (OK?) */
-      MGAG_GC_OUT32(mgag_io, G400_MCTLWTST_RESET_VALUE, MCTLWTST);
+      if (mgag->flags & MGAG_CF_G200)
+	{
+	  /* (Re)Writes the reset value into mem. control wait state (OK?) */
+	  /* TODO: Find a good reset value for MCTLWTST */
+	  MGAG_GC_OUT32(mgag_io, G200_MCTLWTST_RESET_VALUE, MCTLWTST);
 #warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
-      /* We setup things for 16Mo SDRAM memory... */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_MEMCONFIG_MASK)
-		   | (0x0 << G400_O1_MEMCONFIG_SHIFT),
-		   pcidev + MGAG_PCI_OPTION1);
-      pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_HARDPWMSK,
-		   pcidev + MGAG_PCI_OPTION1);
+	  /* TODO: We setup things for 8Mo SDRAM memory with 1 bank. Check! */
+	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_MEMCONFIG_MASK)
+		       | (0x0 << G200_O1_MEMCONFIG_SHIFT),
+		       pcidev + MGAG_PCI_OPTION1);
+	  /* Not indicated in the doc - but we do it anyway */
+	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
+		       pcidev + MGAG_PCI_OPTION1);
+	  /* TODO: We should set the mbuftype of the OPTION2 reg ? */
+	}
+      else if (mgag->flags & MGAG_CF_G400)
+	{
+	  /* (Re)Writes the reset value into mem. control wait state (OK?) */
+	  MGAG_GC_OUT32(mgag_io, G400_MCTLWTST_RESET_VALUE, MCTLWTST);
+#warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
+	  /* We setup things for 16Mo SDRAM memory... */
+	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_MEMCONFIG_MASK)
+		       | (0x0 << G400_O1_MEMCONFIG_SHIFT),
+		       pcidev + MGAG_PCI_OPTION1);
+	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
+		       pcidev + MGAG_PCI_OPTION1);
+	}
       /* Set the OPCODe of MEMRDBK for normal operation (0x0) */
       MGAG_GC_OUT32(mgag_io,
 		    (MGAG_GC_IN32(mgag_io, MEMRDBK) & ~MRSOPCOD_MASK)
@@ -824,23 +852,30 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET | MACCESS_JEDECRST, MACCESS);
     }
-  else if (mgag->flags & MGAG_CF_G400)
+  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET, MACCESS);
     }
   /* Program the memory refresh cycle counter */
   if (mgag->flags & MGAG_CF_1x64)
     {
-      /* We use 0xF here as the refresh counter (like the BIOS) */
+      /* We use 0xF here as the refresh counter (like my BIOS) */
       pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~M1x64_O1_RFHCNT_MASK)
 		   | (0xF << M1x64_O1_RFHCNT_SHIFT),
+		   pcidev + MGAG_PCI_OPTION1);
+    }
+  else if (mgag->flags & MGAG_CF_G200)
+    {
+      /* TODO: Check the value to use here: 1 or 8 or ? */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_RFHCNT_MASK)
+		   | (0x8 << G200_O1_RFHCNT_SHIFT),
 		   pcidev + MGAG_PCI_OPTION1);
     }
   else if (mgag->flags & MGAG_CF_G400)
     {
       /* TODO: Check the value to use here: 1 or 8 or ? */
       pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_RFHCNT_MASK)
-		   | (0x1 << G400_O1_RFHCNT_SHIFT),
+		   | (0x8 << G400_O1_RFHCNT_SHIFT),
 		   pcidev + MGAG_PCI_OPTION1);
     }
   /* On the 1x64, we also initialize the VGA frame buffer mask */
