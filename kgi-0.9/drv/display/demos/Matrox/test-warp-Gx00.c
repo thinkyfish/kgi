@@ -9,7 +9,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 90
+#define TEST_DURATION 30
 
 /*
 **	This is a little test program to test the accelerator
@@ -252,69 +252,35 @@ static kgi_u32_t dma_cmdlist[] =
 #endif
 };
 
-struct
-{
-  kgi_u32_t tag;
-  kgi_u32_t dma1;
-  kgi_u32_t pitch;
-  kgi_u32_t dstorg;
-  kgi_u32_t maccess;
-  kgi_u32_t cxbndry;
-  kgi_u32_t dma2;
-  kgi_u32_t ytop;
-  kgi_u32_t ybot;
-  kgi_u32_t plnwt;
-  kgi_u32_t zorg;
-} init_dma_cmd;
+typedef struct _color_s {
+  kgi_u8_t blue, green, red, alpha;
+} color_t;
 
-struct
-{
-  kgi_u32_t dma1;
-  kgi_u32_t fxbndry;
-  kgi_u32_t ydstlen;
-  kgi_u32_t fcol;
-  kgi_u32_t dwgctl; 
-} onerect_dma_cmd;
+typedef struct _vertex_s {
+  float x; /* screen coordinates */
+  float y;
+  float z; /* Z buffer depth, in 0.0 - 1.0 */
+  float rhw; /* 1/w (reciprocal of homogeneous w) */
+  color_t color; /* vertex color */
+  color_t specular; /* specular component. Alpha is fog factor */
+  float tu0; /* texture coordinate stage 0 */
+  float tv0;
+} vertex_t;
 
-kgi_u_t build_one_buffer(kgi_u8_t* buf, kgi_u_t buf_size,
-			 kgi_u_t xmin,kgi_u_t xmax,kgi_u_t ymin,kgi_u_t ymax,
-			 kgi_u_t* nrect)
-{
-  kgi_u_t cmdsize = sizeof(onerect_dma_cmd);
-  kgi_u_t remaining = buf_size;
+typedef struct _vertex2_s {
+  float x; /* screen coordinates */
+  float y;
+  float z; /* 0.0 - 1.0 */
+  float rhw; /* 1/w (reciprocal of homogeneous w) */
+  color_t color; /* vertex color */
+  color_t specular; /* specular component. Alpha is fog factor */
+  float tu0; /* texture coordinate stage 0 */
+  float tv0;
+  float tu1; /* texture coordinate stage 1 */
+  float tv1;
+} vertex2_t;
 
-  if (remaining < sizeof(init_dma_cmd)) return;
-
-  memcpy(buf,&init_dma_cmd,sizeof(init_dma_cmd));
-  buf += sizeof(init_dma_cmd);
-  remaining -= sizeof(init_dma_cmd);
-
-  while (remaining > cmdsize)
-    {
-      kgi_u_t top,left,bottom,right;
-      kgi_u32_t color;
-      left = xmin + (rand() % (xmax - xmin));
-      right = left + (rand() % (xmax - left + 1)) + 1;
-      top = ymin + (rand() % (ymax - ymin));
-      bottom = top + (rand() % (ymax - top + 1)) + 1;
-      color = (random() & 0xFFFF);
-      color |= (color << 16);
-#if 0
-      printf("left=%i,right=%i,top=%i,bottom=%i color=%.8x\n",
-	     left,right,top,bottom,color);
-#endif
-
-      onerect_dma_cmd.fcol = color;
-      onerect_dma_cmd.fxbndry = left | (right << 16);
-      onerect_dma_cmd.ydstlen = (bottom - top) | (top << 16);
-
-      memcpy(buf,&onerect_dma_cmd,cmdsize);
-      buf += cmdsize;
-      remaining -= cmdsize;
-      (*nrect)++;
-    }
-  return (buf_size - remaining);
-}
+#define swap(x,y,type) { type tmp; tmp = (x); (x) = (y); (y) = tmp; }
 
 /*
 ** DMA buffer size (do *not* change for the moment)
@@ -328,11 +294,13 @@ int main(int argc, char *argv[])
 	kgi_image_mode_t mode;
 	kgi_u_t	i, x, y;
 	kgi_u16_t *fb;
-	kgi_u8_t *accel, *ping, *pong;
+	kgi_u8_t *accel, *ping, *pong, *warp, *wping, *wpong, *ptr;
 	kgi_u_t no = 0;
 	struct timeval end_time;
 	struct timeval current_time;
 	float actual_duration;
+	vertex_t avertex;
+	kgi_u32_t warp_tag;
 
 	kgiInit(&ctx, "testKGI", &testKGI_version);
 
@@ -371,24 +339,17 @@ int main(int argc, char *argv[])
 	memset(fb, 0xff, 0x10000);
 
 	{
-	  int h, hend = 700 + 1000 * (random() & 15);
+	  int h, hend = 70 + 20 * (random() & 15);
 
-	  for (y = 200; y < 600; y++) 
-	    for (x = 200; x < 450; x++) {
+	  for (y = 0; y < 768; y++) 
+	    for (x = 0; x < 1024; x++) {
 	      
 	      fb[y*mode.virt.x + x] =
-		0x7000 | (y * 16) | ((x + i) & 15);
+		// 0x7000 | (y * 16) | ((x + i) & 15);
+		0 + x & 7;
 	      for (h = 0; h < hend; h++);
 	    }
 	}
-
-#if 0
-	/* test: try to map the iload aread */
-	mmap(NULL, (2 * 1024 * 1024),
-	     PROT_READ, MAP_SHARED,
-	     ctx.mapper.fd, 
-	     GRAPH_MMAP_TYPE_MMIO | (1 << GRAPH_MMAP_RESOURCE_SHIFT));
-#endif
 
 	/*
 	** Then, we map the accelerator
@@ -397,9 +358,8 @@ int main(int argc, char *argv[])
 		     PROT_READ | PROT_WRITE, MAP_SHARED,
 		     ctx.mapper.fd,
 		     GRAPH_MMAP_TYPE_ACCEL
-		     | 0x00001000 /* 12 LSBs must be 0 */
+		     | 0x00001000
 		     | (2 << GRAPH_MMAP_RESOURCE_SHIFT));
-
 	if (((int)accel) <= 0) {
 	  printf("ACCEL mmap() failed (ret = %.8x)\n", accel);
 	  exit(1);
@@ -407,72 +367,73 @@ int main(int argc, char *argv[])
 	  printf("ACCEL mmap() succeeded (ret = %.8x)\n", accel);
 	}
 	/* We have two buffers */
+#if 0
 	ping = accel;
 	pong = accel + BUFFER_SIZE;
-
-	/* Try 2 * 256 rectangles - 1 rect per buffer */
-	for (i = 0; i < 255; i++)
-	  {
-	    dma_cmdlist[12] = 0x03800040;
-	    dma_cmdlist[13] = 0x01800080;
-	    dma_cmdlist[14] = i | (i<<8) | (i<<16) | (i<<24);
-	    memcpy(ping, dma_cmdlist, dma_size);
-	    (*(pong + dma_size)) = 0x15; /* Tells size */
-	    dma_cmdlist[12] = 0x02000090;
-	    dma_cmdlist[13] = 0x01000100;
-	    dma_cmdlist[14] = (255 - i) | ((255 - i)<<8)
-	      | ((255 - i)<<16) | ((255 - i)<<24);
-	    memcpy(pong, dma_cmdlist, dma_size);
-	    (*(ping + dma_size)) = 0x15; /* Tells size */
-	  }
-
-#if 1
-	/*
-	** Now we try several rects per buffer a hundred times
-	*/
-	/* First inits the cmd structs */
-	init_dma_cmd.tag = MGAG_ACCEL_TAG_DRAWING_ENGINE;
-#if MYSTIQUE
-	init_dma_cmd.dma1 = MGA_DMA4(PITCH,YDSTORG,MACCESS,CXBNDRY);
-#else
-	init_dma_cmd.dma1 = MGA_DMA4(PITCH,DSTORG,MACCESS,CXBNDRY);
 #endif
-	init_dma_cmd.pitch = 0x00000400; /* PITCH: ylin=0, iy=1024 */
-	init_dma_cmd.dstorg = 0x00000000; /* DSTORG */
-	init_dma_cmd.maccess = 0x40000001; /* MACCESS */
-	init_dma_cmd.cxbndry = 0x0FFF0000, /* CXBNDRY */
-	init_dma_cmd.dma2 = MGA_DMA4(YTOP,YBOT,PLNWT,ZORG);
-	init_dma_cmd.ytop = 0x00000000; /* YTOP */
-	init_dma_cmd.ybot = 0x00FFFFFF; /* YBOT */
-	init_dma_cmd.plnwt = 0xFFFFFFFF; /* PLNWT */
-	init_dma_cmd.zorg = 0x00080000, /* ZORG (not used normally)*/
-	onerect_dma_cmd.dma1 = MGA_DMA4(FXBNDRY,YDSTLEN,FCOL,DWGCTL|ACCEL_GO);
-	onerect_dma_cmd.dwgctl = 0xC40C7814; /* DWGCTL (via 0x1D00) */
-	/* or   0xC00C7814, * DWGCTL (via 0x1D00) */  
+
+	//	{ int cnt = 1000000000; while (cnt--) { int i; i++; }; }
+
+	wping = accel;
+	wpong = accel + BUFFER_SIZE;
+
+	// { int cnt = 100000; while (cnt--) { int i; i++; }; }
 
 	gettimeofday(&end_time,NULL);
 	end_time.tv_sec += TEST_DURATION;
 
 	do
 	{
-	  kgi_u_t size;
-	  size = build_one_buffer(ping, BUFFER_SIZE,
-				  20,1004,20,748,
-				  &no);
-	  /*
-	    printf("%i rectangles (ping=%.8x, size=%i)\n",
-	    no,ping,size);
-	  */
-	  (*(pong + size)) = 0x15; /* Tells size */
+#if 1
+	  dma_cmdlist[12] = 0x03800040;
+	  dma_cmdlist[13] = 0x01800080;
+	  i = 3;
+	  dma_cmdlist[14] = i | (i<<8) | (i<<16) | (i<<24);
+	  memcpy(wping, dma_cmdlist, dma_size);
+	  (*(wpong + dma_size)) = 0x15; /* Tells size */
+	  swap(wping,wpong,kgi_u8_t*);
+#endif
 
-	  size = build_one_buffer(pong, BUFFER_SIZE,
-				  20,1004,20,748,
-				  &no);
 	  /*
-	  printf("%i rectangles (pong=%.8x, size=%i)\n",
-		 no,pong,size);
+	  ** Sends vertices
 	  */
-	  (*(ping + size)) = 0x15; /* Tells size */
+	  /* No texture */
+	  avertex.rhw = 1.0;
+	  avertex.tu0 = 0.0;
+	  avertex.tv0 = 0.0;
+	  /* buffer tag */
+	  warp_tag = MGAG_ACCEL_TAG_WARP_TGZ;
+	  {
+	    color_t col1 = { 0, 255, 0, 12 }; /* Green, semi opaque */
+	    color_t col2 = { 255,0,0,12 }; /* Blue, semi opaque */
+	    color_t col3 = { 0,0,255,12 }; /* Red, semi opaque */
+	    color_t spcol = { 128,128,128,128 }; /* Gray, fog=128 */
+	    
+	    ptr = wping;
+	    memcpy(ptr, &warp_tag, MGAG_ACCEL_TAG_LENGTH);
+	    ptr += MGAG_ACCEL_TAG_LENGTH;
+	    while ((BUFFER_SIZE - 1 - (ptr - wping)) > (3*sizeof(avertex)))
+	      {
+		int j;
+		for (j = 0; j < 3; j++)
+		  {
+		    kgi_u_t r = (rand() % 3);
+		    /* Triangle 1 */
+		    avertex.x = (float)(rand() % 10000) * 0.1;
+		    avertex.y = (float)(rand() % 7000)  * 0.1;
+		    avertex.z = 0.0; // 0.01;
+		    avertex.color = (r == 0) ? col1 : ((r==1) ? col2 : col3);
+		    avertex.specular = spcol;
+		    memcpy(ptr,&avertex,sizeof(avertex));
+		    ptr += sizeof(avertex);
+		    no++;
+		  }
+	      }	  
+	  }
+	  /* printf("wpong + %.4x\n", (ptr - wping)); */
+	  /* Starts execution */
+	  (*(wpong + (ptr - wping))) = 0x0; /* Tells size */
+	  swap(wping,wpong,kgi_u8_t*);
 
 	  gettimeofday(&current_time,NULL);
 	}
@@ -481,10 +442,9 @@ int main(int argc, char *argv[])
 	actual_duration =
 	  (current_time.tv_sec - end_time.tv_sec + TEST_DURATION)
 	  + 1e-6 * (current_time.tv_usec - end_time.tv_usec);
-
-	printf("%i rectangles in %f seconds, i.e. %f rect/s\n",
+	
+	printf("%i triangles in %f seconds, i.e. %f tri/s\n",
 	       no, actual_duration, ((float)no)/actual_duration);
-#endif
-
+	
 	return 0;
 }

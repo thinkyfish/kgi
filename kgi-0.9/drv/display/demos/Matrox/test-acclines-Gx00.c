@@ -214,44 +214,6 @@ kgi_error_t kgiPrintResourceInfo(kgi_context_t *ctx, kgi_u_t resource)
 	return KGI_EOK;
 }
 
-
-static int dma_size = (3 * (4 * 5)) + MGAG_ACCEL_TAG_LENGTH;
-static kgi_u32_t dma_cmdlist[] =
-{
-  MGAG_ACCEL_TAG_DRAWING_ENGINE,
-#if MYSTIQUE
-  MGA_DMA4(PITCH,YDSTORG,MACCESS,CXBNDRY),
-#else
-  MGA_DMA4(PITCH,DSTORG,MACCESS,CXBNDRY),
-#endif
-  0x00000400, /* PITCH: ylin=0, iy=1024 */
-  0x00000000, /* DSTORG or YDSTORG */
-  0x40000001, /* MACCESS */
-  0x0FFF0000, /* CXBNDRY */
-  MGA_DMA4(YTOP,YBOT,PLNWT,ZORG),
-  0x00000000, /* YTOP */
-  0x00FFFFFF, /* YBOT */
-  0xFFFFFFFF, /* PLNWT */
-  0x00080000, /* ZORG (overlaps with fb! not used normally)*/
-#if 0 /* Line */
-  0x00091110,
-  0x000A000A, /* XYSTRT */
-  0x02000300, /* XYEND */
-  0xE2E2E2E2, /* FCOL */
-  0x840C4813, /* DWGCTL: AUTOLINE_CLOSE */
-#else /* Rectangle fill */
-  MGA_DMA4(FXBNDRY,YDSTLEN,FCOL,DWGCTL|ACCEL_GO),
-  0x03800040, /* FXBNDRY */
-  0x01800070, /* YDSTLEN */
-  0x21212121, /* FCOL */
-#if 0
-  0xC40C7814, /* DWGCTL (via 0x1D00) */
-#else
-  0xC00C7814, /* DWGCTL (via 0x1D00) */  
-#endif
-#endif
-};
-
 struct
 {
   kgi_u32_t tag;
@@ -270,17 +232,17 @@ struct
 struct
 {
   kgi_u32_t dma1;
-  kgi_u32_t fxbndry;
-  kgi_u32_t ydstlen;
+  kgi_u32_t xystrt;
+  kgi_u32_t xyend;
   kgi_u32_t fcol;
   kgi_u32_t dwgctl; 
-} onerect_dma_cmd;
+} oneline_dma_cmd;
 
 kgi_u_t build_one_buffer(kgi_u8_t* buf, kgi_u_t buf_size,
 			 kgi_u_t xmin,kgi_u_t xmax,kgi_u_t ymin,kgi_u_t ymax,
-			 kgi_u_t* nrect)
+			 kgi_u_t* nline)
 {
-  kgi_u_t cmdsize = sizeof(onerect_dma_cmd);
+  kgi_u_t cmdsize = sizeof(oneline_dma_cmd);
   kgi_u_t remaining = buf_size;
 
   if (remaining < sizeof(init_dma_cmd)) return;
@@ -299,19 +261,15 @@ kgi_u_t build_one_buffer(kgi_u8_t* buf, kgi_u_t buf_size,
       bottom = top + (rand() % (ymax - top + 1)) + 1;
       color = (random() & 0xFFFF);
       color |= (color << 16);
-#if 0
-      printf("left=%i,right=%i,top=%i,bottom=%i color=%.8x\n",
-	     left,right,top,bottom,color);
-#endif
 
-      onerect_dma_cmd.fcol = color;
-      onerect_dma_cmd.fxbndry = left | (right << 16);
-      onerect_dma_cmd.ydstlen = (bottom - top) | (top << 16);
+      oneline_dma_cmd.fcol = color;
+      oneline_dma_cmd.xystrt = left | (top << 16);
+      oneline_dma_cmd.xyend = right | (bottom << 16);
 
-      memcpy(buf,&onerect_dma_cmd,cmdsize);
+      memcpy(buf,&oneline_dma_cmd,cmdsize);
       buf += cmdsize;
       remaining -= cmdsize;
-      (*nrect)++;
+      (*nline)++;
     }
   return (buf_size - remaining);
 }
@@ -371,24 +329,16 @@ int main(int argc, char *argv[])
 	memset(fb, 0xff, 0x10000);
 
 	{
-	  int h, hend = 700 + 1000 * (random() & 15);
+	  int h, hend = 700 + 100 * (random() & 15);
 
-	  for (y = 200; y < 600; y++) 
-	    for (x = 200; x < 450; x++) {
+	  for (y = 50; y < 400; y++) 
+	    for (x = 20; x < 250; x++) {
 	      
 	      fb[y*mode.virt.x + x] =
 		0x7000 | (y * 16) | ((x + i) & 15);
 	      for (h = 0; h < hend; h++);
 	    }
 	}
-
-#if 0
-	/* test: try to map the iload aread */
-	mmap(NULL, (2 * 1024 * 1024),
-	     PROT_READ, MAP_SHARED,
-	     ctx.mapper.fd, 
-	     GRAPH_MMAP_TYPE_MMIO | (1 << GRAPH_MMAP_RESOURCE_SHIFT));
-#endif
 
 	/*
 	** Then, we map the accelerator
@@ -397,58 +347,33 @@ int main(int argc, char *argv[])
 		     PROT_READ | PROT_WRITE, MAP_SHARED,
 		     ctx.mapper.fd,
 		     GRAPH_MMAP_TYPE_ACCEL
-		     | 0x00001000 /* 12 LSBs must be 0 */
+		     | 0x00001000
 		     | (2 << GRAPH_MMAP_RESOURCE_SHIFT));
-
-	if (((int)accel) <= 0) {
-	  printf("ACCEL mmap() failed (ret = %.8x)\n", accel);
-	  exit(1);
-	} else {
-	  printf("ACCEL mmap() succeeded (ret = %.8x)\n", accel);
-	}
 	/* We have two buffers */
 	ping = accel;
 	pong = accel + BUFFER_SIZE;
 
-	/* Try 2 * 256 rectangles - 1 rect per buffer */
-	for (i = 0; i < 255; i++)
-	  {
-	    dma_cmdlist[12] = 0x03800040;
-	    dma_cmdlist[13] = 0x01800080;
-	    dma_cmdlist[14] = i | (i<<8) | (i<<16) | (i<<24);
-	    memcpy(ping, dma_cmdlist, dma_size);
-	    (*(pong + dma_size)) = 0x15; /* Tells size */
-	    dma_cmdlist[12] = 0x02000090;
-	    dma_cmdlist[13] = 0x01000100;
-	    dma_cmdlist[14] = (255 - i) | ((255 - i)<<8)
-	      | ((255 - i)<<16) | ((255 - i)<<24);
-	    memcpy(pong, dma_cmdlist, dma_size);
-	    (*(ping + dma_size)) = 0x15; /* Tells size */
-	  }
-
-#if 1
 	/*
-	** Now we try several rects per buffer a hundred times
+	** Now we try several per buffer a hundred times
 	*/
 	/* First inits the cmd structs */
 	init_dma_cmd.tag = MGAG_ACCEL_TAG_DRAWING_ENGINE;
 #if MYSTIQUE
-	init_dma_cmd.dma1 = MGA_DMA4(PITCH,YDSTORG,MACCESS,CXBNDRY);
+	init_dma_cmd.dma1 = 0x20012523;
 #else
-	init_dma_cmd.dma1 = MGA_DMA4(PITCH,DSTORG,MACCESS,CXBNDRY);
+	init_dma_cmd.dma1 = 0x2001AE23;
 #endif
 	init_dma_cmd.pitch = 0x00000400; /* PITCH: ylin=0, iy=1024 */
 	init_dma_cmd.dstorg = 0x00000000; /* DSTORG */
 	init_dma_cmd.maccess = 0x40000001; /* MACCESS */
 	init_dma_cmd.cxbndry = 0x0FFF0000, /* CXBNDRY */
-	init_dma_cmd.dma2 = MGA_DMA4(YTOP,YBOT,PLNWT,ZORG);
+	init_dma_cmd.dma2 = 0x03072726;
 	init_dma_cmd.ytop = 0x00000000; /* YTOP */
 	init_dma_cmd.ybot = 0x00FFFFFF; /* YBOT */
 	init_dma_cmd.plnwt = 0xFFFFFFFF; /* PLNWT */
 	init_dma_cmd.zorg = 0x00080000, /* ZORG (not used normally)*/
-	onerect_dma_cmd.dma1 = MGA_DMA4(FXBNDRY,YDSTLEN,FCOL,DWGCTL|ACCEL_GO);
-	onerect_dma_cmd.dwgctl = 0xC40C7814; /* DWGCTL (via 0x1D00) */
-	/* or   0xC00C7814, * DWGCTL (via 0x1D00) */  
+	oneline_dma_cmd.dma1 = 0x40091110;
+	oneline_dma_cmd.dwgctl = 0x840C4813; /* DWGCTL (via 0x1D00) */
 
 	gettimeofday(&end_time,NULL);
 	end_time.tv_sec += TEST_DURATION;
@@ -459,19 +384,11 @@ int main(int argc, char *argv[])
 	  size = build_one_buffer(ping, BUFFER_SIZE,
 				  20,1004,20,748,
 				  &no);
-	  /*
-	    printf("%i rectangles (ping=%.8x, size=%i)\n",
-	    no,ping,size);
-	  */
 	  (*(pong + size)) = 0x15; /* Tells size */
 
 	  size = build_one_buffer(pong, BUFFER_SIZE,
 				  20,1004,20,748,
 				  &no);
-	  /*
-	  printf("%i rectangles (pong=%.8x, size=%i)\n",
-		 no,pong,size);
-	  */
 	  (*(ping + size)) = 0x15; /* Tells size */
 
 	  gettimeofday(&current_time,NULL);
@@ -482,9 +399,8 @@ int main(int argc, char *argv[])
 	  (current_time.tv_sec - end_time.tv_sec + TEST_DURATION)
 	  + 1e-6 * (current_time.tv_usec - end_time.tv_usec);
 
-	printf("%i rectangles in %f seconds, i.e. %f rect/s\n",
+	printf("%i lines in %f seconds, i.e. %f line/s\n",
 	       no, actual_duration, ((float)no)/actual_duration);
-#endif
 
 	return 0;
 }
