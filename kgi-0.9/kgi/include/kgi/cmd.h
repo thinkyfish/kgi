@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: cmd.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:41  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _kgi_command_h
 #define	_kgi_command_h
@@ -166,75 +169,6 @@ typedef struct
 } kgic_mapper_resource_info_result_t;
 
 /* ----------------------------------------------------------------------------
-**	mode commands
-** ----------------------------------------------------------------------------
-*/
-typedef struct
-{
-	kgi_display_t	*dpy;		/* display this mode is for	*/
-	void		*dev_mode;	/* device specific mode data	*/
-	kgi_u_t		images;		/* number of images in img[]	*/
-	kgi_image_mode_t *img;		/* array of images		*/
-
-} kgic_mode_context_t;
-
-typedef
-kgi_error_t kgic_mode_command_fn(kgic_mode_context_t *ctx,
-		kgi_u_t cmd, void *in_buffer,
-		void **out_buffer, kgi_size_t *out_size);
-
-/*
-**	text rendering API
-*/
-#define	KGIC_MODE_TEXT16CONTEXT_REVISION	0x0100
-
-typedef struct kgic_mode_text16context_s kgic_mode_text16context_t;
-
-typedef void kgic_mode_marker_show_fn(kgic_mode_text16context_t *ctx,
-		kgi_u_t x, kgi_u_t y);
-typedef	void kgic_mode_marker_hide_fn(kgic_mode_text16context_t *ctx);
-typedef	void kgic_mode_put_text_fn(kgic_mode_text16context_t *ctx, 
-		kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count);
-typedef void kgic_mode_set_table_fn(kgic_mode_text16context_t *ctx,
-		kgi_u_t table, kgi_u_t index, kgi_u_t count, void *data);
-
-struct kgic_mode_text16context_s
-{
-	kgi_u_t		revision;	/* text (A)PI revision		*/
-	void		*meta_object;	/* device specific handle	*/
-	void		*meta_mode;	/* device specific mode data	*/
-
-	kgi_ucoord_t	size;		/* visible text cells		*/
-	kgi_ucoord_t	virt;		/* virtual text cells		*/
-	kgi_ucoord_t	cell;		/* dots per cell		*/
-	kgi_ucoord_t	font;		/* dots per font cell		*/
-
-	kgic_mode_marker_show_fn	*CursorShow;
-	kgic_mode_marker_hide_fn	*CursorHide;
-	kgic_mode_marker_hide_fn	*CursorUndo;
-
-	kgic_mode_marker_show_fn	*PointerShow;
-	kgic_mode_marker_hide_fn	*PointerHide;
-	kgic_mode_marker_hide_fn	*PointerUndo;
-
-	kgic_mode_put_text_fn		*PutText16;
-	kgic_mode_set_table_fn		*SetCLUT;
-	kgic_mode_set_table_fn		*SetTLUT;
-};
-
-
-typedef struct
-{
-	kgi_u_t		revision;	/* 'optimal' (A)PI revision	*/
-	kgi_u_t		image;		/* image for text output	*/
-
-} kgic_mode_text16context_request_t;
-
-typedef kgic_mode_text16context_t kgic_mode_text16context_result_t;
-
-
-
-/* ----------------------------------------------------------------------------
 **	display commands
 ** ----------------------------------------------------------------------------
 */
@@ -271,7 +205,6 @@ typedef enum
 		KGIC(MAPPER_RESOURCE_INFO,	mapper_resource_info,	0x000A),
 
 	KGIC_MODE_COMMAND	= 0x00008000,	/* mode commands	*/
-		KGIC(MODE_TEXT16CONTEXT,	mode_text16context,	0x8001),
 
 	KGIC_DISPLAY_COMMAND	= 0x0000C000,	/* display commands	*/
 
