@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: errno.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:42  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_kgi_errno_h
 #define	_kgi_errno_h
@@ -46,6 +49,6 @@ enum __kgi_error
 
 };
 
-#define	E(system, code)	((KGI_##system) | (KGI_##code))
+#define	KGI_ERRNO(system, code)	((KGI_##system) | (KGI_##code))
 
 #endif	/* #ifndef _kgi_errno_h	*/
