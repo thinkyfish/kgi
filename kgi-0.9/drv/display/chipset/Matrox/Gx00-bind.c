@@ -10,13 +10,13 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: $
+**	$Id: Gx00-bind.c,v 1.6 2002/09/10 22:35:53 ortalo Exp $
 **	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.5 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.6 $"
 
 /*
 ** Debug levels
@@ -74,18 +74,13 @@ static inline kgi_u32_t mgag_gc_in32(mgag_chipset_io_t *mgag_io, kgi_u32_t reg)
   return val;
 }
 
-#if 0
-/*
-** TODO: My guess is that these (DAC-related) functions should not be provided
-** TODO: by the chipset binder. But I'd like more hints. -- ortalo
-*/
 /*
 ** eXtended DAC registers access functions
 */
 static inline void mgag_xdac_out8(mgag_chipset_io_t *mgag_io, kgi_u8_t val,
 				  kgi_u8_t reg)
 {
-  KRN_DEBUG(1, "XDAC[%.2x] <= %.2x", reg, val);
+  KRN_DEBUG(3, "XDAC[%.2x] <= %.2x", reg, val);
   mem_out8(reg, mgag_io->control.base_virt + MGAG_RAMDAC + PALWTADD);
   mem_out8(val, mgag_io->control.base_virt + MGAG_RAMDAC + X_DATAREG);
 }
@@ -95,10 +90,9 @@ static inline kgi_u8_t mgag_xdac_in8(mgag_chipset_io_t *mgag_io, kgi_u8_t reg)
   kgi_u8_t val;
   mem_out8(reg, mgag_io->control.base_virt + MGAG_RAMDAC + PALWTADD);
   val = mem_in8(mgag_io->control.base_virt + MGAG_RAMDAC + X_DATAREG);
-  KRN_DEBUG(1, "XDAC[%.2x] => %.2x", reg, val);
+  KRN_DEBUG(3, "XDAC[%.2x] => %.2x", reg, val);
   return val;
 }
-#endif
 
 /*
 ** Extended CRT registers access functions
@@ -119,6 +113,29 @@ static inline kgi_u8_t mgag_ecrt_in8(mgag_chipset_io_t *mgag_io, kgi_u8_t reg)
   KRN_DEBUG(3, "ECRT[%.2x] => %.2x", reg, val);
   return val;
 }
+
+/*
+** ROM / Video BIOS access functions
+*/
+static inline kgi_u8_t mgag_rom_in8(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
+{
+  kgi_u8_t val = mem_in8(mgag_io->rom.base_virt + reg);
+  KRN_DEBUG(5, "ROM[%.4x] -> %.2x", reg, val);
+  return val;
+}
+static inline kgi_u16_t mgag_rom_in16(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
+{
+  kgi_u16_t val = mem_in16(mgag_io->rom.base_virt + reg);
+  KRN_DEBUG(5, "ROM[%.4x] -> %.4x", reg, val);
+  return val;
+}
+static inline kgi_u32_t mgag_rom_in32(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
+{
+  kgi_u32_t val = mem_in32(mgag_io->rom.base_virt + reg);
+  KRN_DEBUG(5, "ROM[%.4x] -> %.8x", reg, val);
+  return val;
+}
+
 
 /*
 **     VGA subsystem I/O functions
@@ -213,7 +230,7 @@ static inline kgi_u8_t mgag_chipset_vga_atc_in8(mgag_chipset_io_t *mgag_io,
   return val;
 }
 
-/* VGA Miscellaneous Ouput */
+/* VGA Miscellaneous Output */
 static inline void mgag_chipset_vga_misc_out8(mgag_chipset_io_t *mgag_io,
 					      kgi_u8_t val)
 {
@@ -255,8 +272,6 @@ static inline kgi_u8_t mgag_chipset_vga_fctrl_in8(mgag_chipset_io_t *mgag_io)
  * Therefore, we can use a simple MMIO access to usual DAC regs (VGA).
  * Cool.
  */
-#warning check indexed DAC registers access (in normal mode)!
-
 static inline void mgag_dac_out8(mgag_chipset_io_t *mgag_io, kgi_u8_t val,
 	kgi_u32_t reg)
 {
@@ -275,12 +290,12 @@ static inline void mgag_dac_out8(mgag_chipset_io_t *mgag_io, kgi_u8_t val,
     }
   } else if (mgag_io->flags & MGAG_IF_VGA_MODE) {
     /* Chipset in VGA mode: use VGA DAC ports - only 4 of them */
-    /* KRN_ASSERT(reg < 4); */
+    /* TODO: KRN_ASSERT(reg < 4); ? */
     KRN_DEBUG(3, "VGA-DAC[%.2x] <- %.2x", reg, val);
     mem_out8(val, mgag_io->control.base_virt + MGAG_RAMDAC + reg);
   } else {
     /* Normal DAC accesses */
-    /* KRN_ASSERT(reg <= 0x0A); */
+    /* TODO: KRN_ASSERT(reg <= 0x0A); ? */
     KRN_DEBUG(4, "DAC[%.4x] <- %.2x", reg, val);
     mem_out8(val, mgag_io->control.base_virt + MGAG_RAMDAC + reg);
   }
@@ -458,8 +473,9 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 			break;
 
-#warning check dclk limits for Mystique revision >= 2 !!
-
+			/* TODO: check dclk limits for Mystique chipset
+			 * TODO: with revision >= 2 ! -- ortalo
+			 */
 		case 2:
 			mgag->chipset.dclk.max = 175 MHZ;
 
@@ -471,7 +487,9 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 		case 3:
 			mgag->chipset.dclk.max = 220 MHZ;
 
-#warning check that Mystique rev.3 really has MGABASE2 at PCIBASEADDR0!
+			/* TODO: check that Mystique rev.3 really
+			 * TODO: has MGABASE2 at PCIBASEADDR0! -- ortalo
+			 */
 			pci_mgabase1 = mgag->pci.BaseAddr1;
 			pci_mgabase2 = mgag->pci.BaseAddr0;
 
@@ -693,6 +711,13 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 	mgag_io->ECRTIn8        = (void *) mgag_ecrt_in8;
 	mgag_io->ECRTOut8       = (void *) mgag_ecrt_out8;
+
+	mgag_io->EDACIn8        = (void *) mgag_xdac_in8;
+	mgag_io->EDACOut8       = (void *) mgag_xdac_out8;
+
+	mgag_io->ROMIn8         = (void *) mgag_rom_in8;
+	mgag_io->ROMIn16        = (void *) mgag_rom_in16;
+	mgag_io->ROMIn32        = (void *) mgag_rom_in32;
 
 	/* Initializes io-flags to all 0 */
 	mgag_io->flags = 0; 

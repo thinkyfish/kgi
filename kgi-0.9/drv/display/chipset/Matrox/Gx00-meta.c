@@ -10,12 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: Gx00-meta.c,v 1.9 2001/11/14 21:39:28 ortalo Exp $
+**	$Id: Gx00-meta.c,v 1.10 2002/09/10 22:35:54 ortalo Exp $
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.9 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.10 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -28,15 +28,19 @@
 #include "chipset/Matrox/Gx00-meta.h"
 #include "chipset/IBM/VGA.h"
 
+/* TODO: Compile the micro-code definitions separately? -- ortalo */
 #include "chipset/Matrox/Gx00-ucode.c"
 
-#warning	All uppercase is for macros only.
-#warning 	A meta language prefix of Gx00, not mgag seems more suitable.
+/*
+ * TODO: A meta language prefix of Gx00, not mgag seems more suitable. seeger
+ * TODO: However, the conversion of function names will be cumbersome. ortalo 
+ */
 
 /* ----------------------------------------------------------------------------
 **	Local constants and parameters
 ** ----------------------------------------------------------------------------
 */
+#define DO_GX50_POWER_UP
 
 /* Value sent with the SOFTRAP interrupt at the end of a DMA
  * command buffer associated to the drawing engine.
@@ -50,46 +54,18 @@
 */
 #define MAX_WAIT_LOOP 1000000
 
-/* ----------------------------------------------------------------------------
-**	Local IO procedures (extended dac)
-** ----------------------------------------------------------------------------
-*/
-static inline void MGAG_EDAC_OUT8(mgag_chipset_io_t *mgag_io, kgi_u8_t val,
-				  kgi_u8_t reg)
-{
-  KRN_DEBUG(3, "EDAC[%.2x] <= %.2x", reg, val);
-  MGAG_GC_OUT8(mgag_io, reg, MGAG_RAMDAC + PALWTADD);
-  MGAG_GC_OUT8(mgag_io, val, MGAG_RAMDAC + X_DATAREG);
-}
-
-static inline kgi_u8_t MGAG_EDAC_IN8(mgag_chipset_io_t *mgag_io, kgi_u8_t reg)
-{
-  kgi_u8_t val;
-  MGAG_GC_OUT8(mgag_io, reg,  MGAG_RAMDAC + PALWTADD);
-  val = MGAG_GC_IN8(mgag_io, MGAG_RAMDAC + X_DATAREG);
-  KRN_DEBUG(3, "EDAC[%.2x] => %.2x", reg, val);
-  return val;
-}
-
-static inline kgi_u8_t MGAG_ROM_IN8(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
-{
-  return mem_in8(mgag_io->rom.base_virt + reg);
-}
-static inline kgi_u16_t MGAG_ROM_IN16(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
-{
-  return mem_in16(mgag_io->rom.base_virt + reg);
-}
-static inline kgi_u32_t MGAG_ROM_IN32(mgag_chipset_io_t *mgag_io, kgi_u16_t reg)
-{
-  return mem_in32(mgag_io->rom.base_virt + reg);
-}
-
+#ifdef DO_GX50_POWER_UP
 /* ----------------------------------------------------------------------------
 **	Integration of Gx50 PLL functions (for system clock init)
 ** ----------------------------------------------------------------------------
 */
+/*
+ * TODO: Try to find a way to remove Gx50-pll.inc from the chipset driver...
+ * TODO: (maybe simply via conditional compilation?) -- ortalo
+ */
 #define _Gx50_PLL_FOR_CHIPSET
 #include "chipset/Matrox/Gx50-pll.inc"
+#endif /* DO_GX50_POWER_UP */
 
 /* ----------------------------------------------------------------------------
 **	Probing and analysis code
@@ -180,7 +156,9 @@ static inline void mgag_chipset_probe(mgag_chipset_t *mgag,
   }
 
 #if 0
-  /* Probing the ATC induces lots of problems (black screen effect!!) */
+  /* Probing the ATC may induce lots of problems (black screen effect
+   * probably due to the enable display pb that should be fixed now)
+   */
   PROBE_VGA(mgag_io, ATC, 0x00);
   PROBE_VGA(mgag_io, ATC, 0x01);
   PROBE_VGA(mgag_io, ATC, 0x02);
@@ -198,13 +176,16 @@ static inline void mgag_chipset_probe(mgag_chipset_t *mgag,
   PROBE_VGA(mgag_io, ATC, 0x0E);
   PROBE_VGA(mgag_io, ATC, 0x0F);
   PROBE_VGA(mgag_io, ATC, 0x10);
-  PROBE_VGA(mgag_io, ATC, 0x11);
+  PROBE_VGA(mgag_io, ATC, 0x11 | VGA_ATCI_ENABLE_DISPLAY);
   PROBE_VGA(mgag_io, ATC, 0x12);
   PROBE_VGA(mgag_io, ATC, 0x13);
   PROBE_VGA(mgag_io, ATC, 0x14);
+
+  MGAG_ATC_IN8(mgag_io, VGA_ATCI_ENABLE_DISPLAY);
 #endif
 
-  /* Not very useful but polluting kernel logs... */
+  /* The following is sometimes useful for debugging but
+   * usually it simply pollutes kernel logs... */
 #if 0
   PROBE_VGA(mgag_io, GRC, 0x00);
   PROBE_VGA(mgag_io, GRC, 0x01);
@@ -250,6 +231,8 @@ static inline void mgag_chipset_probe(mgag_chipset_t *mgag,
 
 #undef PROBE_ECRT
 #undef PROBE_EDAC
+#undef PROBE_VGA
+#undef PROBE_GC
 #undef PROBE_PCI
 }
 #endif
@@ -265,7 +248,6 @@ static inline void mgag_chipset_examine(mgag_chipset_t *mgag)
 #endif
 
 #ifdef DEBUG_LEVEL
-
 static inline void mgag_chipset_log_status(mgag_chipset_io_t *mgag_io,
 					   kgi_u_t cnt)
 {
@@ -275,7 +257,7 @@ static inline void mgag_chipset_log_status(mgag_chipset_io_t *mgag_io,
     {
       kgi_u32_t status = MGAG_GC_IN32(mgag_io, STATUS);
       KRN_DEBUG(1,"%i- STATUS = %.8x", i, status);
-#warning do a wait delay of ~100 micro-seconds...
+      /* TODO: do a wait delay of ~100 micro-seconds... */
 #if 0
       udelay(100);
 #else
@@ -517,9 +499,7 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
 				     mgag_chipset_io_t *mgag_io,
 				     irq_system_t *system)
 {
-#ifdef DEBUG_LEVEL
   pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
-#endif
 
   kgi_u32_t iclear = 0x00000000;
   kgi_u32_t flags;
@@ -688,7 +668,7 @@ static void mgag_chipset_softreset(mgag_chipset_io_t *mgag_io)
   /* Does a softreset of the accel engine (graphics engine and WARPs)*/
   MGAG_GC_OUT32(mgag_io, RST_SOFTRESET, RST);
   /* Wait delay */
-#warning do a wait delay of minimum 10 micro-seconds...
+  /* TODO: do a wait delay of minimum 10 micro-seconds... */
 #if 0
   udelay(11);
 #else
@@ -712,7 +692,8 @@ static void mgag_chipset_wait_engine_idle(mgag_chipset_io_t *mgag_io)
   if (status & STATUS_DWGENGSTS)
     {
       KRN_ERROR("Drawing engine infinite loop!");
-#warning do a softreset!
+      mgag_chipset_softreset(mgag_io);
+      /* TODO: Check if a soft reset is enough (DMA?) -- ortalo */
     }
 }
 
@@ -1084,7 +1065,9 @@ static void mgag_chipset_warp_load_ucode(mgag_chipset_t *mgag,
 {
   kgi_u32_t *pwarpcode = (kgi_u32_t*)pvwarpcode;
 
-#warning Check that the warps are idle and DMA is finished ?
+  mgag_chipset_wait_engine_idle(mgag_io);
+  /* TODO: We could even try a softreset in case of problems? */
+
   KRN_DEBUG(1, "Watching status before Warp ucode load");
   KRN_TRACE(1, mgag_chipset_log_status(mgag_io, 2));
 
@@ -2355,7 +2338,7 @@ static void mga_chipset_accel_g400_check(mga_chipset_g400_context_t *ctx,
       ctx->wgetmsb = *val;
       break;
     case MGA_DMA(WACCEPTSEQ):
-#warning clean up hex values!
+      /* TODO: clean up hex values! */
       if (((*val) != 0x18000000)
 	  && ((*val) != 0x02010200)
 	  && ((*val) != 0x01000408)
@@ -3009,7 +2992,9 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	buffer->execution.next = NULL;
 	accel->execution.queue = cur;
 
-#warning wakeup buffer->executed portably!
+	/* TODO: wakeup buffer->executed portably! This is linux-specific
+	 * TODO: and should be abstracted away. -- ortalo
+	 */
 	KRN_DEBUG(2,"before wake_up: buffer:%.8x adress:%.8x value: %i",
 		  buffer, &(buffer->execution.state), buffer->execution.state);
 	wake_up(buffer->executed);
@@ -3019,9 +3004,10 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	    /* no further buffers queued, thus we are done.
 	     */
 	    accel->execution.queue = NULL;
-#warning wakeup mgag_accel->idle
-	    /* Need to delay also ? */
-	    /* wake_up(accel->idle); */
+	    /* TODO: wakeup mgag_accel->idle -- ortalo
+	     * TODO: Need to delay also?
+	     */
+	    /* on linux: wake_up(accel->idle); */
 	    break;
 	  }
 
@@ -3040,7 +3026,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
       ** We swap the data structs and initiate the buffer transfer.
       */
       {
-#warning check the context switch logic!
+	/* TODO: check the context switch logic! */
 	kgi_u_t do_ctx_switch = 0;
 	if (accel->context != buffer->context)
 	  {
@@ -3089,9 +3075,6 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 		mgag_chipset_warp_do_buffer(mgag_io, buffer, mgag_ctx);
 	      } else {
 		KRN_DEBUG(1, "WARPs only active on the G200/G400/G550 for now");
-#if 0
-		mgag_chipset_accel_schedule(accel); /* recurses (?) */
-#endif
 	      }
 	      break;
 	    default:
@@ -3185,7 +3168,11 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       */
       mgag_chipset_irq_block(mgag_io, &irq_state);
 
-#warning should not this be KGI_AS_QUEUED ?
+      /* TODO: should not this be KGI_AS_QUEUED? It seems to me that the
+       * TODO: semantics of WAIT and QUEUED has not really been used
+       * TODO: within the KGI logic (because both buffers are treated
+       * TODO: in the same way in it)... -- ortalo
+       */
       buffer->execution.state = KGI_AS_WAIT;
       buffer->execution.next = NULL;
 
@@ -3301,24 +3288,6 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   /* NOTE: We assume an off-chip voltage reference is used, we do
    * not touch XVREFCTRL.
    */
-
-  /* Hack for G550 */
-  if (mgag->flags & MGAG_CF_G550)
-    {
-      /* XSYNCCTRL(0x8B) to 0xCC as per matroxfb and Petr... */
-      MGAG_EDAC_OUT8(mgag_io, 0xCC, 0x8B);
-      /* XPWRCTRL(0xA0) to 0x1F as per matroxfb and Petr... */
-      MGAG_EDAC_OUT8(mgag_io, 0x1F, 0xA0);
-      /* XOUTPUTCONN(0x8A) to ? (DAC1->output1) as per matroxfb and Petr... */
-      MGAG_EDAC_OUT8(mgag_io, 5, 0x8A);
-    }
-  /* Fast hack for G550 */
-#if 0
-  pcicfg_out32(0x400a1520, pcidev + MGAG_PCI_OPTION1);
-  pcicfg_out32(0x0100ac00, pcidev + MGAG_PCI_OPTION2);
-  pcicfg_out32(0x0090a409, pcidev + MGAG_PCI_OPTION3);
-#endif
-  
   /* Power-up the system PLL */
   pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) | MGAG_O1_SYSPLLPDN,
 	       pcidev + MGAG_PCI_OPTION1);
@@ -3350,7 +3319,6 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   /*
   ** Then, we select the PLLs. According to the documentation, the
   ** following steps will set:
-  ** - G550: unknown (we mimic the BIOS behavior)
   ** - G400: MCLK = 150MHz, GCLK = 90MHz, WCLK = 100, PIXCLK = 25.175MHz
   ** - G200: MCLK = 143MHz, GCLK = 71.5MHz, PIXCLK = 25.175MHz
   ** - Mystique: MCLK = 66MHz, GCLK = 44MHz, PIXCLK = 25.175MHz
@@ -3390,35 +3358,6 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 		   | G400_O3_WCLKSEL_SYS,
 		   pcidev + MGAG_PCI_OPTION3);
     }
-  else if (mgag->flags & MGAG_CF_G550)
-    {
-      /* Select the system PLL and program div fields: MCLK, GCLK, WCLK */
-      /* MCLK selection */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_MCLKSEL_MASK)
-		   | G400_O3_MCLKSEL_SYS,
-		   pcidev + MGAG_PCI_OPTION3);      
-      /* MCKL div */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_MCLKDIV_MASK)
-		   /* Graphic clock source bypass (TODO: Check) */
-		   | G400_O3_MCLKDIV_BYPASS,
-		   pcidev + MGAG_PCI_OPTION3);
-      /* GCLK selection */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_GCLKSEL_MASK)
-		   | G400_O3_GCLKSEL_SYS,
-		   pcidev + MGAG_PCI_OPTION3);      
-      /* GCLK div */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_GCLKDIV_MASK)
-		   | G400_O3_GCLKDIV_2_5,
-		   pcidev + MGAG_PCI_OPTION3);
-      /* WCLK selection */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_WCLKSEL_MASK)
-		   | G400_O3_WCLKSEL_SYS,
-		   pcidev + MGAG_PCI_OPTION3);
-      /* WCLK div */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION3) & ~G400_O3_WCLKDIV_MASK)
-		   | G400_O3_WCLKDIV_2_5,
-		   pcidev + MGAG_PCI_OPTION3);
-    }
   /* Enable the system clocks */
   pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_SYSCLKDIS,
 	       pcidev + MGAG_PCI_OPTION1);
@@ -3426,50 +3365,23 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   MGAG_EDAC_OUT8(mgag_io,
 		 MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) | XPIXCLKCTRL_PIXCLKDIS,
 		 XPIXCLKCTRL);
-  if (mgag->flags & MGAG_CF_G550)
-    {
-      /* Selects the 2nd PLL: we only handle the digital output, connected
-	 to the second output. (I think... Hmm, Petr?) -- ortalo */
-      MGAG_EDAC_OUT8(mgag_io,
-		     (MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKSEL_MASK)
-		     | XPIXCLKCTRL_PIXCLKSEL_PIXPLL, /* or 0x3 ? */
-		     XPIXCLKCTRL);
-      
-    }
-  else
-    {
-      /* Select the pixel PLL */
-      MGAG_EDAC_OUT8(mgag_io,
-		     (MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKSEL_MASK)
-		     | XPIXCLKCTRL_PIXCLKSEL_PIXPLL,
-		     XPIXCLKCTRL);
-    }
+  /* Select the pixel PLL */
+  MGAG_EDAC_OUT8(mgag_io,
+		 (MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKSEL_MASK)
+		 | XPIXCLKCTRL_PIXCLKSEL_PIXPLL,
+		 XPIXCLKCTRL);
   /* Enable the pixel clock and video clock */
   MGAG_EDAC_OUT8(mgag_io,
 		 MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKDIS,
 		 XPIXCLKCTRL);
 
   /* Codec clock frequency selection (G400+) */
-  if (mgag->flags & (MGAG_CF_G400 | MGAG_CF_G550))
+  if (mgag->flags & MGAG_CF_G400)
     {
       pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION2) & ~G400_O2_CODCLKSEL_MASK)
 		   | G400_O2_CODCLKSEL_SYS,
 		   pcidev + MGAG_PCI_OPTION2);
     }
-  /*
-  ** *Unknown* fields selection for the G550! TODO: Understand.
-  */
-  if (mgag->flags & MGAG_CF_G550)
-    {
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION2) & ~(0x7F << 9))
-		   /* This value comes *directly* from BIOS ??? TODO: understand! */
-		   | (0xac << 8),
-		   pcidev + MGAG_PCI_OPTION2);
-      pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~(0x1 << 13),
-		   /* This comes *directly* from BIOS ??? TODO: understand! */
-		   pcidev + MGAG_PCI_OPTION1);
-    }
-
   /*
   ** Finally, we initialize the memory.
   */
@@ -3477,7 +3389,9 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   MGAG_SEQ_OUT8(mgag_io,
 		MGAG_SEQ_IN8(mgag_io,VGA_SEQ_CLOCK) | VGA_SR01_DISPLAY_OFF,
 		VGA_SEQ_CLOCK);
-#warning we should also disable CRTC2 for G400 and higher
+  /* TODO: we should also disable CRTC2 for G400 and higher, but it did
+   * TODO: not hurt me yet. -- ortalo
+   */
   if (mgag->flags & MGAG_CF_1x64)
     {
       MGAG_GC_OUT32(mgag_io, M1x64_MCTLWTST_CASLTCNY | M1x64_MCTLWTST_RCDELAY
@@ -3488,16 +3402,20 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 		     | MGAG_O1_HARDPWMSK, pcidev + MGAG_PCI_OPTION1);
       }
     }
-  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200)
-	   || (mgag->flags & MGAG_CF_G550))
+  else if (mgag->flags & (MGAG_CF_G400 | MGAG_CF_G200))
     {
       if (mgag->flags & MGAG_CF_G200)
 	{
 	  /* (Re)Writes the reset value into mem. control wait state (OK?) */
 	  /* TODO: Find a good reset value for MCTLWTST */
 	  MGAG_GC_OUT32(mgag_io, G200_MCTLWTST_RESET_VALUE, MCTLWTST);
-#warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
-	  /* TODO: We setup things for 8Mo SDRAM memory with 1 bank. Check! */
+	  /* We should write the memconfig field (PCI_OPTION1 reg)
+	   * according to the type of memory used. But this requires
+	   * parsing the BIOS and such a power_up style has been left
+	   * to an alternate implementation in this file. -- ortalo
+	   */
+	  /* TODO: We could use user-provide value however (module parms) */
+	  /* We setup things for 8Mo SDRAM memory with 1 bank statically */
 	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_MEMCONFIG_MASK)
 		       | (0x5 << G200_O1_MEMCONFIG_SHIFT),
 		       pcidev + MGAG_PCI_OPTION1);
@@ -3510,23 +3428,15 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 	{
 	  /* (Re)Writes the reset value into mem. control wait state (OK?) */
 	  MGAG_GC_OUT32(mgag_io, G400_MCTLWTST_RESET_VALUE, MCTLWTST);
-#warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
+	  /* We should write the memconfig field (PCI_OPTION1 reg)
+	   * according to the type of memory used. But this requires
+	   * parsing the BIOS and such a power_up style has been left
+	   * to an alternate implementation in this file. -- ortalo
+	   */
+	  /* TODO: We could use user-provide value however (module parms) */
 	  /* We setup things for 16Mo SDRAM memory... */
 	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_MEMCONFIG_MASK)
 		       | (0x0 << G400_O1_MEMCONFIG_SHIFT),
-		       pcidev + MGAG_PCI_OPTION1);
-	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
-		       pcidev + MGAG_PCI_OPTION1);
-	}
-      else if (mgag->flags & MGAG_CF_G550)
-	{
-	  /* (Re)Writes the reset value into mem. control wait state (OK?) */
-	  MGAG_GC_OUT32(mgag_io, G550_MCTLWTST_RESET_VALUE, MCTLWTST);
-#warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
-	  /* We setup things like the *BIOS* does on my board -- ortalo */
-	  /* TODO: Understand!!! (why 64MB SDRAM and not 32?) */
-	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_MEMCONFIG_MASK)
-		       | (0x5 << G400_O1_MEMCONFIG_SHIFT),
 		       pcidev + MGAG_PCI_OPTION1);
 	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
 		       pcidev + MGAG_PCI_OPTION1);
@@ -3548,7 +3458,7 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
     }
 
   /* Wait delay */
-#warning do a wait delay of minimum 200 micro-seconds...
+  /* TODO: do a wait delay of minimum 200 micro-seconds... */
 #if 0
   udelay(200);
 #else
@@ -3558,8 +3468,8 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   if (mgag->flags & MGAG_CF_1x64)
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET & ~MACCESS_JEDECRST, MACCESS);
-  /* Wait delay */
-#warning do a wait delay of minimum (100 * MCLK period)...
+      /* Wait delay */
+      /* TODO: do a wait delay of minimum (100 * MCLK period)... */
 #if 0
       udelay(5);
 #else
@@ -3572,8 +3482,7 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET | MACCESS_JEDECRST, MACCESS);
     }
-  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200)
-	   || (mgag->flags & MGAG_CF_G550))
+  else if (mgag->flags & (MGAG_CF_G400 | MGAG_CF_G200))
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET, MACCESS);
     }
@@ -3597,13 +3506,6 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
       /* TODO: Check the value to use here: 1 or 8 or ? */
       pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_RFHCNT_MASK)
 		   | (0x8 << G400_O1_RFHCNT_SHIFT),
-		   pcidev + MGAG_PCI_OPTION1);
-    }
-  else if (mgag->flags & MGAG_CF_G550)
-    {
-      /* TODO: Check the value to use here: 1 or 20 or ? */
-      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_RFHCNT_MASK)
-		   | (20 << G400_O1_RFHCNT_SHIFT),
 		   pcidev + MGAG_PCI_OPTION1);
     }
   /* On the 1x64, we also initialize the VGA frame buffer mask */
@@ -3652,14 +3554,14 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
   /* Power-up the system PLL */
   {
     kgi_u32_t opt1;
-#if 0
-    opt1 = pcicfg_in32(pcidev + MGAG_PCI_OPTION1);
-#else
-    opt1 = mgag->vbios.opt;
-#endif
-    opt1 &= 0xC0000100; /* Taken from matroxfb... */
-    opt1 &= ~0x03400040; /* Taken from matroxfb... */
-    opt1 |= mgag->vbios.opt & 0x03400040;
+    /* Selects start value for OPTION register: VBIOS or probed */
+    if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450))
+      opt1 = mgag->vbios.opt;
+    else
+      opt1 = pcicfg_in32(pcidev + MGAG_PCI_OPTION1);
+    opt1 &= 0xC0000100; /* Taken from matroxfb... (preserve straps) */
+    opt1 &= ~0x03400040; /* Taken from matroxfb... (apparently preserves */
+    opt1 |= mgag->vbios.opt & 0x03400040; /* non-specified bits from VBIOS */
     opt1 |= MGAG_O1_SYSPLLPDN; /* Power up the system PLL */
     pcicfg_out32(opt1, pcidev + MGAG_PCI_OPTION1);
   }
@@ -3700,28 +3602,37 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
     }
   if (mgag->flags & MGAG_CF_G200)
     {
+      /* Select the system PLL */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_SYSCLKSEL_MASK)
+		   | G200_O1_SYSCLKSEL_SYS,
+		   pcidev + MGAG_PCI_OPTION1);      
     }
-  if (mgag->flags & MGAG_CF_G400)
+  /* NB: A G450 is also a G400... */
+  if ((mgag->flags & MGAG_CF_G400) && (!(mgag->flags & MGAG_CF_G450)))
     {
-      /* NB: A G450 is also a G400... */
+      /* Force the selection of the system PLL: MCLK, GCLK, WCLK
+       * (it should be done but just to be sure...)
+       */
+      pcicfg_out32((mgag->vbios.opt3 & ~(G400_O3_MCLKSEL_MASK | G400_O3_GCLKSEL_MASK | G400_O3_WCLKSEL_MASK))
+		    | G400_O3_MCLKSEL_SYS | G400_O3_GCLKSEL_SYS | G400_O3_WCLKSEL_SYS,
+		    pcidev + MGAG_PCI_OPTION3);
     }
   if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450))
     {
       /* Program the various clocks parameters using the information
        * from the vbios.
        */
+#ifdef DO_GX50_POWER_UP
       /* Re enable clocks (on PCI clock) for pll programming */
       pcicfg_out32(mgag->vbios.opt3 & ~0x00300C03, pcidev + MGAG_PCI_OPTION3);
-#if 1
       pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_SYSCLKDIS,
 		   pcidev + MGAG_PCI_OPTION1);
       /* Program the video clock PLL to 0 */
       MGAG_EDAC_OUT8(mgag_io, 0x02, XVIDPLLM); /* Like my VBIOS -- ortalo */
       MGAG_EDAC_OUT8(mgag_io, 0x23, XVIDPLLN);
       MGAG_EDAC_OUT8(mgag_io, 0x00, XVIDPLLP);
-#warning do program the video clock PLL of Gx50 to 0 if needed
+      /* TODO: do program the _video_ clock PLL of Gx50 to 0 if needed. */
       /* Program the system clock */
-#if 1
       {
 	Gx50_pll_t oneclock;
 	Gx50_pll_mode_t onemode;
@@ -3742,20 +3653,6 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
 		     Gx50_SYSTEM_PLL, mgag_io,
 		     &onemode);
       }
-#else
-      /* We use my VBIOS defaults for a system vco and fout of 332 MHz
-       * -- ortalo
-       */
-      MGAG_EDAC_OUT8(mgag_io, 0x05, XSYSPLLM); /* Divider - 1 */
-      MGAG_EDAC_OUT8(mgag_io, 0x23, XSYSPLLN); /* Multiplier - 2 */
-      MGAG_EDAC_OUT8(mgag_io, 0x40, XSYSPLLP); /* p & s */      
-      {
-	int mysyspll_lock_cnt = PLL_DELAY; /* Wait the system PLL to lock */
-	while (--mysyspll_lock_cnt &&
-	       !(MGAG_EDAC_IN8(mgag_io, XSYSPLLSTAT) & XSYSPLLSTAT_SYSLOCK));
-	KRN_ASSERT(mysyspll_lock_cnt);
-      }
-#endif
       /* Disable them for final config */
       pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) | MGAG_O1_SYSCLKDIS,
 		   pcidev + MGAG_PCI_OPTION1);
@@ -3766,7 +3663,7 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
   pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_SYSCLKDIS,
 	       pcidev + MGAG_PCI_OPTION1);
   /* Disable the pixel clock and video clock */
-#warning check why disabling then re-enabling the pixel and video clocks
+  /* TODO: check why disabling then re-enabling the pixel and video clocks */
   MGAG_EDAC_OUT8(mgag_io,
 		 MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) | XPIXCLKCTRL_PIXCLKDIS,
 		 XPIXCLKCTRL);
@@ -3776,18 +3673,24 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
 	 to the second output. (I think... Hmm, Petr?) -- ortalo */
       MGAG_EDAC_OUT8(mgag_io,
 		     (MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKSEL_MASK)
-#if 0
-		     | XPIXCLKCTRL_PIXCLKSEL_PIXPLL, /* or 0x3 ? */
-#else
-		     | 0x3,
-#endif
+		     | 0x3, /* nor XPIXCLKCTRL_PIXCLKSEL_PIXPLL ? */
 		     XPIXCLKCTRL);
       
+    }
+  else
+    {
+      /* Select the pixel PLL */
+      MGAG_EDAC_OUT8(mgag_io,
+		     (MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKSEL_MASK)
+		     | XPIXCLKCTRL_PIXCLKSEL_PIXPLL,
+		     XPIXCLKCTRL);
     }
   /* Enable the pixel clock and video clock */
   MGAG_EDAC_OUT8(mgag_io,
 		 MGAG_EDAC_IN8(mgag_io, XPIXCLKCTRL) & ~XPIXCLKCTRL_PIXCLKDIS,
 		 XPIXCLKCTRL);
+
+  /* TODO: do codec clock frequency selection for G400? (see power_up) */
 
   /*
   ** Finally, we initialize the memory.
@@ -3796,16 +3699,53 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
   MGAG_SEQ_OUT8(mgag_io,
 		MGAG_SEQ_IN8(mgag_io,VGA_SEQ_CLOCK) | VGA_SR01_DISPLAY_OFF,
 		VGA_SEQ_CLOCK);
-#warning we should also disable CRTC2 for G400 and higher
+  /* TODO: We should also disable CRTC2 for G400 and higher */
   if (mgag->flags & MGAG_CF_1x64)
     {
     }
   else if (mgag->flags & MGAG_CF_G200)
     {
+      /* Uses video BIOS values */
+      MGAG_GC_OUT32(mgag_io, mgag->vbios.mctlwtst, MCTLWTST);
+      /* We setup things using the memconfig from video BIOS... */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_MEMCONFIG_MASK)
+		   | (mgag->vbios.opt & G200_O1_MEMCONFIG_MASK),
+		   pcidev + MGAG_PCI_OPTION1);
+      /* TODO: Use the global MGAG_CF_SGRAM flag ? */
+      if (mgag->vbios.sgram)
+	pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) | MGAG_O1_HARDPWMSK,
+		     pcidev + MGAG_PCI_OPTION1);
+      else
+	pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
+		     pcidev + MGAG_PCI_OPTION1);
+      /* TODO: Set the mbuftype of the OPTION2 reg as matrox fb */
+#if 0
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION2) & ~(G200_O2_MBUFTYPE0 | G200_O2_MBUFTYPE1)),
+		   pcidev + MGAG_PCI_OPTION2);
+#else
+      /* TODO: should we use the vbios value for opt2? */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION2) & ~(0x3F << 12))
+		   | (mgag->vbios.opt2 & (0x3F << 12)),
+		   pcidev + MGAG_PCI_OPTION2);
+#endif
+      /* Set memrdbk with the video bios value */
+      MGAG_GC_OUT32(mgag_io, mgag->vbios.memrdbk, MEMRDBK);
     }
-  else if (mgag->flags & MGAG_CF_G400)
+  /* NB: A G450 is also a G400... */
+  else if ((mgag->flags & MGAG_CF_G400) && (!(mgag->flags & MGAG_CF_G450)))
     {
-      /* NB: A G450 is also a G400... */
+      /* Uses video BIOS values */
+      MGAG_GC_OUT32(mgag_io, mgag->vbios.mctlwtst, MCTLWTST);
+      /* We setup things using the memconfig from video BIOS... */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_MEMCONFIG_MASK)
+		   | (mgag->vbios.opt & G400_O1_MEMCONFIG_MASK),
+		   pcidev + MGAG_PCI_OPTION1);
+      /* _If_ that memconfig is 000, then 16Mo SDRAM is triggered by
+	 default as hardpwmsk is cleared. Enforces this behavior: */
+      pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
+		   pcidev + MGAG_PCI_OPTION1);
+      /* Set memrdbk with the video bios value */
+      MGAG_GC_OUT32(mgag_io, mgag->vbios.memrdbk, MEMRDBK);
     }
   if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450))
     { /* Taken from matroxfb */
@@ -3830,7 +3770,7 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
     }
 
   /* Wait delay */
-#warning do a wait delay of minimum 200 micro-seconds...
+  /* TODO: do a wait delay of minimum 200 micro-seconds... */
 #if 0
   udelay(200);
 #else
@@ -3840,8 +3780,8 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
   if (mgag->flags & MGAG_CF_1x64)
     {
       MGAG_GC_OUT32(mgag_io, MACCESS_MEMRESET & ~MACCESS_JEDECRST, MACCESS);
-  /* Wait delay */
-#warning do a wait delay of minimum (100 * MCLK period)...
+      /* Wait delay */
+      /* TODO: do a wait delay of minimum (100 * MCLK period)... */
 #if 0
       udelay(5);
 #else
@@ -3864,13 +3804,13 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
     }
   else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200)
 	   || (mgag->flags & MGAG_CF_G550))
-    {
+    { /* NB: A G450 is also a G400 */
       MGAG_GC_OUT32(mgag_io, MGAG_GC_IN32(mgag_io, MACCESS) | MACCESS_MEMRESET,
 		    MACCESS);
     }
-
+  
   /* Wait delay */
-#warning do a wait delay of minimum 200 micro-seconds...
+  /* TODO: do a wait delay of minimum 200 micro-seconds... */
 #if 0
   udelay(200);
 #else
@@ -3883,10 +3823,17 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
     }
   else if (mgag->flags & MGAG_CF_G200)
     {
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_RFHCNT_MASK)
+		   | (0x8 << G200_O1_RFHCNT_SHIFT),
+		   pcidev + MGAG_PCI_OPTION1);
     }
-  else if (mgag->flags & MGAG_CF_G400)
+  else if ((mgag->flags & MGAG_CF_G400) && (!(mgag->flags & MGAG_CF_G450)))
     {
       /* NB: A G450 is also a G400... */
+      /* TODO: Check the value to use here: 1 or 8 or ? */
+      pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G400_O1_RFHCNT_MASK)
+		   | (0x8 << G400_O1_RFHCNT_SHIFT),
+		   pcidev + MGAG_PCI_OPTION1);
     }
   if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450))
     {
@@ -3913,9 +3860,6 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
       /* XOUTPUTCONN(0x8A) to ? (DAC1->output1) as per matroxfb and Petr... */
       MGAG_EDAC_OUT8(mgag_io, 5, XOUTPUTCONN);
   
-      /* Resets the plane mask */
-      MGAG_GC_OUT32(mgag_io, 0x00000000, PLNWT);
-      MGAG_GC_OUT32(mgag_io, 0xFFFFFFFF, PLNWT);
       /* Some translation (taken from matroxfb) */
       if (!(mgag->vbios.no_wtst_xlat))
 	{
@@ -3928,6 +3872,9 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
 	  MGAG_GC_OUT32(mgag_io, new, MCTLWTST);
 	}
     }
+  /* Resets the plane mask */
+  MGAG_GC_OUT32(mgag_io, 0x00000000, PLNWT);
+  MGAG_GC_OUT32(mgag_io, 0xFFFFFFFF, PLNWT);
 
   /* Finally, does a softreset of the accel engine */
   mgag_chipset_softreset(mgag_io);
@@ -3947,6 +3894,188 @@ static void mgag_chipset_power_up_per_vbios(mgag_chipset_t *mgag,
 **	Matrox video BIOS parsing
 ** ----------------------------------------------------------------------------
 */
+static void pins_info_345(mgag_chipset_io_t *mgag_io, kgi_u_t pins_offset)
+{
+#define PINS_IN8(idx) MGAG_ROM_IN8(mgag_io, pins_offset + (idx))
+#define PINS_IN16(idx) MGAG_ROM_IN16(mgag_io, pins_offset + (idx))
+
+#define SERIAL_NO_LENGTH 16
+#define PART_INFO_LENGTH 6
+  kgi_u8_t serial_no[SERIAL_NO_LENGTH+1];
+  kgi_u8_t part_info[PART_INFO_LENGTH+1];
+
+  KRN_DEBUG(1, "Program date: %u-%u-%u, program count: %x",
+	    1900 + (PINS_IN16(6) >> 9),
+	    (PINS_IN16(6) >> 5) & 0xF, PINS_IN16(6) & 0x1F,
+	    PINS_IN16(8));
+  KRN_DEBUG(1, "Product ID: %.4x", PINS_IN16(10));
+  {
+    kgi_u_t i;
+    for (i = 0; i < SERIAL_NO_LENGTH; i++)
+	serial_no[i] = PINS_IN8(12+i);
+    serial_no[SERIAL_NO_LENGTH] = '\0';
+    for (i = 0; i < PART_INFO_LENGTH; i++)
+	part_info[i] = PINS_IN8(28+i);
+    part_info[PART_INFO_LENGTH] = '\0';
+  }
+  KRN_DEBUG(1, "Serial No.: \"%s\"", serial_no);
+  KRN_DEBUG(1, "Part info.: \"%s\"", part_info);
+  KRN_DEBUG(1, "PCB info.: %.4x, DVD info.: %.2x",
+	    PINS_IN16(34), PINS_IN8(3));
+
+#undef PINS_IN8(idx)
+#undef PINS_IN16(idx)
+}
+
+static void parse_pins2(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
+{
+  kgi_u_t _pins_offset = mgag->vbios.pins.offset;
+#define PINS_IN8(idx) MGAG_ROM_IN8(mgag_io, _pins_offset + (idx))
+#define PINS_IN16(idx) MGAG_ROM_IN16(mgag_io, _pins_offset + (idx))
+#define PINS_IN32(idx) MGAG_ROM_IN32(mgag_io, _pins_offset + (idx))
+
+  KRN_DEBUG(1, "Max pixel/system VCO: %u kHz", (PINS_IN8(41) == 0xFF) ?
+	    230000 : ((PINS_IN8(41) + 100) * 1000));
+
+  mgag->vbios.fref = 14318;
+  mgag->vbios.fsystem = 
+    (PINS_IN8(43) == 0xFF) ? 50000 : ((PINS_IN8(43) + 100) * 1000);
+
+  mgag->vbios.mctlwtst = 
+    ((PINS_IN8(51) & 0x01) ? 0x00000001 : 0) |
+    ((PINS_IN8(51) & 0x02) ? 0x00000100 : 0) |
+    ((PINS_IN8(51) & 0x04) ? 0x00010000 : 0) |
+    ((PINS_IN8(51) & 0x08) ? 0x00020000 : 0);
+
+#define DISPLAY_SAVED_FREQ(fre) KRN_DEBUG(1, #fre " = %u kHz", mgag->vbios.##fre)
+#define DISPLAY_SAVED_REG(reg) KRN_DEBUG(1, #reg " = %.8x", mgag->vbios.##reg)
+
+  DISPLAY_SAVED_FREQ(fsystem);
+  DISPLAY_SAVED_REG(mctlwtst);
+
+#undef DISPLAY_SAVED_FREQ(fre)
+#undef DISPLAY_SAVED_REG(reg)
+
+#undef PINS_IN8(idx)
+#undef PINS_IN16(idx)
+#undef PINS_IN32(idx)
+}
+
+static void parse_pins3(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
+{
+  kgi_u_t _pins_offset = mgag->vbios.pins.offset;
+#define PINS_IN8(idx) MGAG_ROM_IN8(mgag_io, _pins_offset + (idx))
+#define PINS_IN16(idx) MGAG_ROM_IN16(mgag_io, _pins_offset + (idx))
+#define PINS_IN32(idx) MGAG_ROM_IN32(mgag_io, _pins_offset + (idx))
+
+  KRN_DEBUG(1, "Max pixel/system VCO: %u kHz", (PINS_IN8(36) == 0xFF) ?
+	    230000 : ((PINS_IN8(36) + 100) * 1000));
+
+  KRN_DEBUG(1, "Max Pixel Clock ( 8bpp): %u MHz", PINS_IN8(37) + 100);
+  KRN_DEBUG(1, "Max Pixel Clock (16bpp): %u MHz", PINS_IN8(38) + 100);
+  KRN_DEBUG(1, "Max Pixel Clock (24bpp): %u MHz", PINS_IN8(39) + 100);
+  KRN_DEBUG(1, "Max Pixel Clock (32bpp): %u MHz", PINS_IN8(40) + 100);
+
+  mgag->vbios.fref = (PINS_IN8(52) & 0x20) ? 14318 : 27000;
+  /* Not used on G200: mgag->vbios.fsystem */
+
+  mgag->vbios.opt = (PINS_IN8(54) & 0x7) << 10; /* (only memconfig) */
+  mgag->vbios.opt2 = PINS_IN8(58) << 12;
+  mgag->vbios.mctlwtst = PINS_IN32(48);
+  if (mgag->vbios.mctlwtst == 0xFFFFFFFF)
+    mgag->vbios.mctlwtst = 0x01250A21; /* matroxfb default value */
+  mgag->vbios.memrdbk = 
+    ((PINS_IN8(57) << 21) & 0x1E000000)
+    |((PINS_IN8(57) << 22) & 0x00C00000)
+    |((PINS_IN8(56) << 1) & 0x000001E0)
+    |(PINS_IN8(56) & 0x0000000F);
+  KRN_DEBUG(1, "MemRdBk    : %.4x", PINS_IN16(56));
+  mgag->vbios.sgram = (PINS_IN8(52) & 0x10) ? 1 : 0;
+
+  KRN_DEBUG(1, "Memory size: %u MB", (PINS_IN8(55) & 0xC0) >> 4);
+  KRN_DEBUG(1, "Memory type: %u (0=SDRAM, 1=SGRAM)", (PINS_IN8(52) & 0x10));
+
+  pins_info_345(mgag_io, _pins_offset);
+
+#define DISPLAY_SAVED_FREQ(fre) KRN_DEBUG(1, #fre " = %u kHz", mgag->vbios.##fre)
+#define DISPLAY_SAVED_REG(reg) KRN_DEBUG(1, #reg " = %.8x", mgag->vbios.##reg)
+
+  DISPLAY_SAVED_FREQ(fref);
+  DISPLAY_SAVED_REG(opt);
+  DISPLAY_SAVED_REG(opt2);
+  DISPLAY_SAVED_REG(mctlwtst);
+  DISPLAY_SAVED_REG(memrdbk);
+  DISPLAY_SAVED_REG(sgram);
+
+#undef DISPLAY_SAVED_FREQ(fre)
+#undef DISPLAY_SAVED_REG(reg)
+
+#undef PINS_IN8(idx)
+#undef PINS_IN16(idx)
+#undef PINS_IN32(idx)
+}
+
+static void parse_pins4(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
+{
+  kgi_u_t _pins_offset = mgag->vbios.pins.offset;
+#define PINS_IN8(idx) MGAG_ROM_IN8(mgag_io, _pins_offset + (idx))
+#define PINS_IN16(idx) MGAG_ROM_IN16(mgag_io, _pins_offset + (idx))
+#define PINS_IN32(idx) MGAG_ROM_IN32(mgag_io, _pins_offset + (idx))
+
+  KRN_DEBUG(1, "Max pixel VCO: %u kHz", (PINS_IN8(39) == 0xFF) ?
+	    230000 : (PINS_IN8(39) * 4000));
+  KRN_DEBUG(1, "Max system VCO: %u kHz", (PINS_IN8(38) == 0xFF) ?
+	    0 : (PINS_IN8(38) * 4000));
+
+  KRN_DEBUG(1, "Max CRTC1 speed (8bpp): %u kHz (%.2x)",
+	    PINS_IN8(40) * 4000, PINS_IN8(40));
+  KRN_DEBUG(1, "Max CRTC1 speed (16bpp): %u kHz (%.2x)",
+	    PINS_IN8(41) * 4000, PINS_IN8(41));
+  KRN_DEBUG(1, "Max CRTC2 speed (16bpp): %u kHz (%.2x)",
+	    PINS_IN8(44) * 4000, PINS_IN8(44));
+
+  mgag->vbios.fref = (PINS_IN8(92) & 0x01) ? 14318 : 27000;
+  mgag->vbios.fsystem = 
+    (PINS_IN8(65) == 0xFF) ? 200000 : (PINS_IN8(65) * 4000);
+  KRN_DEBUG(2, "VBIOS Freq. system info: %.2x", PINS_IN8(65));
+
+  mgag->vbios.opt =
+    ((PINS_IN8(53) << 15) & 0x00400000)
+    |((PINS_IN8(53) << 22) & 0x10000000)
+    |((PINS_IN8(53) << 10) & 0x00001C00);
+  mgag->vbios.opt3 = PINS_IN32(67);
+  mgag->vbios.mctlwtst = PINS_IN32(71);
+  mgag->vbios.memrdbk = 
+    ((PINS_IN8(87) << 21) & 0x1E000000)
+    |((PINS_IN8(87) << 22) & 0x00C00000)
+    |((PINS_IN8(86) << 1) & 0x000001E0)
+    |(PINS_IN8(86) & 0x0000000F);
+  KRN_DEBUG(1, "MemRdBk    : %.4x", PINS_IN16(86));
+  KRN_DEBUG(1, "MemRdBkMod : %.4x", PINS_IN16(88));
+
+  KRN_DEBUG(1, "Memory size idx: %u (4,8,16,32MB)", (PINS_IN8(92) >> 2) & 3);
+  KRN_DEBUG(1, "Memory type: %u (0=SDRAM, 1=SGLVTTL16)", (PINS_IN8(92) & 16));
+
+  pins_info_345(mgag_io, _pins_offset);
+
+#define DISPLAY_SAVED_FREQ(fre) KRN_DEBUG(1, #fre " = %u kHz", mgag->vbios.##fre)
+#define DISPLAY_SAVED_REG(reg) KRN_DEBUG(1, #reg " = %.8x", mgag->vbios.##reg)
+
+  DISPLAY_SAVED_FREQ(fref);
+  DISPLAY_SAVED_FREQ(fsystem);
+  DISPLAY_SAVED_REG(opt);
+  DISPLAY_SAVED_REG(opt3);
+  DISPLAY_SAVED_REG(mctlwtst);
+  DISPLAY_SAVED_REG(memrdbk);
+
+#undef DISPLAY_SAVED_FREQ(fre)
+#undef DISPLAY_SAVED_REG(reg)
+
+
+#undef PINS_IN8(idx)
+#undef PINS_IN16(idx)
+#undef PINS_IN32(idx)
+}
 
 static void parse_pins5(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
 {
@@ -3977,6 +4106,8 @@ static void parse_pins5(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
 	    PINS_IN8(40) * 4000, PINS_IN8(40));
   KRN_DEBUG(1, "Max CRTC2 speed (16bpp): %u kHz (%.2x)",
 	    PINS_IN8(43) * 4000, PINS_IN8(43));
+
+  pins_info_345(mgag_io, _pins_offset);
 
   mgag->vbios.fref = (PINS_IN8(110) & 0x01) ? 14318 : 27000;
   mgag->vbios.fsystem = mgag->vbios.fvideo =
@@ -4094,7 +4225,7 @@ static void parse_bios(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
 	KRN_ERROR("Unknown Matrox pins fingerprint %.4x", pcheck);
 	pversion = plength = 0;
       }
-    KRN_DEBUG(2, "Matrox pins length: %.2x, version: %.2x", plength, pversion);
+    KRN_DEBUG(1, "Matrox pins length: %.2x, version: %.2x", plength, pversion);
     /* Saves data */
     mgag->vbios.pins.version = pversion;
     mgag->vbios.pins.length = plength;
@@ -4119,11 +4250,17 @@ static void parse_bios(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io)
       KRN_ERROR("Erroneous/unknown pins data, powerup info parsing cancelled.");
       break;
     case 1:
-    case 2:
-    case 3:
-    case 4:
       KRN_ERROR("Parsing powerup information for pins version %u"
 		" not yet implemented!", mgag->vbios.pins.version);
+      break;
+    case 2:
+      parse_pins2(mgag, mgag_io);
+      break;
+    case 3:
+      parse_pins3(mgag, mgag_io);
+      break;
+    case 4:
+      parse_pins4(mgag, mgag_io);
       break;
     case 5:
       parse_pins5(mgag, mgag_io);
@@ -4199,7 +4336,7 @@ kgi_error_t mgag_chipset_init(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
     {
       KRN_DEBUG(2, "chipset not initialized: doing reset/power-up");
       /* Power up the chipset */
-      if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450))
+      if (mgag->flags & (MGAG_CF_G550 | MGAG_CF_G450 | MGAG_CF_G400 | MGAG_CF_G200))
 	{
 	  KRN_DEBUG(1, "Starting (matroxfb+VBIOS)-based power-up sequence");
 	  mgag_chipset_power_up_per_vbios(mgag, mgag_io);
@@ -4337,7 +4474,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 	if (images != 1) {
 
-		KRN_DEBUG(1, "%i images not supported.", images);
+		KRN_ERROR("%i images not supported.", images);
 		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
@@ -4432,7 +4569,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL))
 	{
-		KRN_DEBUG(1, "image flags %.8x not supported", img[0].flags);
+		KRN_ERROR("image flags %.8x not supported", img[0].flags);
 		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
@@ -4444,7 +4581,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 		break;
 
 	default:
-		KRN_DEBUG(1, "common attributes %.8x not supported", img[0].cam);
+		KRN_ERROR("common attributes %.8x not supported", img[0].cam);
 		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
@@ -4470,7 +4607,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 			pgm = (pgm << shift) - 1;
 			break;
 
-	default:	KRN_DEBUG(0, "%i bpd not supported", bpd);
+	default:	KRN_ERROR("%i bpd not supported", bpd);
 			return -KGI_ERRNO(CHIPSET, FAILED);
 	}
 
@@ -4516,23 +4653,31 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 
 		/* Are we beyond the limits of the H/W?	*/
 
-		if ((img[0].size.x >= mgag->chipset.maxdots.x) || (img[0].virt.x >= mgag->chipset.maxdots.x)) {
+		if ((img[0].size.x >= mgag->chipset.maxdots.x)
+		    || (img[0].virt.x >= mgag->chipset.maxdots.x)) {
 
-			KRN_DEBUG(1, "%i (%i) x pixels are too many", img[0].size.x, img[0].virt.x);
+			KRN_ERROR("%i (%i) x pixels exceed %i",
+				  img[0].size.x, img[0].virt.x,
+				  mgag->chipset.maxdots.x);
 
 			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
-		if ((img[0].size.y >= mgag->chipset.maxdots.y) || (img[0].virt.y >= mgag->chipset.maxdots.y)) {
+		if ((img[0].size.y >= mgag->chipset.maxdots.y)
+		    || (img[0].virt.y >= mgag->chipset.maxdots.y)) {
 
-			KRN_DEBUG(1, "%i (%i) y pixels are too many", img[0].size.y, img[0].virt.y);
+			KRN_ERROR("%i (%i) y pixels exceed %i",
+				  img[0].size.y, img[0].virt.y,
+				  mgag->chipset.maxdots.y);
 
 			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > (8 * mgag->chipset.memory)) {
 
-			KRN_DEBUG(1, "not enough memory (%ipf*%if + %ipc)@%ix%i", bpf, img[0].frames, bpc, img[0].virt.x, img[0].virt.y);
+			KRN_ERROR("not enough memory (%ipf*%if + %ipc)@%ix%i",
+				  bpf, img[0].frames, bpc,
+				  img[0].virt.x, img[0].virt.y);
 
 			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
@@ -4550,15 +4695,19 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 		return KGI_EOK;
 
 	case KGI_TC_LOWER:
+		if (dpm->dclk < mgag->chipset.dclk.min) {
+
+			KRN_ERROR("DCLK = %i Hz is too low", dpm->dclk);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
+		}
+		return KGI_EOK;
+
 	case KGI_TC_RAISE:
 
-		if (cmd == KGI_TC_LOWER) {
+		if (dpm->dclk > mgag->chipset.dclk.max) {
 
-			if (dpm->dclk < mgag->chipset.dclk.min) {
-
-				KRN_DEBUG(1, "DCLK = %i Hz is too low", dpm->dclk);
-				return -KGI_ERRNO(CHIPSET, UNKNOWN);
-			}
+			KRN_ERROR("DCLK = %i Hz is too high", dpm->dclk);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
 		}
 		return KGI_EOK;
 
@@ -4582,7 +4731,7 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 		    (img[0].virt.x >= mgag->chipset.maxdots.x) ||
 		   ((img[0].virt.y * img[0].virt.x * bpp) > (8 * mgag->chipset.memory))) {
 
-			KRN_DEBUG(1, "resolution too high: %ix%i (%ix%i)",
+			KRN_ERROR("resolution too high: %ix%i (%ix%i)",
 					img[0].size.x,
 					img[0].size.y,
 					img[0].virt.x,
@@ -4650,7 +4799,7 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 				((mgag_mode->mgag.VbStart & 0x200) >> 4);
 	mgag_mode->mgag.CRTC[0x0A] = 0x00; /* No text cursor */
 	mgag_mode->mgag.CRTC[0x0B] = 0x00; /* No text cursor */
-#warning do we need to set the Start Address ?
+	/* TODO: do we need to set the Start Address? */
 	mgag_mode->mgag.CRTC[0x0C] = 0x00;
 	mgag_mode->mgag.CRTC[0x0D] = 0x00;
 	mgag_mode->mgag.CRTC[0x0E] = 0x00; /* No text cursor */
@@ -4668,7 +4817,7 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 	mgag_mode->mgag.CRTC[0x18] =   mgag_mode->mgag.LnComp & 0xFF;
 	/* CRTC22, CRTC24, CRTC26 not needed/handled */
 
-#warning do we need to set the Start Address ?
+	/* TODO: do we need to set the Start Address? */
 	mgag_mode->mgag.ECRTC[0]   =  (mgag_mode->mgag.Offset  & 0x300) >> 4;
 	mgag_mode->mgag.ECRTC[1]   = ((mgag_mode->mgag.HTotal  & 0x100) >> 8) |
 				((mgag_mode->mgag.HbStart & 0x100) >> 7) |
@@ -4681,7 +4830,7 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 				((mgag_mode->mgag.LnComp  & 0x400) >> 3);
 	{
 	  int vcsf = 0; /* Video Clocking Scale Factor */
-	  switch (bpp) { /* TODO: Do something better than a switch ? */
+	  switch (bpp) {
 	  case 8:
 	    vcsf = 0; break;
 	  case 16:
@@ -4691,7 +4840,7 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 	  case 32:
 	    vcsf = 3; break;
 	  default:
-	    KRN_DEBUG(0, "%i bpp not supported", bpp);
+	    KRN_ERROR("%i bpp not supported", bpp);
 	    return -KGI_ERRNO(CHIPSET, FAILED);
 	  }
 	  mgag_mode->mgag.ECRTC[3] = (vcsf & ECRT3_SCALE_MASK)

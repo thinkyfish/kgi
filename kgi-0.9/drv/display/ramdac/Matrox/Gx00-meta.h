@@ -12,6 +12,9 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00-meta.h,v $
+**	Revision 1.2  2001/08/31 23:59:55  ortalo
+**	Driver nearly operational (without accel) on G400 and Mystique boards.
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -20,7 +23,7 @@
 #ifndef	_ramdac_Matrox_Gx00_meta_h
 #define	_ramdac_Matrox_Gx00_meta_h
 
-#warning your meta language prefix is Gx00 or gx00_, not MGAG/mgag.
+/* TODO: the meta language prefix is Gx00 or gx00_, not MGAG/mgag. */
 
 typedef kgim_chipset_io_t mgag_ramdac_io_t;
 

@@ -30,7 +30,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 600
+#define TEST_DURATION 15
 
 #define BUFFER_IN_MEMORY 0
 

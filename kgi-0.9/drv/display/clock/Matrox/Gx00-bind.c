@@ -10,11 +10,11 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: $
+**	$Id: Gx00-bind.c,v 1.6 2002/09/10 22:35:58 ortalo Exp $
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.5 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.6 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -66,7 +66,7 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_MYS):
 
-		mgag->flags |= MGAG_CF_1x64;
+		mgag->flags |= MGAG_CLOCK_1x64;
 
 		mgag->pll.fref = KGIM_DEFAULT(options->clock->fref, 14318180);
 
@@ -96,14 +96,14 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G200_PCI):
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G200_AGP):
 
-		mgag->flags |= MGAG_CF_G200;
+		mgag->flags |= MGAG_CLOCK_G200;
 
 		mgag->pll.fref = KGIM_DEFAULT(options->clock->fref, 27 MHZ);
 
 		mgag->pll.mul.min = 8;
 		mgag->pll.div.max = 7;
 
-		if (mgag->flags & MGAG_CF_SGRAM) {
+		if (mgag->flags & MGAG_CLOCK_SGRAM) {
 
 			mgag->pll.clock.dclk.range[0].max = 
 			mgag->pll.fvco.max = 
@@ -119,7 +119,7 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G400):
 
-		mgag->flags |= MGAG_CF_G400;
+		mgag->flags |= MGAG_CLOCK_G400;
 
 		if (pcicfg_in8(MGAG_PCIDEV(mgag_io) + PCI_REVISION_ID) >= 128)
 		  {

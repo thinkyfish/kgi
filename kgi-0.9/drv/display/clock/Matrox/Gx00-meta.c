@@ -10,12 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: $
+**	$Id: Gx00-meta.c,v 1.4 2002/09/10 22:35:58 ortalo Exp $
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.4 $"
 
 #ifndef DEBUG_LEVEL
 #define DEBUG_LEVEL 1
@@ -25,7 +25,7 @@
 
 #include "chipset/Matrox/Gx00.h"
 #include "clock/Matrox/Gx00-meta.h"
-
+#if 0
 /*
 **	IO helpers
 */
@@ -46,7 +46,7 @@ static inline kgi_u8_t MGAG_EDAC_IN8(mgag_clock_io_t *mgag_io, kgi_u8_t reg)
   KRN_DEBUG(3, "EDAC[%.2x] => %.2x", reg, val);
   return val;
 }
-
+#endif
 /*	KGI interface
 */
 
@@ -101,7 +101,7 @@ void mgag_clock_mode_prepare(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
   /*	Get loop filter value (s) - 1x64 and G200 uses the same values
    */
 
-  if (mgag->flags & MGAG_CF_G400) {
+  if (mgag->flags & MGAG_CLOCK_G400) {
 
     if ((mgag_mode->pll.fvco > 50 MHZ) && 
 	(mgag_mode->pll.fvco < 110 MHZ)) {

@@ -11,12 +11,14 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	Rodolphe_Ortalo
 **
-**	$Id: $
+**	$Id: Gx00-meta.h,v 1.5 2002/09/10 22:35:54 ortalo Exp $
 */
 #ifndef	_chipset_Matrox_Gx00_meta_h
 #define	_chipset_Matrox_Gx00_meta_h
 
 #include "chipset/IBM/VGA-text-meta.h"
+
+#include "chipset/Matrox/Gx00.h"
 
 #define MGAG_ECRT_REGS 0x09
 
@@ -50,6 +52,16 @@ typedef	struct {
   kgim_io_out8_fn *ECRTOut8;
   kgim_io_in8_fn *ECRTIn8;
 
+  kgim_io_out8_fn *EDACOut8;
+  kgim_io_in8_fn *EDACIn8;
+
+  // TODO: Correct the probable bug in KGIM_IO_FN macro (module.h) with
+  // TODO: respect to the size of the 'reg' parm (not variable).
+  // TODO: And then update the declarations to match the size...
+  kgim_io_in32_fn *ROMIn8;
+  kgim_io_in32_fn *ROMIn16;
+  kgim_io_in32_fn *ROMIn32;
+
 } mgag_chipset_io_t;
 
 /*
@@ -68,6 +80,17 @@ typedef	struct {
  */
 #define MGAG_ECRT_OUT8(ctx, val, reg)   (ctx)->ECRTOut8((ctx), (val), (reg))
 #define MGAG_ECRT_IN8(ctx, reg)         (ctx)->ECRTIn8((ctx), (reg))
+/*
+ * MGA extended-DAC registers
+ */
+#define MGAG_EDAC_OUT8(ctx, val, reg)   (ctx)->EDACOut8((ctx), (val), (reg))
+#define MGAG_EDAC_IN8(ctx, reg)         (ctx)->EDACIn8((ctx), (reg))
+/*
+ * Access to MGA ROM/VBIOS
+ */
+#define MGAG_ROM_IN8(ctx, reg)          (ctx)->ROMIn8((ctx), (reg))
+#define MGAG_ROM_IN16(ctx, reg)         (ctx)->ROMIn16((ctx), (reg))
+#define MGAG_ROM_IN32(ctx, reg)         (ctx)->ROMIn32((ctx), (reg))
 /*
  * Access to the VGA IO
  */
@@ -185,20 +208,21 @@ typedef struct
 
     /* Reference information */
     kgi_u_t fref;
-    kgi_u_t fsystem;
+    kgi_u_t fsystem; /* G400, Gx50 */
     kgi_u_t fvideo;
 
     /* Init. values get from the 'pins' */
     kgi_u32_t opt;
     kgi_u32_t opt2;
-    kgi_u32_t opt3;
+    kgi_u32_t opt3; /* G400, Gx50 */
     kgi_u32_t mctlwtst;
-    kgi_u32_t memmisc;
+    kgi_u32_t memmisc; /* Gx50 */
     kgi_u32_t memrdbk;
     kgi_u32_t maccess;
 
     /* Flags */ /* TODO: Reduce size of boolean flags */
-    kgi_u_t ddr, dll, emrswen, no_wtst_xlat;
+    kgi_u_t ddr, dll, emrswen, no_wtst_xlat; /* Gx50 */
+    kgi_u_t sgram; /* G200 */
 
   } vbios;
 

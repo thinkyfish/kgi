@@ -11,7 +11,7 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	Rodolphe_Ortalo
 **
-**	$Id: $
+**	$Id: Gx00-meta.h,v 1.4 2002/09/10 22:35:59 ortalo Exp $
 */
 
 #ifndef _clock_Matrox_Gx00_meta_h
@@ -19,8 +19,17 @@
 
 #include "clock/pll-meta.h"
 
-#warning your meta language prefix is GX00_ and gx00_.
-
+/* TODO: The meta language prefix is should be GX00_ and gx00_.
+ * TODO: But this will be cumbersome to adapt to. -- ortalo
+ */
+#if 1
+#include "chipset/Matrox/Gx00-meta.h"
+typedef mgag_chipset_io_t mgag_clock_io_t;
+#define MGAG_DAC_OUT8(ctx, val, reg)	KGIM_DAC_OUT8(&(ctx->vga.kgim), val, reg)
+#define MGAG_DAC_IN8(ctx, reg)		KGIM_DAC_IN8(&(ctx->vga.kgim), reg)
+#define MGAG_CLK_OUT8(ctx, val, reg)	KGIM_CLK_OUT8(&(ctx->vga.kgim), val, reg)
+#define MGAG_CLK_IN8(ctx, val, reg)	KGIM_CLK_IN8(&(ctx->vga.kgim), reg)
+#else
 typedef pll_clock_io_t mgag_clock_io_t;
 
 #define MGAG_PCIDEV(ctx)		KGIM_PCIDEV(ctx)
@@ -29,6 +38,7 @@ typedef pll_clock_io_t mgag_clock_io_t;
 #define MGAG_DAC_IN8(ctx, reg)		PLL_DAC_IN8(ctx, reg)
 #define MGAG_CLK_OUT8(ctx, val, reg)	PLL_CLK_OUT8(ctx, val, reg)
 #define MGAG_CLK_IN8(ctx, val, reg)	PLL_CLK_IN8(ctx, reg)
+#endif
 
 typedef struct {
 
@@ -42,13 +52,13 @@ typedef enum {
 
 	/* chipsets */
 
-	MGAG_CF_1x64	= (0x01 << 1),
-	MGAG_CF_G200	= (0x01 << 2),
-	MGAG_CF_G400	= (0x01 << 3),
+	MGAG_CLOCK_1x64	= (0x01 << 1),
+	MGAG_CLOCK_G200	= (0x01 << 2),
+	MGAG_CLOCK_G400	= (0x01 << 3),
 
 	/* capabilities */
 
-	MGAG_CF_SGRAM	= (0x01 << 4)
+	MGAG_CLOCK_SGRAM = (0x01 << 4)
 
 } mgag_clock_flags_t;
 

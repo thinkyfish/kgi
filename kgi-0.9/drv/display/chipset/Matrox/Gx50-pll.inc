@@ -9,7 +9,7 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: $
+**	$Id: Gx50-pll.inc,v 1.1 2002/09/10 22:35:54 ortalo Exp $
 **	
 */
 
@@ -76,8 +76,8 @@ static kgi_u8_t Gx50_PLLSTAT_LOCK[] =
 { XSYSPLLSTAT_SYSLOCK, XPIXPLLSTAT_PIXLOCK, XPIXPLLSTAT_PIXLOCK,
   XPIXPLLSTAT_PIXLOCK, XVIDPLLSTAT_VIDLOCK };
 
-/* TODOs:
- *  - better error reporting
+/*
+ * TODO: - better error reporting
  */
 static inline void Gx50_register_values(Gx50_pll_mode_t *mode,
 					kgi_u8_t *m, kgi_u8_t *n, kgi_u8_t *ps)

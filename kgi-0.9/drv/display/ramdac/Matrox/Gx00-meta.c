@@ -10,21 +10,13 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: Gx00-meta.c,v $
-**	Revision 1.3  2001/08/31 23:59:55  ortalo
-**	Driver nearly operational (without accel) on G400 and Mystique boards.
-**	
-**	Revision 1.2  2000/09/21 10:06:40  seeger_s
-**	- namespace cleanup: E() -> KGI_ERRNO()
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
-**	- initial import of pre-SourceForge tree
+**	$Id:$
 **	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.4 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -363,7 +355,8 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 		KRN_DEBUG(3, "KGI_TC_PROPOSE:");
 
 		if (0 == img[0].frames) {
-#warning check that it is the ramdac which should do that!
+
+		  /* TODO: check that it is the ramdac which should do that! */
 			img[0].frames = 1;
 		}
 
@@ -422,7 +415,8 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 
 		KRN_DEBUG(3, "KGI_TC_CHECK:");
 
-		if (! (dpm->lclk.mul == dpm->lclk.div == dpm->rclk.mul == dpm->rclk.div == 1)) {
+		if (! ((dpm->lclk.mul == 1) && (dpm->lclk.div == 1) &&
+		       (dpm->rclk.mul == 1) && (dpm->rclk.div == 1)) ) {
 
 			KRN_DEBUG(1, "lclk/rclk div/mul not supported");
 			return -KGI_ERRNO(RAMDAC, NOSUP);
@@ -487,8 +481,7 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 		mgag_mode->ptr_ctrl.Show	= mgag_ramdac_ptr_show;
 		mgag_mode->ptr_ctrl.Hide	= mgag_ramdac_ptr_hide;
 		mgag_mode->ptr_ctrl.Undo	= mgag_ramdac_ptr_undo;
-#warning init mgag_mode->cursor_clut
-#warning init mgag_mode->cursor_data
+#warning init mgag_mode->cursor_clut and mgag_mode->cursor_data
 
 		/*
 		**	clut setup
