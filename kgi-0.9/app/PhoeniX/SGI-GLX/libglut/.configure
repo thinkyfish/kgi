@@ -1,0 +1,4 @@
+
+mkdir -p $DIR_TOP_BUILD/include/GL
+
+ln -sf $DIR_SOURCE/glut.h	$DIR_TOP_BUILD/include/GL/glut.h
