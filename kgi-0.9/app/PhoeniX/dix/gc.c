@@ -157,7 +157,7 @@ dixChangeGC(client, pGC, mask, pC32, pUnion)
     PixmapPtr 		pPixmap;
     BITS32		maskQ;
 
-    assert( client );
+    assert( client || (NullClient == client));
     assert( (pC32 && !pUnion) || (!pC32 && pUnion) );
     pGC->serialNumber |= GC_CHANGE_SERIAL_BIT;
 
