@@ -69,7 +69,7 @@ SOFTWARE.
 #define MAXBUFSIZE (1 << 22)
 #endif
 
-#include <X11/Xdmcp.h>
+#include "X11/Xdmcp.h"
 
 #ifndef sgi	    /* SGI defines OPEN_MAX in a useless way */
 #ifndef X_NOT_POSIX
@@ -111,7 +111,7 @@ SOFTWARE.
 #endif
 #endif
 
-#include <X11/Xpoll.h>
+#include "X11/Xpoll.h"
 
 /*
  * MAXSOCKS is used only for initialising MaxClients when no other method

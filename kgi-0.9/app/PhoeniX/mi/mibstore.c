@@ -40,10 +40,12 @@ implied warranty.
 
 /* $XFree86: xc/programs/Xserver/mi/mibstore.c,v 1.5 1999/10/13 22:33:11 dawes Exp $ */
 
+#include "config.h"
+
 #define NEED_EVENTS
-#include "X.h"
-#include "Xmd.h"
-#include "Xproto.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
+#include "X11/Xproto.h"
 #include "misc.h"
 #include "regionstr.h"
 #include "scrnintstr.h"
@@ -51,7 +53,7 @@ implied warranty.
 #include "extnsionst.h"
 #include "windowstr.h"
 #include "pixmapstr.h"
-#include "fontstruct.h"
+#include "X11/fonts/fontstruct.h"
 #include "dixfontstr.h"
 #include "dixstruct.h"		/* For requestingClient */
 #include "mi.h"

@@ -43,11 +43,13 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: osinit.c /main/47 1998/02/09 15:12:48 kaleb $ */
 
+#include "config.h"
+
 #include <stdio.h>
-#include "X.h"
+#include "X11/X.h"
 #include "os.h"
 #include "osdep.h"
-#include "Xos.h"
+#include "X11/Xos.h"
 
 #ifdef SMART_SCHEDULE
 #include "dixstruct.h"

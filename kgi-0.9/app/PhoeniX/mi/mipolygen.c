@@ -41,7 +41,10 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mipolygen.c /main/9 1998/02/09 14:47:51 kaleb $ */
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 #include "gcstruct.h"
 #include "miscanfill.h"
 #include "mipoly.h"

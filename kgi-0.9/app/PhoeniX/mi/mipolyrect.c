@@ -41,8 +41,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mipolyrect.c /main/12 1998/02/09 14:47:59 kaleb $ */
-#include "X.h"
-#include "Xprotostr.h"
+
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "miscstruct.h"
 #include "gcstruct.h"
 #include "pixmap.h"

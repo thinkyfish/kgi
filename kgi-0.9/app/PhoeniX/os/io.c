@@ -50,15 +50,18 @@ SOFTWARE.
  *****************************************************************/
 /* $XFree86: xc/programs/Xserver/os/io.c,v 3.21 1999/11/19 13:55:10 hohndel Exp $ */
 
+#include "config.h"
+#define	_XOPEN_SOURCE
+
 #ifdef WIN32
 #include <X11/Xwinsock.h>
 #endif
 #include <stdio.h>
-#include <X11/Xtrans.h>
+#include "X11/Xtrans.h"
 #ifdef X_NOT_STDC_ENV
 extern int errno;
 #endif
-#include "Xmd.h"
+#include "X11/Xmd.h"
 #include <errno.h>
 #if !defined(AMOEBA) && !defined(MINIX) && !defined(__EMX__) && !defined(WIN32)
 #ifndef Lynx
@@ -67,17 +70,17 @@ extern int errno;
 #include <uio.h>
 #endif
 #endif
-#include "X.h"
+#include "X11/X.h"
 #define NEED_REPLIES
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "os.h"
-#include "Xpoll.h"
+#include "X11/Xpoll.h"
 #include "osdep.h"
 #include "opaque.h"
 #include "dixstruct.h"
 #include "misc.h"
 #ifdef LBX
-#include "lbxserve.h"
+#include "X11/extensions/lbxserve.h"
 #endif
 
 CallbackListPtr       ReplyCallback;

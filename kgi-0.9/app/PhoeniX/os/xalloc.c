@@ -27,6 +27,8 @@ Pascal Haible.
 
 /* $XFree86: xc/programs/Xserver/os/xalloc.c,v 3.25 2000/02/22 01:03:25 mvojkovi Exp $ */
 
+#include "config.h"
+
 /* Only used if INTERNAL_MALLOC is defined
  * - otherwise xalloc() in utils.c is used
  */
@@ -42,9 +44,9 @@ extern char *calloc();
 extern char *realloc();
 #endif
 
-#include "Xos.h"
-#include "misc.h"
-#include "X.h"
+#include "X11/Xos.h"
+#include "X11/misc.h"
+#include "X11/X.h"
 
 #ifdef XALLOC_LOG
 #include <stdio.h>

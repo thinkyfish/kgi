@@ -41,7 +41,10 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 
 #include "misc.h"
 #include "scrnintstr.h"

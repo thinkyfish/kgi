@@ -44,6 +44,8 @@ SOFTWARE.
 
 /* $TOG: mispans.c /main/7 1998/02/09 14:48:44 kaleb $ */
 
+#include "config.h"
+
 #include "misc.h"
 #include "pixmapstr.h"
 #include "gcstruct.h"

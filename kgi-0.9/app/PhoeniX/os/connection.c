@@ -59,12 +59,15 @@ SOFTWARE.
  *
  *****************************************************************/
 
+#include "config.h"
+#define	_XOPEN_SOURCE
+
 #ifdef WIN32
 #include <X11/Xwinsock.h>
 #endif
-#include "X.h"
-#include "Xproto.h"
-#include <X11/Xtrans.h>
+#include "X11/X.h"
+#include "X11/Xproto.h"
+#include "X11/Xtrans.h"
 #include <errno.h>
 #ifdef X_NOT_STDC_ENV
 extern int errno;
@@ -148,19 +151,19 @@ extern __const__ int _nfiles;
 #endif
 #endif /* WIN32 */
 #include "misc.h"		/* for typedef of pointer */
-#include <X11/Xpoll.h>
+#include "X11/Xpoll.h"
 #include "osdep.h"
 #include "opaque.h"
 #include "dixstruct.h"
 #ifdef XAPPGROUP
-#include "extensions/Xagsrv.h"
+#include "X11/extensions/Xagsrv.h"
 #endif
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "extensions/security.h"
+#include "X11/extensions/security.h"
 #endif
 #ifdef LBX
-#include "lbxserve.h"
+#include "X11/extensions/lbxserve.h"
 #endif
 
 #ifdef X_NOT_POSIX

@@ -41,8 +41,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mipolypnt.c /main/7 1998/02/09 14:47:55 kaleb $ */
-#include "X.h"
-#include "Xprotostr.h"
+
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "pixmapstr.h"
 #include "gcstruct.h"
 #include "windowstr.h"

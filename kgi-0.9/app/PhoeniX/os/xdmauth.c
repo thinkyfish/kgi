@@ -30,9 +30,11 @@ from The Open Group.
  * Author:  Keith Packard, MIT X Consortium
  */
 
+#include "config.h"
+
 #include <stdio.h>
-#include "X.h"
-#include "Xtrans.h"
+#include "X11/X.h"
+#include "X11/Xtrans.h"
 #include "os.h"
 #include "osdep.h"
 #include "dixstruct.h"
@@ -42,9 +44,9 @@ from The Open Group.
 static Bool authFromXDMCP;
 
 #ifdef XDMCP
-#include "Xmd.h"
+#include "X11/Xmd.h"
 #undef REQUEST
-#include "Xdmcp.h"
+#include "X11/Xdmcp.h"
 
 /* XDM-AUTHENTICATION-1 */
 

@@ -51,7 +51,10 @@ SOFTWARE.
  *  to the appropriate routine to actually scan convert the
  *  polygon.
  */
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 #include "windowstr.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"

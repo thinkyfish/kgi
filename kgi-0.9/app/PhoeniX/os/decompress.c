@@ -28,6 +28,8 @@ from The Open Group.
  * decompress - cat a compressed file
  */
 
+#include "config.h"
+
 #include <stdio.h>
 
 #ifdef TEST
@@ -41,7 +43,7 @@ typedef char	*FID;
 #include <ctype.h>
 
 #else
-#include    "Xos.h"
+#include    "X11/Xos.h"
 #include    "misc.h"
 #endif
 

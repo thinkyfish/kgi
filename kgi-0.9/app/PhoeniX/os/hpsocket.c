@@ -27,6 +27,8 @@ from The Open Group.
  * special socket routine for hp
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 

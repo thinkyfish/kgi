@@ -78,7 +78,7 @@ from The Open Group.
 #define _WILLWINSOCK_
 #endif
 
-#include "Xtrans.h"
+#include "X11/Xtrans.h"
 
 #ifdef XTRANSDEBUG
 #include <stdio.h>

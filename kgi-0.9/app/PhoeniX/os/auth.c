@@ -24,6 +24,9 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/Xserver/os/auth.c,v 1.4 1998/12/06 06:08:47 dawes Exp $ */
 
+
+#include "config.h"
+
 /*
  * authorization hooks for the server
  * Author:  Keith Packard, MIT X Consortium
@@ -32,8 +35,8 @@ from The Open Group.
 #ifdef K5AUTH
 # include   <krb5/krb5.h>
 #endif
-# include   "X.h"
-# include   "Xauth.h"
+# include   "X11/X.h"
+# include   "X11/Xauth.h"
 # include   "misc.h"
 # include   "osdep.h"
 # include   "dixstruct.h"
@@ -41,7 +44,7 @@ from The Open Group.
 # include   <sys/stat.h>
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-# include   "extensions/security.h"
+# include   "X11/extensions/security.h"
 #endif
 #ifdef WIN32
 #include "Xw32defs.h"

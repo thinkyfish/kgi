@@ -42,7 +42,10 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: miwindow.c /main/23 1998/02/09 14:49:30 kaleb $ */
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 #include "miscstruct.h"
 #include "region.h"
 #include "mi.h"

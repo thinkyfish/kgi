@@ -47,6 +47,8 @@ from The Open Group.
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
 #ifdef XSERV_t
 #include "os.h"
 #else

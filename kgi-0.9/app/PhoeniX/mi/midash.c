@@ -41,6 +41,9 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: midash.c /main/14 1998/02/09 14:46:34 kaleb $ */
+
+#include "config.h"
+
 #include "miscstruct.h"
 #include "mistruct.h"
 #include "mifpoly.h"

@@ -12,6 +12,8 @@
  * It is provided "as is" without express or implied warranty.
  */
 
+#include "config.h"
+
 #ifdef AMOEBA
 /*
  * iopreader.c

@@ -43,6 +43,8 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: oscolor.c /main/17 1998/02/09 15:12:39 kaleb $ */
 
+#include "config.h"
+
 #ifndef USE_RGB_TXT
 
 #ifdef NDBM

@@ -43,15 +43,17 @@ SOFTWARE.
 ******************************************************************/
 /* $XFree86: xc/programs/Xserver/os/access.c,v 3.31 1999/12/27 00:39:57 robin Exp $ */
 
+#include "config.h"
+
 #ifdef WIN32
 #include <X11/Xwinsock.h>
 #endif
 
 #include <stdio.h>
-#include <X11/Xtrans.h>
-#include <X11/Xauth.h>
-#include <X.h>
-#include <Xproto.h>
+#include "X11/Xtrans.h"
+#include "X11/Xauth.h"
+#include "X11/X.h"
+#include "X11/Xproto.h"
 #include "misc.h"
 #include "site.h"
 #include <errno.h>
@@ -203,7 +205,7 @@ SOFTWARE.
 
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "extensions/security.h"
+#include "X11/extensions/security.h"
 #endif
 
 Bool defeatAccessControl = FALSE;

@@ -31,6 +31,8 @@ from The Open Group.
  * bresenham zero-width lines, except walks an X edge
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #ifdef _XOPEN_SOURCE
 #include <math.h>
@@ -39,7 +41,7 @@ from The Open Group.
 #include <math.h>
 #undef _XOPEN_SOURCE
 #endif
-#include "X.h"
+#include "X11/X.h"
 #include "windowstr.h"
 #include "gcstruct.h"
 #include "miscstruct.h"

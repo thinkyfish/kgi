@@ -31,9 +31,11 @@ Author:  Bob Scheifler, MIT X Consortium
  * The Computer Journal, November 1967, Volume 10, Number 3, pp. 282-289
  */
 
+#include "config.h"
+
 #include <math.h>
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "miscstruct.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"

@@ -22,14 +22,16 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/Xserver/os/secauth.c,v 1.5 1998/10/11 11:23:44 dawes Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "os.h"
 #include "osdep.h"
 #include "dixstruct.h"
 
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "extensions/security.h"
+#include "X11/extensions/security.h"
 #endif
 
 static char InvalidPolicyReason[] = "invalid policy specification";

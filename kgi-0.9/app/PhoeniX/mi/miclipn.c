@@ -23,7 +23,9 @@ from The Open Group.
 
 */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "windowstr.h"
 #include "scrnintstr.h"
 

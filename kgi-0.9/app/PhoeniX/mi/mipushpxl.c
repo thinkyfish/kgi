@@ -42,12 +42,15 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mipushpxl.c /main/12 1998/02/09 14:48:25 kaleb $ */
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 #include "gcstruct.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "miscstruct.h"
-#include "../ddx/mfb/maskbits.h"
+#include "ddx/mfb/maskbits.h"
 #include "mi.h"
 
 #define NPT 128

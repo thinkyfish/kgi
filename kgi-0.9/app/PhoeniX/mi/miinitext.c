@@ -43,6 +43,8 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: miinitext.c /main/47 1998/02/09 14:47:26 kaleb $ */
 
+#include "config.h"
+
 #include "misc.h"
 #include "extension.h"
 #include "micmap.h"
@@ -76,33 +78,33 @@ typedef void (*InitExtension)(INITARGS);
 #include "loaderProcs.h"
 #endif
 
-#include "Xlib.h"
+#include "X11/Xlib.h"
 #ifdef MITSHM
-#include "shmstr.h"
+#include "X11/extensions/shmstr.h"
 #endif
 #ifdef XTEST
-#include "XTest.h"
+#include "X11/extensions/XTest.h"
 #endif
 #ifdef XKB
-#include "XKB.h"
+#include "X11/extensions/XKB.h"
 #endif
 #ifdef LBX
-#include "lbxstr.h"
+#include "X11/extensions/lbxstr.h"
 #endif
 #ifdef XPRINT
-#include "Print.h"
+#include "X11/extensions/Print.h"
 #endif
 #ifdef XAPPGROUP
-#include "Xagstr.h"
+#include "X11/extensions/Xagstr.h"
 #endif
 #ifdef XCSECURITY
-#include "securstr.h"
+#include "X11/extensions/securstr.h"
 #endif
 #ifdef PANORAMIX
-#include "panoramiXproto.h"
+#include "X11/extensions/panoramiXproto.h"
 #endif
 #ifdef XF86BIGFONT
-#include "xf86bigfstr.h"
+#include "X11/extensions/xf86bigfstr.h"
 #endif
 
 /* FIXME: this whole block of externs should be from the appropriate headers */

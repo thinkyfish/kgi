@@ -80,7 +80,9 @@ in this Software without prior written authorization from The Open Group.
   *		Bob Scheifler -- avoid miComputeClips for unmapped windows,
   *				 valdata changes
   */
-#include    "X.h"
+
+#include "config.h"
+#include    "X11/X.h"
 #include    "scrnintstr.h"
 #include    "validate.h"
 #include    "windowstr.h"

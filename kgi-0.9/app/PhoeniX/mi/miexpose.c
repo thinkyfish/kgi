@@ -67,10 +67,12 @@ SOFTWARE.
 
 /* $TOG: miexpose.c /main/44 1998/02/09 14:46:47 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_EVENTS
-#include "Xproto.h"
-#include "Xprotostr.h"
+#include "X11/Xproto.h"
+#include "X11/Xprotostr.h"
 
 #include "misc.h"
 #include "regionstr.h"
@@ -82,15 +84,15 @@ SOFTWARE.
 
 #include "dixstruct.h"
 #include "mi.h"
-#include "Xmd.h"
+#include "X11/Xmd.h"
 
 #include "globals.h"
 
 extern WindowPtr *WindowTable;
 
 #ifdef PANORAMIX
-#include "panoramiX.h"
-#include "panoramiXsrv.h"
+#include "X11/extensions/panoramiX.h"
+#include "X11/extensions/panoramiXsrv.h"
 #endif
 
 /*

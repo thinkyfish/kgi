@@ -41,6 +41,9 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mipolycon.c /main/8 1998/02/09 14:47:47 kaleb $ */
+
+#include "config.h"
+
 #include "gcstruct.h"
 #include "pixmap.h"
 #include "miscanfill.h"

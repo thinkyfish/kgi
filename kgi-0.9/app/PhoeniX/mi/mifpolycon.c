@@ -41,8 +41,11 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mifpolycon.c /main/13 1998/02/09 14:47:05 kaleb $ */
+
+#include "config.h"
+
 #include <math.h>
-#include "X.h"
+#include "X11/X.h"
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmapstr.h"

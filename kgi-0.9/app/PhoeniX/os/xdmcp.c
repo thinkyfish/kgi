@@ -15,6 +15,8 @@
  *
  */
 
+#include "config.h"
+
 #ifdef WIN32
 /* avoid conflicting definitions */
 #define BOOL wBOOL
@@ -29,7 +31,7 @@
 #undef RT_CURSOR
 #endif
 
-#include "Xos.h"
+#include "X11/Xos.h"
 
 #if !defined(MINIX) && !defined(WIN32)
 #ifndef Lynx
@@ -52,10 +54,11 @@
 #endif
 #endif
 #include <stdio.h>
-#include "X.h"
-#include "Xmd.h"
+
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "misc.h"
-#include "Xpoll.h"
+#include "X11/Xpoll.h"
 #include "osdep.h"
 #include "input.h"
 #include "dixstruct.h"
@@ -74,7 +77,7 @@
 
 #ifdef XDMCP
 #undef REQUEST
-#include "Xdmcp.h"
+#include "X11/Xdmcp.h"
 
 extern char *display;
 extern fd_set EnabledDevices;

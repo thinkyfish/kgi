@@ -44,8 +44,10 @@ SOFTWARE.
 /* $TOG: mibitblt.c /main/56 1998/02/09 14:46:05 kaleb $ */
 /* Author: Todd Newman  (aided and abetted by Mr. Drewry) */
 
-#include "X.h"
-#include "Xprotostr.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 
 #include "misc.h"
 #include "gcstruct.h"
@@ -54,7 +56,7 @@ SOFTWARE.
 #include "scrnintstr.h"
 #include "mi.h"
 #include "regionstr.h"
-#include "Xmd.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 
 /* MICOPYAREA -- public entry for the CopyArea request 

@@ -42,7 +42,10 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: mizerline.c /main/18 1998/02/09 14:49:45 kaleb $ */
-#include "X.h"
+
+#include "config.h"
+
+#include "X11/X.h"
 
 #include "misc.h"
 #include "scrnintstr.h"

@@ -28,8 +28,10 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 */
 
+#include "config.h"
+
 #define NEED_EVENTS
-# include   "X.h"
+# include   "X11/X.h"
 # include   "misc.h"
 # include   "input.h"
 # include   "cursorstr.h"

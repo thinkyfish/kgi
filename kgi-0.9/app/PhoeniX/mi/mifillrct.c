@@ -42,8 +42,10 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: mifillrct.c /main/6 1998/02/09 14:47:01 kaleb $ */
 
-#include "X.h"
-#include "Xprotostr.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "gcstruct.h"
 #include "windowstr.h"
 #include "pixmap.h"

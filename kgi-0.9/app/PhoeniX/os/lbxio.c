@@ -45,12 +45,14 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: lbxio.c /main/11 1998/02/09 15:12:30 kaleb $ */
 
+#include "config.h"
+
 #include <stdio.h>
-#include <X11/Xtrans.h>
+#include "X11/Xtrans.h"
 #ifdef X_NOT_STDC_ENV
 extern int errno;
 #endif
-#include "Xmd.h"
+#include "X11/Xmd.h"
 #include <errno.h>
 #ifndef Lynx
 #include <sys/param.h>
@@ -60,15 +62,15 @@ extern int errno;
 #else
 #include <uio.h>
 #endif
-#include "X.h"
-#include "Xproto.h"
+#include "X11/X.h"
+#include "X11/Xproto.h"
 #include "os.h"
-#include "Xpoll.h"
+#include "X11/Xpoll.h"
 #include "osdep.h"
 #include "opaque.h"
 #include "dixstruct.h"
 #include "misc.h"
-#include "lbxserve.h"
+#include "X11/extensions/lbxserve.h"
 
 /* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
  * systems are broken and return EWOULDBLOCK when they should return EAGAIN

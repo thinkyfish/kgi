@@ -29,11 +29,12 @@ from The Open Group.
  * Author:  Mayank Choudhary, Sun Microsystems
  */
 
+#include "config.h"
 
 #ifdef SECURE_RPC
 
-#include "X.h"
-#include "Xauth.h"
+#include "X11/X.h"
+#include "X11/Xauth.h"
 #include "misc.h"
 #include "os.h"
 #include "dixstruct.h"

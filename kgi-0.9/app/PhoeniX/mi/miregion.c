@@ -67,9 +67,11 @@ SOFTWARE.
 
 /* $TOG: miregion.c /main/40 1998/02/09 14:48:29 kaleb $ */
 
+#include "config.h"
+
 #include "miscstruct.h"
 #include "regionstr.h"
-#include "Xprotostr.h"
+#include "X11/Xprotostr.h"
 #include "gc.h"
 
 #if defined (__GNUC__) && !defined (NO_INLINES)

@@ -47,13 +47,19 @@ OR PERFORMANCE OF THIS SOFTWARE.
 */
 /* $XFree86: xc/programs/Xserver/os/utils.c,v 3.56 2000/02/23 20:30:18 dawes Exp $ */
 
+#include "config.h"
+
+#ifndef	X_NOT_POSIX
+#	define	POSIX_SOURCE
+#endif
+
 #ifdef WIN32
 #include <X11/Xwinsock.h>
 #endif
-#include "Xos.h"
+#include "X11/Xos.h"
 #include <stdio.h>
 #include "misc.h"
-#include "X.h"
+#include "X11/X.h"
 #include "input.h"
 #ifdef X_POSIX_C_SOURCE
 #define _POSIX_C_SOURCE X_POSIX_C_SOURCE

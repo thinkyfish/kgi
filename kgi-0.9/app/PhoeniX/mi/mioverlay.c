@@ -1,6 +1,8 @@
 /* $XFree86: xc/programs/Xserver/mi/mioverlay.c,v 3.4 2000/02/29 00:16:03 mvojkovi Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "validate.h"
 #include "windowstr.h"

@@ -50,7 +50,7 @@ SOFTWARE.
 #include "validate.h"
 #include "window.h"
 #include "gc.h"
-#include "font.h"
+#include "X11/fonts/font.h"
 #include "input.h"
 #include "cursor.h"
 

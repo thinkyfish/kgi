@@ -41,6 +41,9 @@ SOFTWARE.
 
 ******************************************************************/
 /* $TOG: micursor.c /main/5 1998/02/09 14:46:31 kaleb $ */
+
+#include "config.h"
+
 #include "scrnintstr.h"
 #include "cursor.h"
 #include "misc.h"

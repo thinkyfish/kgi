@@ -24,7 +24,9 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/Xserver/mi/miscrinit.c,v 3.11 2000/03/07 13:37:51 dawes Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "servermd.h"
 #include "misc.h"
 #include "mi.h"

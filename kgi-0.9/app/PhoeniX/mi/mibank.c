@@ -46,6 +46,8 @@
 
 /* $XFree86: xc/programs/Xserver/mi/mibank.c,v 1.8 2000/02/18 12:20:10 tsi Exp $ */
 
+#include "config.h"
+
 /*
  * This thing originated from an idea of Edwin Goei and his bank switching
  * code for the DEC TX board.

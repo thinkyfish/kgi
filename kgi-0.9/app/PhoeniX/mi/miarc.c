@@ -45,6 +45,8 @@ SOFTWARE.
 /* Author: Keith Packard and Bob Scheifler */
 /* Warning: this code is toxic, do not dally very long here. */
 
+#include "config.h"
+
 #if defined(_XOPEN_SOURCE) || defined(__QNXNTO__)
 #include <math.h>
 #else
@@ -52,8 +54,8 @@ SOFTWARE.
 #include <math.h>
 #undef _XOPEN_SOURCE
 #endif
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "misc.h"
 #include "gcstruct.h"
 #include "scrnintstr.h"
@@ -62,7 +64,7 @@ SOFTWARE.
 #include "mifpoly.h"
 #include "mi.h"
 #include "mifillarc.h"
-#include "Xfuncproto.h"
+#include "X11/Xfuncproto.h"
 
 static double miDsin(), miDcos(), miDasin(), miDatan2();
 double	cbrt(

@@ -52,10 +52,13 @@ SOFTWARE.
  *
  *****************************************************************/
 
+#include "config.h"
+#define	_XOPEN_SOURCE
+
 #ifdef WIN32
 #include <X11/Xwinsock.h>
 #endif
-#include "Xos.h"			/* for strings, fcntl, time */
+#include "X11/Xos.h"			/* for strings, fcntl, time */
 
 #include <errno.h>
 #ifdef X_NOT_STDC_ENV
@@ -63,7 +66,7 @@ extern int errno;
 #endif
 
 #include <stdio.h>
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 
 #ifdef MINIX
@@ -73,7 +76,7 @@ extern int errno;
 #ifdef __EMX__
 #define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
 #endif
-#include <X11/Xpoll.h>
+#include "X11/Xpoll.h"
 #include "osdep.h"
 #include "dixstruct.h"
 #include "opaque.h"
@@ -96,7 +99,7 @@ mffs(fd_mask mask)
 
 #ifdef DPMSExtension
 #define DPMS_SERVER
-#include "dpms.h"
+#include "X11/extensions/dpms.h"
 extern void DPMSSet();
 #endif
 

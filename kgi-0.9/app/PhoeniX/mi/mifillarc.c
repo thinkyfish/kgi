@@ -25,9 +25,11 @@ Author:  Bob Scheifler, MIT X Consortium
 
 /* $TOG: mifillarc.c /main/20 1998/02/09 14:46:52 kaleb $ */
 
+#include "config.h"
+
 #include <math.h>
-#include "X.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xprotostr.h"
 #include "miscstruct.h"
 #include "gcstruct.h"
 #include "pixmapstr.h"
