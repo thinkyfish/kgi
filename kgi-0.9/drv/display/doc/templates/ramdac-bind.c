@@ -9,11 +9,14 @@
 **
 ** -----------------------------------------------------------------------------
 **
-**	$Log: ##META##-bind.c,v $
+**	$Log: ramdac-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:12  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	##AUTHOR##
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -44,7 +47,7 @@ kgi_error_t ##meta##_ramdac_init_module(##meta##_ramdac_t *##meta##,
 
 	default:
 		KRN_NOTICE("no ##VENDOR## ##MODEL## DAC detected");
-		return -E(RAMDAC, NODEV);
+		return -KGI_ERRNO(RAMDAC, NODEV);
 	}
 
 #warning detect or verify the dac if possible (e.g. verify ID registers)

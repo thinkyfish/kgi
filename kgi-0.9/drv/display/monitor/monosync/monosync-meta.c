@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: monosync-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:08  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Steffen_Seeger
-#define	KGIM_MONITOR_DRIVER	"$Revision: 1.5 $"
+#define	KGIM_MONITOR_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -74,7 +77,7 @@ static inline kgi_error_t monosync_monitor_fcheck(monosync_monitor_t *monosync,
 			flags |= 2;
 		}
 	}
-	return (flags == 3) ? KGI_EOK : -E(MONITOR,INVAL);
+	return (flags == 3) ? KGI_EOK : -KGI_ERRNO(MONITOR,INVAL);
 }
 
 kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
@@ -94,7 +97,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 		KRN_DEBUG(2, "Resolution %ix%i higher than limit %ix%i",
 			dotsx, dotsy, monosync->monitor.maxdots.x, 
 			monosync->monitor.maxdots.y);
-		return -E(MONITOR, UNKNOWN);
+		return -KGI_ERRNO(MONITOR, UNKNOWN);
 	}
 
 	while ((v < t->vtimings) && (t->vtiming[v].width != dotsy)) {
@@ -105,7 +108,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 
 		KRN_DEBUG(2, "No vtiming for %i lines in timing set %s.",
 			dotsy, t->name);
-		return -E(MONITOR, UNKNOWN);
+		return -KGI_ERRNO(MONITOR, UNKNOWN);
 	}
 
 	h = t->vtiming[v].polarity & ~MONOSYNC_POLARITY_MASK;
@@ -162,14 +165,14 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 	case KGI_TC_LOWER:
 		if (monosync_mode->kgim.in.dclk < monosync->monitor.dclk.min) {
 
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		if ((100 * ddclk)  >  (2 * dclk)) {
 
 			KRN_DEBUG(2, "dclk is %i (should be %li) Hz",
 				 monosync_mode->kgim.in.dclk, dclk);
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		return KGI_TC_CHECK;
@@ -177,14 +180,14 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 	case KGI_TC_RAISE:
 		if (monosync_mode->kgim.in.dclk > monosync->monitor.dclk.max) {
 
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		if ((100 * ddclk)  >  (2 * dclk)) {
 
 			KRN_DEBUG(2, "dclk is %i (should be %li) Hz",
 				monosync_mode->kgim.in.dclk, dclk);
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		return KGI_TC_CHECK;
@@ -195,7 +198,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 
 			KRN_DEBUG(2, "DCLK of %i Hz is out of bounds.",
 				monosync_mode->kgim.in.dclk);
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		if ((monosync->monitor.maxdots.x < dotsx) ||
@@ -203,7 +206,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 
 			KRN_DEBUG(2, "resolution too high (%ix%i).",
 				dotsx, dotsy);
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		if (((100 * ddclk) > (2 * dclk)) || 
@@ -213,7 +216,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 				monosync_mode->kgim.y.total)) {
 
 			KRN_DEBUG(2, "frequency limits violated.");
-			return -E(MONITOR, UNKNOWN);
+			return -KGI_ERRNO(MONITOR, UNKNOWN);
 		}
 
 		KRN_DEBUG(2, "%i\t%i %i %i %i %i %i\t%i %i %i %i %i %i",
@@ -239,7 +242,7 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 				ERR(syncend) || ERR(blankend) || ERR(total)) {
 
 				KRN_DEBUG(2, "Error in timings.");
-				return -E(MONITOR, UNKNOWN);
+				return -KGI_ERRNO(MONITOR, UNKNOWN);
 			}
 
 #		undef	ERR
@@ -253,6 +256,6 @@ kgi_error_t monosync_monitor_mode_check(monosync_monitor_t *monosync,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(MONITOR, UNKNOWN);
+		return -KGI_ERRNO(MONITOR, UNKNOWN);
 	}
 }

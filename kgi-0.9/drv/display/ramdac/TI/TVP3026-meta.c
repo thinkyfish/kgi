@@ -10,13 +10,16 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: TVP3026-meta.c,v $
+**	Revision 1.2  2000/04/26 14:07:08  seeger_s
+**	- minor cleanups
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:05  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -395,7 +398,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 		KRN_DEBUG(1, "could not handle dot attributes (dam %.8x)",
 			dpm->dam);
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 
 	switch (cmd) {
@@ -428,7 +431,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 			(dpm->dclk < tvp3026->ramdac.dclk.min)) {
 
 			KRN_DEBUG(1, "%i Hz DCLK is too low", dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		if ((lclk > tvp3026->ramdac.lclk.max) || 
 			(dpm->dclk > tvp3026->ramdac.dclk.max)) {
@@ -449,7 +452,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 			(dpm->dclk > tvp3026->ramdac.dclk.max)) {
 
 			KRN_DEBUG(1, "%i Hz DCLK is too high", dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		if ((lclk < tvp3026->ramdac.lclk.min) ||
 			(dpm->dclk < tvp3026->ramdac.dclk.min)) {
@@ -469,7 +472,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 			KRN_DEBUG(1, "invalid dpm->lclk ration (%i:%i)",
 				dpm->lclk.mul, dpm->lclk.div);
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 
 		lclk = dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
@@ -480,25 +483,25 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 			KRN_DEBUG(1, "%i Hz DCLK (%i Hz LCLK) is out of bounds",
 				dpm->dclk, lclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
                 if (tvp3026_mode->kgim.crt->sync & (KGIM_ST_SYNC_ON_RED |
 			KGIM_ST_SYNC_ON_BLUE)) {
 
 			KRN_DEBUG(1, "can't do red or blue composite sync");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
                 }
 
 		if (dpm->flags & KGI_DPF_TP_2XCLOCK) {
 
 			KRN_DEBUG(1, "can't handle internal clock doubling.");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 		if (((dpm->flags & KGI_DPF_CH_ALUT) && !rec->alut) ||
 			((dpm->flags & KGI_DPF_CH_ILUT) && !rec->ilut)) {
 
 			KRN_DEBUG(1, "LUT configuration not supported");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 		dpm->flags |= rec->ilut ? KGI_DPF_CH_ILUT : 0;
 		dpm->flags |= rec->alut ? KGI_DPF_CH_ALUT : 0;
@@ -506,7 +509,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 
 	/*	Now everything except the LCLK ration is checked and should 
@@ -639,7 +642,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, NOSUP);
+		return -KGI_ERRNO(RAMDAC, NOSUP);
 	}	
 
 	/*	Loop PLL & LatchControl setup
@@ -673,7 +676,7 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, NOSUP);
+		return -KGI_ERRNO(RAMDAC, NOSUP);
 	}
 
 	if (z > 1600) {

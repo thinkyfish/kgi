@@ -10,11 +10,14 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: monosync-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:08  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/module.h>
 #include "monitor/monosync/monosync-meta.h"
 
-extern kgi_error_t monitor_init_module_Standard_VGA(kgim_monitor_t *monitor,
+extern kgi_error_t monitor_init_module_Standard_SVGA(kgim_monitor_t *monitor,
 	const kgim_options_t *options);
 
 extern const monosync_timing_t monosync_monitor_timing;
@@ -26,7 +29,7 @@ kgi_error_t monosync_monitor_init_module(monosync_monitor_t *monosync,
 	
 	monosync->timing = &monosync_monitor_timing;
 
-	return monitor_init_module_Standard_VGA(&monosync->monitor, options);
+	return monitor_init_module_Standard_SVGA(&monosync->monitor, options);
 }
 
 const kgim_meta_t monosync_monitor_meta =

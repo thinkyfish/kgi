@@ -9,11 +9,14 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: ##META##-meta.c,v $
+**	$Log: chipset-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	##AUTHOR##
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -146,7 +149,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 	if (images != 1) {
 
 		KRN_DEBUG(1, "%i images not supported.", images);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	/*	for text16 support we fall back to VGA mode
@@ -161,7 +164,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 	if (img[0].flags & (KGI_IF_TILE_X | KGI_IF_TILE_Y | KGI_IF_VIRTUAL)) {
 
 		KRN_DEBUG(1, "image flags %.8x not supported", img[0].flags);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	check if common attributes are supported.
@@ -176,7 +179,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 			KRN_DEBUG(1, "S%iZ%i local buffer not supported",
 				img[0].bpca[0], img[0].bpca[1]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		break;
 
@@ -185,12 +188,12 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 			KRN_DEBUG(1,"Z%i local buffer not supported",
 				img[0].bpca[0]);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	default:
 		KRN_DEBUG(1, "common attributes %.8x not supported",
 			img[0].cam);
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	total bits per dot
@@ -254,7 +257,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 			KRN_DEBUG(1, "%i (%i) horizontal pixels are too many",
 				img[0].size.x, img[0].virt.x);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].size.y >= ##meta##->chipset.maxdots.y) ||
@@ -262,7 +265,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 			KRN_DEBUG(1, "%i (%i) vertical pixels are too many",
 				img[0].size.y, img[0].virt.y);
-			return -E(CHIPSET, UNKNOWN);
+			return -KGI_ERRNO(CHIPSET, UNKNOWN);
 		}
 
 		if ((img[0].virt.x * img[0].virt.y * bpp) > 
@@ -271,7 +274,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 			KRN_DEBUG(1, "not enough memory for (%ipf*%if + %ipc)@"
 				"%ix%i", bpf, img[0].frames, bpc,
 				img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET,NOMEM);
+			return -KGI_ERRNO(CHIPSET,NOMEM);
 		}
 
 #warning	Take screen visible width up to next supported width
@@ -306,7 +309,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 				KRN_DEBUG(1, "DCLK = %i Hz is too low",
 					dpm->dclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 #warning		check/set LCLK maximum here
 			if (lclk > 50000000) {
@@ -321,7 +324,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 			if (lclk > 50000000) {
 
 				KRN_DEBUG(1, "LCLK = %i Hz is too high", lclk);
-				return -E(CHIPSET, UNKNOWN);
+				return -KGI_ERRNO(CHIPSET, UNKNOWN);
 			}
 		}
 		return KGI_EOK;
@@ -335,7 +338,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 
 		if (width != img[0].virt.x) {
 
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 		if ((img[0].size.x >= ##meta##->chipset.maxdots.x) ||
 			(img[0].size.y >= ##meta##->chipset.maxdots.y) || 
@@ -346,7 +349,7 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 			KRN_DEBUG(1, "resolution too high: %ix%i (%ix%i)",
 				img[0].size.x, img[0].size.y,
 				img[0].virt.x, img[0].virt.y);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 #warning	check LCLK and RCLK rations here!
@@ -357,20 +360,20 @@ kgi_error_t ##meta##_chipset_mode_check(##meta##_chipset_t *##meta##,
 			KRN_DEBUG(1, "invalid LCLK (%i:%i) or CLK (%i:%i)", 
 				dpm->lclk.mul, dpm->lclk.div,
 				dpm->rclk.mul, dpm->rclk.div);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 
 #warning	check maximum LCLK rate here.
 		if (lclk > 50000000) {
 
 			KRN_DEBUG(1, "LCLK = %i Hz is too high\n", lclk);
-			return -E(CHIPSET, CLK_LIMIT);
+			return -KGI_ERRNO(CHIPSET, CLK_LIMIT);
 		}
 		break;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(CHIPSET, UNKNOWN);
+		return -KGI_ERRNO(CHIPSET, UNKNOWN);
 	}
 
 

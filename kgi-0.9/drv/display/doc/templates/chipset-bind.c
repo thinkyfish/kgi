@@ -9,11 +9,14 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: ##META##-bind.c,v $
+**	$Log: chipset-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	##AUTHOR##
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -225,7 +228,7 @@ kgi_error_t ##meta##_chipset_init_module(##meta##_chipset_t *##meta##,
 		if (pcicfg_find_device(&pcidev, ##meta##_chipset_pcicfg)) {
 
 			KRN_ERROR("No supported device found!");
-			return -E(CHIPSET,INVAL);
+			return -KGI_ERRNO(CHIPSET,INVAL);
 		}
 	}
 
@@ -252,7 +255,7 @@ kgi_error_t ##meta##_chipset_init_module(##meta##_chipset_t *##meta##,
 	default:
 		KRN_ERROR("Device not yet supported (vendor %.4x device %.4x).",
 			##meta##->chipset.vendor_id, ##meta##->chipset.device_id);
-		return -E(CHIPSET, NOSUP);
+		return -KGI_ERRNO(CHIPSET, NOSUP);
 	}
 
 	subvendor = pcicfg_in16(pcidev + PCI_SUBSYSTEM_VENDOR_ID);
@@ -304,7 +307,7 @@ kgi_error_t ##meta##_chipset_init_module(##meta##_chipset_t *##meta##,
 
 			KRN_ERROR("%s region served (maybe another driver?).",
 				##meta##_io->vga.ports);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 	if (##meta##->pci.Command & PCI_COMMAND_MEMORY) {
@@ -313,7 +316,7 @@ kgi_error_t ##meta##_chipset_init_module(##meta##_chipset_t *##meta##,
 
 			KRN_ERROR("%s region already served!",
 				##meta##_io->mem.name);
-			return -E(CHIPSET, INVAL);
+			return -KGI_ERRNO(CHIPSET, INVAL);
 		}
 	}
 
@@ -338,7 +341,7 @@ kgi_error_t ##meta##_chipset_init_module(##meta##_chipset_t *##meta##,
 		mem_check_region(&##meta##_io->rom)) {
 
 		KRN_ERROR("check of ##MODEL## io and memory regions failed!");
-		return -E(CHIPSET, INVAL);
+		return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
 	/*	claim the regions & the IRQ line

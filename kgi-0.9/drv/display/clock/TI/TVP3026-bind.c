@@ -9,11 +9,14 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: pll-bind.c,v $
+**	$Log: TVP3026-bind.c,v $
+**	Revision 1.1  2000/04/26 14:12:18  seeger_s
+**	- added TI TVP3026 driver
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Steffen_Seeger
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1 $"
 
 #include <kgi/module.h>
 
@@ -35,7 +38,7 @@ kgi_error_t tvp3026_clock_init_module(tvp3026_clock_t *tvp3026,
 		TVP3026_DAC_IN8(tvp3026_io,TVP3026_EDAC_DATA)) {
 
 		KRN_ERROR("no Texas Instruments TVP3026 detected.");
-		return -E(RAMDAC, NODEV);
+		return -KGI_ERRNO(RAMDAC, NODEV);
 	}
 
 	kgim_strcpy(tvp3026->pll.clock.vendor, "TI");

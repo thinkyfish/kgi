@@ -10,11 +10,14 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define DEBUG_LEVEL 255
 
@@ -90,7 +93,7 @@ kgi_error_t mgag_ramdac_init_module(mgag_ramdac_t *mgag,
 
 	default:
 		KRN_NOTICE("no Matrox Integrated RAMDAC detected.");
-		return -E(RAMDAC, NODEV);
+		return -KGI_ERRNO(RAMDAC, NODEV);
 	}
 
 	KRN_NOTICE("%s %s driver " KGIM_RAMDAC_DRIVER, 

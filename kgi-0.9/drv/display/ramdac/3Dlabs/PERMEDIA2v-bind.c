@@ -10,10 +10,13 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA2v-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #ifndef DEBUG_LEVEL
 #define	DEBUG_LEVEL	0	/* do silent checking */
@@ -48,7 +51,7 @@ kgi_error_t pgc2v_ramdac_init_module(pgc2v_ramdac_t *pgc2v,
 
 	default:
 		KRN_NOTICE("no 3Dlabs PERMEDIA2 or TI TVP4020 DAC detected");
-		return -E(RAMDAC, NODEV);
+		return -KGI_ERRNO(RAMDAC, NODEV);
 	}
 
 	pgc2v->ramdac.revision	= KGIM_RAMDAC_REVISION;

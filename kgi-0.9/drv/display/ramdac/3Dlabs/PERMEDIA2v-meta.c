@@ -10,10 +10,13 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA2v-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -429,7 +432,7 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 
 			KRN_DEBUG(1, "could not handle frame attributes %.8x",
 				img[0].fam);
-			return -E(RAMDAC, UNKNOWN);
+			return -KGI_ERRNO(RAMDAC, UNKNOWN);
 		}
 
 		dpm->flags &= ~KGI_DPF_TP_2XCLOCK;
@@ -454,7 +457,7 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 			(dpm->dclk < pgc2v->ramdac.dclk.min)) {
 
 			KRN_DEBUG(1, "%i Hz LCLK is too low", lclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		if ((lclk > pgc2v->ramdac.lclk.max) || 
 			(dpm->dclk > pgc2v->ramdac.dclk.max)) {
@@ -475,7 +478,7 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 			(dpm->dclk > pgc2v->ramdac.dclk.max)) {
 
 			KRN_DEBUG(1, "%i Hz LCLK is too high", lclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 		if ((lclk < pgc2v->ramdac.lclk.min) ||
 			(dpm->dclk < pgc2v->ramdac.dclk.min)) {
@@ -494,13 +497,13 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 
 			KRN_DEBUG(1, "could not handle frame attributes %.8x",
 				img[0].fam);
-			return -E(RAMDAC, UNKNOWN);
+			return -KGI_ERRNO(RAMDAC, UNKNOWN);
 		}
 
 		if (! ((dpm->lclk.mul == rec->lclk.mul) &&
 			(dpm->lclk.div == rec->lclk.div))) {
 
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 
 		lclk = dpm->dclk * dpm->lclk.mul / dpm->lclk.div;
@@ -511,14 +514,14 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 
 			KRN_DEBUG(1, "%i Hz DCLK (%i Hz LCLK) is out of bounds",
 				dpm->dclk, lclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 
                 if (pgc2v_mode->kgim.crt->sync & (KGIM_ST_SYNC_ON_RED |
 			KGIM_ST_SYNC_ON_GREEN | KGIM_ST_SYNC_ON_BLUE)) {
 
 			KRN_DEBUG(1, "can't do red or blue composite sync");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
                 }
 
 		/*	Now everything is checked and should be sane.
@@ -548,7 +551,7 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 		case 24: pgc2v_mode->RD.PixelSize = PGC2v_E003_24bpp; break;
 		default:
 			KRN_INTERNAL_ERROR;
-			return -E(RAMDAC, UNKNOWN);
+			return -KGI_ERRNO(RAMDAC, UNKNOWN);
 		}
 
 		pgc2v_mode->RD.ColorFormat = rec->ColorFormat;
@@ -572,7 +575,7 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 }
 

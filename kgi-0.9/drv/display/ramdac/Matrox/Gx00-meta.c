@@ -10,11 +10,14 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-meta.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define DEBUG_LEVEL 255
 
@@ -141,7 +144,7 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 
 		KRN_DEBUG(1, "could not handle dot attributes (dam %.8x)",
 			dpm->dam);
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 
 	switch (cmd) {
@@ -175,7 +178,7 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 
 			KRN_DEBUG(1, "%i Hz DCLK is too low",
 				dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 
 		if (dpm->dclk > mgag->ramdac.dclk.max) {
@@ -191,7 +194,7 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 		if (dpm->dclk > mgag->ramdac.dclk.max) {
 
 			KRN_DEBUG(1, "%i Hz DCLK is too high", dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 
 		if (dpm->dclk < mgag->ramdac.dclk.min) {
@@ -209,7 +212,7 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 		if (! (dpm->lclk.mul = dpm->lclk.div = dpm->rclk.mul = dpm->rclk.div = 1)) {
 
 			KRN_DEBUG(1, "lclk/rclk div/mul not supported");
-			return -E(RAMDAC, NOSUP);
+			return -KGI_ERRNO(RAMDAC, NOSUP);
 		}
 
 		if ((dpm->dclk < mgag->ramdac.dclk.min) || 
@@ -217,14 +220,14 @@ kgi_error_t mgag_ramdac_mode_check( mgag_ramdac_t *mgag,
 
 			KRN_DEBUG(1, "%i Hz DCLK is out of bounds", 
 				dpm->dclk);
-			return -E(RAMDAC, INVAL);
+			return -KGI_ERRNO(RAMDAC, INVAL);
 		}
 
 		return KGI_EOK;
 
 	default:
 		KRN_INTERNAL_ERROR;
-		return -E(RAMDAC, UNKNOWN);
+		return -KGI_ERRNO(RAMDAC, UNKNOWN);
 	}
 
 	KRN_DEBUG(2, "ramdac_mode_check() completed");

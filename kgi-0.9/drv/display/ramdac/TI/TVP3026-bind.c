@@ -10,10 +10,13 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: TVP3026-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:05  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #include <kgi/module.h>
 
@@ -38,7 +41,7 @@ kgi_error_t tvp3026_ramdac_init_module(tvp3026_ramdac_t *tvp3026,
 	if (e3F != TVP3026_EDAC3F_TVP3026_ID) {
 
 		KRN_ERROR("unknown chip ID %.2x.", e3F);
-		return -E(RAMDAC, NODEV);
+		return -KGI_ERRNO(RAMDAC, NODEV);
 	}
 	TVP3026_DAC_OUT8(tvp3026_io, TVP3026_EDAC_Revision, TVP3026_EDAC_ADDR);
 	tvp3026->rev = TVP3026_DAC_IN8(tvp3026_io, TVP3026_EDAC_DATA);
