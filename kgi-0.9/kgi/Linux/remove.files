@@ -7,3 +7,5 @@ MAINTAINERS
 README
 Rules.make
 .config
+.hdepend
+.version
