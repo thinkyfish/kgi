@@ -19,8 +19,8 @@ distclean.entry: $(patsubst %.t,%-timings.c,$(wildcard *.t))
 maintainer-clean.entry:
 	rm -f *-timings.c
 
-ifeq ($(CONFIG_MONITOR_VENDOR),monosync)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+ifeq ($(CONFIG_MONITOR_DRIVER),monosync)
+default.entry: $(CONFIG_MONITOR_TIMING).o
 else
 default.entry:
 endif
