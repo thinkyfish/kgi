@@ -2,13 +2,13 @@
 
 if test -f .config
 then
-	source .config
+	. .config
 fi
 
 HTF_LANGUAGE=$1
 HTF_MENU_FILE=$2
 
-function abs() {
+function abs {
 
 	if [ "$HTF_LANGUAGE" = "$1" ]
 	then
@@ -20,7 +20,7 @@ function abs() {
 	fi
 }
 
-function rel() {
+function rel {
 
 	if [ "$HTF_LANGUAGE" = "$1" ]
 	then
@@ -32,7 +32,7 @@ function rel() {
 	fi
 }
 
-function title() {
+function title {
 
 	if [ "$HTF_LANGUAGE" = "$1" ]
 	then
@@ -46,7 +46,7 @@ function title() {
 	fi
 }
 
-function list() {
+function list {
 
 	case $2 in
 	begin)	echo "<$1>" ;;
@@ -54,7 +54,7 @@ function list() {
 	esac
 }
 
-function item() {
+function item {
 
 	if [ "$HTF_LANGUAGE" = "$1" ]
 	then
@@ -87,7 +87,7 @@ then
 	cat $HTF_MENU_PROLOG.$HTF_LANGUAGE
 fi
 
-source $HTF_MENU_FILE
+. $HTF_MENU_FILE
 
 if test -f $HTF_MENU_PROLOG.$HTF_LANGUAGE
 then

@@ -4,10 +4,10 @@ HTF_SOURCE=$1
 
 if test -f .config
 then
-	source .config
+	. .config
 fi
 
-source $HTF_SOURCE > /dev/null
+. $HTF_SOURCE > /dev/null
 
 #	document header
 #
@@ -27,7 +27,7 @@ echo ${HTF_DOCUMENT_TITLE:-"<h1><hr noshade>${HTF_LONG_TITLE:-$HTF_TITLE}<hr nos
 
 #	document body
 #
-source $HTF_SOURCE 
+. $HTF_SOURCE 
 
 #	document trailer
 #

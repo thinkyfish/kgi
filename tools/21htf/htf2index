@@ -2,7 +2,7 @@
 
 if test -f .config
 then
-	source .config
+	. .config
 fi
 
 DIR_BUILD=`pwd -P`
@@ -10,7 +10,7 @@ DIR_SOURCE=$DIR_TOP_SOURCE`echo $DIR_BUILD | sed s%$DIR_TOP_BUILD%%`
 
 HTF_SOURCE=$1
 
-source $HTF_SOURCE > /dev/null
+. $HTF_SOURCE > /dev/null
 
 #	document header
 #
@@ -33,7 +33,7 @@ echo ${HTF_DOCUMENT_TITLE:-"<h1><hr noshade>${HTF_LONG_TITLE:-$HTF_TITLE}<hr nos
 
 #	document body
 #
-source $HTF_SOURCE 
+. $HTF_SOURCE 
 
 #	document trailer
 #

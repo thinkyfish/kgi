@@ -4,7 +4,7 @@
 
 #	helper functions to set default parameters for the various compilers
 #
-function cc_gnuc() {
+function cc_gnuc {
 	#
 	#	GNU C/C++ compiler settings
 	#
@@ -30,7 +30,7 @@ function cc_gnuc() {
 	fi
 }
 
-function cc_sgic() {
+function cc_sgic {
 
 	#	SGI (IRIX) compiler C/C++ compiler settings
 	#
@@ -58,7 +58,7 @@ function cc_sgic() {
 	fi
 }
 
-function cc_mwcc() {
+function cc_mwcc {
 	#
 	#	Metrowerks (BeOS) C/C++ compiler settings 
 	#

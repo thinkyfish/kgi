@@ -8,7 +8,7 @@
 
 DIR_TOOLS=$DIR_TOP_SOURCE/tools
 
-function configure_arg() {
+function configure_arg {
 
 	echo $* | sed "s/[^=]*=//"
 }
@@ -18,14 +18,14 @@ function configure_arg() {
 #
 MODULES=`find $DIR_TOOLS/. -name configure.sh -print | sed "s%/configure.sh$%%" | sort -n`
 
-function configure_modules() {
+function configure_modules {
 
-	source $DIR_TOOLS/config/dirs.sh
-	source $DIR_TOOLS/config/host.sh
+	. $DIR_TOOLS/config/dirs.sh
+	. $DIR_TOOLS/config/host.sh
 
 	for module in $MODULES
 	do
-		source $module/configure.sh
+		. $module/configure.sh
 	done
 }
 
@@ -44,17 +44,17 @@ case $1 in
 		then
 			echo -n "usage: configure [--help [config-file|<tool>]]"
 			CONFIG_ACTION=help-syntax
-			source $DIR_TOOLS/??$2/configure.sh
+			. $DIR_TOOLS/??$2/configure.sh
 
 			echo; echo "Options:"
 			CONFIG_ACTION=help-options
-			source $DIR_TOOLS/??$2/configure.sh
+			. $DIR_TOOLS/??$2/configure.sh
 
 			echo ".config file variables"
 			echo "----------------------"
 			echo
 			CONFIG_ACTION=config-help
-			source $DIR_TOOLS/??$2/configure.sh
+			. $DIR_TOOLS/??$2/configure.sh
 			exit 0
 		else
 			echo "config/main.sh: no such tool '$2'"
@@ -90,7 +90,7 @@ configure_modules "$@"
 FILE_CONFIG=$DIR_TOP_BUILD/.config
 CONFIG_ACTION=config-file
 configure_modules "$@" > $FILE_CONFIG
-source $FILE_CONFIG
+. $FILE_CONFIG
 
 FILE_GNUMAKEFILE=$DIR_TOP_BUILD/GNUmakefile
 CONFIG_ACTION=config-makefile
@@ -110,7 +110,7 @@ end-of-trailer
 #	all subdirectories starting from $DIR_TOP_SOURCE.
 #
 
-function do_reconfig () {
+function do_reconfig {
 
 	if test -f $DIR_BUILD/.config.tmp
 	then
@@ -126,7 +126,7 @@ function do_reconfig () {
 	fi
 }
 
-function do_recursion () {
+function do_recursion {
 
 	cd $DIR_SOURCE
 	SUBDIRS=`echo */.configure | sed "s%/.configure%%g"`
@@ -138,7 +138,7 @@ function do_recursion () {
 		$DIR_SOURCE/.configure "$@"
 		do_reconfig
 	else
-		source $DIR_SOURCE/.configure
+		. $DIR_SOURCE/.configure
 		do_reconfig
 	fi
 
