@@ -3,17 +3,113 @@ HTF_TITLE="Developer Resources"
 HTF_DESCRIPTION="How to become a developer, report bugs and get the latest sources."
 HTF_KEYWORDS="KGI Project; Developer Resources"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: $" 
+HTF_REVISION="$Revision: 1.2 $" 
 
 cat <<end-of-htf
 <h2><a name="cvs"></a>CVS Repository</h2>
+	<blockquote>
 	We use the Concurent Version System (CVS) for strong version control
-	of our code.
+	of our code. General information, documentation about CVS and
+	instructions how to use CVS can be found at the following locations:
+	<dl>
+	<dt><a href="http://cvsbook.red-bean.com"><tt>http://cvsbook.red-bean.com</tt></a><dd>
+		<p>This is the online-version of <i>Open Source Development 
+		with CVS</i>, a book published by Coriolis Inc. as part 
+		of the Coriolis OpenPress series.
+		</p></dd>
 
-<h2><a name="mailing-list"></a>Mailing List</h2>
-	There is a mailing list for discussion of KGI development related
-	issues. The mailing list address is 
-	<tt>kgi-develop@lists.sourceforge.net</tt>.
-	Detailed information how to subscribe can be found at
-	<a href="http://">http://</a>.
+	<dt><a href="http://www.loria.fr/~molli/cvs-index.html"><tt>http://www.loria.fr/~molli/cvs-index.html</tt></a><dd>
+		<p>The official CVS homepage contains the reference manual,
+		an official FAQ, related tools and links to other CVS
+		web pages.
+		</p></dd>
+
+	<dt><a href="http://sfdocs.sourceforge.net/sfdocs"><tt>http://sfdocs.sourceforge.net/sfdocs/</tt></a><dd>
+		<p>The SourceForge Documentation Project is maintaining a 
+		<a href="http://sfdocs.sourceforge.net/sfdocs/site/cvs.php">CVS-HOWTO</a> 
+		explaining the site specific issues to get started with CVS 
+		on SourceForge. There is also a <a href="http://sfdocs.sourceforge.net/sfdocs/site/user/cvssshfaq.php">CVS/SSH-FAQ</a> 
+		with answers to frequently asked questions about CVS and SSH.
+		</p></dd>
+	</dl>
+	There are several methods available to access the
+	CVS repository: 
+	<dl>
+	<dt><h4>Anonymous access using the pserver method</h4><dd>
+		<p>You may checkout modules from the CVS Repository using
+		the pserver access method. To do so, do the following:</p>
+		<ul>
+		<li><p>set the environment variable <tt>CVSROOT</tt> to the
+			KGI CVS repository <tt>:pserver:anonymous@cvs.kgi.sourceforge.net:/cvsroot/kgi</tt>.
+			E.g. for <tt>bash</tt> or <tt>csh</tt>, do
+			<blockquote><tt>
+			bash: export CVSROOT=<i>repository</i><br>
+			csh: setenv CVSROOT <i>repository</i>
+			</tt></blockquote></p></li>
+		<li><p>then login using the following command and press enter
+			when asked for a password.
+			<blockquote><tt>
+			cvs login
+			</tt></blockquote></p></li>
+		<li><p>after anonymously logging in, check out the module(s) 
+			desired by executing the following command:
+			<blockquote><tt>
+			cvs -z3 co <i>module</i>
+			</tt></blockquote>
+			where <tt><i>module</i></tt> is the appropriate 
+			module name.</p></li>
+		<li><p>after initial checkout, you can execute CVS commands
+			from the module tree without setting the CVSROOT
+			variable as above. E.g. to update your sources, 
+			just execute
+			<blockquote><tt>
+			cd <i>module</i>; cvs -z3 update
+			</tt></blockquote></p></li>
+		</ul>
+		</p></dd>
+	<dt><h4>Browse the CVS Repository online</h4><dd>
+		Just pointing your browser to 
+		<a href="http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=kgi">http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=kgi</a>. This 
+		allows you to examine the CVS Repository online.
+		</dd>
+	</dl>
+	</blockquote>
+
+<h2><a name="mailing-lists"></a>Mailing Lists</h2>
+	<blockquote>
+	The following mailing lists might be of interest for KGI developers
+	or people interested in the progress of development on the KGI project:
+	<dl>
+	<dt><a href="http://www.geocrawler.com/lists/3/SourceForge/2596/0"><tt>kgi-develop</tt></a><dd>
+		<p>If you have comments, suggestions or technical questions 
+		about software developed by the KGI Project this list is 
+		the one to subscribe to. If you want to participate in 
+		the development of KGI, the <tt>kgi-develop</tt> list is 
+		one you <i>should</i> be subscribed to.
+		Detailed information about using this list and subscription
+		information can be found at
+		<a href="http://lists.sourceforge.net/mailman/listinfo/kgi-develop"><tt>http://lists.sourceforge.net/mailman/listinfo/kgi-develop</tt></a>
+		</p></dd>
+
+	<dt><a href="http://www.geocrawler.com/lists/3/SourceForge/2594/0"><tt>kgi-announce</tt></a><dd>
+		<p>If you are interested in the development of the KGI Project,
+		but don't want to know the details, this list is the one 
+		you should subscribe to. <tt>kgi-announce</tt> is intended 
+		for general announcements regarding the Kernel Graphics 
+		Interface Project, such as snapshot releases, news of public
+ 		interest etc. It therefore should be rather low-traffic.
+		Detailed information about how to subscribe to this
+		list can be found at 
+		<a href="http://lists.sourceforge.net/mailman/listinfo/kgi-announce"><tt>http://lists.sourceforge.net/mailman/listinfo/kgi-announce</tt></a>
+		</p></dd>
+
+	<dt><a href="http://www.geocrawler.com/lists/3/SourceForge/2595/0"><tt>kgi-users</tt></a><dd>
+		<p>If you have problems installing and using software from
+		the KGI Project or want to discuss general issues or your 
+		experience or problems with other users, you may direct 
+		your questions to this list.
+		<a href="http://lists.sourceforge.net/mailman/listinfo/kgi-users"><tt>http://lists.sourceforge.net/mailman/listinfo/kgi-users</tt></a>
+		</p>
+	</dl>
+	</blockquote>
 end-of-htf
