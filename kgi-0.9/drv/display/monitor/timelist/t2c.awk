@@ -70,6 +70,9 @@ BEGIN {
 
 	htimings = 0;
 	vtimings = 0;
+        hsync[vtimings]  = "HP";
+        vsync[vtimings]  = "VP";
+
 }
 
 END {
