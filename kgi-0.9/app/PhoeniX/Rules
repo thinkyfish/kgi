@@ -3,6 +3,7 @@
 # -----------------------------------------------------------------------------
 
 CC_INCLUDE_PATH += $(X11_TOP_DIR) $(X11_TOP_DIR)/include $(X11R6_DIR)/include
+CC_LIBRARY_PATH += $(X11R6_DIR)/lib
 
 LD = ld
 

@@ -16,9 +16,9 @@ X11_DIRS = -L$(X11R6_DIR)/lib
 #
 #	SGI OpenGL Sample Implementation
 #
-BUILD_LIBS += -lGL -lGLX
-PHOENIX_OBJECTS += SGI-GLX/ddx/glx.o
-PHOENIX_OBJECTS += SGI-GLX/dix/glx.o
+BUILD_LIBS += -lGLcore
+PHOENIX_OBJECTS += SGI-GLX/dix/lib.a
+PHOENIX_OBJECTS += SGI-GLX/ddx/lib.a
 
 
 
