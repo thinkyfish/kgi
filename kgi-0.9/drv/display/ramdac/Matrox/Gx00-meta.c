@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-meta.c,v $
+**	Revision 1.3  2001/08/31 23:59:55  ortalo
+**	Driver nearly operational (without accel) on G400 and Mystique boards.
+**	
 **	Revision 1.2  2000/09/21 10:06:40  seeger_s
 **	- namespace cleanup: E() -> KGI_ERRNO()
 **	
@@ -21,7 +24,7 @@
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -555,6 +558,7 @@ void mgag_ramdac_mode_enter(mgag_ramdac_t *mgag, mgag_ramdac_io_t *mgag_io,
 
 		for (i=0;i<mgag_mode->rec->pal_size;i++)
 		  {
+#if 0
 		    /* Setting a random palette w/ psychedelic colors */
 		    kgi_u8_t r = (((79 * i) % 256) | 0x40)
 		      << mgag_mode->rec->r_shift;
@@ -562,6 +566,11 @@ void mgag_ramdac_mode_enter(mgag_ramdac_t *mgag, mgag_ramdac_io_t *mgag_io,
 		      << mgag_mode->rec->g_shift;
 		    kgi_u8_t b = (((71 * i) % 256) | 0x40)
 		      << mgag_mode->rec->b_shift;
+#else
+		    kgi_u8_t r = i << mgag_mode->rec->r_shift;
+		    kgi_u8_t g = i << mgag_mode->rec->g_shift;
+		    kgi_u8_t b = i << mgag_mode->rec->b_shift;
+#endif
 		    
 		    MGAG_DAC_OUT8(mgag_io, r, PALDATA);
 		    MGAG_DAC_OUT8(mgag_io, g, PALDATA);

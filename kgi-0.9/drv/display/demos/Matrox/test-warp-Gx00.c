@@ -9,7 +9,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 30
+#define TEST_DURATION 10
 
 /*
 **	This is a little test program to test the accelerator
@@ -214,6 +214,9 @@ kgi_error_t kgiPrintResourceInfo(kgi_context_t *ctx, kgi_u_t resource)
 	return KGI_EOK;
 }
 
+/*
+** Raw test data
+*/
 
 static int dma_size = (3 * (4 * 5)) + MGAG_ACCEL_TAG_LENGTH;
 static kgi_u32_t dma_cmdlist[] =
@@ -301,6 +304,14 @@ int main(int argc, char *argv[])
 	float actual_duration;
 	vertex_t avertex;
 	kgi_u32_t warp_tag;
+	color_t col1 = { 0, 255, 0, 0}; /* Green, semi opaque */
+	color_t col2 = { 255,0,0,0 }; /* Blue, semi opaque */
+	color_t col3 = { 0,0,255,0 }; /* Red, semi opaque */
+#if 0
+	color_t spcol = { 128,128,128,128 }; /* Gray, fog=128 */
+#else
+	color_t spcol = { 0,0,0,0 }; /* black */
+#endif	    
 
 	kgiInit(&ctx, "testKGI", &testKGI_version);
 
@@ -404,11 +415,6 @@ int main(int argc, char *argv[])
 	  /* buffer tag */
 	  warp_tag = MGAG_ACCEL_TAG_WARP_TGZ;
 	  {
-	    color_t col1 = { 0, 255, 0, 12 }; /* Green, semi opaque */
-	    color_t col2 = { 255,0,0,12 }; /* Blue, semi opaque */
-	    color_t col3 = { 0,0,255,12 }; /* Red, semi opaque */
-	    color_t spcol = { 128,128,128,128 }; /* Gray, fog=128 */
-	    
 	    ptr = wping;
 	    memcpy(ptr, &warp_tag, MGAG_ACCEL_TAG_LENGTH);
 	    ptr += MGAG_ACCEL_TAG_LENGTH;
@@ -421,7 +427,7 @@ int main(int argc, char *argv[])
 		    /* Triangle 1 */
 		    avertex.x = (float)(rand() % 10000) * 0.1;
 		    avertex.y = (float)(rand() % 7000)  * 0.1;
-		    avertex.z = 0.0; // 0.01;
+		    avertex.z = (float)(rand() % 99) * 0.01; // 0.0; // 0.01;
 		    avertex.color = (r == 0) ? col1 : ((r==1) ? col2 : col3);
 		    avertex.specular = spcol;
 		    memcpy(ptr,&avertex,sizeof(avertex));

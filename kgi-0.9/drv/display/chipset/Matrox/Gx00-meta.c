@@ -10,12 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: Gx00-meta.c,v 1.6 2001/09/17 20:43:37 seeger_s Exp $
+**	$Id: Gx00-meta.c,v 1.7 2001/10/03 21:33:19 ortalo Exp $
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.6 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.7 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -536,7 +536,7 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
 	{
 	  iclear |= ICLEAR_SOFTRAPICLR;
 	  KRN_TRACE(0, mgag->interrupt.softtrap++);
-	  KRN_DEBUG(1, "soft trap interrupt (pcidev %.8x) softrap=%.8x",
+	  KRN_DEBUG(2, "soft trap interrupt (pcidev %.8x) softrap=%.8x",
 		    pcidev, MGAG_GC_IN32(mgag_io,SOFTRAP));
 	  if (mgag->mode)
 	    {
@@ -677,10 +677,321 @@ static void mgag_chipset_wait_dma_idle(mgag_chipset_io_t *mgag_io)
 **	Graphics accelerator related data types
 ** ----------------------------------------------------------------------------
 */
+
+/* TODO: Reorganize the 1x64 context to reduce size! */
+typedef struct 
+{
+  kgi_u32_t
+
+#define MGA_1x64_CONTEXT_INDEX0 MGA_DMA4(MACCESS,ZORG,PITCH,DMAPAD)
+  index0,
+    maccess, zorg, pitch, pad0_1,
+#define MGA_1x64_CONTEXT_INDEX1 MGA_DMA4(FCOL,BCOL,PLNWT,DWGCTL)
+    index1,
+    fcol, bcol, plnwt, dwgctl,
+#define MGA_1x64_CONTEXT_INDEX2 MGA_DMA4(CXBNDRY,YTOP,YBOT,DMAPAD)
+    index2,
+    cxbndry, ytop, ybot, pad2_1,
+#define MGA_1x64_CONTEXT_INDEX3 MGA_DMA4(DMAPAD,YDSTORG,DMAPAD,SRCORG)
+    index3,
+    pad3_1, ydstorg, pad3_2, srcorg,
+#define MGA_1x64_CONTEXT_INDEX4 MGA_DMA4(DR0,DR2,DR3,DR4)
+    index4,
+    dr0, dr2, dr3, dr4,
+#define MGA_1x64_CONTEXT_INDEX5 MGA_DMA4(DR6,DR7,DR8,DR10)
+    index5,
+    dr6, dr7, dr8, dr10,
+#define MGA_1x64_CONTEXT_INDEX6 MGA_DMA4(DR11,DR12,DR14,DR15)
+    index6,
+    dr11, dr12, dr14, dr15,
+#define MGA_1x64_CONTEXT_INDEX7 MGA_DMA4(DMAPAD,DMAPAD,DMAPAD,DMAPAD)
+    index7,
+    pad7_1, pad7_2, pad7_3, pad7_4,
+#define MGA_1x64_CONTEXT_INDEX8 MGA_DMA4(DMAPAD,DMAPAD,DMAPAD,DMAPAD)
+    index8,
+    pad8_1,pad8_2,pad8_3,pad8_4,
+#define MGA_1x64_CONTEXT_INDEX9 MGA_DMA4(DMAPAD,DMAPAD,DMAPAD,DMAPAD)
+    index9,
+    pad9_1,pad9_2,pad9_3,pad9_4,
+#define MGA_1x64_CONTEXT_INDEXA MGA_DMA4(FXBNDRY,SGN,SHIFT,DMAPAD)
+    indexA,
+    fxbndry, sgn, shift, padA_1,
+#define MGA_1x64_CONTEXT_INDEXB_SRC MGA_DMA4(SRC0,SRC1,SRC2,SRC3)
+#define MGA_1x64_CONTEXT_INDEXB_PAT MGA_DMA4(PAT0,PAT1,DMAPAD,DMAPAD)
+    indexB,
+    src0_or_pat0, src1_or_pat1, src2, src3,
+    /* NOTE: Do NOT change the order of regs here without changing macros
+     * NOTE: due to alias handling in state management.
+     */
+#define MGA_1x64_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN \
+ MGA_DMA4(XYEND,YDSTLEN,XYSTRT,DMAPAD)
+#define MGA_1x64_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT \
+ MGA_DMA4(XYEND,DMAPAD,XYSTRT,YDSTLEN)
+#define MGA_1x64_CONTEXT_INDEXC MGA_1x64_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN
+    indexC,
+    xyend, ydstlen1, xystrt, ydstlen2,
+#define MGA_1x64_CONTEXT_INDEXD MGA_DMA4(AR0,AR2,AR3,AR4)
+    indexD,
+    ar0, ar2, ar3, ar4,
+#define MGA_1x64_CONTEXT_INDEXE MGA_DMA4(AR5,AR6,XDST,YDST)
+    indexE,
+    ar5, ar6, xdst, ydst,
+#define MGA_1x64_CONTEXT_INDEXF MGA_DMA4(LEN,AR1,DMAPAD,DMAPAD)
+    indexF,
+    len, ar1, padF_1, padF_2,
+
+    /*
+    ** Some tricky macros
+    */
+#define M1x64_XYSTRT_AFTER_YDSTLEN(ctx) \
+  (ctx)->indexC = MGA_1x64_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN;
+#define M1x64_YDSTLEN_AFTER_XYSTRT(ctx) \
+  (ctx)->indexC = MGA_1x64_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT;
+
+#define M1x64_PASSIVATE_AR5_AR6_XDST_YDST(ctx) \
+  (ctx)->indexE = MGA_DMA4(DMAPAD, DMAPAD, DMAPAD, DMAPAD);
+#define M1x64_PASSIVATE_AR0_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF0000; \
+  (ctx)->indexD |= (MGA_DMA(DMAPAD) << 8) | MGA_DMA(DMAPAD);
+#define M1x64_PASSIVATE_YDST_LEN(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(DMAPAD) << 24); \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexF |= MGA_DMA(DMAPAD);
+
+#define M1x64_ACTIVATE_AR0(ctx) \
+  (ctx)->indexD &= 0xFFFFFF00; (ctx)->indexD |= MGA_DMA(AR0);
+#define M1x64_ACTIVATE_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF00FF; (ctx)->indexD |= (MGA_DMA(AR2) << 8);
+#define M1x64_ACTIVATE_AR5(ctx) \
+  (ctx)->indexE &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(AR5);
+#define M1x64_ACTIVATE_AR6(ctx) \
+  (ctx)->indexE &= 0xFFFF00FF; (ctx)->indexE |= (MGA_DMA(AR5) << 8);
+#define M1x64_ACTIVATE_XDST(ctx) \
+  (ctx)->indexE &= 0xFF00FFFF; (ctx)->indexE |= (MGA_DMA(XDST) << 16);
+#define M1x64_ACTIVATE_YDST(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(YDST) << 24);
+#define M1x64_ACTIVATE_LEN(ctx) \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(LEN);
+
+    /* Now the part used to schedule execution */
+    index_sec,
+    secaddress, secend,
+    /* No other regs, end of secondary DMA will reset the DMA engine */
+    index_softrap,
+    softrap;
+    /* No other regs, SOFTRAP will reset the DMA engine */
+} mga_chipset_1x64_context_t;
+
+/* TODO: Reorganize the G200 context to reduce size! */
+typedef struct 
+{
+  kgi_u32_t
+
+#define MGA_G200_CONTEXT_INDEX0 MGA_DMA4(MACCESS,ZORG,PITCH,TEXTRANS)
+  index0,
+    maccess, zorg, pitch, textrans,
+#define MGA_G200_CONTEXT_INDEX1 MGA_DMA4(FCOL,BCOL,PLNWT,DWGCTL)
+    index1,
+    fcol, bcol, plnwt, dwgctl,
+#define MGA_G200_CONTEXT_INDEX2 MGA_DMA4(CXBNDRY,YTOP,YBOT,TEXTRANSHIGH)
+    index2,
+    cxbndry, ytop, ybot, textranshigh,
+#define MGA_G200_CONTEXT_INDEX3 MGA_DMA4(DSTORG,YDSTORG,DMAPAD,SRCORG)
+    index3,
+    dstorg, ydstorg, pad3_2, srcorg,
+#define MGA_G200_CONTEXT_INDEX4 MGA_DMA4(WFLAG,DMAPAD,WGETMSB,DMAPAD)
+    index4,
+    wflag, pad4_1, wgetmsb, pad4_2,
+#define MGA_G200_CONTEXT_INDEX5 MGA_DMA4(TEXORG,TEXWIDTH,TEXHEIGHT,TEXCTL)
+    index5,
+    texorg,texwidth,texheight,texctl,
+#define MGA_G200_CONTEXT_INDEX6 MGA_DMA4(TEXCTL2,TEXFILTER,TEXBORDERCOL,ALPHACTRL)
+    index6,
+    texctl2, texfilter, texbordercol, alphactrl,
+#define MGA_G200_CONTEXT_INDEX7 MGA_DMA4(TEXORG1,TEXORG2,TEXORG3,TEXORG4)
+    index7,
+    texorg1, texorg2, texorg3, texorg4,
+#define MGA_G200_CONTEXT_INDEX8 MGA_DMA4(DMAPAD,DMAPAD,DMAPAD,DMAPAD)
+    index8,
+    pad8_1,pad8_2,pad8_3,pad8_4,
+#define MGA_G200_CONTEXT_INDEX9 MGA_DMA4(WARPREG(24),WARPREG(34),DMAPAD,FOGCOL)
+    index9,
+    warp24, warp34, pad9_1, fogcol,
+#define MGA_G200_CONTEXT_INDEXA MGA_DMA4(FXBNDRY,SGN,SHIFT,DMAPAD)
+    indexA,
+    fxbndry, sgn, shift, padA_1,
+#define MGA_G200_CONTEXT_INDEXB_SRC MGA_DMA4(SRC0,SRC1,SRC2,SRC3)
+#define MGA_G200_CONTEXT_INDEXB_PAT MGA_DMA4(PAT0,PAT1,DMAPAD,DMAPAD)
+    indexB,
+    src0_or_pat0, src1_or_pat1, src2, src3,
+    /* NOTE: Do NOT change the order of regs here without changing macros
+     * NOTE: due to alias handling in state management.
+     */
+#define MGA_G200_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN \
+ MGA_DMA4(XYEND,YDSTLEN,XYSTRT,DMAPAD)
+#define MGA_G200_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT \
+ MGA_DMA4(XYEND,DMAPAD,XYSTRT,YDSTLEN)
+#define MGA_G200_CONTEXT_INDEXC MGA_G200_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN
+    indexC,
+    xyend, ydstlen1, xystrt, ydstlen2,
+#define MGA_G200_CONTEXT_INDEXD MGA_DMA4(AR0,AR2,AR3,AR4)
+    indexD,
+    ar0, ar2, ar3, ar4,
+#define MGA_G200_CONTEXT_INDEXE MGA_DMA4(AR5,AR6,XDST,YDST)
+    indexE,
+    ar5, ar6, xdst, ydst,
+#define MGA_G200_CONTEXT_INDEXF MGA_DMA4(LEN,AR1,DMAPAD,DMAPAD)
+    indexF,
+    len, ar1, padF_1, padF_2,
+
+    /*
+    ** Some tricky macros
+    */
+#define G200_XYSTRT_AFTER_YDSTLEN(ctx) \
+  (ctx)->indexC = MGA_G200_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN;
+#define G200_YDSTLEN_AFTER_XYSTRT(ctx) \
+  (ctx)->indexC = MGA_G200_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT;
+
+#define G200_PASSIVATE_AR5_AR6_XDST_YDST(ctx) \
+  (ctx)->indexE = MGA_DMA4(DMAPAD, DMAPAD, DMAPAD, DMAPAD);
+#define G200_PASSIVATE_AR0_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF0000; \
+  (ctx)->indexD |= (MGA_DMA(DMAPAD) << 8) | MGA_DMA(DMAPAD);
+#define G200_PASSIVATE_YDST_LEN(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(DMAPAD) << 24); \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexF |= MGA_DMA(DMAPAD);
+
+#define G200_ACTIVATE_AR0(ctx) \
+  (ctx)->indexD &= 0xFFFFFF00; (ctx)->indexD |= MGA_DMA(AR0);
+#define G200_ACTIVATE_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF00FF; (ctx)->indexD |= (MGA_DMA(AR2) << 8);
+#define G200_ACTIVATE_AR5(ctx) \
+  (ctx)->indexE &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(AR5);
+#define G200_ACTIVATE_AR6(ctx) \
+  (ctx)->indexE &= 0xFFFF00FF; (ctx)->indexE |= (MGA_DMA(AR5) << 8);
+#define G200_ACTIVATE_XDST(ctx) \
+  (ctx)->indexE &= 0xFF00FFFF; (ctx)->indexE |= (MGA_DMA(XDST) << 16);
+#define G200_ACTIVATE_YDST(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(YDST) << 24);
+#define G200_ACTIVATE_LEN(ctx) \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(LEN);
+
+    /* Now the part used to schedule execution */
+    index_sec,
+    secaddress, secend,
+    /* No other regs, end of secondary DMA will reset the DMA engine */
+    index_softrap,
+    softrap;
+    /* No other regs, SOFTRAP will reset the DMA engine */
+} mga_chipset_g200_context_t;
+
+typedef struct 
+{
+  kgi_u32_t
+
+#define MGA_G400_CONTEXT_INDEX0 MGA_DMA4(MACCESS,ZORG,PITCH,TEXTRANS)
+  index0,
+    maccess, zorg, pitch, textrans,
+#define MGA_G400_CONTEXT_INDEX1 MGA_DMA4(FCOL,BCOL,PLNWT,DWGCTL)
+    index1,
+    fcol, bcol, plnwt, dwgctl,
+#define MGA_G400_CONTEXT_INDEX2 MGA_DMA4(CXBNDRY,YTOP,YBOT,TEXTRANSHIGH)
+    index2,
+    cxbndry, ytop, ybot, textranshigh,
+#define MGA_G400_CONTEXT_INDEX3 MGA_DMA4(DSTORG,TDUALSTAGE0,TDUALSTAGE1,SRCORG)
+    index3,
+    dstorg, tdualstage0, tdualstage1, srcorg,
+#define MGA_G400_CONTEXT_INDEX4 MGA_DMA4(WFLAG,WFLAG1,WGETMSB,WACCEPTSEQ)
+    index4,
+    wflag, wflag1, wgetmsb, wacceptseq,
+#define MGA_G400_CONTEXT_INDEX5 MGA_DMA4(TEXORG,TEXWIDTH,TEXHEIGHT,TEXCTL)
+    index5,
+    texorg,texwidth,texheight,texctl,
+#define MGA_G400_CONTEXT_INDEX6 MGA_DMA4(TEXCTL2,TEXFILTER,TEXBORDERCOL,ALPHACTRL)
+    index6,
+    texctl2, texfilter, texbordercol, alphactrl,
+#define MGA_G400_CONTEXT_INDEX7 MGA_DMA4(TEXORG1,TEXORG2,TEXORG3,TEXORG4)
+    index7,
+    texorg1, texorg2, texorg3, texorg4,
+#define MGA_G400_CONTEXT_INDEX8 MGA_DMA4(STENCIL,STENCILCTL,TBUMPMAT,TBUMPFMT)
+    index8,
+    stencil, stencilctl, tbumpmat, tbumpfmt,
+#define MGA_G400_CONTEXT_INDEX9 MGA_DMA4(WARPREG(54),WARPREG(62),WARPREG(52),FOGCOL)
+    index9,
+    warp54, warp62, warp52, fogcol,
+#define MGA_G400_CONTEXT_INDEXA MGA_DMA4(FXBNDRY,SGN,SHIFT,DMAPAD)
+    indexA,
+    fxbndry, sgn, shift, padA_1,
+#define MGA_G400_CONTEXT_INDEXB_SRC MGA_DMA4(SRC0,SRC1,SRC2,SRC3)
+#define MGA_G400_CONTEXT_INDEXB_PAT MGA_DMA4(PAT0,PAT1,DMAPAD,DMAPAD)
+    indexB,
+    src0_or_pat0, src1_or_pat1, src2, src3,
+    /* NOTE: Do NOT change the order of regs here without changing macros
+     * NOTE: due to alias handling in state management.
+     */
+#define MGA_G400_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN \
+ MGA_DMA4(XYEND,YDSTLEN,XYSTRT,DMAPAD)
+#define MGA_G400_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT \
+ MGA_DMA4(XYEND,DMAPAD,XYSTRT,YDSTLEN)
+#define MGA_G400_CONTEXT_INDEXC MGA_G400_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN
+    indexC,
+    xyend, ydstlen1, xystrt, ydstlen2,
+#define MGA_G400_CONTEXT_INDEXD MGA_DMA4(AR0,AR2,AR3,AR4)
+    indexD,
+    ar0, ar2, ar3, ar4,
+#define MGA_G400_CONTEXT_INDEXE MGA_DMA4(AR5,AR6,XDST,YDST)
+    indexE,
+    ar5, ar6, xdst, ydst,
+#define MGA_G400_CONTEXT_INDEXF MGA_DMA4(LEN,AR1,DMAPAD,DMAPAD)
+    indexF,
+    len, ar1, padF_1, padF_2,
+
+    /*
+    ** Some tricky macros
+    */
+#define G400_XYSTRT_AFTER_YDSTLEN(ctx) \
+  (ctx)->indexC = MGA_G400_CONTEXT_INDEXC_XYSTRT_AFTER_YDSTLEN;
+#define G400_YDSTLEN_AFTER_XYSTRT(ctx) \
+  (ctx)->indexC = MGA_G400_CONTEXT_INDEXC_YDSTLEN_AFTER_XYSTRT;
+
+#define G400_PASSIVATE_AR5_AR6_XDST_YDST(ctx) \
+  (ctx)->indexE = MGA_DMA4(DMAPAD, DMAPAD, DMAPAD, DMAPAD);
+#define G400_PASSIVATE_AR0_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF0000; \
+  (ctx)->indexD |= (MGA_DMA(DMAPAD) << 8) | MGA_DMA(DMAPAD);
+#define G400_PASSIVATE_YDST_LEN(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(DMAPAD) << 24); \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexF |= MGA_DMA(DMAPAD);
+
+#define G400_ACTIVATE_AR0(ctx) \
+  (ctx)->indexD &= 0xFFFFFF00; (ctx)->indexD |= MGA_DMA(AR0);
+#define G400_ACTIVATE_AR2(ctx) \
+  (ctx)->indexD &= 0xFFFF00FF; (ctx)->indexD |= (MGA_DMA(AR2) << 8);
+#define G400_ACTIVATE_AR5(ctx) \
+  (ctx)->indexE &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(AR5);
+#define G400_ACTIVATE_AR6(ctx) \
+  (ctx)->indexE &= 0xFFFF00FF; (ctx)->indexE |= (MGA_DMA(AR5) << 8);
+#define G400_ACTIVATE_XDST(ctx) \
+  (ctx)->indexE &= 0xFF00FFFF; (ctx)->indexE |= (MGA_DMA(XDST) << 16);
+#define G400_ACTIVATE_YDST(ctx) \
+  (ctx)->indexE &= 0x00FFFFFF; (ctx)->indexE |= (MGA_DMA(YDST) << 24);
+#define G400_ACTIVATE_LEN(ctx) \
+  (ctx)->indexF &= 0xFFFFFF00; (ctx)->indexE |= MGA_DMA(LEN);
+
+    /* Now the part used to schedule execution */
+    index_sec,
+    secaddress, secend,
+    /* No other regs, end of secondary DMA will reset the DMA engine */
+    index_softrap,
+    softrap;
+    /* No other regs, SOFTRAP will reset the DMA engine */
+} mga_chipset_g400_context_t;
+
+
 typedef struct
 {
   kgi_accel_context_t		kgi;
-  kgi_aperture_t		aperture;
+  kgi_aperture_t		aperture_fast;
+  kgi_aperture_t		aperture_with_ctx;
 
   struct {
     kgi_u32_t index1;
@@ -690,9 +1001,15 @@ typedef struct
     kgi_u32_t index2;
     kgi_u32_t softrap;
     /* No other regs, SOFTRAP will reset the DMA engine */
-  } primary_dma;
+  } dma_fast;
   
   /* No state: most regs are Write-only */
+  
+  union {
+      mga_chipset_g400_context_t g400;
+      mga_chipset_g200_context_t g200;
+      mga_chipset_1x64_context_t m1x64;
+  } dma_with_context;
 
 } mgag_chipset_accel_context_t;
 
@@ -716,30 +1033,38 @@ static void mgag_chipset_warp_load_ucode(mgag_chipset_t *mgag,
   KRN_DEBUG(1, "Watching status before Warp ucode load");
   KRN_TRACE(1, mgag_chipset_log_status(mgag_io, 2));
 
-#warning handle G200 (1 warp) and older chipsets (no warp) cases
-
-  MGAG_GC_OUT32(mgag_io, 0x0, WIMEMADDR);
+  if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
+    {
+      MGAG_GC_OUT32(mgag_io, 0x0, WIMEMADDR);
 #if 0
-  /* This reg does not exists in the doc?!? -- ortalo
-   * (and the WARPs run anyway)
-   */
-  MGAG_GC_OUT32(mgag_io, 0x0, WIMEMADDR1);
+      /* This reg does not exists in the doc?!? -- ortalo
+       * (and the WARPs run anyway)
+       */
+      MGAG_GC_OUT32(mgag_io, 0x0, WIMEMADDR1);
 #endif
 
-  /* TODO: Check size! */
-  /* rounds size */
-  warpcodesize = (warpcodesize + 0x7) & ~0x7;
+      /* TODO: Check size! */
+      /* rounds size */
+      warpcodesize = (warpcodesize + 0x7) & ~0x7;
 
-  KRN_DEBUG(1, "Loading %.4x bytes @ %.8x of ucode into WARPs",
-	    warpcodesize, pwarpcode);
+      KRN_DEBUG(1, "Loading %.4x bytes @ %.8x of ucode into WARPs",
+		warpcodesize, pwarpcode);
 
-  while (warpcodesize != 0)
+      while (warpcodesize != 0)
+	{
+	  kgi_u32_t ins = (*pwarpcode);
+	  MGAG_GC_OUT32(mgag_io, ins, WIMEMDATA);
+	  if (mgag->flags & MGAG_CF_G400)
+	    {
+	      MGAG_GC_OUT32(mgag_io, ins, WIMEMDATA1);
+	    }
+	  warpcodesize -= 4;
+	  pwarpcode++;
+	}
+    }
+  else
     {
-      kgi_u32_t ins = (*pwarpcode);
-      MGAG_GC_OUT32(mgag_io, ins, WIMEMDATA);
-      MGAG_GC_OUT32(mgag_io, ins, WIMEMDATA1);
-      warpcodesize -= 4;
-      pwarpcode++;
+      KRN_ERROR("Trying to load WARP ucode on old chipset (w/o WARP)");
     }
 }
 
@@ -754,7 +1079,43 @@ static void mgag_chipset_warp_setup_pipe(mgag_chipset_t *mgag,
   
   if (mgag->flags & MGAG_CF_G200)
     {
-      KRN_DEBUG(1, "WARP support NYI on the G200");
+      mgag_chipset_wait_engine_idle(mgag_io);
+      /*
+      ** Directly programs the regs
+      */
+      MGAG_GC_OUT32(mgag_io, WIADDR_WMODE_SUSPEND, WIADDR);
+      MGAG_GC_OUT32(mgag_io, WMISC_WCACHEFLUSH, WMISC);
+      MGAG_GC_OUT32(mgag_io,
+		    ((6 << WGETMSB_WGETMSBMIN_SHIFT) & WGETMSB_WGETMSBMIN_MASK)
+		    | ((16 << WGETMSB_WGETMSBMAX_SHIFT) & WGETMSB_WGETMSBMAX_MASK),
+		    WGETMSB);
+      /* i.e.: MGAG_GC_OUT32(mgag_io, 0x00001606, WGETMSB); */
+      
+      /* We load the microcode directly in the WARPs instruction memory
+      ** It could be fetched by the WARPs themselves via bus mastering,
+      ** but that's not done for the moment.
+      */
+      mgag_chipset_warp_load_ucode(mgag, mgag_io,
+				   WARP_G200_tgz, sizeof(WARP_G200_tgz));
+      
+      /*
+      ** We initialize directly the WARPs registers (not via DMA)
+      */
+      MGAG_GC_OUT32(mgag_io,
+		    ((7 << WVRTXSZ_WVRTXSZ_SHIFT) & WVRTXSZ_WVRTXSZ_MASK),
+		    WVRTXSZ);
+      /* i.e.: MGAG_GC_OUT32(mgag_io, 0x00000007, WVRTXSZ); */
+      MGAG_GC_OUT32(mgag_io, 0x00000100, WARPREG(25));
+      MGAG_GC_OUT32(mgag_io, 0x0000FFFF, WARPREG(42));
+      MGAG_GC_OUT32(mgag_io, 0x0000FFFF, WARPREG(60));
+      MGAG_GC_OUT32(mgag_io, 0x0, WARPREG(24));
+      MGAG_GC_OUT32(mgag_io, 0x0, WARPREG(34));
+      MGAG_GC_OUT32(mgag_io, 0, WFLAG);
+      
+      MGAG_GC_OUT32(mgag_io, WIADDR_WMODE_START, WIADDR); /* Start @ 0x0 */
+      
+      KRN_DEBUG(1, "Watching status after Warp initialization");
+      KRN_TRACE(1, mgag_chipset_log_status(mgag_io, 5));
     }
   else if (mgag->flags & MGAG_CF_G400)
     {
@@ -834,32 +1195,34 @@ static void mgag_chipset_warp_do_buffer(mgag_chipset_io_t *mgag_io,
 					mgag_chipset_accel_context_t *mgag_ctx)
 {
   /* Sets start adress and end address in the primary DMA list */
-  mgag_ctx->primary_dma.secaddress = (buffer->aperture.bus
-				      + MGAG_ACCEL_TAG_LENGTH) /* skip tag */
+  mgag_ctx->dma_fast.secaddress = (buffer->aperture.bus
+				   + MGAG_ACCEL_TAG_LENGTH) /* skip tag */
     | SECADDRESS_DMAMOD_VERTEX_WRITE;
-  mgag_ctx->primary_dma.secend = buffer->aperture.bus + buffer->execution.size;
-  mgag_ctx->primary_dma.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(2,"Executing one WARP buffer "
+  mgag_ctx->dma_fast.secend = buffer->aperture.bus + buffer->execution.size;
+  mgag_ctx->dma_fast.softrap = MGAG_SOFTRAP_ENGINE;
+  KRN_DEBUG(1,"Executing one WARP buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
-	    mgag_ctx->aperture.bus,
-	    mgag_ctx->aperture.bus + mgag_ctx->aperture.size,
+	    mgag_ctx->aperture_fast.bus,
+	    mgag_ctx->aperture_fast.bus + mgag_ctx->aperture_fast.size,
 	    buffer->aperture.bus + MGAG_ACCEL_TAG_LENGTH,
 	    buffer->aperture.bus + buffer->execution.size,
 	    buffer->execution.size);
   /* For testing, sets a trapezoid with no textures TODO: Remove! */
+#if 0
   MGAG_GC_OUT32(mgag_io, 0x00000400, PITCH);
   MGAG_GC_OUT32(mgag_io, 0x00000000, DSTORG);
   MGAG_GC_OUT32(mgag_io, 0x00800000, ZORG); /* !!! */
   MGAG_GC_OUT32(mgag_io, 0xFFFFFFFF, PLNWT);
   MGAG_GC_OUT32(mgag_io, 0x40000001, MACCESS);
   MGAG_GC_OUT32(mgag_io, 0x800C4074, DWGCTL); /* No Z compare */
+#endif
   /* Starts execution of the context primary dma (precomputed area) */
-  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
 		| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
 		PRIMADDRESS);
-  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
-		+ mgag_ctx->aperture.size,
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
+		+ mgag_ctx->aperture_fast.size,
 		PRIMEND);
 }
 
@@ -872,26 +1235,1492 @@ static void mgag_chipset_engine_do_buffer(mgag_chipset_io_t *mgag_io,
 					  mgag_chipset_accel_context_t *mgag_ctx)
 {
   /* Sets start adress and end address in the primary DMA list */
-  mgag_ctx->primary_dma.secaddress = (buffer->aperture.bus
+  mgag_ctx->dma_fast.secaddress = (buffer->aperture.bus
 				      + MGAG_ACCEL_TAG_LENGTH) /* skip tag */
     | SECADDRESS_DMAMOD_GENERAL_WRITE;
-  mgag_ctx->primary_dma.secend = buffer->aperture.bus + buffer->execution.size;
-  mgag_ctx->primary_dma.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(2,"Executing one accel buffer "
+  mgag_ctx->dma_fast.secend = buffer->aperture.bus + buffer->execution.size;
+  mgag_ctx->dma_fast.softrap = MGAG_SOFTRAP_ENGINE;
+  KRN_DEBUG(1,"Executing one accel buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
-	    mgag_ctx->aperture.bus,
-	    mgag_ctx->aperture.bus + mgag_ctx->aperture.size,
+	    mgag_ctx->aperture_fast.bus,
+	    mgag_ctx->aperture_fast.bus + mgag_ctx->aperture_fast.size,
 	    buffer->aperture.bus + MGAG_ACCEL_TAG_LENGTH,
 	    buffer->aperture.bus + buffer->execution.size,
 	    buffer->execution.size);
   /* Starts execution of the context primary dma (precomputed area) */
-  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
 		| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
 		PRIMADDRESS);
-  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
-		+ mgag_ctx->aperture.size,
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
+		+ mgag_ctx->aperture_fast.size,
 		PRIMEND);
+}
+
+static void mgag_chipset_g200_do_buffer_ctx(mgag_chipset_io_t *mgag_io,
+					    kgi_accel_buffer_t *buffer,
+					    mgag_chipset_accel_context_t *mgag_ctx)
+{
+  /* Sets start adress and end address in the primary DMA list */
+  mgag_ctx->dma_with_context.g200.secaddress = (buffer->aperture.bus
+				   + MGAG_ACCEL_TAG_LENGTH) /* skip tag */
+    | SECADDRESS_DMAMOD_GENERAL_WRITE;
+  mgag_ctx->dma_with_context.g200.secend = buffer->aperture.bus + buffer->execution.size;
+  mgag_ctx->dma_with_context.g200.softrap = MGAG_SOFTRAP_ENGINE;
+  KRN_DEBUG(1,"Executing one accel buffer "
+	    "(primaddress=%.8x,primend=%.8x,"
+	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
+	    mgag_ctx->aperture_with_ctx.bus,
+	    mgag_ctx->aperture_with_ctx.bus + mgag_ctx->aperture_with_ctx.size,
+	    buffer->aperture.bus + MGAG_ACCEL_TAG_LENGTH,
+	    buffer->aperture.bus + buffer->execution.size,
+	    buffer->execution.size);
+  KRN_DEBUG(2,"pitch = %.8x dwgctl=%.8x",
+	    mgag_ctx->dma_with_context.g200.pitch,
+	    mgag_ctx->dma_with_context.g200.dwgctl);
+  /* Starts execution of the context primary dma (precomputed area) */
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_with_ctx.bus
+		| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
+		PRIMADDRESS);
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_with_ctx.bus
+		+ mgag_ctx->aperture_with_ctx.size,
+		PRIMEND);
+}
+
+static void mgag_chipset_g400_do_buffer_ctx(mgag_chipset_io_t *mgag_io,
+					    kgi_accel_buffer_t *buffer,
+					    mgag_chipset_accel_context_t *mgag_ctx)
+{
+  /* Sets start adress and end address in the primary DMA list */
+  mgag_ctx->dma_with_context.g400.secaddress = (buffer->aperture.bus
+				   + MGAG_ACCEL_TAG_LENGTH) /* skip tag */
+    | SECADDRESS_DMAMOD_GENERAL_WRITE;
+  mgag_ctx->dma_with_context.g400.secend = buffer->aperture.bus + buffer->execution.size;
+  mgag_ctx->dma_with_context.g400.softrap = MGAG_SOFTRAP_ENGINE;
+  KRN_DEBUG(1,"Executing one accel buffer "
+	    "(primaddress=%.8x,primend=%.8x,"
+	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
+	    mgag_ctx->aperture_with_ctx.bus,
+	    mgag_ctx->aperture_with_ctx.bus + mgag_ctx->aperture_with_ctx.size,
+	    buffer->aperture.bus + MGAG_ACCEL_TAG_LENGTH,
+	    buffer->aperture.bus + buffer->execution.size,
+	    buffer->execution.size);
+  KRN_DEBUG(2,"pitch = %.8x dwgctl=%.8x",
+	    mgag_ctx->dma_with_context.g400.pitch,
+	    mgag_ctx->dma_with_context.g400.dwgctl);
+  /* Starts execution of the context primary dma (precomputed area) */
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_with_ctx.bus
+		| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
+		PRIMADDRESS);
+  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_with_ctx.bus
+		+ mgag_ctx->aperture_with_ctx.size,
+		PRIMEND);
+}
+
+/* ----------------------------------------------------------------------------
+**	Validation/state persistence specific functions
+** ----------------------------------------------------------------------------
+*/
+static void mga_chipset_accel_1x64_check(mga_chipset_1x64_context_t *ctx,
+					 kgi_u8_t *reg, kgi_u32_t *val)
+{
+  kgi_u_t has_go = 0;
+  kgi_u8_t regv = *reg;
+  KRN_DEBUG(5, "Checking reg_ptr=%.8x (%.2x)"
+	    " val_ptr=%.8x (%.8x) ctx=%.8x",
+	    reg, *reg, val, *val, ctx);
+  /* Check overall range */
+  if (*reg >= 0x80)
+    {
+      KRN_DEBUG(2,"Probable access to Gx00-specific register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      return; /* Early return */
+    }
+
+  /* Checks if this is a "GO" register */
+  if ((*reg >= 0x40) && (*reg <= 0x7F))
+    {
+      has_go = 1;
+      regv &= ~0x40;
+      KRN_DEBUG(2, "We have an ACCEL_GO reg_ptr=%.8x (%.2x aka %.2x)",
+		reg, *reg, regv);
+    }
+  /*
+   * Saves/validates
+   */
+  switch(regv)
+    {
+      /* Regs are usually ordered by increasing index value */
+      /*
+       * Registers (or alias) recorded in state.
+       */
+    case MGA_DMA(DWGCTL):
+      ctx->dwgctl = *val;
+      if ((*val) & DWGCTL_SGNZERO)
+	ctx->sgn = 0x0;
+      if ((*val) & DWGCTL_SHFTZERO)
+	ctx->shift = 0x0;
+      if ((*val) & DWGCTL_SOLID)
+	{
+	  ctx->src0_or_pat0 = 0xFFFFFFFF;
+	  ctx->src1_or_pat1 = 0xFFFFFFFF;
+	  ctx->src2 = 0xFFFFFFFF;
+	  ctx->src3 = 0xFFFFFFFF;
+	  ctx->indexB = MGA_1x64_CONTEXT_INDEXB_SRC;
+	}
+      if ((*val) & DWGCTL_ARZERO)
+	{
+	  ctx->ar0 = 0x0;
+	  ctx->ar1 = 0x0;
+	  ctx->ar2 = 0x0;
+	  ctx->ar3 = 0x0;
+	  ctx->ar4 = 0x0;
+	  ctx->ar5 = 0x0;
+	  ctx->ar6 = 0x0;
+	  M1x64_ACTIVATE_AR0(ctx);
+	  M1x64_ACTIVATE_AR2(ctx);
+	  M1x64_ACTIVATE_AR5(ctx);
+	  M1x64_ACTIVATE_AR6(ctx);
+	}
+      break;
+    case MGA_DMA(MACCESS):
+      ctx->maccess = *val;
+      break;
+    case MGA_DMA(ZORG):
+      ctx->zorg = *val;
+      break;
+    case MGA_DMA(PLNWT):
+      ctx->plnwt = *val;
+      break;
+    case MGA_DMA(BCOL):
+      ctx->bcol = *val;
+      break;
+    case MGA_DMA(FCOL):
+      ctx->fcol = *val;
+      break;
+    case MGA_DMA(SRC0):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_SRC;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(SRC1):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_SRC;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SRC2):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_SRC;
+      ctx->src2 = *val;
+      break;
+    case MGA_DMA(SRC3):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_SRC;
+      ctx->src3 = *val;
+      break;
+    case MGA_DMA(PAT0):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_PAT;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(PAT1):
+      ctx->indexB = MGA_1x64_CONTEXT_INDEXB_PAT;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SHIFT):
+      ctx->shift = *val;
+      break;
+    case MGA_DMA(SGN):
+      ctx->sgn = *val;
+      break;
+    case MGA_DMA(AR0):
+      ctx->ar0 = *val;
+      M1x64_ACTIVATE_AR0(ctx);
+      break;
+    case MGA_DMA(AR1):
+      ctx->ar1 = *val;
+      break;
+    case MGA_DMA(AR2):
+      ctx->ar2 = *val;
+      M1x64_ACTIVATE_AR2(ctx);
+      break;
+    case MGA_DMA(AR3):
+      ctx->ar3 = *val;
+      break;
+    case MGA_DMA(AR4):
+      ctx->ar4 = *val;
+      break;
+    case MGA_DMA(AR5):
+      ctx->ar5 = *val;
+      M1x64_ACTIVATE_AR5(ctx);
+      break;
+    case MGA_DMA(AR6):
+      ctx->ar6 = *val;
+      M1x64_ACTIVATE_AR6(ctx);
+      break;
+    case MGA_DMA(XDST):
+      ctx->xdst = *val;
+      M1x64_ACTIVATE_XDST(ctx);
+      break;
+    case MGA_DMA(YDST):
+      ctx->ydst = *val;
+      M1x64_ACTIVATE_YDST(ctx);
+      break;
+    case MGA_DMA(LEN):
+      ctx->len = *val;
+      M1x64_ACTIVATE_LEN(ctx);
+      break;
+    case MGA_DMA(XYSTRT):
+      ctx->xystrt = *val;
+      M1x64_XYSTRT_AFTER_YDSTLEN(ctx);
+      M1x64_PASSIVATE_AR5_AR6_XDST_YDST(ctx);
+      break;
+    case MGA_DMA(XYEND):
+      ctx->xyend = *val;
+      M1x64_PASSIVATE_AR0_AR2(ctx);
+      break;
+    case MGA_DMA(YDSTLEN):
+      ctx->ydstlen1 = *val;
+      ctx->ydstlen2 = *val;
+      M1x64_YDSTLEN_AFTER_XYSTRT(ctx);
+      M1x64_PASSIVATE_YDST_LEN(ctx);
+      break;
+    case MGA_DMA(CXBNDRY): /* NB: Faster than CXLEFT and CXRIGHT */
+      ctx->cxbndry = *val;
+      break;
+    case MGA_DMA(CXLEFT): /* NB: Slower than CXBNDRY */
+      ctx->cxbndry &= ~CXBNDRY_CXLEFT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXLEFT_SHIFT) & CXBNDRY_CXLEFT_MASK;
+      break;
+    case MGA_DMA(CXRIGHT):
+      ctx->cxbndry &= ~CXBNDRY_CXRIGHT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXRIGHT_SHIFT) & CXBNDRY_CXRIGHT_MASK;
+      break;
+    case MGA_DMA(FXBNDRY): /* NB: Faster than FXLEFT and FXRIGHT */
+      ctx->fxbndry = *val;
+      break;
+    case MGA_DMA(FXLEFT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXLEFT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXLEFT_SHIFT) & FXBNDRY_FXLEFT_MASK;
+      break;
+    case MGA_DMA(FXRIGHT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXRIGHT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXRIGHT_SHIFT) & FXBNDRY_FXRIGHT_MASK;
+      break;
+    case MGA_DMA(PITCH):
+      ctx->pitch = *val;
+      break;
+    case MGA_DMA(YTOP):
+      ctx->ytop = *val;
+      break;
+    case MGA_DMA(YBOT):
+      ctx->ybot = *val;
+      break;
+    case MGA_DMA(YDSTORG):
+      ctx->ydstorg = *val;
+      break;
+      /*
+       * Direct drawing registers
+       */
+    case MGA_DMA(DR0):
+      ctx->dr0 = *val;
+      break;
+    case MGA_DMA(DR2):
+      ctx->dr2 = *val;
+      break;
+    case MGA_DMA(DR3):
+      ctx->dr3 = *val;
+      break;
+    case MGA_DMA(DR4):
+      ctx->dr4 = *val;
+      break;
+    case MGA_DMA(DR6):
+      ctx->dr6 = *val;
+      break;
+    case MGA_DMA(DR7):
+      ctx->dr7 = *val;
+      break;
+    case MGA_DMA(DR8):
+      ctx->dr8 = *val;
+      break;
+    case MGA_DMA(DR10):
+      ctx->dr10 = *val;
+      break;
+    case MGA_DMA(DR11):
+      ctx->dr11 = *val;
+      break;
+    case MGA_DMA(DR12):
+      ctx->dr12 = *val;
+      break;
+    case MGA_DMA(DR14):
+      ctx->dr14 = *val;
+      break;
+    case MGA_DMA(DR15):
+      ctx->dr15 = *val;
+      break;
+      /*
+       * Forbidden access registers: padded out
+       */
+    case MGA_DMA(MCTLWTST):
+      KRN_DEBUG(1,"Trying to access a driver-only register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      break;
+      /*
+       * Compatibility hack(s)
+       */
+    case MGA_DMA(DSTORG):
+      /* Set to YDSTORG so that Gx00 code (hopefully) runs */
+      (*reg) = MGA_DMA(YDSTORG);
+      ctx->ydstorg = *val;
+      KRN_DEBUG(1,"Changed DSTORG to YDSTORG! (Gx00 code?)");
+      break;
+      /*
+       * Matrox reserved values: padded out
+       */
+    case 0x06:
+    case 0x0A:
+    case 0x0B:
+    case 0x12:
+    case 0x13:
+    case 0x1F:
+    case 0x2D:
+    case 0x2E:
+    case 0x2F:
+    case 0x31:
+    case 0x35:
+    case 0x39:
+    case 0x3D:
+      KRN_DEBUG(1,"Access to Matrox reserved register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD); 
+     break;
+    default:
+      KRN_ERROR("Unhandled register for checking (DMA index: %.2x)."
+		"Padded out. Please, inform " MAINTAINER ".", regv);
+      break;
+    }
+
+  /* Restores the go flag (except on a pad) */
+  if (has_go && ((*reg) != MGA_DMA(DMAPAD)))
+    {
+      (*reg) |= 0x40;
+    }
+}
+
+static void mga_chipset_accel_g200_check(mga_chipset_g200_context_t *ctx,
+					 kgi_u8_t *reg, kgi_u32_t *val)
+{
+  kgi_u_t has_go = 0;
+  kgi_u8_t regv = *reg;
+  KRN_DEBUG(5, "Checking reg_ptr=%.8x (%.2x)"
+	    " val_ptr=%.8x (%.8x) ctx=%.8x",
+	    reg, *reg, val, *val, ctx);
+  /* Checks if this is a "GO" register */
+  if ((*reg >= 0x40) && (*reg <= 0x6F))
+    {
+      has_go = 1;
+      regv &= ~0x40;
+      KRN_DEBUG(2, "We have an ACCEL_GO reg_ptr=%.8x (%.2x aka %.2x)",
+		reg, *reg, regv);
+    }
+  /*
+   * Saves/validates
+   */
+  switch(regv)
+    {
+      /* Regs are usually ordered by increasing index value */
+      /*
+       * Registers (or alias) recorded in state.
+       */
+    case MGA_DMA(DWGCTL):
+      ctx->dwgctl = *val;
+      if ((*val) & DWGCTL_SGNZERO)
+	ctx->sgn = 0x0;
+      if ((*val) & DWGCTL_SHFTZERO)
+	ctx->shift = 0x0;
+      if ((*val) & DWGCTL_SOLID)
+	{
+	  ctx->src0_or_pat0 = 0xFFFFFFFF;
+	  ctx->src1_or_pat1 = 0xFFFFFFFF;
+	  ctx->src2 = 0xFFFFFFFF;
+	  ctx->src3 = 0xFFFFFFFF;
+	  ctx->indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+	}
+      if ((*val) & DWGCTL_ARZERO)
+	{
+	  ctx->ar0 = 0x0;
+	  ctx->ar1 = 0x0;
+	  ctx->ar2 = 0x0;
+	  ctx->ar3 = 0x0;
+	  ctx->ar4 = 0x0;
+	  ctx->ar5 = 0x0;
+	  ctx->ar6 = 0x0;
+	  G200_ACTIVATE_AR0(ctx);
+	  G200_ACTIVATE_AR2(ctx);
+	  G200_ACTIVATE_AR5(ctx);
+	  G200_ACTIVATE_AR6(ctx);
+	}
+      break;
+    case MGA_DMA(MACCESS):
+      ctx->maccess = *val;
+      break;
+    case MGA_DMA(ZORG):
+      ctx->zorg = *val;
+      break;
+    case MGA_DMA(PLNWT):
+      ctx->plnwt = *val;
+      break;
+    case MGA_DMA(BCOL):
+      ctx->bcol = *val;
+      break;
+    case MGA_DMA(FCOL):
+      ctx->fcol = *val;
+      break;
+    case MGA_DMA(SRC0):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(SRC1):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SRC2):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+      ctx->src2 = *val;
+      break;
+    case MGA_DMA(SRC3):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+      ctx->src3 = *val;
+      break;
+    case MGA_DMA(PAT0):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_PAT;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(PAT1):
+      ctx->indexB = MGA_G200_CONTEXT_INDEXB_PAT;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SHIFT):
+      ctx->shift = *val;
+      break;
+    case MGA_DMA(SGN):
+      ctx->sgn = *val;
+      break;
+    case MGA_DMA(AR0):
+      ctx->ar0 = *val;
+      G200_ACTIVATE_AR0(ctx);
+      break;
+    case MGA_DMA(AR1):
+      ctx->ar1 = *val;
+      break;
+    case MGA_DMA(AR2):
+      ctx->ar2 = *val;
+      G200_ACTIVATE_AR2(ctx);
+      break;
+    case MGA_DMA(AR3):
+      ctx->ar3 = *val;
+      break;
+    case MGA_DMA(AR4):
+      ctx->ar4 = *val;
+      break;
+    case MGA_DMA(AR5):
+      ctx->ar5 = *val;
+      G200_ACTIVATE_AR5(ctx);
+      break;
+    case MGA_DMA(AR6):
+      ctx->ar6 = *val;
+      G200_ACTIVATE_AR6(ctx);
+      break;
+    case MGA_DMA(XDST):
+      ctx->xdst = *val;
+      G200_ACTIVATE_XDST(ctx);
+      break;
+    case MGA_DMA(YDST):
+      ctx->ydst = *val;
+      G200_ACTIVATE_YDST(ctx);
+      break;
+    case MGA_DMA(LEN):
+      ctx->len = *val;
+      G200_ACTIVATE_LEN(ctx);
+      break;
+    case MGA_DMA(XYSTRT):
+      ctx->xystrt = *val;
+      G200_XYSTRT_AFTER_YDSTLEN(ctx);
+      G200_PASSIVATE_AR5_AR6_XDST_YDST(ctx);
+      break;
+    case MGA_DMA(XYEND):
+      ctx->xyend = *val;
+      G200_PASSIVATE_AR0_AR2(ctx);
+      break;
+    case MGA_DMA(YDSTLEN):
+      ctx->ydstlen1 = *val;
+      ctx->ydstlen2 = *val;
+      G200_YDSTLEN_AFTER_XYSTRT(ctx);
+      G200_PASSIVATE_YDST_LEN(ctx);
+      break;
+    case MGA_DMA(CXBNDRY): /* NB: Faster than CXLEFT and CXRIGHT */
+      ctx->cxbndry = *val;
+      break;
+    case MGA_DMA(CXLEFT): /* NB: Slower than CXBNDRY */
+      ctx->cxbndry &= ~CXBNDRY_CXLEFT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXLEFT_SHIFT) & CXBNDRY_CXLEFT_MASK;
+      break;
+    case MGA_DMA(CXRIGHT):
+      ctx->cxbndry &= ~CXBNDRY_CXRIGHT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXRIGHT_SHIFT) & CXBNDRY_CXRIGHT_MASK;
+      break;
+    case MGA_DMA(FXBNDRY): /* NB: Faster than FXLEFT and FXRIGHT */
+      ctx->fxbndry = *val;
+      break;
+    case MGA_DMA(FXLEFT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXLEFT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXLEFT_SHIFT) & FXBNDRY_FXLEFT_MASK;
+      break;
+    case MGA_DMA(FXRIGHT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXRIGHT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXRIGHT_SHIFT) & FXBNDRY_FXRIGHT_MASK;
+      break;
+    case MGA_DMA(PITCH):
+      ctx->pitch = *val;
+      break;
+    case MGA_DMA(YTOP):
+      ctx->ytop = *val;
+      break;
+    case MGA_DMA(YBOT):
+      ctx->ybot = *val;
+      break;
+    case MGA_DMA(FOGCOL):
+      ctx->fogcol = *val;
+      break;
+    case MGA_DMA(WFLAG):
+      ctx->wflag = *val;
+      break;
+    case MGA_DMA(WGETMSB):
+      ctx->wgetmsb = *val;
+      break;
+    case MGA_DMA(TEXORG):
+      ctx->texorg = *val;
+      break;
+    case MGA_DMA(TEXWIDTH):
+      ctx->texwidth = *val;
+      ctx->warp24 = (*val) | 0x40; /* Enforces the | 0x40 */
+      break;
+    case MGA_DMA(TEXHEIGHT):
+      ctx->texheight = *val;
+      ctx->warp34 = (*val) | 0x40; /* Enforces the | 0x40 */
+      break;
+    case MGA_DMA(TEXCTL):
+      ctx->texctl = *val;
+      break;
+    case MGA_DMA(TEXTRANS):
+      ctx->textrans = *val;
+      break;
+    case MGA_DMA(TEXTRANSHIGH):
+      ctx->textranshigh = *val;
+      break;
+    case MGA_DMA(TEXCTL2):
+      ctx->texctl2 = *val;
+      break;
+    case MGA_DMA(TEXFILTER):
+      ctx->texfilter = *val;
+      break;
+    case MGA_DMA(TEXBORDERCOL):
+      ctx->texbordercol = *val;
+      break;
+    case MGA_DMA(ALPHACTRL):
+      ctx->alphactrl = *val;
+      break;
+    case MGA_DMA(SRCORG):
+      ctx->srcorg = *val;
+      break;
+    case MGA_DMA(DSTORG):
+      ctx->dstorg = *val;
+      break;
+    case MGA_DMA(YDSTORG): /* 0x25: reserved on the G400 */
+      /* NOTE: Use of DSTORG is recommended, but YDSTORG *must*
+       * NOTE: be initialized!
+       */
+      ctx->ydstorg = *val;
+      break;
+    case MGA_DMA(TEXORG1):
+      ctx->texorg1 = *val;
+      break;
+    case MGA_DMA(TEXORG2):
+      ctx->texorg2 = *val;
+      break;
+    case MGA_DMA(TEXORG3):
+      ctx->texorg3 = *val;
+      break;
+    case MGA_DMA(TEXORG4):
+      ctx->texorg4 = *val;
+      break;
+    case MGA_DMA(WARPREG(24)):
+      /* This driver wants TEXWIDTH to be programmed first! */
+      if (((*val) & ~0x40) != (ctx->texwidth & ~0x40))
+	{
+	  KRN_DEBUG(1,"WARPREG(24) (%.8x) is different from"
+		    " current TEXWIDTH value (%.8x): passivated."
+		    " (Rq: check programming sequence order.)",
+		    (*val), ctx->texwidth);
+	  *val = ctx->texwidth | 0x40;
+	}
+#if 0 /* Not needed: already enforced by TEXWIDTH case */
+      else
+	{
+	  ctx->warp24 = *val | 0x40; /* Enforces the | 0x40 */
+	}
+#endif
+      break;
+    case MGA_DMA(WARPREG(34)):
+      /* This driver wants TEXHEIGHT to be programmed first! */
+      if (((*val) & ~0x40) != (ctx->texheight & ~0x40))
+	{
+	  KRN_DEBUG(1,"WARPREG(34) (%.8x) is different from"
+		    " current TEXHEIGHT value (%.8x): passivated."
+		    " (Rq: check programming sequence order.)",
+		    (*val), ctx->texheight);
+	  *val = ctx->texheight | 0x40;
+	}
+#if 0 /* Not needed: already enforced by TEXHEIGHT case */
+      else
+	ctx->warp34 = *val | 0x40; /* Enforces the | 0x40 */
+#endif
+      break;
+      /*
+       * Some registers that need checking
+       */
+    case MGA_DMA(WARPREG(42)):
+    case MGA_DMA(WARPREG(60)):
+      if ((*val) != 0x0000FFFF)
+	{
+	  KRN_DEBUG(1,"WARPREG(%i) should be set to 0x0000FFFF only:"
+		    " padded out!",
+		    regv - MGA_DMA(WARPREG(0)));
+	  *reg = MGA_DMA(DMAPAD);
+	}
+      break;
+    case MGA_DMA(WARPREG(25)):
+      if ((*val) != 0x00000100)
+	{
+	  KRN_DEBUG(1,"WARPREG(25) should be set to 0x00000100 only:"
+		    " padded out!");
+	  *reg = MGA_DMA(DMAPAD);
+	}
+      break;
+      /*
+       * Direct drawing registers: allowed but not saved in state
+       * accross different DMA buffers.
+       */
+      /* None */
+      /*
+       * Registers usually computed by the WARP pipes.
+       * Allowed with a warning, but not saved.
+       */
+    case MGA_DMA(DR4):
+    case MGA_DMA(DR6):
+    case MGA_DMA(DR7):
+    case MGA_DMA(DR8):
+    case MGA_DMA(DR10):
+    case MGA_DMA(DR11):
+    case MGA_DMA(DR12):
+    case MGA_DMA(DR14):
+    case MGA_DMA(DR15):
+    case MGA_DMA(ALPHASTART):
+    case MGA_DMA(ALPHAXINC):
+    case MGA_DMA(ALPHAYINC):
+    case MGA_DMA(DR0):
+    case MGA_DMA(DR2):
+    case MGA_DMA(DR3):
+    case MGA_DMA(SPECRSTART):
+    case MGA_DMA(SPECRXINC):
+    case MGA_DMA(SPECRYINC):
+    case MGA_DMA(SPECGSTART):
+    case MGA_DMA(SPECGXINC):
+    case MGA_DMA(SPECGYINC):
+    case MGA_DMA(SPECBSTART):
+    case MGA_DMA(SPECBXINC):
+    case MGA_DMA(SPECBYINC):
+    case MGA_DMA(FOGSTART):
+    case MGA_DMA(FOGXINC):
+    case MGA_DMA(FOGYINC):
+    case MGA_DMA(TMR0):
+    case MGA_DMA(TMR1):
+    case MGA_DMA(TMR6):
+    case MGA_DMA(TMR2):
+    case MGA_DMA(TMR3):
+    case MGA_DMA(TMR7):
+    case MGA_DMA(TMR4):
+    case MGA_DMA(TMR5):
+    case MGA_DMA(TMR8):
+      KRN_DEBUG(1,"Using a pipe-managed register (DMA index: %.2x)."
+		" Normally, you do not need to use it.",
+		regv);
+      break;
+      /*
+       * Forbidden access registers: padded out
+       */
+    case MGA_DMA(MCTLWTST):
+    case MGA_DMA(WIADDR):
+    case MGA_DMA(WVRTXSZ): /* Constant - Pipe-dependent */
+    case MGA_DMA(SECADDRESS):
+    case MGA_DMA(SECEND):
+    case MGA_DMA(SOFTRAP):
+    case MGA_DMA(DWGSYNC):
+    case MGA_DMA(SETUPADDRESS):
+    case MGA_DMA(SETUPEND):
+      KRN_DEBUG(1,"Trying to access a driver-only register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      break;
+      /*
+       * WARP general registers: not to be used normally.
+       */
+    case MGA_DMA(WARPREG(0)):
+    case MGA_DMA(WARPREG(1)):
+    case MGA_DMA(WARPREG(2)):
+    case MGA_DMA(WARPREG(3)):
+    case MGA_DMA(WARPREG(4)):
+    case MGA_DMA(WARPREG(5)):
+    case MGA_DMA(WARPREG(6)):
+    case MGA_DMA(WARPREG(7)):
+    case MGA_DMA(WARPREG(8)):
+    case MGA_DMA(WARPREG(9)):
+    case MGA_DMA(WARPREG(10)):
+    case MGA_DMA(WARPREG(11)):
+    case MGA_DMA(WARPREG(12)):
+    case MGA_DMA(WARPREG(13)):
+    case MGA_DMA(WARPREG(14)):
+    case MGA_DMA(WARPREG(15)):
+    case MGA_DMA(WARPREG(16)):
+    case MGA_DMA(WARPREG(17)):
+    case MGA_DMA(WARPREG(18)):
+    case MGA_DMA(WARPREG(19)):
+    case MGA_DMA(WARPREG(20)):
+    case MGA_DMA(WARPREG(21)):
+    case MGA_DMA(WARPREG(22)):
+    case MGA_DMA(WARPREG(23)):
+    case MGA_DMA(WARPREG(26)):
+    case MGA_DMA(WARPREG(27)):
+    case MGA_DMA(WARPREG(28)):
+    case MGA_DMA(WARPREG(29)):
+    case MGA_DMA(WARPREG(30)):
+    case MGA_DMA(WARPREG(31)):
+    case MGA_DMA(WARPREG(32)):
+    case MGA_DMA(WARPREG(33)):
+    case MGA_DMA(WARPREG(35)):
+    case MGA_DMA(WARPREG(36)):
+    case MGA_DMA(WARPREG(37)):
+    case MGA_DMA(WARPREG(38)):
+    case MGA_DMA(WARPREG(39)):
+    case MGA_DMA(WARPREG(40)):
+    case MGA_DMA(WARPREG(41)):
+    case MGA_DMA(WARPREG(43)):
+    case MGA_DMA(WARPREG(44)):
+    case MGA_DMA(WARPREG(45)):
+    case MGA_DMA(WARPREG(46)):
+    case MGA_DMA(WARPREG(47)):
+    case MGA_DMA(WARPREG(48)):
+    case MGA_DMA(WARPREG(49)):
+    case MGA_DMA(WARPREG(50)):
+    case MGA_DMA(WARPREG(51)):
+    case MGA_DMA(WARPREG(52)):
+    case MGA_DMA(WARPREG(53)):
+    case MGA_DMA(WARPREG(54)):
+    case MGA_DMA(WARPREG(55)):
+    case MGA_DMA(WARPREG(56)):
+    case MGA_DMA(WARPREG(57)):
+    case MGA_DMA(WARPREG(58)):
+    case MGA_DMA(WARPREG(59)):
+    case MGA_DMA(WARPREG(61)):
+    case MGA_DMA(WARPREG(62)):
+    case MGA_DMA(WARPREG(63)):
+      KRN_DEBUG(1,"WARPREG(%i) should not be used normally: padded out!",
+		    regv - MGA_DMA(WARPREG(0)));
+      *reg = MGA_DMA(DMAPAD);
+      break;
+      /*
+       * Compatibility hack(s)
+       */
+      /* none */
+      /*
+       * Matrox reserved values: padded out
+       */
+    case 0x06:
+    case 0x0A:
+    case 0x0B:
+    case 0x12:
+    case 0x13:
+    case 0x1F:
+    case 0x2D:
+    case 0x2E:
+    case 0x2F:
+    case 0x74:
+    case 0x75:
+    case 0x76:
+    case 0x77:
+    case 0x78:
+    case 0x79:
+    case 0x7A:
+    case 0x7B:
+    case 0x7C:
+    case 0x7D:
+    case 0x7E:
+    case 0x7F:
+    case 0xAF:
+    case 0xB0:
+    case 0xB1:
+    case 0xB2:
+    case 0xB3:
+    case 0xB6:
+    case 0xB7:
+    case 0xB8:
+    case 0xB9:
+    case 0xBA:
+    case 0xBB:
+    case 0xBC:
+    case 0xBD:
+    case 0xBE:
+    case 0xBF:
+      KRN_DEBUG(1,"Access to Matrox reserved register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      break;
+    default:
+      KRN_ERROR("Unhandled register for checking (DMA index: %.2x)."
+		"Please, inform " MAINTAINER ".", regv);
+      break;
+    }
+
+  /* Restores the go flag (except on a pad) */
+  if (has_go && ((*reg) != MGA_DMA(DMAPAD)))
+    {
+      (*reg) |= 0x40;
+    }
+}
+
+static void mga_chipset_accel_g400_check(mga_chipset_g400_context_t *ctx,
+					 kgi_u8_t *reg, kgi_u32_t *val)
+{
+  kgi_u_t has_go = 0;
+  kgi_u8_t regv = *reg;
+  KRN_DEBUG(5, "Checking reg_ptr=%.8x (%.2x)"
+	    " val_ptr=%.8x (%.8x) ctx=%.8x",
+	    reg, *reg, val, *val, ctx);
+  /* Checks if this is a "GO" register */
+  if ((*reg >= 0x40) && (*reg <= 0x6F))
+    {
+      has_go = 1;
+      regv &= ~0x40;
+      KRN_DEBUG(2, "We have an ACCEL_GO reg_ptr=%.8x (%.2x aka %.2x)",
+		reg, *reg, regv);
+    }
+  /*
+   * Saves/validates
+   */
+  switch(regv)
+    {
+      /* Regs are usually ordered by increasing index value */
+      /*
+       * Registers (or alias) recorded in state.
+       */
+    case MGA_DMA(DWGCTL):
+      ctx->dwgctl = *val;
+      if ((*val) & DWGCTL_SGNZERO)
+	ctx->sgn = 0x0;
+      if ((*val) & DWGCTL_SHFTZERO)
+	ctx->shift = 0x0;
+      if ((*val) & DWGCTL_SOLID)
+	{
+	  ctx->src0_or_pat0 = 0xFFFFFFFF;
+	  ctx->src1_or_pat1 = 0xFFFFFFFF;
+	  ctx->src2 = 0xFFFFFFFF;
+	  ctx->src3 = 0xFFFFFFFF;
+	  ctx->indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+	}
+      if ((*val) & DWGCTL_ARZERO)
+	{
+	  ctx->ar0 = 0x0;
+	  ctx->ar1 = 0x0;
+	  ctx->ar2 = 0x0;
+	  ctx->ar3 = 0x0;
+	  ctx->ar4 = 0x0;
+	  ctx->ar5 = 0x0;
+	  ctx->ar6 = 0x0;
+	  G400_ACTIVATE_AR0(ctx);
+	  G400_ACTIVATE_AR2(ctx);
+	  G400_ACTIVATE_AR5(ctx);
+	  G400_ACTIVATE_AR6(ctx);
+	}
+      break;
+    case MGA_DMA(MACCESS):
+      ctx->maccess = *val;
+      break;
+    case MGA_DMA(ZORG):
+      ctx->zorg = *val;
+      break;
+    case MGA_DMA(PLNWT):
+      ctx->plnwt = *val;
+      break;
+    case MGA_DMA(BCOL):
+      ctx->bcol = *val;
+      break;
+    case MGA_DMA(FCOL):
+      ctx->fcol = *val;
+      break;
+    case MGA_DMA(SRC0):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(SRC1):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SRC2):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+      ctx->src2 = *val;
+      break;
+    case MGA_DMA(SRC3):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+      ctx->src3 = *val;
+      break;
+    case MGA_DMA(PAT0):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_PAT;
+      ctx->src0_or_pat0 = *val;
+      break;
+    case MGA_DMA(PAT1):
+      ctx->indexB = MGA_G400_CONTEXT_INDEXB_PAT;
+      ctx->src1_or_pat1 = *val;
+      break;
+    case MGA_DMA(SHIFT):
+      ctx->shift = *val;
+      break;
+    case MGA_DMA(SGN):
+      ctx->sgn = *val;
+      break;
+    case MGA_DMA(AR0):
+      ctx->ar0 = *val;
+      G400_ACTIVATE_AR0(ctx);
+      break;
+    case MGA_DMA(AR1):
+      ctx->ar1 = *val;
+      break;
+    case MGA_DMA(AR2):
+      ctx->ar2 = *val;
+      G400_ACTIVATE_AR2(ctx);
+      break;
+    case MGA_DMA(AR3):
+      ctx->ar3 = *val;
+      break;
+    case MGA_DMA(AR4):
+      ctx->ar4 = *val;
+      break;
+    case MGA_DMA(AR5):
+      ctx->ar5 = *val;
+      G400_ACTIVATE_AR5(ctx);
+      break;
+    case MGA_DMA(AR6):
+      ctx->ar6 = *val;
+      G400_ACTIVATE_AR6(ctx);
+      break;
+    case MGA_DMA(XDST):
+      ctx->xdst = *val;
+      G400_ACTIVATE_XDST(ctx);
+      break;
+    case MGA_DMA(YDST):
+      ctx->ydst = *val;
+      G400_ACTIVATE_YDST(ctx);
+      break;
+    case MGA_DMA(LEN):
+      ctx->len = *val;
+      G400_ACTIVATE_LEN(ctx);
+      break;
+    case MGA_DMA(XYSTRT):
+      ctx->xystrt = *val;
+      G400_XYSTRT_AFTER_YDSTLEN(ctx);
+      G400_PASSIVATE_AR5_AR6_XDST_YDST(ctx);
+      break;
+    case MGA_DMA(XYEND):
+      ctx->xyend = *val;
+      G400_PASSIVATE_AR0_AR2(ctx);
+      break;
+    case MGA_DMA(YDSTLEN):
+      ctx->ydstlen1 = *val;
+      ctx->ydstlen2 = *val;
+      G400_YDSTLEN_AFTER_XYSTRT(ctx);
+      G400_PASSIVATE_YDST_LEN(ctx);
+      break;
+    case MGA_DMA(CXBNDRY): /* NB: Faster than CXLEFT and CXRIGHT */
+      ctx->cxbndry = *val;
+      break;
+    case MGA_DMA(CXLEFT): /* NB: Slower than CXBNDRY */
+      ctx->cxbndry &= ~CXBNDRY_CXLEFT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXLEFT_SHIFT) & CXBNDRY_CXLEFT_MASK;
+      break;
+    case MGA_DMA(CXRIGHT):
+      ctx->cxbndry &= ~CXBNDRY_CXRIGHT_MASK;
+      ctx->cxbndry |= ((*val) << CXBNDRY_CXRIGHT_SHIFT) & CXBNDRY_CXRIGHT_MASK;
+      break;
+    case MGA_DMA(FXBNDRY): /* NB: Faster than FXLEFT and FXRIGHT */
+      ctx->fxbndry = *val;
+      break;
+    case MGA_DMA(FXLEFT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXLEFT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXLEFT_SHIFT) & FXBNDRY_FXLEFT_MASK;
+      break;
+    case MGA_DMA(FXRIGHT): /* NB: Slower than FXBNDRY */
+      ctx->fxbndry &= ~FXBNDRY_FXRIGHT_MASK;
+      ctx->fxbndry |= ((*val) << FXBNDRY_FXRIGHT_SHIFT) & FXBNDRY_FXRIGHT_MASK;
+      break;
+    case MGA_DMA(PITCH):
+      ctx->pitch = *val;
+      break;
+    case MGA_DMA(YTOP):
+      ctx->ytop = *val;
+      break;
+    case MGA_DMA(YBOT):
+      ctx->ybot = *val;
+      break;
+    case MGA_DMA(FOGCOL):
+      ctx->fogcol = *val;
+      break;
+    case MGA_DMA(WFLAG):
+      ctx->wflag = *val;
+      break;
+    case MGA_DMA(WFLAG1):
+      ctx->wflag1 = *val;
+      break;
+    case MGA_DMA(WGETMSB):
+      ctx->wgetmsb = *val;
+      break;
+    case MGA_DMA(WACCEPTSEQ):
+#warning clean up hex values!
+      if (((*val) != 0x18000000)
+	  && ((*val) != 0x02010200)
+	  && ((*val) != 0x01000408)
+	  && ((*val) != 0x02020400)
+	  && ((*val) != 0x01000810))
+	{
+	  KRN_DEBUG(1,"Incorrect WACCEPTSEQ value (%.8x): padded out",(*val));
+	  (*reg) = MGA_DMA(DMAPAD);
+	}
+      else
+	{
+	  ctx->wacceptseq = *val;
+	}
+      break;
+    case MGA_DMA(TEXORG):
+      ctx->texorg = *val;
+      break;
+    case MGA_DMA(TEXWIDTH):
+      ctx->texwidth = *val;
+      ctx->warp54 = (*val) | 0x40; /* Enforces the | 0x40 */
+      ctx->warp52 = (*val) | 0x40;
+      break;
+    case MGA_DMA(TEXHEIGHT):
+      ctx->texheight = *val;
+      ctx->warp62 = (*val) | 0x40; /* Enforces the | 0x40 */
+      break;
+    case MGA_DMA(TEXCTL):
+      ctx->texctl = *val;
+      break;
+    case MGA_DMA(TEXTRANS):
+      ctx->textrans = *val;
+      break;
+    case MGA_DMA(TEXTRANSHIGH):
+      ctx->textranshigh = *val;
+      break;
+    case MGA_DMA(TEXCTL2):
+      ctx->texctl2 = *val;
+      break;
+    case MGA_DMA(TEXFILTER):
+      ctx->texfilter = *val;
+      break;
+    case MGA_DMA(TEXBORDERCOL):
+      ctx->texbordercol = *val;
+      break;
+    case MGA_DMA(ALPHACTRL):
+      ctx->alphactrl = *val;
+      break;
+    case MGA_DMA(SRCORG):
+      ctx->srcorg = *val;
+      break;
+    case MGA_DMA(DSTORG):
+      ctx->dstorg = *val;
+      break;
+    case MGA_DMA(TEXORG1):
+      ctx->texorg1 = *val;
+      break;
+    case MGA_DMA(TEXORG2):
+      ctx->texorg2 = *val;
+      break;
+    case MGA_DMA(TEXORG3):
+      ctx->texorg3 = *val;
+      break;
+    case MGA_DMA(TEXORG4):
+      ctx->texorg4 = *val;
+      break;
+    case MGA_DMA(STENCIL):
+      ctx->stencil = *val;
+      break;
+    case MGA_DMA(STENCILCTL):
+      ctx->stencilctl = *val;
+      break;
+    case MGA_DMA(TBUMPMAT):
+      ctx->tbumpmat = *val;
+      break;
+    case MGA_DMA(TBUMPFMT):
+      ctx->tbumpfmt = *val;
+      break;
+    case MGA_DMA(TDUALSTAGE0):
+      ctx->tdualstage0 = *val;
+      break;
+    case MGA_DMA(TDUALSTAGE1):
+      ctx->tdualstage1 = *val;
+      break;
+    case MGA_DMA(WARPREG(54)):
+      /* This driver wants TEXWIDTH to be programmed first! */
+      if (((*val) & ~0x40) != (ctx->texwidth & ~0x40))
+	{
+	  KRN_DEBUG(1,"WARPREG(54) (%.8x) is different from"
+		    " current TEXWIDTH value (%.8x): passivated."
+		    " (Rq: check programming sequence order.)",
+		    (*val), ctx->texwidth);
+	  *val = ctx->texwidth | 0x40;
+	}
+#if 0 /* Not needed: already enforced by TEXWIDTH case */
+      else
+	{
+	  ctx->warp54 = *val | 0x40; /* Enforces the | 0x40 */
+	  ctx->warp52 = *val | 0x40;
+	}
+#endif
+      break;
+    case MGA_DMA(WARPREG(62)):
+      /* This driver wants TEXHEIGHT to be programmed first! */
+      if (((*val) & ~0x40) != (ctx->texheight & ~0x40))
+	{
+	  KRN_DEBUG(1,"WARPREG(62) (%.8x) is different from"
+		    " current TEXHEIGHT value (%.8x): passivated."
+		    " (Rq: check programming sequence order.)",
+		    (*val), ctx->texheight);
+	  *val = ctx->texheight | 0x40;
+	}
+#if 0 /* Not needed: already enforced by TEXHEIGHT case */
+      else
+	ctx->warp62 = *val | 0x40; /* Enforces the | 0x40 */
+#endif
+      break;
+    case MGA_DMA(WARPREG(52)):
+      /* This driver wants TEXWIDTH to be programmed first! */
+      if (((*val) & ~0x40) != (ctx->texwidth & ~0x40))
+	{
+	  KRN_DEBUG(1,"WARPREG(52) (%.8x) is different from"
+		    " current TEXWIDTH value (%.8x): passivated."
+		    " (Rq: check programming sequence order.)",
+		    (*val), ctx->texwidth);
+	  *val = ctx->texwidth | 0x40;
+	}
+#if 0 /* Not needed: already enforced by TEXWIDTH case */
+      else
+	{
+	  ctx->warp52 = *val | 0x40; /* Enforces the | 0x40 */
+	  ctx->warp54 = *val | 0x40;
+	}
+#endif
+      break;
+      /*
+       * Some registers that need checking
+       */
+    case MGA_DMA(WARPREG(49)):
+    case MGA_DMA(WARPREG(57)):
+    case MGA_DMA(WARPREG(53)):
+    case MGA_DMA(WARPREG(61)):
+      if ((*val) != 0)
+	{
+	  KRN_DEBUG(1,"WARPREG(%i) should be set to 0 only: padded out!",
+		    regv - MGA_DMA(WARPREG(0)));
+	  *reg = MGA_DMA(DMAPAD);
+	}
+      break;
+      /*
+       * Direct drawing registers: allowed but not saved in state
+       * accross different DMA buffers.
+       */
+      /* None */
+      /*
+       * Registers usually computed by the WARP pipes.
+       * Allowed with a warning, but not saved.
+       */
+    case MGA_DMA(DR4):
+    case MGA_DMA(DR6):
+    case MGA_DMA(DR7):
+    case MGA_DMA(DR8):
+    case MGA_DMA(DR10):
+    case MGA_DMA(DR11):
+    case MGA_DMA(DR12):
+    case MGA_DMA(DR14):
+    case MGA_DMA(DR15):
+    case MGA_DMA(ALPHASTART):
+    case MGA_DMA(ALPHAXINC):
+    case MGA_DMA(ALPHAYINC):
+    case MGA_DMA(DR0):
+    case MGA_DMA(DR2):
+    case MGA_DMA(DR3):
+    case MGA_DMA(SPECRSTART):
+    case MGA_DMA(SPECRXINC):
+    case MGA_DMA(SPECRYINC):
+    case MGA_DMA(SPECGSTART):
+    case MGA_DMA(SPECGXINC):
+    case MGA_DMA(SPECGYINC):
+    case MGA_DMA(SPECBSTART):
+    case MGA_DMA(SPECBXINC):
+    case MGA_DMA(SPECBYINC):
+    case MGA_DMA(FOGSTART):
+    case MGA_DMA(FOGXINC):
+    case MGA_DMA(FOGYINC):
+    case MGA_DMA(TMR0):
+    case MGA_DMA(TMR1):
+    case MGA_DMA(TMR6):
+    case MGA_DMA(TMR2):
+    case MGA_DMA(TMR3):
+    case MGA_DMA(TMR7):
+    case MGA_DMA(TMR4):
+    case MGA_DMA(TMR5):
+    case MGA_DMA(TMR8):
+      KRN_DEBUG(1,"Using a pipe-managed register (DMA index: %.2x)."
+		" Normally, you do not need to use it.",
+		regv);
+      break;
+      /*
+       * Forbidden access registers: padded out
+       */
+    case MGA_DMA(MCTLWTST):
+    case MGA_DMA(WIADDR):
+    case MGA_DMA(WVRTXSZ): /* Constant - Pipe-dependent */
+    case MGA_DMA(WIADDR2):
+    case MGA_DMA(SECADDRESS):
+    case MGA_DMA(SECEND):
+    case MGA_DMA(SOFTRAP):
+    case MGA_DMA(DWGSYNC):
+    case MGA_DMA(SETUPADDRESS):
+    case MGA_DMA(SETUPEND):
+    case MGA_DMA(WARPREG(56)): /* Constant - New pipe only */
+      KRN_DEBUG(1,"Trying to access a driver-only register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      break;
+      /*
+       * WARP general registers: not to be used normally.
+       */
+    case MGA_DMA(WARPREG(0)):
+    case MGA_DMA(WARPREG(1)):
+    case MGA_DMA(WARPREG(2)):
+    case MGA_DMA(WARPREG(3)):
+    case MGA_DMA(WARPREG(4)):
+    case MGA_DMA(WARPREG(5)):
+    case MGA_DMA(WARPREG(6)):
+    case MGA_DMA(WARPREG(7)):
+    case MGA_DMA(WARPREG(8)):
+    case MGA_DMA(WARPREG(9)):
+    case MGA_DMA(WARPREG(10)):
+    case MGA_DMA(WARPREG(11)):
+    case MGA_DMA(WARPREG(12)):
+    case MGA_DMA(WARPREG(13)):
+    case MGA_DMA(WARPREG(14)):
+    case MGA_DMA(WARPREG(15)):
+    case MGA_DMA(WARPREG(16)):
+    case MGA_DMA(WARPREG(17)):
+    case MGA_DMA(WARPREG(18)):
+    case MGA_DMA(WARPREG(19)):
+    case MGA_DMA(WARPREG(20)):
+    case MGA_DMA(WARPREG(21)):
+    case MGA_DMA(WARPREG(22)):
+    case MGA_DMA(WARPREG(23)):
+    case MGA_DMA(WARPREG(24)):
+    case MGA_DMA(WARPREG(25)):
+    case MGA_DMA(WARPREG(26)):
+    case MGA_DMA(WARPREG(27)):
+    case MGA_DMA(WARPREG(28)):
+    case MGA_DMA(WARPREG(29)):
+    case MGA_DMA(WARPREG(30)):
+    case MGA_DMA(WARPREG(31)):
+    case MGA_DMA(WARPREG(32)):
+    case MGA_DMA(WARPREG(33)):
+    case MGA_DMA(WARPREG(34)):
+    case MGA_DMA(WARPREG(35)):
+    case MGA_DMA(WARPREG(36)):
+    case MGA_DMA(WARPREG(37)):
+    case MGA_DMA(WARPREG(38)):
+    case MGA_DMA(WARPREG(39)):
+    case MGA_DMA(WARPREG(40)):
+    case MGA_DMA(WARPREG(41)):
+    case MGA_DMA(WARPREG(42)):
+    case MGA_DMA(WARPREG(43)):
+    case MGA_DMA(WARPREG(44)):
+    case MGA_DMA(WARPREG(45)):
+    case MGA_DMA(WARPREG(46)):
+    case MGA_DMA(WARPREG(47)):
+    case MGA_DMA(WARPREG(48)):
+    case MGA_DMA(WARPREG(50)):
+    case MGA_DMA(WARPREG(51)):
+    case MGA_DMA(WARPREG(55)):
+    case MGA_DMA(WARPREG(58)):
+    case MGA_DMA(WARPREG(59)):
+    case MGA_DMA(WARPREG(60)):
+    case MGA_DMA(WARPREG(63)):
+      KRN_DEBUG(1,"WARPREG(%i) should not be used normally: padded out!",
+		    regv - MGA_DMA(WARPREG(0)));
+      *reg = MGA_DMA(DMAPAD);
+      break;
+      /*
+       * Compatibility hack(s)
+       */
+    case MGA_DMA(YDSTORG): /* 0x25: reserved on the G400 */
+      /* Set to DSTORG so that Mystique/G200 code (hopefully) runs */
+      (*reg) = MGA_DMA(DSTORG);
+      ctx->dstorg = *val;
+      KRN_DEBUG(1,"Changed YDSTORG to DSTORG! (1x64/G200 legacy?)");
+      break;
+      /*
+       * Matrox reserved values: padded out
+       */
+    case 0x06:
+    case 0x0A:
+    case 0x0B:
+    case 0x12:
+    case 0x13:
+    case 0x2D:
+    case 0x2E:
+    case 0x2F:
+    case 0x74:
+    case 0x79:
+    case 0x7A:
+    case 0x7B:
+    case 0x7C:
+    case 0x7D:
+    case 0x7E:
+    case 0x7F:
+    case 0xAF:
+    case 0xB0:
+    case 0xB1:
+    case 0xB6:
+    case 0xB7:
+    case 0xB8:
+    case 0xB9:
+    case 0xBA:
+    case 0xBB:
+      KRN_DEBUG(1,"Access to Matrox reserved register (DMA index: %.2x)"
+		": padded out!",
+		regv);
+      (*reg) = MGA_DMA(DMAPAD);
+      break;
+    default:
+      KRN_ERROR("Unhandled register for checking (DMA index: %.2x)."
+		"Please, inform " MAINTAINER ".", regv);
+      break;
+    }
+
+  /* Restores the go flag (except on a pad) */
+  if (has_go && ((*reg) != MGA_DMA(DMAPAD)))
+    {
+      (*reg) |= 0x40;
+    }
+}
+
+/* Walks and validate the buffer: changes some commands if needed,
+ * records the state-relevant modifications.
+ * Returns 0 if ok for execution, 1 if not.
+ */
+static kgi_u_t mga_chipset_accel_validate(kgi_accel_t *accel,
+					  kgi_accel_buffer_t *buffer)
+{
+  mgag_chipset_t *mgag = accel->meta;
+  kgi_u32_t tag = (*(buffer->aperture.virt));
+  kgi_u32_t *base_ptr = (kgi_u32_t*)buffer->aperture.virt + 1;
+  kgi_u_t dword_size = (buffer->execution.size >> 2) - 1;
+  mgag_chipset_accel_context_t *ctx = buffer->context;
+  kgi_u_t ret = 1; /* Error by default */
+
+  if ((buffer->execution.size & 0x3) || (buffer->aperture.bus & 0x3))
+    {
+      KRN_ERROR("Matrox: invalid buffer start adress (%.8x) or size (%.8x)",
+		buffer->aperture.bus, buffer->execution.size);
+      return ret; /* Early exit */
+    }
+
+  switch (tag)
+    {
+    case MGAG_ACCEL_TAG_DRAWING_ENGINE:
+      {
+	kgi_u_t current_index = 0;
+	kgi_u_t current_value = 1;
+	if (dword_size < 2)
+	  {
+	    KRN_DEBUG(1, "General purpose DMA buffer"
+		      " too small for execution (size=%i)",
+		      buffer->execution.size);
+	    ret = 1; /* Buffer too small */
+	    break;
+	  }
+	while ((current_index + current_value) < dword_size)
+	  {
+	    kgi_u32_t* val = base_ptr + current_index + current_value;
+	    kgi_u8_t* reg = (kgi_u8_t*)(base_ptr + current_index)
+	      + (current_value - 1);
+
+	    /* One call for specific */
+	    if (mgag->flags & MGAG_CF_G400)
+	      {
+		mga_chipset_accel_g400_check(&(ctx->dma_with_context.g400),
+					     reg, val);
+	      }
+	    else if (mgag->flags & MGAG_CF_G200)
+	      {
+		mga_chipset_accel_g200_check(&(ctx->dma_with_context.g200),
+					     reg, val);
+	      }
+	    else if (mgag->flags & MGAG_CF_1x64)
+	      {
+		mga_chipset_accel_1x64_check(&(ctx->dma_with_context.m1x64),
+					     reg, val);
+	      }
+	    else
+	      {
+		KRN_DEBUG(1, "Unknown chipset type for validation");
+		return 1; /* Early exit */
+	      }
+	    /* NB: function should be able to change the reg */
+
+	    current_value++;
+	    if (current_value == 5)
+	      {
+		current_value = 1;
+		current_index += 5;
+	      }
+	  }
+	ret = 0;
+      }
+      break;
+    case MGAG_ACCEL_TAG_WARP_TGZ:
+      if (dword_size < (3 * 8))
+	{
+	  KRN_DEBUG(1, "Skipping warp TGZ DMA buffer"
+		    " too small for execution (size=%i)",
+		    buffer->execution.size);
+	  ret = 1;
+	  break; /* Early exit */
+	}
+      ret = 0;
+      break;
+    default:
+      KRN_DEBUG(1, "Unknown DMA buffer tag (%.8x)", tag);
+      ret = 1;
+      break;
+    }
+  return ret;
 }
 
 /* ----------------------------------------------------------------------------
@@ -910,29 +2739,165 @@ static void mgag_chipset_accel_init(kgi_accel_t *accel, void *ctx)
   */
   if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
     {
-      /* To be able to use ctx->primary_dma for DMA we precalculate the
-      ** aperture info needed to have it at hand when needed.
+      /* To be able to use ctx->dma_fast for DMA we precalculate the
+      ** apertures info needed to have it at hand when needed.
       */
-      mgag_ctx->aperture.size = sizeof(mgag_ctx->primary_dma);
-      offset = (mem_vaddr_t) &mgag_ctx->primary_dma - (mem_vaddr_t) mgag_ctx;
-      mgag_ctx->aperture.bus  = mgag_ctx->kgi.aperture.bus  + offset;
-      mgag_ctx->aperture.phys = mgag_ctx->kgi.aperture.phys + offset;
-      mgag_ctx->aperture.virt = mgag_ctx->kgi.aperture.virt + offset;
-      if ((mgag_ctx->aperture.size & ~PRIMADDRESS_ADDRESS_MASK)
-	  || (mgag_ctx->aperture.bus & ~PRIMADDRESS_ADDRESS_MASK))
+      mgag_ctx->aperture_fast.size = sizeof(mgag_ctx->dma_fast);
+      offset = (mem_vaddr_t) &mgag_ctx->dma_fast - (mem_vaddr_t) mgag_ctx;
+      mgag_ctx->aperture_fast.bus  = mgag_ctx->kgi.aperture.bus  + offset;
+      mgag_ctx->aperture_fast.phys = mgag_ctx->kgi.aperture.phys + offset;
+      mgag_ctx->aperture_fast.virt = mgag_ctx->kgi.aperture.virt + offset;
+      if ((mgag_ctx->aperture_fast.size & ~PRIMADDRESS_ADDRESS_MASK)
+	  || (mgag_ctx->aperture_fast.bus & ~PRIMADDRESS_ADDRESS_MASK))
 	{
-	  KRN_ERROR("Matrox: invalid primary DMA start (%.8x) or size (%.8x)",
-		    mgag_ctx->aperture.bus, mgag_ctx->aperture.size);
+	  KRN_ERROR("Matrox: invalid (fast) primary DMA start (%.8x) or size (%.8x)",
+		    mgag_ctx->aperture_fast.bus, mgag_ctx->aperture_fast.size);
 	  KRN_INTERNAL_ERROR;
 	}
       /* Initialize the primary dma list used for sending buffers
       ** (via the secondary DMA)
       */
-      mgag_ctx->primary_dma.index1 = MGA_DMA4(SECADDRESS,SECEND,DMAPAD,DMAPAD);
-      mgag_ctx->primary_dma.secaddress = 0x00000000; /* value of SECADDRESS */
-      mgag_ctx->primary_dma.secend = 0x00000000; /* value of SECEND */
-      mgag_ctx->primary_dma.index2 = MGA_DMA4(SOFTRAP,DMAPAD,DMAPAD,DMAPAD);
-      mgag_ctx->primary_dma.softrap = MGAG_SOFTRAP_ENGINE;
+      mgag_ctx->dma_fast.index1 = MGA_DMA4(SECADDRESS,SECEND,DMAPAD,DMAPAD);
+      mgag_ctx->dma_fast.secaddress = 0x00000000; /* value of SECADDRESS */
+      mgag_ctx->dma_fast.secend = 0x00000000; /* value of SECEND */
+      mgag_ctx->dma_fast.index2 = MGA_DMA4(SOFTRAP,DMAPAD,DMAPAD,DMAPAD);
+      mgag_ctx->dma_fast.softrap = MGAG_SOFTRAP_ENGINE;
+
+      if (mgag->flags & MGAG_CF_G200)
+	{
+	  /* To be able to use ctx->dma_with_context.g200 for DMA we
+	  ** precalculate the apertures info needed to have it at hand
+	  ** when needed.
+	  */
+	  mgag_ctx->aperture_with_ctx.size =
+	    sizeof(mgag_ctx->dma_with_context.g200);
+	  offset = (mem_vaddr_t) &(mgag_ctx->dma_with_context.g200)
+	    - (mem_vaddr_t) mgag_ctx;
+	  mgag_ctx->aperture_with_ctx.bus  = mgag_ctx->kgi.aperture.bus
+	    + offset;
+	  mgag_ctx->aperture_with_ctx.phys = mgag_ctx->kgi.aperture.phys
+	    + offset;
+	  mgag_ctx->aperture_with_ctx.virt = mgag_ctx->kgi.aperture.virt
+	    + offset;
+	  if ((mgag_ctx->aperture_with_ctx.size & ~PRIMADDRESS_ADDRESS_MASK)
+	      || (mgag_ctx->aperture_with_ctx.bus & ~PRIMADDRESS_ADDRESS_MASK))
+	    {
+	      KRN_ERROR("Matrox: invalid (ctx) primary DMA start (%.8x) or size (%.8x)",
+			mgag_ctx->aperture_with_ctx.bus,
+			mgag_ctx->aperture_with_ctx.size);
+	      KRN_INTERNAL_ERROR;
+	    }
+	  /* Initialize the primary dma context used for sending buffers
+	  ** (via the secondary DMA)
+	  */
+	  mgag_ctx->dma_with_context.g200.index0 = MGA_G200_CONTEXT_INDEX0;
+	  mgag_ctx->dma_with_context.g200.index1 = MGA_G200_CONTEXT_INDEX1;
+	  mgag_ctx->dma_with_context.g200.index2 = MGA_G200_CONTEXT_INDEX2;
+	  mgag_ctx->dma_with_context.g200.index3 = MGA_G200_CONTEXT_INDEX3;
+	  mgag_ctx->dma_with_context.g200.index4 = MGA_G200_CONTEXT_INDEX4;
+	  mgag_ctx->dma_with_context.g200.index5 = MGA_G200_CONTEXT_INDEX5;
+	  mgag_ctx->dma_with_context.g200.index6 = MGA_G200_CONTEXT_INDEX6;
+	  mgag_ctx->dma_with_context.g200.index7 = MGA_G200_CONTEXT_INDEX7;
+	  mgag_ctx->dma_with_context.g200.index8 = MGA_G200_CONTEXT_INDEX8;
+	  mgag_ctx->dma_with_context.g200.index9 = MGA_G200_CONTEXT_INDEX9;
+	  mgag_ctx->dma_with_context.g200.indexA = MGA_G200_CONTEXT_INDEXA;
+	  mgag_ctx->dma_with_context.g200.indexB = MGA_G200_CONTEXT_INDEXB_SRC;
+	  mgag_ctx->dma_with_context.g200.indexC = MGA_G200_CONTEXT_INDEXC;
+	  mgag_ctx->dma_with_context.g200.indexD = MGA_G200_CONTEXT_INDEXD;
+	  mgag_ctx->dma_with_context.g200.indexE = MGA_G200_CONTEXT_INDEXE;
+	  mgag_ctx->dma_with_context.g200.indexF = MGA_G200_CONTEXT_INDEXF;
+	  mgag_ctx->dma_with_context.g200.index_sec =
+	    MGA_DMA4(SECADDRESS,SECEND,DMAPAD,DMAPAD);
+	  mgag_ctx->dma_with_context.g200.secaddress =
+	    0x00000000; /* value of SECADDRESS */
+	  mgag_ctx->dma_with_context.g200.secend =
+	    0x00000000; /* value of SECEND */
+	  mgag_ctx->dma_with_context.g200.index_softrap =
+	    MGA_DMA4(SOFTRAP,DMAPAD,DMAPAD,DMAPAD);
+	  mgag_ctx->dma_with_context.g200.softrap = MGAG_SOFTRAP_ENGINE;
+	  /*
+	   * Initialize the DMA context
+	   */
+	  mgag_ctx->dma_with_context.g200.maccess = MACCESS_ZWIDTH_ZW16
+	    | MACCESS_PWIDTH_PW16;
+	  mgag_ctx->dma_with_context.g200.pitch = 1024;
+	  mgag_ctx->dma_with_context.g200.dstorg = 0;
+	  mgag_ctx->dma_with_context.g200.ydstorg = 0; /* Mandatory! */
+	  mgag_ctx->dma_with_context.g200.ybot = 0xFFFFF0;
+	  mgag_ctx->dma_with_context.g200.plnwt = 0xFFFFFFFF;
+	  mgag_ctx->dma_with_context.g200.zorg = 1024 * 768 * 2;
+	  mgag_ctx->dma_with_context.g200.alphactrl = 0x1;
+
+	  mgag_ctx->dma_with_context.g200.fcol = 0x12345678;
+	  mgag_ctx->dma_with_context.g200.bcol = 0x11111111;
+	  mgag_ctx->dma_with_context.g200.sgn = 0x00000000;
+	  mgag_ctx->dma_with_context.g200.srcorg = 0x00000000;
+	}
+      else if (mgag->flags & MGAG_CF_G400)
+	{
+	  /* To be able to use ctx->dma_with_context.g400 for DMA we
+	  ** precalculate the apertures info needed to have it at hand
+	  ** when needed.
+	  */
+	  mgag_ctx->aperture_with_ctx.size =
+	    sizeof(mgag_ctx->dma_with_context.g400);
+	  offset = (mem_vaddr_t) &(mgag_ctx->dma_with_context.g400)
+	    - (mem_vaddr_t) mgag_ctx;
+	  mgag_ctx->aperture_with_ctx.bus  = mgag_ctx->kgi.aperture.bus
+	    + offset;
+	  mgag_ctx->aperture_with_ctx.phys = mgag_ctx->kgi.aperture.phys
+	    + offset;
+	  mgag_ctx->aperture_with_ctx.virt = mgag_ctx->kgi.aperture.virt
+	    + offset;
+	  if ((mgag_ctx->aperture_with_ctx.size & ~PRIMADDRESS_ADDRESS_MASK)
+	      || (mgag_ctx->aperture_with_ctx.bus & ~PRIMADDRESS_ADDRESS_MASK))
+	    {
+	      KRN_ERROR("Matrox: invalid (ctx) primary DMA start (%.8x) or size (%.8x)",
+			mgag_ctx->aperture_with_ctx.bus,
+			mgag_ctx->aperture_with_ctx.size);
+	      KRN_INTERNAL_ERROR;
+	    }
+	  /* Initialize the primary dma context used for sending buffers
+	  ** (via the secondary DMA)
+	  */
+	  mgag_ctx->dma_with_context.g400.index0 = MGA_G400_CONTEXT_INDEX0;
+	  mgag_ctx->dma_with_context.g400.index1 = MGA_G400_CONTEXT_INDEX1;
+	  mgag_ctx->dma_with_context.g400.index2 = MGA_G400_CONTEXT_INDEX2;
+	  mgag_ctx->dma_with_context.g400.index3 = MGA_G400_CONTEXT_INDEX3;
+	  mgag_ctx->dma_with_context.g400.index4 = MGA_G400_CONTEXT_INDEX4;
+	  mgag_ctx->dma_with_context.g400.index5 = MGA_G400_CONTEXT_INDEX5;
+	  mgag_ctx->dma_with_context.g400.index6 = MGA_G400_CONTEXT_INDEX6;
+	  mgag_ctx->dma_with_context.g400.index7 = MGA_G400_CONTEXT_INDEX7;
+	  mgag_ctx->dma_with_context.g400.index8 = MGA_G400_CONTEXT_INDEX8;
+	  mgag_ctx->dma_with_context.g400.index9 = MGA_G400_CONTEXT_INDEX9;
+	  mgag_ctx->dma_with_context.g400.indexA = MGA_G400_CONTEXT_INDEXA;
+	  mgag_ctx->dma_with_context.g400.indexB = MGA_G400_CONTEXT_INDEXB_SRC;
+	  mgag_ctx->dma_with_context.g400.indexC = MGA_G400_CONTEXT_INDEXC;
+	  mgag_ctx->dma_with_context.g400.indexD = MGA_G400_CONTEXT_INDEXD;
+	  mgag_ctx->dma_with_context.g400.indexE = MGA_G400_CONTEXT_INDEXE;
+	  mgag_ctx->dma_with_context.g400.indexF = MGA_G400_CONTEXT_INDEXF;
+	  mgag_ctx->dma_with_context.g400.index_sec =
+	    MGA_DMA4(SECADDRESS,SECEND,DMAPAD,DMAPAD);
+	  mgag_ctx->dma_with_context.g400.secaddress =
+	    0x00000000; /* value of SECADDRESS */
+	  mgag_ctx->dma_with_context.g400.secend =
+	    0x00000000; /* value of SECEND */
+	  mgag_ctx->dma_with_context.g400.index_softrap =
+	    MGA_DMA4(SOFTRAP,DMAPAD,DMAPAD,DMAPAD);
+	  mgag_ctx->dma_with_context.g400.softrap = MGAG_SOFTRAP_ENGINE;
+	  /*
+	   * Initialize the DMA context
+	   */
+	  mgag_ctx->dma_with_context.g400.maccess = MACCESS_ZWIDTH_ZW16
+	    | MACCESS_PWIDTH_PW16;
+	  mgag_ctx->dma_with_context.g400.pitch = 1024;
+	  mgag_ctx->dma_with_context.g400.dstorg = 0;
+	  mgag_ctx->dma_with_context.g400.plnwt = 0xFFFFFFFF;
+	  mgag_ctx->dma_with_context.g400.zorg = 1024 * 768 * 2;
+	  mgag_ctx->dma_with_context.g400.alphactrl = 0x1;
+	  mgag_ctx->dma_with_context.g400.tdualstage0 = 0;
+	  mgag_ctx->dma_with_context.g400.tdualstage1 = 0;
+	}
       /*
       ** Initialize the WARP pipe (setup engine)
       */
@@ -1007,39 +2972,47 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
       /* We do not do GP context switch on the Matrox.
       ** We swap the data structs and initiate the buffer transfer.
       */
-      if (accel->context != buffer->context)
-	{
-	  accel->context = buffer->context;
-	}
-      
-      buffer->execution.state = KGI_AS_EXEC;
-
-      if ((buffer->execution.size & 0x3) || (buffer->aperture.bus & 0x3))
-	{
-	  KRN_ERROR("Matrox: invalid buffer start adress (%.8x) or size (%.8x)",
-		    buffer->aperture.bus, buffer->execution.size);
-#if 0
-	  mgag_chipset_accel_schedule(accel); /* recurse? */
-#endif
-	  break;
-	}
-      else
+      {
+#warning check the context switch logic!
+	kgi_u_t do_ctx_switch = 0;
+	if (accel->context != buffer->context)
+	  {
+	    KRN_DEBUG(1,"DMA with context update needed!");
+	    do_ctx_switch = 1;
+	    accel->context = buffer->context;
+	  }
+	
+	buffer->execution.state = KGI_AS_EXEC;
+	
 	{
 	  mgag_chipset_accel_context_t *mgag_ctx = accel->context;
 	  /* Recovers the buffer tag */
 	  kgi_u32_t tag = (*(buffer->aperture.virt));
-
+	  
 	  /* Dispatch buffer according to tag */
 	  switch (tag)
 	    {
 	    case MGAG_ACCEL_TAG_DRAWING_ENGINE:
-	      mgag_chipset_engine_do_buffer(mgag_io, buffer, mgag_ctx);
+	      if (do_ctx_switch == 0)
+		{
+		  mgag_chipset_engine_do_buffer(mgag_io, buffer, mgag_ctx);
+		}
+	      else
+		{
+		  if (mgag->flags & MGAG_CF_G200) {
+		    mgag_chipset_g200_do_buffer_ctx(mgag_io, buffer, mgag_ctx);
+		  } else if (mgag->flags & MGAG_CF_G400) {
+		    mgag_chipset_g400_do_buffer_ctx(mgag_io, buffer, mgag_ctx);
+		  } else {
+		    KRN_DEBUG(1, "Context switches only active on the Gx00 for now");
+		  }
+		}
 	      break;
 	    case MGAG_ACCEL_TAG_WARP_TGZ:
-	      if (mgag->flags & MGAG_CF_G400) {
+	      if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200)) {
 		mgag_chipset_warp_do_buffer(mgag_io, buffer, mgag_ctx);
 	      } else {
-		KRN_DEBUG(1, "WARPs only active on the G400 for now");
+		KRN_DEBUG(1, "WARPs only active on the G200/G400 for now");
 #if 0
 		mgag_chipset_accel_schedule(accel); /* recurses (?) */
 #endif
@@ -1050,6 +3023,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	      break;
 	    }
 	}
+      }
       break;
 
     default:
@@ -1069,16 +3043,21 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 {
   mgag_chipset_t *mgag = accel->meta;
   mgag_chipset_io_t *mgag_io = accel->meta_io;
-
-#warning check/validate validate data stream!!!
+  /* Recovers the buffer tag */
+  kgi_u32_t tag = (*(buffer->aperture.virt));
 
   KRN_ASSERT(KGI_AS_FILL == buffer->execution.state);
 
+  if (mga_chipset_accel_validate(accel, buffer))
+    {
+      /* Error detected: returns */
+      KRN_DEBUG(1,"Validation function detected error: no exec!");
+      buffer->execution.state = KGI_AS_IDLE;
+      return;
+    }
+
   if (mgag->flags & MGAG_CF_1x64)
     {
-      /* Recovers the buffer tag */
-      kgi_u32_t tag = (*(buffer->aperture.virt));
-
       /* Dispatch buffer according to tag */
       switch (tag)
 	{
@@ -1118,7 +3097,7 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       /* Mark buffer as idle */
       buffer->execution.state = KGI_AS_IDLE;
     }
-  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G400))
+  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
     {
       mgag_chipset_irq_state_t irq_state;
       /*
@@ -1133,9 +3112,12 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 
       if (accel->execution.queue)
 	{
-	  /* We add the buffer to the execution queue
-	  ** (IRQs are blocked)
-	  ** TODO: Manage priorities...
+	  /* We add the buffer to the execution queue (IRQs are blocked)
+	  **
+	  ** NOTE: We probably *cannot* manage priorities easily...
+	  ** NOTE: Accel context is built after parsing command buffers
+	  ** NOTE: in this function, so reordering buffers will invalidate
+	  ** NOTE: the context.
 	  */
 	  kgi_accel_buffer_t *cur = accel->execution.queue;
 	  /* Goes to the end of the list */
@@ -1158,6 +3140,11 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
       ** TODO: while we should let the DMA buffers go...
       */
       mgag_chipset_wait_engine_idle(mgag_io);
+    }
+  else
+    {
+      KRN_ERROR("Unknown chipset for accelerator! (Buffer not executed.)");
+      buffer->execution.state = KGI_AS_IDLE;
     }
 
   KRN_DEBUG(2,"completed");
@@ -1217,12 +3204,10 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   KRN_ASSERT(mgag);
   KRN_ASSERT(mgag_io);
 
-#warning Check or implement Matrox G200 power-up code.
-
   KRN_DEBUG(2, "entered");
 
   /* NOTE: we do not touch the flash rom, endianess, refresh counter
-   * and vgaboot strap.
+   * NOTE: and vgaboot strap.
    */
 
   /*
@@ -1349,10 +3334,10 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 #warning we should write the memconfig field (PCI_OPTION1 reg) according to thetype of memory used
 	  /* TODO: We setup things for 8Mo SDRAM memory with 1 bank. Check! */
 	  pcicfg_out32((pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~G200_O1_MEMCONFIG_MASK)
-		       | (0x0 << G200_O1_MEMCONFIG_SHIFT),
+		       | (0x5 << G200_O1_MEMCONFIG_SHIFT),
 		       pcidev + MGAG_PCI_OPTION1);
 	  /* Not indicated in the doc - but we do it anyway */
-	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~MGAG_O1_HARDPWMSK,
+	  pcicfg_out32(pcicfg_in32(pcidev + MGAG_PCI_OPTION1) & ~ MGAG_O1_HARDPWMSK,
 		       pcidev + MGAG_PCI_OPTION1);
 	  /* TODO: We should set the mbuftype of the OPTION2 reg ? */
 	}

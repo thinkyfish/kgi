@@ -9,7 +9,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 90
+#define TEST_DURATION 30
 
 /*
 **	This is a little test program to test the accelerator
