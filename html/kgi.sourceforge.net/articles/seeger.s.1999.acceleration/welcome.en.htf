@@ -4,7 +4,7 @@ HTF_LONG_TITLE="KGI Acceleration Handling"
 HTF_DESCRIPTION="A short comment on how KGI will handle acceleration features."
 HTF_KEYWORDS="KGI Project; display drivers; Acceleration handling"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.1.1.1 $"
+HTF_REVISION="$Revision: 1.2 $"
 
 cat <<end-of-htf
 
@@ -106,7 +106,7 @@ leader).
 <a name="implementation"></a><h2><u>Current implementation</u></h2>
 	<p>The current implementation of a mapper providing access to 
 	the resources via standard file operations can be found in 
-	<a href="$KGI_SOURCE_URL/kgi-0.9/kgi/Linux/linux/driver/kgi/graphic.c"><tt>file:kgi-0.9/kgi/Linux/linux/driver/kgi/graphic.c</tt></a>.
+	<a href="$KGI_SOURCE_URL/kgi-0.9/kgi/Linux/linux/drivers/kgi/graphic.c"><tt>file:kgi-0.9/kgi/Linux/linux/drivers/kgi/graphic.c</tt></a>.
 	<ul>
 	<li>Command resources are mapped using ioctl()</li>
 	<li>MMIO and accelerator resources are mapped using <tt>mmap()</tt>
