@@ -52,10 +52,10 @@ then
 
 	echo "creating vendor configure script clock/$VENDOR/.configure"
 	touch clock/$VENDOR/.configure
-
-	echo "creating vendor name file chipset/$VENDOR/.configure"
-	echo $VENDOR_NAME > clock/$VENDOR/.vendor
 fi
+
+echo "adding driver to status file clock/$VENDOR/status"
+echo "$META_CPP	$MODEL_NAME	10	$AUTHOR" >> clock/$VENDOR/status
 
 if [ ! -f clock/$VENDOR/Makefile ]
 then

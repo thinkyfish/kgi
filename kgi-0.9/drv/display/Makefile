@@ -9,5 +9,26 @@ modules/$(CONFIG_BOARD_VENDOR)/$(CONFIG_BOARD_MODEL).o:
 	mkdir -p modules/$(CONFIG_BOARD_VENDOR)
 	$(LD_BIN) -o $@ -r $(SUBSYSTEMS)
 
+clean.exit:
+	rm -f menu welcome.*.htf
+
 distclean.exit:
 	rm -rf modules
+
+welcome.en.htf: $(DIR_SOURCE)/status2htf.awk $(wildcard $DIR_SOURCE/*/*/status)
+	( echo "$(DIR_SOURCE)/vendors";					\
+	cat $(DIR_SOURCE)/vendors;					\
+	for dir in board/ chipset/ clock/ ramdac/ monitor/; do		\
+		for file in `find $(DIR_SOURCE)/$$dir -name status -print`; do \
+			echo $$file;					\
+			cat $$file;					\
+		done;							\
+	done ) | $(AWK_BIN) -F'\t' -f $(DIR_SOURCE)/status2htf.awk > $@
+
+menu:
+	(	echo -e "rel\ten\t\"Boards\"\twelcome.en.html#board";	\
+		echo -e "rel\ten\t\"Chipsets\"\twelcome.en.html#chipset"; \
+		echo -e "rel\ten\t\"Clock Chips\"\t\twelcome.en.html#clock";\
+		echo -e "rel\ten\t\"DACs\"\twelcome.en.html#ramdac";	\
+		echo -e "rel\ten\t\"Monitors\"\twelcome.en.html#monitor"; \
+	) > $@

@@ -52,10 +52,10 @@ then
 
 	echo "creating vendor configure script ramdac/$VENDOR/.configure"
 	touch ramdac/$VENDOR/.configure
-
-	echo "creating vendor name file ramdac/$VENDOR/vendor"
-	echo $VENDOR_NAME > ramdac/$VENDOR/vendor
 fi
+
+echo "adding driver to status file ramdac/$VENDOR/status"
+echo "$META_CPP	$MODEL_NAME	10	$AUTHOR" >> ramdac/$VENDOR/status
 
 if [ ! -f ramdac/$VENDOR/Makefile ]
 then

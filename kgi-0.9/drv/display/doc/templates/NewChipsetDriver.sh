@@ -52,10 +52,10 @@ then
 
 	echo "creating vendor configure script chipset/$VENDOR/.configure"
 	touch chipset/$VENDOR/.configure
-
-	echo "creating vendor name file chipset/$VENDOR/vendor"
-	echo $VENDOR_NAME > chipset/$VENDOR/vendor
 fi
+
+echo "adding driver to status file chipset/$VENDOR/status"
+echo "$META_CPP	$MODEL_NAME	10	$AUTHOR" >> chipset/$VENDOR/status
 
 if [ ! -f chipset/$VENDOR/Makefile ]
 then
