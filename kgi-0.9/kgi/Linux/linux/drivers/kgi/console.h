@@ -14,6 +14,10 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: console.h,v $
+**	Revision 1.2  2001/07/03 08:50:44  seeger_s
+**	- text control now done via image resources
+**	- gadget handling now done all in console.c and scroll_sync()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:47  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -262,9 +266,9 @@ extern void scroll_undo_gadgets(kgi_console_t *cons);
 extern void scroll_show_gadgets(kgi_console_t *cons);
 
 extern kgi_console_font_t *	default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
-extern kgi_rgb_color_t		default_color[16];
-extern kgi_rgb_color_t		default_ptr_color[3];
-extern kgi_u8_t			default_ptr_64x64[1024];
+extern const kgi_u16_t		default_color_text16_ilut[16*3];
+extern const kgi_rgb_color_t		default_ptr_color[3];
+extern const kgi_u8_t			default_ptr_64x64[1024];
 
 extern kgi_isochar_t console_font_ptoc(kgi_console_font_t *f, kgi_u_t p);
 extern kgi_u_t console_font_ctop(kgi_console_font_t *f, kgi_isochar_t c);

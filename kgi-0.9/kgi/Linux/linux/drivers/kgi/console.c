@@ -13,6 +13,10 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: console.c,v $
+**	Revision 1.2  2001/07/03 08:50:44  seeger_s
+**	- text control now done via image resources
+**	- gadget handling now done all in console.c and scroll_sync()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:46  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -287,7 +291,7 @@ void console_do_kgi_map(kgi_console_t *cons)
 		if (cons->tlut->Set) {
 
 			(cons->ilut->Set)(cons->ilut, 0, 
-				0, 16, KGI_AM_COLORS, default_color);
+				0, 16, KGI_AM_COLORS, default_color_text16_ilut);
 		}
 		if (cons->ilut->Select) {
 
