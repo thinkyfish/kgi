@@ -13,6 +13,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: system.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -220,6 +223,8 @@ mem_vaddr_t mem_alloc_region(mem_region_t *r)
 */
 #include <linux/pci.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+
 int pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 {
 #ifdef CONFIG_PCI
@@ -302,6 +307,91 @@ int pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	*addr = PCICFG_NULL;
 	return 1;
 }
+
+
+#else /* kernel version 2.4 */
+
+int pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
+{
+#ifdef CONFIG_PCI
+	struct pci_dev *dev = NULL;
+
+	KRN_DEBUG(2, "scanning pcicfg space:");
+
+	pci_for_each_dev(dev) {
+
+		const __kgi_u32_t *check = signatures;
+		__kgi_u32_t signature = 
+			PCICFG_SIGNATURE(dev->vendor, dev->device);
+
+		KRN_DEBUG(2, "scanning device %x %x\n", 
+			dev->vendor, dev->device);
+
+		while (*check && (*check != signature)) {
+
+			check++;
+		}
+
+		if (*check && (*check == signature)) {
+
+			*addr = PCICFG_VADDR(dev->bus->number, 
+				PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
+			KRN_DEBUG(1, "found device %.8x at %.8x", 
+				signature, *addr);
+			return 0;
+		}
+	}
+#else
+	KRN_DEBUG(1, "PCICFG not enabled");
+#endif
+	*addr = PCICFG_NULL;
+	return 1;
+}
+
+int pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
+{
+#ifdef CONFIG_PCI
+	struct pci_dev *dev = NULL;
+
+	KRN_DEBUG(2, "scanning pcicfg space:");
+
+	pci_for_each_dev (dev) {
+
+		const __kgi_u32_t *check = signatures;
+		__kgi_u32_t signature;
+		__kgi_u16_t subvendor = 0xFFFF, subdevice = 0xFFFF;
+
+		pcibios_read_config_word(dev->bus->number, dev->devfn,
+			PCI_SUBSYSTEM_VENDOR_ID, &subvendor);
+		pcibios_read_config_word(dev->bus->number, dev->devfn,
+			PCI_SUBSYSTEM_ID, &subdevice);
+
+		signature = PCICFG_SIGNATURE(subvendor, subdevice);
+
+		KRN_DEBUG(2, "scanning device %x %x, subsystem %x %x\n", 
+			dev->vendor, dev->device, subvendor, subdevice);
+
+		while (*check && (*check != signature)) {
+
+			check++;
+		}
+
+		if (*check && (*check == signature)) {
+
+			*addr = PCICFG_VADDR(dev->bus->number, 
+				PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
+			KRN_DEBUG(1, "found device %.8x at %.8x", 
+				signature, *addr);
+			return 0;
+		}
+	}
+#else
+	KRN_DEBUG(1, "PCICFG not enabled");
+#endif
+	*addr = PCICFG_NULL;
+	return 1;
+}
+#endif /* kernel version 2.4.x */
 
 
 #define	PCIARGS	(vaddr >> 24) & 0xFF, (vaddr >> 16) & 0xFF, vaddr & 0xFF
