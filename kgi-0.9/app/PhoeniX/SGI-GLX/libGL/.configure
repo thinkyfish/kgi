@@ -1,0 +1,16 @@
+
+mkdir -p $DIR_TOP_BUILD/include/GL
+
+#	we need to export internal data to dix and ddx
+#
+for header in		\
+	gl.h		\
+	glext.h		\
+	glx.h		\
+	glxext.h	\
+	glxtokens.h	\
+	glxproto.h	\
+	glxmd.h		
+do
+	ln -sf $DIR_SOURCE/$header	$DIR_TOP_BUILD/include/GL/$header
+done
