@@ -1,91 +1,122 @@
 # -----------------------------------------------------------------------------
-#	GNU Make specific rules
+#	GNU make specific rules
 #
 
-#	build entry, exit and recursion target identifiers from one set
-#	and make them .PHONY targets (entry, exit and common targets must
-#	not be .PHONY, as then implicit rule search will not work below.)
+#	The following rules apply to all the (.PHONY) targets listed here:
 #
 targets = default all depend clean realclean distclean install
+
+.PHONY:	$(targets)
+
+#	The build of <target> is done in five stages:
+#
+#	init		inititialize build (e.g. create dependencies, headers)
+#	entry		build files needed before doing recursion
+#	recursion	descent subdirectories and build <target> there
+#	exit		build files depending on results of recursive build
+#	done		do clean-ups required after each build/recursion
+#
 
 targets-init = $(patsubst %,%.init, $(targets))
 targets-entry = $(patsubst %,%.entry, $(targets))
 targets-recursion = $(patsubst %,%.recursion, $(targets))
-targets-common = $(patsubst %,%.common, $(targets))
 targets-exit = $(patsubst %,%.exit, $(targets))
 targets-done = $(patsubst %,%.done, $(targets))
 
-.PHONY:	$(targets) $(targets-common)
+$(targets): % : %.init %.entry %.recursion %.exit %.done
 
-#	recursion
+#	Create empty double-colon subtargets for init, entry, exit and done, 
+#	so that GNU make would not complian about not knowing about them.
 #
-#	first find subdirectories with Makefiles and then, if there are any
-#	subdirectories with makefiles found, decend for the common targets
-#	after making them in the current directory.
+$(targets-init)::
+$(targets-entry)::
+$(targets-exit)::
+$(targets-done)::
+
+#	For recursion, we first need to find subdirectories with GNUmakefiles
+#	and descent only if there are any.
 #
 subdirs=$(patsubst ./%/GNUmakefile,%, $(wildcard ./*/GNUmakefile))
-
-$(targets): % : %.init %.entry %.recursion %.exit %.done
 
 $(targets-recursion): %.recursion:
 ifneq ($(subdirs),)
 	@for i in $(subdirs); do $(MAKE) -C $$i $*; done
 endif
 
-#	Create overridable null dependencies for entry targets, so that Make
-#	would not complian about missing dependencies. Also create a dependency
-#	so that common targets are executed before exit targets.
-#
-$(targets-init):
-$(targets-done):
-$(targets-entry):
-
-$(targets-exit): %.exit: %.common
 
 #
-#	cleanup need to be done before recursion
+#	default dependency actions
+#
+
+depend.init::
+	touch .depend
+
+ifeq ($(wildcard .depend),.depend)
+
+GMAKE_FULL_DEPENDENCIES=yes
+include .depend
+
+endif
+
+
+#
+#	default clean-up actions, common to all sub-directories
+#
+#	when making distclean, remove configuration files recursively
+
+distclean.done::
+	rm -f GNUmakefile GNUmakefile.tmp .config .config.tmp
+
+#	Doing default actions only for the first instance of make is both more
+#	efficient and more robust, as we will not trigger any rules to
+#	remake targets which get deleted anyway.
 #
 ifeq ($(MAKELEVEL),0)
 
-GMAKE_CLEAN_INIT+="*%" "*.bak" "*~"
-GMAKE_REALCLEAN_INIT=".??*.d" "*.d" ".depend" ".??*.rej" "*.rej" "*.orig" ".??*.orig" "*.so"
+#	clean::
+#		- remove files generated from source distribution
+#		- remove back-up files created by editors
+#
+GMAKE_CLEAN_INIT += "*%" "*.bak" "*~"
 
-clean.init:
+clean.init::
 	-for i in $(GMAKE_CLEAN_INIT); \
 		do rm -f `find . -follow -name "$$i" -print`; done
 
-realclean.init: clean.init
+clean.done::
+	@echo "Files generated from source distribution removed."
+
+#	realclean::
+#		- remove dependencies
+#		- make clean
+#
+GMAKE_REALCLEAN_INIT += ".??*.d" ".depend"
+
+realclean.init:: clean.init
 	-for i in $(GMAKE_REALCLEAN_INIT); \
 		do rm -f `find . -follow -name "$$i" -print`; done
 
-distclean.init: realclean.init
+realclean.done:: clean.done
+	@echo "Dependencies removed. Execute 'make depend' to rebuild!"
 
 
-clean.done:
-	@echo "Files generated from source distribution removed."
+#	distclean::
+#		- remove backups and rejections created by patch
+#		- make realclean
+#
+GMAKE_DISTCLEAN_INIT += ".??*.rej" ".??*.orig" "*.rej" "*.orig" 
 
-realclean.done: clean.done
-	@echo "dependencies removed. Execute 'make depend' to rebuild!"
+distclean.init:: realclean.init
+	-for i in $(GMAKE_DISTCLEAN_INIT); \
+		do rm -f `find . -follow -name "$$i" -print`; done
 
-distclean.done:
+distclean.done::
 	@echo "made distribution clean."
 	@echo "Reconfigure and execute 'make; make' to rebuild from scratch."
 
 endif
 
-distclean.common:
-	rm -f GNUmakefile GNUmakefile.tmp .config .config.tmp
-
-
-#	generated dependencies
-#
-ifeq ($(wildcard .depend),.depend)
-
-FLAG_BUILD_DEPENDENCIES = 1
-include .depend
-
-endif
-
 #
 # -----------------------------------------------------------------------------
+
 
