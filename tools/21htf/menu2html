@@ -6,46 +6,56 @@ then
 fi
 
 HTF_LANGUAGE=$1
-HTF_MENU_FILE=$2
+HTF_MENU_FILE1=$2
+HTF_MENU_FILE2=$3
+HTF_MENU_FILE3=$4
 
+#	absoulte link (changes _top frame, must inside the document tree)
+#
 function abs {
 
-	if [ "$HTF_LANGUAGE" = "$1" ]
+	if [ "${HTF_LANGUAGE:?}" = "$1" ]
 	then
-		echo "<li><a href=\"$3\" target=\"_top\">$2</a></li>"
+		echo "<li><a href=\"${HTF_REL_BASE}$3\" target=\"_top\">$2</a></li>"
 	fi
 	if [ "all" = "$1" ]
 	then
-		echo "<li><a href=\"$3\" target=\"_top\">$2</a></li>"
+		echo "<li><a href=\"${HTF_REL_BASE}$3\" target=\"_top\">$2</a></li>"
 	fi
 }
 
+#	relative link (changes only content frame)
+#
 function rel {
 
-	if [ "$HTF_LANGUAGE" = "$1" ]
+	if [ "${HTF_LANGUAGE:?}" = "$1" ]
 	then
-		echo "<li><a href=\"$3\" target=\"this-page\">$2</a></li>"
+		echo "<li><a href=\"$3\" target=\"content\">$2</a></li>"
 	fi
 	if [ "all" = "$1" ]
 	then
-		echo "<li><a href=\"$3\" target=\"this-page\">$2</a></li>>"
+		echo "<li><a href=\"$3\" target=\"content\">$2</a></li>>"
 	fi
 }
 
+#	title line
+#
 function title {
 
-	if [ "$HTF_LANGUAGE" = "$1" ]
+	if [ "${HTF_LANGUAGE:?}" = "$1" ]
 	then
-		echo "<h2>$2</h2>"
+		echo "<h3>$2</h3>"
 #		echo "<font size=+2><b><u>$2</u></b></font><ul>"
 	fi
 	if [ "all" = "$1" ]
 	then
-		echo "<h2>$2</h2>"
+		echo "<h3>$2</h3>"
 #		echo "<font size=+2><b><u>$2</u></b></font><ul>"
 	fi
 }
 
+#	begin or end of list
+#
 function list {
 
 	case $2 in
@@ -54,9 +64,11 @@ function list {
 	esac
 }
 
+#	list item
+#
 function item {
 
-	if [ "$HTF_LANGUAGE" = "$1" ]
+	if [ "${HTF_LANGUAGE:?}" = "$1" ]
 	then
 		echo "<li>$2</li>"
 	fi
@@ -66,36 +78,80 @@ function item {
 	fi
 }
 
-
+#	set provide logo variables
+#
 if [ "$HTML_SITE_NAME" != "" ]
 then
-	HTF_SITE_HOME="<center><h1><a href=\"$HTML_SITE_URL\">$HTML_SITE_NAME</a></center></h1><hr noshade>"
+	HTF_SITE_HOME="<center><h1><a href=\"${HTML_SITE_URL:?}\">${HTML_SITE_NAME}</a></center></h1><hr noshade>"
 fi
 
 if [ "$HTML_PROVIDER_LOGO" != "" ]
 then
-	HTF_PROVIDER_LOGO="<center><a href=\"$HTML_PROVIDER_URL\" target=\"_top\">$HTML_PROVIDER_LOGO</a></center>"
+	HTF_PROVIDER_LOGO="<center><a href=\"${HTML_PROVIDER_URL:?}\" target=\"_top\">${HTML_PROVIDER_LOGO}</a></center>"
 fi
 
-cat <<end-of-header
-<html><body text="${HTF_MENU_COLOR_TEXT:-#FFFF00}" bgcolor="${HTF_MENU_COLOR_BGCOLOR:-#0000FF}" link="${HTF_MENU_COLOR_LINK:-#FFFFFF}" vlink="${HTF_MENU_COLOR_VLINK:-#FFFFFF}" alink="${HTF_MENU_COLOR_ALINK:-#FFFFFF}" background="$HTF_MENU_IMAGE_BACKGROUND">
-$HTF_SITE_HOME
-end-of-header
+# -----------------------------------------------------------------------------
+#	generate the file
+# -----------------------------------------------------------------------------
 
-if test -f $HTF_MENU_PROLOG.$HTF_LANGUAGE
+
+#	document type
+#
+echo "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
+echo "<html>"
+
+#	begin of body
+#
+cat <<end-of-body
+<body text="${HTF_MENU_COLOR_TEXT:-#FFFF00}" bgcolor="${HTF_MENU_COLOR_BGCOLOR:-#0000FF}" link="${HTF_MENU_COLOR_LINK:-#FFFFFF}" vlink="${HTF_MENU_COLOR_VLINK:-#FFFFFF}" alink="${HTF_MENU_COLOR_ALINK:-#FFFFFF}" background="$HTF_MENU_IMAGE_BACKGROUND">
+$HTF_SITE_HOME
+end-of-body
+
+#	prolog
+#
+if test -f $HTF_MENU_PROLOG.${HTF_LANGUAGE:?}
 then
 	cat $HTF_MENU_PROLOG.$HTF_LANGUAGE
 fi
 
-. $HTF_MENU_FILE
 
-if test -f $HTF_MENU_PROLOG.$HTF_LANGUAGE
+#	the menu itself
+#
+if [ -f ${HTF_MENU_FILE3:-.} ]
+then
+	cat <<end-of-backlink
+<a href="../index.${HTF_LANGUAGE:?}.html" target="_top"><img src="${HTML_SITE_URL:?}/images/htf-left.gif" alt="&lt;=" border=0><i>&nbsp;back</i></a>
+<hr noshade>
+end-of-backlink
+fi
+
+HTF_REL_BASE=""
+. ${HTF_MENU_FILE1:?}
+
+
+if [ -f ${HTF_MENU_FILE2:-.} ]
+then
+	echo "<hr noshade>"
+	HTF_REL_BASE="../"
+	. $HTF_MENU_FILE2
+fi
+
+#	epilog
+#
+if test -f $HTF_MENU_EPILOG.${HTF_LANGUAGE:?}
 then
 	cat $HTF_MENU_EPILOG.$HTF_LANGUAGE
 fi
 
+#	end of body
+#
 cat <<end-of-trailer
+
 <hr noshade>
 $HTF_PROVIDER_LOGO
-</body></html>
+</body>
 end-of-trailer
+
+#	end of document
+#
+echo "</html>"

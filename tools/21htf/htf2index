@@ -12,24 +12,65 @@ HTF_SOURCE=$1
 
 . $HTF_SOURCE > /dev/null
 
+#	document type
+#
+echo "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
+echo "<html>"
+
 #	document header
 #
 if [ "$HTF_HEADER" != "no" ]
 then
-cat <<end-of-header
-<html>
-<head>	<title>${HTF_TITLE:-No title set}</title>
-	<meta name="Description" content="$HTF_DESCRIPTION">
-	<meta name="Keywords" content="$HTF_KEYWORDS">
-	<meta name="Author" content="$HTF_AUTOR">
-</head><frameset cols="${HTF_MENU_WIDTH:-180}, *" border=0>
-	<frame src="menu.$HTF_LANGUAGE.html" name="menu">
-	<frame src="welcome.$HTF_LANGUAGE.html" name="this-page">
-<noframes><body text="${HTF_COLOR_TEXT:-#000000}" bgcolor="${HTF_COLOR_BGCOLOR:-#FFFFFF}" link="${HTF_COLOR_LINK:-#0000EE}" vlink="${HTF_COLOR_VLINK:-#551A8B}" alink="${HTF_COLOR_ALINK:-#FF0000}" background="$HTF_IMAGE_BACKGROUND">
-end-of-header
-fi
+	echo "<head>"
 
-echo ${HTF_DOCUMENT_TITLE:-"<h1><hr noshade>${HTF_LONG_TITLE:-$HTF_TITLE}<hr noshade></h1>"}
+	#	document title
+	#
+	echo "	<title lang=\"${HTF_LANGUAGE:?}\">${HTF_TITLE:?}</title>"
+
+	#	reference base settings
+	#
+	if [ "${HTF_BASE_HREF}" -o "${HTF_BASE_TARGET}" ]
+	then
+		echo -n "	<base "
+		if [ -n ${HTF_BASE_HREF} ]
+		then
+			echo -n " href=\"${HTF_BASE_HREF}\""
+		fi
+		if [ -n ${HTF_BASE_TARGET} ]
+		then
+			echo -n " target=\"${HTF_BASE_TARGET}\""
+		fi
+		echo ">"
+	fi
+
+	#	create meta tags
+	#
+	cat <<end-of-meta
+	<meta name="Description" content="${HTF_DESCRIPTION:?}">
+	<meta name="Keywords" content="${HTF_KEYWORDS:?}">
+	<meta name="Author" content="${HTF_AUTHOR:?}">
+end-of-meta
+
+	echo "</head>"
+
+	#	frame set
+	#
+	cat <<end-of-frameset
+<frameset cols="${HTF_MENU_WIDTH:-180}, *" frameborder=0 border=0>
+	<frame src="menu.${HTF_LANGUAGE:?}.html" name="menu">
+	<frame src="welcome.${HTF_LANGUAGE:?}.html" name="content">
+	<noframes>
+end-of-frameset
+
+	#	document body (for browsers not supporting frames)
+	#
+	cat <<end-of-body
+	<body text="${HTF_COLOR_TEXT:-#000000}" bgcolor="${HTF_COLOR_BGCOLOR:-#FFFFFF}" link="${HTF_COLOR_LINK:-#0000EE}" vlink="${HTF_COLOR_VLINK:-#551A8B}" alink="${HTF_COLOR_ALINK:-#FF0000}" background="$HTF_IMAGE_BACKGROUND">
+end-of-body
+
+	echo ${HTF_DOCUMENT_TITLE:-"<h1><hr noshade>${HTF_LONG_TITLE:-$HTF_TITLE}<hr noshade></h1>"}
+
+fi
 
 #	document body
 #
@@ -54,13 +95,19 @@ then
 	
 	cat <<end-of-trailer
 
-<p><hr noshade>
-<table cols=3 width="100%"><tr valign=top>
-<td align=left><i><a target="_top" href="${HTF_BACKLINK:-../index.$HTF_LANGUAGE.html}">$HTF_BACK</a></i></td>
-<td align=center><i>\$Revision ${HTF_REVISION:-&nbsp;}</i></td>
-<td align=right><i>$HTF_MAINTAINED1 <a href="$HTF_MAINTAINER_URL">$HTF_MAINTAINER</a>$HTF_MAINTAINED2</i></td>
-</tr></table>
-</body></noframes>
-</frameset></html>
+	<p>
+	<hr noshade>
+	<table cols=3 width="100%">
+	<tr valign=top>
+		<td align=left><i><a target="_top" href="${HTF_BACKLINK:-../index.$HTF_LANGUAGE.html}">${HTF_BACK?-}</a></i></td>
+		<td align=center><i>\$Revision ${HTF_REVISION:-&nbsp;}</i></td>
+		<td align=right><i>${HTF_MAINTAINED1:?} <a href="${HTF_MAINTAINER_URL:?}">${HTF_MAINTAINER:?}</a>$HTF_MAINTAINED2</i></td>
+	</tr>
+	</table>
+</body>
+</noframes>
+</frameset>
 end-of-trailer
 fi
+
+echo "</html>"
