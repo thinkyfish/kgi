@@ -11,18 +11,7 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	Rodolphe_Ortalo
 **
-**	$Log: Gx00-meta.h,v $
-**	Revision 1.3  2001/09/12 20:55:52  ortalo
-**	Acceleration support added for G400 (w/ bus-master DMA) and Mystique
-**	(w/ pseudo-DMA).
-**	Added a Matrox-specific test program.
-**	
-**	Revision 1.2  2001/08/31 23:56:32  ortalo
-**	/tmp/cvs46Wo9B
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:24  seeger_s
-**	- initial import of pre-SourceForge tree
-**	
+**	$Id: $
 */
 #ifndef	_chipset_Matrox_Gx00_meta_h
 #define	_chipset_Matrox_Gx00_meta_h
@@ -48,6 +37,7 @@ typedef	struct {
   mem_region_t fb;
   mem_region_t iload;
   mem_region_t text16fb;
+  mem_region_t rom;
   irq_line_t irq;
 
   kgi_u32_t ptr_fboffset;
@@ -141,10 +131,12 @@ typedef enum {
   MGAG_CF_G200    = (0x01 << 2),
   MGAG_CF_G400    = (0x01 << 3),
   MGAG_CF_G450    = (0x01 << 8), /* variant of G400 */
+  MGAG_CF_G550    = (0x01 << 9),
 
   /* capabilities */
   MGAG_CF_OLD     = (0x01 << 4),
   MGAG_CF_SGRAM	  = (0x01 << 5),
+  MGAG_CF_VBIOS   = (0x01 << 10), /* has a video BIOS */
 
   /* driver status */
   MGAG_CF_PRIMARY = (0x01 << 6),
@@ -168,7 +160,8 @@ typedef struct
 
     kgi_u32_t	Command, LatTimer, IntLine,
       BaseAddr0, BaseAddr1, BaseAddr2,
-      BaseAddr3, BaseAddr4, RomAddr;
+      /* (unused) BaseAddr3, BaseAddr4, */
+      RomAddr;
 
   } pci;
 
@@ -177,6 +170,37 @@ typedef struct
   struct { /* Control registers */
     /* None yet */
   } ctrl;
+
+  /* Information parsed from the video BIOS */
+  struct {
+    /* VBIOS-related information */
+    struct {
+      kgi_u8_t major,minor,revision;
+    } version;
+    struct {
+      kgi_u8_t version; /* 0 means invalid pins */
+      kgi_u8_t length;
+      kgi_u16_t offset;
+    } pins;
+
+    /* Reference information */
+    kgi_u_t fref;
+    kgi_u_t fsystem;
+    kgi_u_t fvideo;
+
+    /* Init. values get from the 'pins' */
+    kgi_u32_t opt;
+    kgi_u32_t opt2;
+    kgi_u32_t opt3;
+    kgi_u32_t mctlwtst;
+    kgi_u32_t memmisc;
+    kgi_u32_t memrdbk;
+    kgi_u32_t maccess;
+
+    /* Flags */ /* TODO: Reduce size of boolean flags */
+    kgi_u_t ddr, dll, emrswen, no_wtst_xlat;
+
+  } vbios;
 
   struct {
 

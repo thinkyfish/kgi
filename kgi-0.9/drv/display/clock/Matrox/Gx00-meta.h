@@ -11,13 +11,7 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	Rodolphe_Ortalo
 **
-**	$Log: Gx00-meta.h,v $
-**	Revision 1.2  2001/08/31 23:59:14  ortalo
-**	Driver nearly operational (without accel) on G400 and Mystique boards.
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
-**	- initial import of pre-SourceForge tree
-**	
+**	$Id: $
 */
 
 #ifndef _clock_Matrox_Gx00_meta_h
@@ -51,7 +45,6 @@ typedef enum {
 	MGAG_CF_1x64	= (0x01 << 1),
 	MGAG_CF_G200	= (0x01 << 2),
 	MGAG_CF_G400	= (0x01 << 3),
-	MGAG_CF_G450	= (0x01 << 5),
 
 	/* capabilities */
 

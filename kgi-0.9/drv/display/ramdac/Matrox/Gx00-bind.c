@@ -10,21 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: Gx00-bind.c,v $
-**	Revision 1.3  2001/07/03 08:59:00  seeger_s
-**	- updated to changes in kgi/module.h
-**	
-**	Revision 1.2  2000/09/21 10:06:40  seeger_s
-**	- namespace cleanup: E() -> KGI_ERRNO()
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
-**	- initial import of pre-SourceForge tree
-**	
+**	$Id: $
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.4 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -100,6 +91,13 @@ kgi_error_t mgag_ramdac_init_module(mgag_ramdac_t *mgag,
 
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G400):
 
+		mgag->ramdac.dclk.max = options->ramdac->dclk_max 
+			? options->ramdac->dclk_max : 300 MHZ;
+		break;
+
+	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G550):
+
+	  /* TODO: Update */
 		mgag->ramdac.dclk.max = options->ramdac->dclk_max 
 			? options->ramdac->dclk_max : 300 MHZ;
 		break;

@@ -20,8 +20,8 @@
 #ifndef CHIPSET_G400
 #ifndef CHIPSET_MYSTIQUE
 /* One of those should be set to 1 before including mga_accel.h */
-//#define CHIPSET_G200 1
-#define CHIPSET_G400 1
+#define CHIPSET_G200 1
+//#define CHIPSET_G400 1
 //#define CHIPSET_MYSTIQUE 1
 #endif
 #endif
@@ -30,7 +30,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 6
+#define TEST_DURATION 600
 
 #define BUFFER_IN_MEMORY 0
 

@@ -10,24 +10,13 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: Gx00-bind.c,v $
-**	Revision 1.4  2001/08/31 23:50:04  ortalo
-**	Driver nearly operational (without accel) on G400 and Mystique boards.
-**	
-**	Revision 1.3  2001/07/03 08:58:59  seeger_s
-**	- updated to changes in kgi/module.h
-**	
-**	Revision 1.2  2000/09/21 09:57:15  seeger_s
-**	- name space cleanup: E() -> KGI_ERRNO()
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
-**	- initial import of pre-SourceForge tree
+**	$Id: $
 **	
 */
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.4 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.5 $"
 
 /*
 ** Debug levels
@@ -400,6 +389,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 		PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G200_PCI),
 		PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G200_AGP),
 		PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G400),
+		PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G550),
 		PCICFG_SIGNATURE(0,0)
 	};
 
@@ -440,6 +430,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 	mgag->pci.BaseAddr0	= pcicfg_in32(pcidev + PCI_BASE_ADDRESS_0);
 	mgag->pci.BaseAddr1	= pcicfg_in32(pcidev + PCI_BASE_ADDRESS_1);
 	mgag->pci.BaseAddr2	= pcicfg_in32(pcidev + PCI_BASE_ADDRESS_2);
+	mgag->pci.RomAddr       = pcicfg_in32(pcidev + PCI_ROM_ADDRESS);
 
 	switch PCICFG_SIGNATURE(mgag->chipset.vendor_id,
 		mgag->chipset.device_id) {
@@ -534,7 +525,26 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 		pci_mgabase1 = mgag->pci.BaseAddr1;
 		pci_mgabase2 = mgag->pci.BaseAddr0;
 
-		mgag->chipset.dclk.max = 300 MHZ;
+		mgag->chipset.dclk.max = 300 MHZ; /* TODO: Check/Updt (G450) */
+
+		break;
+
+	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G550):
+
+		KRN_NOTICE("Matrox G550 revision %i",
+			   pcicfg_in8(pcidev + PCI_REVISION_ID));
+
+		mgag->chipset.maxdots.x = 4096;
+		mgag->chipset.maxdots.y = 4096;
+
+		mgag->flags |= MGAG_CF_G550;
+
+		mgabase2_size = G550_MGABASE2_SIZE;
+
+		pci_mgabase1 = mgag->pci.BaseAddr1;
+		pci_mgabase2 = mgag->pci.BaseAddr0;
+
+		mgag->chipset.dclk.max = 300 MHZ; /* TODO: Check/Update. */
 
 		break;
 
@@ -579,6 +589,13 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 	mgag_io->iload.size		= MGAG_MGABASE3_SIZE;
 	mgag_io->iload.decode		= MEM_DECODE_ALL;
 
+	mgag_io->rom.name      = "Matrox BIOS";
+	mgag_io->rom.device    = pcidev;
+	mgag_io->rom.base_virt = MEM_NULL;
+	mgag_io->rom.base_io   = mgag->pci.RomAddr & ~(MGAG_ROM_SIZE -1);
+	mgag_io->rom.size      = MGAG_ROM_SIZE;
+	mgag_io->rom.decode    = MEM_DECODE_ALL;
+
 	mgag_io->irq.flags	= IF_SHARED_IRQ;
 	mgag_io->irq.name	= "1x64/Gx00 interrupt line";
 	mgag_io->irq.line	= mgag->pci.IntLine & 0xFF;
@@ -588,6 +605,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 
 	/* VGA text16 aperture */
 	mgag_io->text16fb.name      = "Matrox VGA text16 aperture";
+	mgag_io->text16fb.device    = pcidev;
 	mgag_io->text16fb.base_virt = MEM_NULL;
 	mgag_io->text16fb.base_io   = VGA_TEXT_MEM_BASE;
 	mgag_io->text16fb.size      = VGA_TEXT_MEM_SIZE;
@@ -603,6 +621,15 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 	*/
 	if (mem_check_region(&mgag_io->text16fb)) {
 	  KRN_ERROR("%s region already served!", mgag_io->text16fb.name);
+	  return -KGI_ERRNO(CHIPSET, INVAL);
+	}
+
+	/*
+	** Checks the ROM (video BIOS) region independently
+	*/
+	if (mem_check_region(&mgag_io->rom)) {
+	  KRN_ERROR("%s region already served! (base_io: %.8x)",
+		    mgag_io->rom.name, mgag_io->rom.base_io);
 	  return -KGI_ERRNO(CHIPSET, INVAL);
 	}
 
@@ -622,6 +649,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 	mem_claim_region(&mgag_io->control);
 	mem_claim_region(&mgag_io->fb);
 	mem_claim_region(&mgag_io->iload);
+	mem_claim_region(&mgag_io->rom);
 
 	if (KGI_EOK == irq_claim_line(&mgag_io->irq))
 	  {
@@ -634,12 +662,7 @@ kgi_error_t mgag_chipset_init_module(mgag_chipset_t *mgag,
 	  }
 
 	/* Initialize the VGA aperture */
-#if 1
 	mgag_io->vga.aperture = mgag_io->text16fb;
-#else
-	/* Did not work much... Incompatible addressing problem... */
-	mgag_io->vga.aperture = mgag_io->fb;
-#endif
 
 	/* initializing the io helper struct. */
 	mgag_io->vga.kgim.DacOut8	= (void *) mgag_dac_out8;
@@ -692,6 +715,7 @@ void mgag_chipset_done_module(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
 		irq_free_line(&mgag_io->irq);
 	}
 
+	mem_free_region(&mgag_io->rom);
 	mem_free_region(&mgag_io->iload);
 	mem_free_region(&mgag_io->fb);
 	mem_free_region(&mgag_io->control);

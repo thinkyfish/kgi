@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
 **	Matrox Gx00 clock driver binding
 ** ----------------------------------------------------------------------------
-**	Copyright (C)	1999-2001	Johan Karlberg
+**	Copyright (C)	1999-2002	Johan Karlberg
 **					Rodolphe Ortalo
 **
 **	This file is distributed under the terms and conditions of the 
@@ -10,23 +10,11 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: Gx00-bind.c,v $
-**	Revision 1.4  2001/08/31 23:59:14  ortalo
-**	Driver nearly operational (without accel) on G400 and Mystique boards.
-**	
-**	Revision 1.3  2001/07/03 08:59:00  seeger_s
-**	- updated to changes in kgi/module.h
-**	
-**	Revision 1.2  2000/09/21 09:57:16  seeger_s
-**	- name space cleanup: E() -> KGI_ERRNO()
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
-**	- initial import of pre-SourceForge tree
-**	
+**	$Id: $
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.4 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.5 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -135,8 +123,9 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 
 		if (pcicfg_in8(MGAG_PCIDEV(mgag_io) + PCI_REVISION_ID) >= 128)
 		  {
-		    KRN_NOTICE("triggering G450 clock parameters");
-		    mgag->flags |= MGAG_CF_G450;
+		    KRN_NOTICE("G450 clock detected (id of G400 w/ rev.>=128)."
+			       " Use the Gx50 clock subsystem.");
+		    return -KGI_ERRNO(CLOCK, UNKNOWN);
 		  }
 		mgag->pll.fref = KGIM_DEFAULT(options->clock->fref, 27 MHZ);
 
@@ -145,6 +134,14 @@ kgi_error_t mgag_clock_init_module(mgag_clock_t *mgag, mgag_clock_io_t *mgag_io,
 
 		mgag->pll.clock.dclk.range[0].max = mgag->pll.fvco.max = 
 			KGIM_DEFAULT(options->clock->fvco_max, 300 MHZ);
+
+		break;
+
+	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_G550):
+
+		KRN_NOTICE("G550 clock detected. Use the Gx50 clock subsytem.");
+
+		return -KGI_ERRNO(CLOCK, UNKNOWN);
 
 		break;
 	default:

@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
 **	Matrox Gx00 register definitions
 ** ----------------------------------------------------------------------------
-**	Copyright (C)	1999-2001	Johan Karlberg
+**	Copyright (C)	1999-2002	Johan Karlberg
 **					Rodolphe Ortalo
 **
 **	This file is distributed under the terms and conditions of the 
@@ -11,35 +11,7 @@
 ** ----------------------------------------------------------------------------
 **	MAINTAINER	Rodolphe_Ortalo
 **
-**	$Log: Gx00.h,v $
-**	Revision 1.6  2001/11/04 17:36:04  ortalo
-**	DMA command buffer checking/validation (for G400,G200,1x64).
-**	Experimental new userspace "header" library for managing commands.
-**	Added new demo programs (boxes, lines, 3D) that uses this library.
-**	Testing/validation done on the G200 (AGP) as well as G400 and Mystique.
-**	Several bugs correction: 16/15bpp palette, G200 power up, etc.
-**	
-**	Revision 1.5  2001/10/03 21:33:19  ortalo
-**	 * Implemented experimental support for the WARP 3D setup
-**	engine hardware accelerator.
-**	 * Added a buffer tag to the acceleration engine to differentiate
-**	between various types of accel (WARP, drawing engine).
-**	 * Some attempts towards the G450.
-**	
-**	Revision 1.4  2001/09/12 20:55:52  ortalo
-**	Acceleration support added for G400 (w/ bus-master DMA) and Mystique
-**	(w/ pseudo-DMA).
-**	Added a Matrox-specific test program.
-**	
-**	Revision 1.3  2001/09/02 17:42:08  ortalo
-**	Added some tentative power up code for the G200.
-**	
-**	Revision 1.2  2001/08/31 23:56:32  ortalo
-**	/tmp/cvs46Wo9B
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
-**	- initial import of pre-SourceForge tree
-**	
+**	$Id: $
 */
 #ifndef _Matrox_Gx00_h
 #define _Matrox_Gx00_h
@@ -65,6 +37,13 @@
 #ifndef PCI_DEVICE_ID_MATROX_G400
 #	define PCI_DEVICE_ID_MATROX_G400 0x0525
 #endif
+
+#ifndef PCI_DEVICE_ID_MATROX_G550
+#	define PCI_DEVICE_ID_MATROX_G550 0x2527
+#endif
+
+/* power management */
+#define MGAG_PCI_PM_CSR 0xE0
 
 /* the options register is a mess. */
 
@@ -167,6 +146,7 @@
 #	define G400_O3_GCLKSEL_MCLK	(0x02 << G400_O3_GCLKSEL_SHIFT)
 #	define G400_O3_GCLKSEL_AGP	(0x03 << G400_O3_GCLKSEL_SHIFT)
 #	define G400_O3_GCLKDIV_SHIFT	3
+#	define G400_O3_GCLKDIV_2_5	(0x01 << G400_O3_GCLKDIV_SHIFT)
 #	define G400_O3_GCLKDIV_MASK	(0x07 << G400_O3_GCLKDIV_SHIFT)
 #	define G400_O3_GCLKDCYC_SHIFT	6
 #	define G400_O3_GCLKDCYC_MASK	(0x0F << G400_O3_GCLKDCYC_SHIFT)
@@ -177,6 +157,7 @@
 #	define G400_O3_MCLKSEL_MCLK	(0x02 << G400_O3_MCLKSEL_SHIFT)
 #	define G400_O3_MCLKSEL_AGP	(0x03 << G400_O3_MCLKSEL_SHIFT)
 #	define G400_O3_MCLKDIV_SHIFT	13
+#	define G400_O3_MCLKDIV_BYPASS	(0x05 << G400_O3_MCLKDIV_SHIFT)
 #	define G400_O3_MCLKDIV_MASK	(0x07 << G400_O3_MCLKDIV_SHIFT)
 #	define G400_O3_MCLKDCYC_SHIFT	16
 #	define G400_O3_MCLKDCYC_MASK	(0x0F << G400_O3_MCLKDCYC_SHIFT)
@@ -187,16 +168,24 @@
 #	define G400_O3_WCLKSEL_MCLK	(0x02 << G400_O3_WCLKSEL_SHIFT)
 #	define G400_O3_WCLKSEL_AGP	(0x03 << G400_O3_WCLKSEL_SHIFT)
 #	define G400_O3_WCLKDIV_SHIFT	23
+#	define G400_O3_WCLKDIV_2_5	(0x01 << G400_O3_WCLKDIV_SHIFT)
 #	define G400_O3_WCLKDIV_MASK	(0x07 << G400_O3_WCLKDIV_SHIFT)
 #	define G400_O3_WCLKDCYC_SHIFT	26
 #	define G400_O3_WCLKDCYC_MASK	(0x0F << G400_O3_WCLKDCYC_SHIFT)
 
+/* Gx50 only! */
+
+#define MGAG_PCI_MEMMISC 0x58
+
 #define MGAG_MGABASE1_SIZE	(0x01 << 14)	/* 16K */
 #define MGAG_MGABASE3_SIZE	(0x01 << 23)	/* 8MB */
+#define MGAG_ROM_SIZE           0x10000
 
 #define M1x64_MGABASE2_SIZE	(0x01 << 23)	/* 8M */
 #define  G200_MGABASE2_SIZE	(0x01 << 24)	/* 16M */
 #define  G400_MGABASE2_SIZE	(0x01 << 25)	/* 32M */
+/* TODO: Check update for G550 */
+#define  G550_MGABASE2_SIZE	G400_MGABASE2_SIZE
 
 /* control aperture */
 
@@ -621,6 +610,18 @@
 #define	XCURCOL15GREEN				0x85	/* G200+ */
 #define	XCURCOL15BLUE				0x86	/* G200+ */
 
+/* following for Gx50+ it seems -- ortalo */
+#define	XOUTPUTCONN				0x8A	/* Gx50+ */
+#define	XSYNCCTRL				0x8B	/* Gx50+ */
+/* Video engine definitions, taken from matroxfb */
+#define	XVIDPLLSTAT				0x8C	/* Gx50+, RO */
+#	define XVIDPLLSTAT_VIDLOCK		(0x01 << 6)
+#define	XVIDPLLP				0x8D	/* Gx50+ */
+#define	XVIDPLLM				0x8E	/* Gx50+ */
+#define	XVIDPLLN				0x8F	/* Gx50+ */
+
+#define	XPWRCTRL				0xA0	/* Gx50+ */
+
 /* drawiung engine defintions */
 
 #define DWGCTL					(MGAG_DWGREG0+0x00) /* WO */
@@ -732,6 +733,7 @@
 /* G400 specific (maybe good for G200?) */
 #define G200_MCTLWTST_RESET_VALUE 0x84A49921
 #define G400_MCTLWTST_RESET_VALUE 0x84A49921
+#define G550_MCTLWTST_RESET_VALUE 0x84A49921
 
 #define ZORG					(MGAG_DWGREG0+0x0C)	/* WO */
 #define PAT0					(MGAG_DWGREG0+0x10)	/* WO */
@@ -1063,7 +1065,7 @@
 
 #define ACCEL_GO				0x100
 
-#define PLL_DELAY				10000
+#define PLL_DELAY				100000
 
 #define KHZ					*1000
 #define MHZ					*1000000
