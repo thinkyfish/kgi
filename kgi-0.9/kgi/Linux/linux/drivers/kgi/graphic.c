@@ -14,6 +14,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:48  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -1331,13 +1334,6 @@ static int graph_ioctl(struct inode *inode, struct file *kfile,
 	case KGIC_DISPLAY_COMMAND:
 		io_result = KGI_VALID_DEVICE_ID(file->device->kgi.id)
 			? kgidev_display_command(&file->device->kgi,
-				cmd, io_ibuf, &io_obuf, &io_size)
-			: -EPROTO;
-		break;
-
-	case KGIC_MODE_COMMAND:
-		io_result = KGI_VALID_DEVICE_ID(file->device->kgi.id)
-			? kgidev_mode_command(&file->device->kgi, 
 				cmd, io_ibuf, &io_obuf, &io_size)
 			: -EPROTO;
 		break;
