@@ -12,6 +12,9 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00-meta.h,v $
+**	Revision 1.2  2001/08/31 23:56:32  ortalo
+**	/tmp/cvs46Wo9B
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:24  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -114,6 +117,7 @@ typedef union
     kgim_chipset_mode_t     kgim;
 
     kgi_mmio_region_t	control, fb, iload;
+    kgi_accel_t engine;
 
     kgi_u32_t		VideoControl, Offset, LnComp,
       HTotal, HdEnd, HsStart, HsEnd, HbStart, HbEnd,

@@ -10,20 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Log: Gx00-meta.c,v $
-**	Revision 1.3  2001/08/31 23:56:32  ortalo
-**	/tmp/cvs46Wo9B
-**	
-**	Revision 1.2  2000/09/21 09:57:15  seeger_s
-**	- name space cleanup: E() -> KGI_ERRNO()
-**	
-**	Revision 1.1.1.1  2000/04/18 08:51:24  seeger_s
-**	- initial import of pre-SourceForge tree
+**	$Id:$
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.4 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -215,266 +207,6 @@ static inline void mgag_chipset_examine(mgag_chipset_t *mgag)
 #endif
 
 /* ----------------------------------------------------------------------------
-**	Totally experimental hack test code
-** ----------------------------------------------------------------------------
-*/
-#define DO_ACCEL_TEST 0
-#if DO_ACCEL_TEST
-/*
-** Do some testing of the accel engine
-*/
-static kgi_u32_t dma_area = 0;
-static kgi_u32_t count = 1;
-#if 1
-static int dma_size = (4 * (4 * 5));
-static kgi_u32_t primary_dma[] =
-{
-  0x2001AE23,
-  0x00000400, /* PITCH: ylin=0, iy=1024 */
-  0x00000000, /* DSTORG */
-  0x40000001, /* MACCESS */
-  0x0FFF0000, /* CXBNDRY */
-  0x03072726,
-  0x00000000, /* YTOP */
-  0x00FFFFFF, /* YBOT */
-  0xFFFFFFFF, /* PLNWT */
-  0x00080000, /* ZORG (overlaps with fb! not used normally)*/
-#if 0 /* Line */
-  0x00091110,
-  0x000A000A, /* XYSTRT */
-  0x02000300, /* XYEND */
-  0xE2E2E2E2, /* FCOL */
-  0x840C4813, /* DWGCTL: AUTOLINE_CLOSE */
-#else /* Rectangle fill */
-  0x00092221,
-  0x02000040, /* FXBNDRY */
-  0x00200F00, /* YDSTLEN */
-  0xE2E2E2E2, /* FCOL */
-  0xC40C7814, /* DWGCTL */
-#endif
-  0x92151515, /* 3x DMAPAD + 1x SOFTRAP */
-  0xAAAAAAAA,
-  0xBBBBBBBB,
-  0xCCCCCCCC,
-  0xDCBA9876
-};
-#else
-static int dma_size = (4 * (2 * 5));
-static kgi_u32_t primary_dma[] =
-{
-  0x15151515, /* 4x DMAPAD */
-  0x12345678,
-  0x87654321,
-  0x43215678,
-  0x12348765,
-  0x92151515, /* 3x DMAPAD + 1x SOFTRAP */
-  0xAAAAAAAA,
-  0xBBBBBBBB,
-  0xCCCCCCCC,
-  0xFEDCBA98
-};
-#endif
-#include "asm/io.h"
-#include "linux/slab.h"
-static void mgag_accel_test(mgag_chipset_io_t *mgag_io)
-{
-#if 1
-#if 1
-#if 1
-  kgi_u32_t area = virt_to_bus(dma_area);
-#else
-  kgi_u32_t area = (kgi_u32_t) primary_dma;
-#endif
-#else
-  kgi_u32_t area = virt_to_bus(primary_dma);
-#endif
-#else
-  kgi_u32_t area = 0x020ABCD0;
-#endif
-
-  KRN_DEBUG(1, "started");
-  /*
-  KRN_ASSERT(0 == (area & 0x3));
-  */
-  if (0 == (area & ~PRIMADDRESS_ADDRESS_MASK)) {
-    pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
-#if 0
-    pcicfg_out32(pcicfg_in32(pcidev + PCI_COMMAND) | 0x20000000,
-		 pcidev + PCI_COMMAND);
-#endif
-    KRN_DEBUG(1, "DEVCTRL = %.8x", pcicfg_in32(pcidev + PCI_COMMAND));
-    KRN_DEBUG(1, "PRIMADRESS = %.8x", MGAG_GC_IN32(mgag_io, PRIMADDRESS));
-    KRN_DEBUG(1, "PRIMEND = %.8x", MGAG_GC_IN32(mgag_io, PRIMEND));
-    KRN_DEBUG(1, "Starting DMA from %.8x to %.8x", area, (area + dma_size));
-    /* OOPS-es hardly! Do not activate.
-    (*((kgi_u32_t*)(dma_area + dma_size - 4))) = count++;
-    */
-    MGAG_GC_OUT32(mgag_io, area | PRIMADDRESS_DMAMOD_GENERAL_WRITE,
-		  PRIMADDRESS);
-    MGAG_GC_OUT32(mgag_io, area + dma_size, PRIMEND);
-#if 1
-    { kgi_u_t c = 60;
-    while (c--) { kgi_u_t i; i++; }
-    }
-#endif
-    KRN_DEBUG(1, "2-PRIMADDRESS = %.8x", MGAG_GC_IN32(mgag_io, PRIMADDRESS));
-    KRN_DEBUG(1, "2-PRIMEND = %.8x", MGAG_GC_IN32(mgag_io, PRIMEND));
-    KRN_DEBUG(1, "2-DEVCTRL = %.8x", pcicfg_in32(pcidev + PCI_COMMAND));
-  } else {
-    KRN_DEBUG(1, "Unable to start DMA at %.8x", area);
-  }
-  KRN_DEBUG(1, "completed");
-}
-#endif
-
-/* ----------------------------------------------------------------------------
-**	Interrupt management
-** ----------------------------------------------------------------------------
-*/
-
-/*
-** Chipset interrupt handler
-*/
-kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag, 
-				     mgag_chipset_io_t *mgag_io,
-				     irq_system_t *system)
-{
-#ifdef DEBUG_LEVEL
-  pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
-#endif
-
-  kgi_u32_t iclear = 0x00000000;
-  kgi_u32_t flags  = MGAG_GC_IN32(mgag_io, STATUS);
-
-  KRN_ASSERT(mgag);
-  KRN_ASSERT(mgag_io);
-
-  KRN_DEBUG(5, "chipset IRQ handler initiated.");
-
-  /*
-  ** All Matrox chipsets interrupts
-  */
-
-  if (flags & STATUS_PICKPEN)
-    {
-      iclear |= ICLEAR_PICKPICLR;
-      KRN_TRACE(0, mgag->interrupt.pick++);
-      KRN_DEBUG(1, "Pick interrupt (pcidev %.8x)", pcidev);
-    }
-
-  if (flags & STATUS_VSYNCPEN)
-    {
-      kgi_u8_t cr11;
-      /* NB: Clears the interrupt directly from here */
-      cr11 = MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND);
-      MGAG_CRT_OUT8(mgag_io, cr11 & ~VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
-      MGAG_CRT_OUT8(mgag_io, cr11 | VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
-
-      KRN_TRACE(0, mgag->interrupt.vsync++);
-      KRN_DEBUG(5, "Vertical Sync interrupt (pcidev %.8x)", pcidev);
-    }
-
-  if (flags & STATUS_VLINEPEN)
-    {
-      iclear |= ICLEAR_VLINEICLR;
-      KRN_TRACE(0, mgag->interrupt.vline++);
-      KRN_DEBUG(5, "1st CRTC Vertical line interrupt (pcidev %.8x)", pcidev);
-    }
-
-  if (flags & STATUS_EXTPEN)
-    {
-      /* Uncleared, because I don't know how, probably device dependent */
-      KRN_TRACE(0, mgag->interrupt.ext++);
-      KRN_DEBUG(1, "External interrupt (pcidev %.8x)", pcidev);
-    }
-
-  /*
-  ** G200 or G400 interrupts
-  */
-
-  if ((mgag->flags & MGAG_CF_G200) || (mgag->flags & MGAG_CF_G400))
-    {
-      if (flags & STATUS_SOFTRAPEN)
-	{
-	  iclear |= ICLEAR_SOFTRAPICLR;
-	  KRN_TRACE(0, mgag->interrupt.softtrap++);
-	  KRN_DEBUG(1, "soft trap interrupt (pcidev %.8x) softrap=%.8x",
-		    pcidev, MGAG_GC_IN32(mgag_io,SOFTRAP));
-	}
-
-      if (flags & STATUS_WPEN)
-	{
-	  iclear |= ICLEAR_WICLR;
-	  KRN_TRACE(0, mgag->interrupt.warp++);
-	  KRN_DEBUG(1, "WARP pipe 0 interrupt (pcidev %.8x)", pcidev);
-	}
-
-      if (flags & STATUS_WCPEN)
-	{
-	  iclear |= ICLEAR_WCICLR;
-	  KRN_TRACE(0, mgag->interrupt.warpcache++);
-	  KRN_DEBUG(1, "WARP pipe 0 cache interrupt (pcidev %.8x)", pcidev);
-	}
-    }
-
-  /*
-  ** G400-specific interrupts
-  */
-
-  if (mgag->flags & MGAG_CF_G400)
-    {
-      if (flags & STATUS_C2VLINEPEN)
-	{
-	  iclear |= ICLEAR_C2VLINEICLR;
-	  KRN_TRACE(0, mgag->interrupt.c2vline++);
-	  KRN_DEBUG(5, "2nd CRTC Vertical line interrupt "
-		    "(pcidev %.8x)", pcidev);
-	}
-
-      if (flags & STATUS_WPEN1)
-	{
-	  iclear |= ICLEAR_WICLR1;
-	  KRN_TRACE(0, mgag->interrupt.warp1++);
-	  KRN_DEBUG(1, "WARP pipe 1 interrupt (pcidev %.8x)", pcidev);
-	}
-
-      if (flags & STATUS_WCPEN1)
-	{
-	  iclear |= ICLEAR_WCICLR1;
-	  KRN_TRACE(0, mgag->interrupt.warpcache1++);
-	  KRN_DEBUG(1, "WARP pipe 1 cache interrupt (pcidev %.8x)", pcidev);
-	}
-    }
-
-  { /* Display error message if necessary */
-    kgi_u_t check = ((flags & 0xFFFF) & ~iclear)
-      & ~(STATUS_VSYNCPEN | STATUS_VSYNCSTS); /* Omit VSYNC irqs */
-    if (check)
-      {
-	KRN_TRACE(0, mgag->interrupt.not_handled++);
-	KRN_ERROR("MATROX: unhandled interrupt flag(s) %.4x "
-		  "(pcidev %.8x)", check, pcidev);
-      }
-  }
-
-  /* Finally, clear the interrupt(s) */
-  MGAG_GC_OUT32(mgag_io, iclear, ICLEAR);
-
-  KRN_TRACE(0, mgag->interrupt.handler_total++);
-
-  KRN_DEBUG(5, "chipset IRQ handler completed.");
-
-#if DO_ACCEL_TEST
-  if ((mgag->interrupt.vsync % 200) == 0) {
-    KRN_DEBUG(1, "Trying one accel.");
-    mgag_accel_test(mgag_io);
-  }
-#endif  
-
-  return KGI_EOK;
-}
-
-/* ----------------------------------------------------------------------------
 **	Compatibility *UNSUPPORTED* text16 operations
 ** ----------------------------------------------------------------------------
 */
@@ -604,6 +336,490 @@ static void mgag_chipset_compat_set_tlut(kgi_tlut_t *tlut,
       }
     }
   }
+}
+
+/* ----------------------------------------------------------------------------
+**	Interrupt management
+** ----------------------------------------------------------------------------
+*/
+
+typedef struct
+{
+  kgi_u32_t ien;
+  /* Unhandled: always reactivated */
+  /* kgi_u8_t vga_crt_vsyncend; */
+}
+mgag_chipset_irq_state_t;
+
+static void mgag_chipset_irq_enable(mgag_chipset_io_t *mgag_io)
+{
+  KRN_DEBUG(2, "enabling some IRQs");
+  MGAG_GC_OUT32(mgag_io, IEN_SOFTRAPIEN | IEN_VLINEIEN /*| IEN_EXTIEN */,
+		IEN);
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		& ~(VGA_CR11_DISABLE_VSYNC_IRQ | VGA_CR11_CLEAR_VSYNC_IRQ),
+		VGA_CRT_VSYNCEND);
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		| VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+}
+
+static void mgag_chipset_irq_block(mgag_chipset_io_t *mgag_io,
+				   mgag_chipset_irq_state_t *mgag_irq_state)
+{
+  KRN_DEBUG(2, "saving and disabling IRQs");
+
+  if (mgag_irq_state != NULL)
+    {
+      /* Saving IRQs state */
+      mgag_irq_state->ien = MGAG_GC_IN32(mgag_io, IEN);
+      /*  KRN_DEBUG(1, "saved: ien=%.8x", mgag_irq_state->ien); */
+    }
+  /* Disabling all interrupts sources */
+  MGAG_GC_OUT32(mgag_io, 0, IEN);
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		| VGA_CR11_DISABLE_VSYNC_IRQ,
+		VGA_CRT_VSYNCEND);
+}
+
+static void mgag_chipset_irq_restore(mgag_chipset_io_t *mgag_io,
+				     mgag_chipset_irq_state_t *mgag_irq_state)
+{
+  KRN_DEBUG(2, "restoring previously saved IRQs");
+  MGAG_GC_OUT32(mgag_io, mgag_irq_state->ien, IEN);
+  /* TODO: Check this VSYNC interrupt issue... -- ortalo */
+#if 1
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		& ~(VGA_CR11_DISABLE_VSYNC_IRQ | VGA_CR11_CLEAR_VSYNC_IRQ),
+		VGA_CRT_VSYNCEND);
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		| VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+#else
+  {
+    kgi_u8_t r = MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND);
+    if (mgag_irq_state->vga_crt_vsyncend)
+      {
+	r |= VGA_CR11_DISABLE_VSYNC_IRQ;
+	MGAG_GC_OUT8(mgag_io, r, VGA_CRT_VSYNCEND);
+	KRN_DEBUG(1, "VSYNC IRQ disabled");
+      }
+    else
+      {
+	r &= ~(VGA_CR11_DISABLE_VSYNC_IRQ | VGA_CR11_CLEAR_VSYNC_IRQ);
+	MGAG_GC_OUT8(mgag_io, r, VGA_CRT_VSYNCEND);
+	KRN_DEBUG(1, "VSYNC IRQ enabled");
+      }
+  }
+#endif
+}
+
+/*
+** Chipset interrupt handler
+*/
+
+static void mgag_chipset_accel_schedule(kgi_accel_t *accel);
+
+kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag, 
+				     mgag_chipset_io_t *mgag_io,
+				     irq_system_t *system)
+{
+#ifdef DEBUG_LEVEL
+  pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
+#endif
+
+  kgi_u32_t iclear = 0x00000000;
+  kgi_u32_t flags;
+  mgag_chipset_irq_state_t irq_state;
+
+  KRN_ASSERT(mgag);
+  KRN_ASSERT(mgag_io);
+
+  KRN_DEBUG(5, "chipset IRQ handler initiated.");
+
+  flags = MGAG_GC_IN32(mgag_io, STATUS);
+
+  mgag_chipset_irq_block(mgag_io, &irq_state);
+
+  /*
+  ** All Matrox chipsets interrupts
+  */
+
+  if (flags & STATUS_PICKPEN)
+    {
+      iclear |= ICLEAR_PICKPICLR;
+      KRN_TRACE(0, mgag->interrupt.pick++);
+      KRN_DEBUG(2, "Pick interrupt (pcidev %.8x)", pcidev);
+    }
+
+  if (flags & STATUS_VSYNCPEN)
+    {
+#if 0
+      /* This is done by mgag_chipset_irq_restore() when reenable the IRQ */
+      kgi_u8_t cr11;
+      /* NB: Clears the interrupt directly from here */
+      cr11 = MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND);
+      MGAG_CRT_OUT8(mgag_io, cr11 & ~VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+      MGAG_CRT_OUT8(mgag_io, cr11 | VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+#endif
+      KRN_TRACE(0, mgag->interrupt.vsync++);
+      KRN_DEBUG(5, "Vertical Sync interrupt (pcidev %.8x)", pcidev);
+    }
+
+  if (flags & STATUS_VLINEPEN)
+    {
+      iclear |= ICLEAR_VLINEICLR;
+      KRN_TRACE(0, mgag->interrupt.vline++);
+      KRN_DEBUG(5, "1st CRTC Vertical line interrupt (pcidev %.8x)", pcidev);
+    }
+
+  if (flags & STATUS_EXTPEN)
+    {
+      /* Uncleared, because I don't know how, probably device dependent */
+      KRN_TRACE(0, mgag->interrupt.ext++);
+      KRN_DEBUG(1, "External interrupt (pcidev %.8x)", pcidev);
+    }
+
+  /*
+  ** G200 or G400 interrupts
+  */
+
+  if ((mgag->flags & MGAG_CF_G200) || (mgag->flags & MGAG_CF_G400))
+    {
+      if (flags & STATUS_SOFTRAPEN)
+	{
+	  iclear |= ICLEAR_SOFTRAPICLR;
+	  KRN_TRACE(0, mgag->interrupt.softtrap++);
+	  KRN_DEBUG(2, "soft trap interrupt (pcidev %.8x) softrap=%.8x",
+		    pcidev, MGAG_GC_IN32(mgag_io,SOFTRAP));
+	  if (mgag->mode)
+	    {
+	      mgag_chipset_accel_schedule(&(mgag->mode->mgag.engine));
+	    }
+	}
+
+      if (flags & STATUS_WPEN)
+	{
+	  iclear |= ICLEAR_WICLR;
+	  KRN_TRACE(0, mgag->interrupt.warp++);
+	  KRN_DEBUG(1, "WARP pipe 0 interrupt (pcidev %.8x)", pcidev);
+	}
+
+      if (flags & STATUS_WCPEN)
+	{
+	  iclear |= ICLEAR_WCICLR;
+	  KRN_TRACE(0, mgag->interrupt.warpcache++);
+	  KRN_DEBUG(1, "WARP pipe 0 cache interrupt (pcidev %.8x)", pcidev);
+	}
+    }
+
+  /*
+  ** G400-specific interrupts
+  */
+
+  if (mgag->flags & MGAG_CF_G400)
+    {
+      if (flags & STATUS_C2VLINEPEN)
+	{
+	  iclear |= ICLEAR_C2VLINEICLR;
+	  KRN_TRACE(0, mgag->interrupt.c2vline++);
+	  KRN_DEBUG(5, "2nd CRTC Vertical line interrupt "
+		    "(pcidev %.8x)", pcidev);
+	}
+
+      if (flags & STATUS_WPEN1)
+	{
+	  iclear |= ICLEAR_WICLR1;
+	  KRN_TRACE(0, mgag->interrupt.warp1++);
+	  KRN_DEBUG(1, "WARP pipe 1 interrupt (pcidev %.8x)", pcidev);
+	}
+
+      if (flags & STATUS_WCPEN1)
+	{
+	  iclear |= ICLEAR_WCICLR1;
+	  KRN_TRACE(0, mgag->interrupt.warpcache1++);
+	  KRN_DEBUG(1, "WARP pipe 1 cache interrupt (pcidev %.8x)", pcidev);
+	}
+    }
+
+  { /* Display error message if necessary */
+    kgi_u_t check = ((flags & 0xFFFF) & ~iclear)
+      & ~(STATUS_VSYNCPEN | STATUS_VSYNCSTS); /* Omit VSYNC irqs */
+    if (check)
+      {
+	KRN_TRACE(0, mgag->interrupt.not_handled++);
+	KRN_ERROR("MATROX: unhandled interrupt flag(s) %.4x "
+		  "(pcidev %.8x)", check, pcidev);
+      }
+  }
+
+  /* Finally, clear the interrupt(s) */
+  MGAG_GC_OUT32(mgag_io, iclear, ICLEAR);
+
+  KRN_TRACE(0, mgag->interrupt.handler_total++);
+
+  mgag_chipset_irq_restore(mgag_io, &irq_state);
+
+  KRN_DEBUG(5, "chipset IRQ handler completed.");
+
+  return KGI_EOK;
+}
+
+/* ----------------------------------------------------------------------------
+**	Graphics accelerator engine
+** ----------------------------------------------------------------------------
+*/
+#define MGAG_SOFTRAP_MAGIC (0xFEDCBA98)
+
+typedef struct
+{
+  kgi_accel_context_t		kgi;
+  kgi_aperture_t		aperture;
+
+  struct {
+    kgi_u32_t index1;
+    kgi_u32_t secaddress;
+    kgi_u32_t secend;
+    /* No other regs, end of secondary DMA will reset the DMA engine */
+    kgi_u32_t index2;
+    kgi_u32_t softrap;
+    /* No other regs, SOFTRAP will reset the DMA engine */
+  } primary_dma;
+
+  /* No state: most regs are Write-only */
+
+} mgag_chipset_accel_context_t;
+
+static void mgag_chipset_accel_init(kgi_accel_t *accel, void *ctx)
+{
+  /* mgag_chipset_t *mgag = accel->meta; */
+  /* mgag_chipset_io_t *mgag_io = accel->meta_io; */
+  mgag_chipset_accel_context_t *mgag_ctx = ctx;
+  kgi_size_t offset;
+  
+  /* To be able to use ctx->primary_dma for DMA we precalculate the
+  ** aperture info needed to have it at hand when needed.
+  */
+  mgag_ctx->aperture.size = sizeof(mgag_ctx->primary_dma);
+  offset = (mem_vaddr_t) &mgag_ctx->primary_dma - (mem_vaddr_t) mgag_ctx;
+  mgag_ctx->aperture.bus  = mgag_ctx->kgi.aperture.bus  + offset;
+  mgag_ctx->aperture.phys = mgag_ctx->kgi.aperture.phys + offset;
+  mgag_ctx->aperture.virt = mgag_ctx->kgi.aperture.virt + offset;
+  if ((mgag_ctx->aperture.size & 0x3) || (mgag_ctx->aperture.bus & 0x3))
+    {
+      KRN_ERROR("Matrox: invalid primary DMA start (%.8x) or size (%.8x)",
+		mgag_ctx->aperture.bus, mgag_ctx->aperture.size);
+      KRN_INTERNAL_ERROR;
+    }
+  /* Initialize the primary dma list used for sending buffers
+  ** (via the secondary DMA)
+  */
+  mgag_ctx->primary_dma.index1 = 0x15159190; /* DMAPAD, DMAPAD, SECADDRESS, SECEND */
+  mgag_ctx->primary_dma.secaddress = 0x00000000; /* value of SECADDRESS */
+  mgag_ctx->primary_dma.secend = 0x00000000; /* value of SECEND */
+  mgag_ctx->primary_dma.index2 = 0x15151592; /* DMAPAD, DMAPAD, DMAPAD, SOFTRAP */
+  mgag_ctx->primary_dma.softrap = MGAG_SOFTRAP_MAGIC;
+}
+
+static void mgag_chipset_accel_done(kgi_accel_t *accel, void *ctx)
+{
+  if (ctx == accel->ctx)
+    {
+      accel->ctx = NULL;
+    }
+}
+
+/* TODO: remove this dependency needed for wake_up() */
+#include <linux/sched.h>
+
+/* This must not be interrupted! */
+static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
+{
+  mgag_chipset_io_t *mgag_io = accel->meta_io;
+  kgi_accel_buffer_t *buffer = accel->exec_queue;
+  kgi_accel_buffer_t *to_wakeup = NULL;
+
+#if 0
+  KRN_ASSERT(buffer);
+#else
+  if (buffer == NULL)
+    return;
+#endif
+
+  switch (buffer->exec_state)
+    {
+
+    case KGI_AS_EXEC:
+      /*	Execution of the current buffer finished (one per one), so we 
+      **	mark it KGI_AS_IDLE and advance the queue.
+      */
+      buffer->exec_state = KGI_AS_IDLE;
+
+#warning wakeup buffer->executed portably!
+      /* We delay the wakeup until we have finished scheduling buffers
+      ** (to avoid a deadlock?)
+      */
+      to_wakeup = buffer;
+
+      {
+	kgi_accel_buffer_t *cur = buffer->next;
+	while ((cur->exec_state != KGI_AS_WAIT)
+	       && (cur->next != NULL) && (cur != buffer))
+	  cur = cur->next;
+	if (cur->exec_state != KGI_AS_WAIT)
+	  {
+	    /* no further buffers queued, thus we are done.
+	     */
+	    KRN_DEBUG(2,"No further buffers queued");
+	    accel->exec_queue = NULL;
+#warning wakeup mgag_accel->idle
+	    /* Need to delay also ? */
+	    /* wake_up(accel->idle); */
+	    break;
+	  }
+	KRN_DEBUG(2, "Proceeding to next buffer queued (%.8x)",cur);
+	buffer = cur;
+	accel->exec_queue = cur;
+      }
+      /*
+      ** FALL THROUGH! (to execute next WAIT buffer)
+      */
+    case KGI_AS_WAIT:
+      /* We do not do GP context switch on the Matrox.
+      ** We swap the data structs and initiate the buffer transfer.
+      */
+      if (accel->ctx != buffer->exec_ctx)
+	{
+	  accel->ctx = buffer->exec_ctx;
+	}
+      
+      buffer->exec_state = KGI_AS_EXEC;
+
+      if ((buffer->exec_size & 0x3) || (buffer->aperture.bus & 0x3))
+	{
+	  KRN_ERROR("Matrox: invalid buffer start adress (%.8x) or size (%.8x)",
+		    buffer->aperture.bus, buffer->exec_size);
+	  mgag_chipset_accel_schedule(accel); /* recurses */
+	  break;
+	}
+      else
+	{
+	  mgag_chipset_accel_context_t *mgag_ctx = accel->ctx;
+
+	  /* Sets start adress and end address in the primary DMA list */
+	  mgag_ctx->primary_dma.secaddress = buffer->aperture.bus;
+	  mgag_ctx->primary_dma.secend = buffer->aperture.bus + buffer->exec_size;
+	  KRN_DEBUG(2,"Executing one accel buffer "
+		    "(primaddress=%.8x,primend=%.8x,"
+		    "secaddress=%8.x,secend=%.8x,size=%.4x)",
+		    mgag_ctx->aperture.bus,
+		    mgag_ctx->aperture.bus + mgag_ctx->aperture.size,
+		    buffer->aperture.bus,
+		    buffer->aperture.bus + buffer->exec_size,
+		    buffer->exec_size);
+	  /* Starts execution of the context primary dma (precomputed area) */
+	  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
+			| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
+			PRIMADDRESS);
+	  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture.bus
+			+ mgag_ctx->aperture.size,
+			PRIMEND);
+	}
+      break;
+
+    default:
+      KRN_ERROR("PERMEDIA: invalid state %i for queued buffer",
+		buffer->exec_state);
+      KRN_INTERNAL_ERROR;
+      break;
+    }
+
+  if (to_wakeup != NULL)
+    {
+      wake_up(to_wakeup->executed);
+    }
+}
+
+/*
+** We do NOT touch buffer->next or buffer list sort order in
+** exec() and schedule() !!!
+*/
+static void mgag_chipset_accel_exec(kgi_accel_t *accel,
+				    kgi_accel_buffer_t *buffer)
+{
+  mgag_chipset_t *mgag = accel->meta;
+  mgag_chipset_io_t *mgag_io = accel->meta_io;
+
+#warning check/validate validate data stream!!!
+
+  KRN_ASSERT(KGI_AS_FILL == buffer->exec_state);
+
+#warning fix the exec size offset!!!
+  buffer->exec_size &= 0xFFF; /* Limit to 4KB currently */
+
+  if (mgag->flags & MGAG_CF_1x64)
+    {
+      kgi_u32_t* pbuf = buffer->aperture.virt;
+      kgi_size_t i = 0;
+      /*
+      ** We directly write the given buffer to the pseudo-dma
+      ** window of the chipset.
+      */
+      /* buffer->exec_state = KGI_AS_QUEUED; */
+      /* buffer->exec_state = KGI_AS_EXEC; */
+      /* Resets pseudo-DMA, selects General Purpose Write */
+      MGAG_GC_OUT32(mgag_io,
+		    (MGAG_GC_IN32(mgag_io, OPMODE) & ~OPMODE_DMAMOD_MASK)
+		    | OPMODE_DMAMOD_GENERAL_WRITE,
+		    OPMODE);
+      /* Transfers the buffer: ILOAD or DMAWIN (control) areas can
+      ** be used... (8Mo or 7Ko apertures).
+      ** TODO: Should I use a different instruction to take advantage
+      ** TODO: of PCI bursts ?
+      */
+      mem_outs32(mgag_io->iload.base_virt,
+		 buffer->aperture.virt, (buffer->exec_size >> 2));
+      /* Again */
+      MGAG_GC_OUT32(mgag_io,
+		    (MGAG_GC_IN32(mgag_io, OPMODE) & ~OPMODE_DMAMOD_MASK)
+		    | OPMODE_DMAMOD_GENERAL_WRITE,
+		    OPMODE);
+      buffer->exec_state = KGI_AS_IDLE;
+    }
+  else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G400))
+    {
+      mgag_chipset_irq_state_t irq_state;
+      /*
+      ** The buffer is fetched by the chipset itself via DMA.
+      ** We schedule the work.
+      */
+      mgag_chipset_irq_block(mgag_io, &irq_state);
+
+#warning should not this be KGI_AS_QUEUED ?
+      buffer->exec_state = KGI_AS_WAIT;
+
+      if (accel->exec_queue)
+	{
+	  kgi_accel_buffer_t *cur = accel->exec_queue;
+	  /* No need to start the accel queue. We just check that this
+	  ** buffer is on the list.
+	  */
+	  while ((cur->next != NULL) && (cur != buffer)
+		 && (cur->next != accel->exec_queue))
+	    cur = cur->next;
+	  if (cur != buffer)
+	    KRN_ERROR("buffer %.8x not on the list of the accelerator!", buffer);
+	}
+      else
+	{
+	  /* Points the beginning of the exec queue on this buffer */
+	  accel->exec_queue = buffer;
+	  /* Starts execution if no other buffer running */
+	  mgag_chipset_accel_schedule(accel);
+	}
+
+      mgag_chipset_irq_restore(mgag_io, &irq_state);
+    }
+
+  KRN_DEBUG(2,"completed");
 }
 
 /* ----------------------------------------------------------------------------
@@ -886,6 +1102,20 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 		   | (0x7 << M1x64_O1_FBMASKN_SHIFT),
 		   pcidev + MGAG_PCI_OPTION1);
     }
+
+#if 0
+  /* Finally, does a softreset of the accel engine */
+  MGAG_GC_OUT32(mgag_io, RST_SOFTRESET, RST);
+  /* Wait delay */
+#warning do a wait delay of minimum 10 micro-seconds...
+#if 0
+  udelay(10);
+#else
+  { int cnt = 100000; while (cnt--) { int i; i++; }; }
+#endif
+  MGAG_GC_OUT32(mgag_io, 0, RST);
+#endif
+
   /* TODO: No need to re-enable the video in theory, remove? */
   MGAG_SEQ_OUT8(mgag_io,
 	       MGAG_SEQ_IN8(mgag_io,VGA_SEQ_CLOCK) & ~VGA_SR01_DISPLAY_OFF,
@@ -900,98 +1130,93 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
 */
 
 kgi_error_t mgag_chipset_init(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
-	const kgim_options_t *options)
+			      const kgim_options_t *options)
 {
-	pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
+  pcicfg_vaddr_t pcidev = MGAG_PCIDEV(mgag_io);
 
-	KRN_ASSERT(mgag);
-	KRN_ASSERT(mgag_io);
-	KRN_ASSERT(options);
+  KRN_ASSERT(mgag);
+  KRN_ASSERT(mgag_io);
+  KRN_ASSERT(options);
 
- 	KRN_DEBUG(2, "initializing %s %s", mgag->chipset.vendor,
-		mgag->chipset.model);
+  KRN_DEBUG(2, "initializing %s %s", mgag->chipset.vendor,
+	    mgag->chipset.model);
 
-	if (mgag->flags & MGAG_CF_OLD) {
-
-		PCICFG_SET_BASE32(mgag_io->control.base_io,
+  if (mgag->flags & MGAG_CF_OLD)
+    {
+      PCICFG_SET_BASE32(mgag_io->control.base_io,
 			pcidev + PCI_BASE_ADDRESS_0);
-		PCICFG_SET_BASE32(mgag_io->fb.base_io,
+      PCICFG_SET_BASE32(mgag_io->fb.base_io,
 			pcidev + PCI_BASE_ADDRESS_1);
-	} else {
-
-		PCICFG_SET_BASE32(mgag_io->control.base_io,
+    }
+  else
+    {
+      PCICFG_SET_BASE32(mgag_io->control.base_io,
 			pcidev + PCI_BASE_ADDRESS_1);
-		PCICFG_SET_BASE32(mgag_io->fb.base_io,
+      PCICFG_SET_BASE32(mgag_io->fb.base_io,
 			pcidev + PCI_BASE_ADDRESS_0);
-	}
+    }
 
-	PCICFG_SET_BASE32(mgag_io->iload.base_io,	pcidev + PCI_BASE_ADDRESS_2);
+  PCICFG_SET_BASE32(mgag_io->iload.base_io, pcidev + PCI_BASE_ADDRESS_2);
 
-	/* initialize PCI command register */
+  /* initialize PCI command register */
 
-	pcicfg_out16(PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER, pcidev + PCI_COMMAND);
+  pcicfg_out16(PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER, pcidev + PCI_COMMAND);
 
-	if (mgag->flags & MGAG_CF_PRIMARY) {
+  if (mgag->flags & MGAG_CF_PRIMARY)
+    {
+      KRN_DEBUG(2, "chipset already initialized.");	  
+    }
+  else
+    {
+      KRN_DEBUG(2, "chipset not initialized: doing reset/power-up");
+      /* Power up the chipset */
+      mgag_chipset_power_up(mgag, mgag_io);
+    }
 
-	  KRN_DEBUG(2, "chipset already initialized.");	  
+  /* Reading configuration and saving it
+  ** (NB: Most of the VGA part is done by vga_text_chipset_init())
+  */
+  KRN_DEBUG(2, "chipset initialized, saving configuration...");
+  {
+    kgi_u_t i;
 
-	} else {
+    for (i = 0; i < MGAG_ECRT_REGS; ++i)
+      mgag->ECRT[i] = MGAG_ECRT_IN8(mgag_io, i);
+  }
 
-	  KRN_DEBUG(2, "chipset not initialized: doing reset/power-up");
-	  /* Power up the chipset */
-	  mgag_chipset_power_up(mgag, mgag_io);
-	}
+  /* Now proceeds with initialisation
+   */
+  mgag->chipset.memory = mgag_chipset_memory_count(mgag, mgag_io);
 
-	/* Reading configuration and saving it
-	** (NB: Most of the VGA part is done by vga_text_chipset_init())
-	*/
-	KRN_DEBUG(2, "chipset initialized, saving configuration...");
-	{
-	  kgi_u_t i;
+  KRN_NOTICE("%i bytes framebuffer detected.", mgag->chipset.memory);
 
-	  for (i = 0; i < MGAG_ECRT_REGS; ++i)
-	    mgag->ECRT[i] = MGAG_ECRT_IN8(mgag_io, i);
-	}
+  /*
+  ** Initialize pointer shape access related fields
+  */
+  mgag_io->ptr_fboffset = mgag->chipset.memory - POINTER_FB_AREA_SIZE;
+  mgag_io->flags |= MGAG_POINTER_FB_READY;
+  MGAG_EDAC_OUT8(mgag_io, ((mgag_io->ptr_fboffset >> 10) >> 8) & 0x3F,
+		 XCURADDH);
+  MGAG_EDAC_OUT8(mgag_io, (mgag_io->ptr_fboffset >> 10) & 0xFF, XCURADDL);
 
-	/* Now proceeds with initialisation
-	 */
-	mgag->chipset.memory = mgag_chipset_memory_count(mgag, mgag_io);
+  KRN_DEBUG(1, "pointer shape fb offset = %.8x", mgag_io->ptr_fboffset);
 
-	KRN_NOTICE("%i bytes framebuffer detected.", mgag->chipset.memory);
+  KRN_TRACE(2, mgag_chipset_examine(mgag));
 
-	/*
-	** Initialize pointer shape access related fields
-	*/
-	mgag_io->ptr_fboffset = mgag->chipset.memory - POINTER_FB_AREA_SIZE;
-	mgag_io->flags |= MGAG_POINTER_FB_READY;
-	MGAG_EDAC_OUT8(mgag_io, ((mgag_io->ptr_fboffset >> 10) >> 8) & 0x3F,
-		       XCURADDH);
-	MGAG_EDAC_OUT8(mgag_io, (mgag_io->ptr_fboffset >> 10) & 0xFF, XCURADDL);
+  KRN_TRACE(1, mgag_chipset_probe(mgag,mgag_io));
 
-	KRN_DEBUG(1, "pointer shape fb offset = %.8x", mgag_io->ptr_fboffset);
+  /* Calls the VGA-text driver initialization procedure
+   */
+  vga_text_chipset_init(&(mgag->vga),&(mgag_io->vga),options);
 
-	KRN_TRACE(2, mgag_chipset_examine(mgag));
+  if (mgag->flags & MGAG_CF_IRQ_CLAIMED)
+    {
+      mgag_chipset_irq_enable(mgag_io);
+    }
 
-	KRN_TRACE(1, mgag_chipset_probe(mgag,mgag_io));
+  KRN_DEBUG(2, "chipset enabled");
 
-	/* Calls the VGA-text driver initialization procedure
-	 */
-	vga_text_chipset_init(&(mgag->vga),&(mgag_io->vga),options);
-
-	if (mgag->flags & MGAG_CF_IRQ_CLAIMED) {
-
-		KRN_DEBUG(2, "allowing some IRQs");
-		MGAG_GC_OUT32(mgag_io,
-			      IEN_SOFTRAPIEN | IEN_VLINEIEN | IEN_EXTIEN,
-			      IEN);
-		MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
-			      & ~(VGA_CR11_DISABLE_VSYNC_IRQ | VGA_CR11_CLEAR_VSYNC_IRQ),
-			      VGA_CRT_VSYNCEND);
-	}
-
-	KRN_DEBUG(2, "chipset enabled");
-
-	return KGI_EOK;
+  return KGI_EOK;
 }
 
 void mgag_chipset_done(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
@@ -1002,13 +1227,9 @@ void mgag_chipset_done(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
 
   if (mgag->flags & MGAG_CF_IRQ_CLAIMED)
     {
-
       KRN_DEBUG(2, "Disabling all interrupts");
       /* Disable all interrupts */
-      MGAG_GC_OUT32(mgag_io, 0x00000000, IEN);
-      MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
-		    | VGA_CR11_DISABLE_VSYNC_IRQ,
-		    VGA_CRT_VSYNCEND);
+      mgag_chipset_irq_block(mgag_io, NULL);
 
       /* Output IRQ stats */
       KRN_DEBUG(1, "IRQ stats: handler_total=%i, not_handled=%i",
@@ -1071,6 +1292,7 @@ kgi_error_t mgag_chipset_mode_check(mgag_chipset_t *mgag,
 		pp[3]	= { 0, 0, 0 };
 
 	kgi_mmio_region_t *r;
+	kgi_accel_t *a;
 	kgi_u_t mul, div, bpd;
 
 	KRN_DEBUG(1, "mgag_chipset_mode_check initiated");
@@ -1486,6 +1708,23 @@ KRN_DEBUG(1, "width == %i different from img[0].virt.x == %i",
 	r->win.phys	= mgag_io->control.base_phys;
 	r->win.virt	= mgag_io->control.base_virt;
 
+	a = &mgag_mode->mgag.engine;
+	a->meta = mgag;
+	a->meta_io = mgag_io;
+	a->type = KGI_RT_ACCELERATOR;
+	a->prot = KGI_PF_LIB | KGI_PF_DRV; 
+	a->name = "Matrox Gx00 graphics engine";
+	a->flags |= KGI_AF_DMA_BUFFERS;
+	a->buffers = 3;
+	a->buffer_size = 8 KB; /* TODO: Should be 7 KB ? */
+	a->ctx = NULL;
+	a->ctx_size = sizeof(mgag_chipset_accel_context_t);
+	a->exec_queue = NULL;
+#warning initialize a->idle!!!
+	a->Init = mgag_chipset_accel_init;
+	a->Done = mgag_chipset_accel_done;
+	a->Exec = mgag_chipset_accel_exec;
+
 	return KGI_EOK;
 }
 
@@ -1512,6 +1751,7 @@ kgi_resource_t *mgag_chipset_mode_resource(mgag_chipset_t *mgag,
 
   case 0:	return (kgi_resource_t *) &mgag_mode->mgag.fb;
   case 1:	return (kgi_resource_t *) &mgag_mode->mgag.iload;
+  case 2:	return (kgi_resource_t *) &mgag_mode->mgag.engine;
 
   }
 
@@ -1668,12 +1908,6 @@ void mgag_chipset_mode_enter(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
 
 	mgag->mode = mgag_mode;
 
-#if DO_ACCEL_TEST
-	dma_area = kmalloc(dma_size, GFP_KERNEL /* | GFP_DMA */ );
-	memcpy(dma_area, primary_dma, dma_size);
-	mgag_accel_test(mgag_io);
-#endif
-
 #if 0
 	KRN_TRACE(2, mgag_chipset_probe(mgag,mgag_io));
 #endif
@@ -1682,10 +1916,5 @@ void mgag_chipset_mode_enter(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
 void mgag_chipset_mode_leave(mgag_chipset_t *mgag, mgag_chipset_io_t *mgag_io,
 	mgag_chipset_mode_t *mgag_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
-#if DO_ACCEL_TEST
-  KRN_DEBUG(2, "3-PRIMADDRESS = %.8x", MGAG_GC_IN32(mgag_io, PRIMADDRESS));
-  mgag_accel_test(mgag_io);
-#endif
-
     mgag->mode = NULL;
 }

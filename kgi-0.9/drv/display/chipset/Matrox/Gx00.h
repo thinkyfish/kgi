@@ -12,6 +12,9 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00.h,v $
+**	Revision 1.3  2001/09/02 17:42:08  ortalo
+**	Added some tentative power up code for the G200.
+**	
 **	Revision 1.2  2001/08/31 23:56:32  ortalo
 **	/tmp/cvs46Wo9B
 **	
@@ -249,7 +252,10 @@
 #define DMAMAP74				(MGAG_HSTREG+0x34)
 #define DMAMAPB8				(MGAG_HSTREG+0x38)
 #define DMAMAPFC				(MGAG_HSTREG+0x3C)
+
 #define RST					(MGAG_HSTREG+0x40)
+#define RST_SOFTRESET  0x1
+#define RST_SOFTEXTRST 0x2
 
 #define MEMRDBK					(MGAG_HSTREG+0x44)	/* G200+ */
 #	define MCLKBRD0_SHIFT			0
