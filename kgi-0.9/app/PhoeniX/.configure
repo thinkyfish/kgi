@@ -1,0 +1,15 @@
+
+cp .config .config.tmp
+
+cat >> .config.tmp <<-end-of-config
+#
+#	PhoeniX X-server configuration
+#
+CC_OPT_DEBUG=""
+CC_OPT_WARN=""
+X11_TOP_DIR=$DIR_SOURCE
+
+end-of-config
+
+cp GNUmakefile GNUmakefile.tmp
+cat $DIR_SOURCE/Rules >> GNUmakefile.tmp
