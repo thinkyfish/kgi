@@ -12,24 +12,12 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: module.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:10  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _kgi_module_h
 #define _kgi_module_h
-
-/*
-**	subsystems
-*/
-typedef enum
-{
-	KGIM_SUBSYSTEM_monitor,
-	KGIM_SUBSYSTEM_chipset,
-	KGIM_SUBSYSTEM_ramdac,
-	KGIM_SUBSYSTEM_clock,
-
-	KGIM_LAST_SUBSYSTEM,
-	__KGIM_MAX_NR_SUBSYSTEMS = 8
-
-} kgim_subsystem_t;
 
 /*
 **	debugging management
@@ -61,6 +49,38 @@ typedef enum
 
 #define	KGI_SYS_NEED_IO
 #include <kgi/kgi.h>
+
+
+/*
+**	subsystems
+*/
+typedef enum
+{
+	KGIM_SUBSYSTEM_monitor,
+	KGIM_SUBSYSTEM_chipset,
+	KGIM_SUBSYSTEM_ramdac,
+	KGIM_SUBSYSTEM_clock,
+
+	KGIM_LAST_SUBSYSTEM,
+	__KGIM_MAX_NR_SUBSYSTEMS = 8
+
+} kgim_subsystem_type_t;
+
+#define	__KGIM_SUBSYSTEM		\
+	kgi_u_t		revision;	/* KGI/driver revision	*/\
+	kgi_ascii_t	vendor[64];	/* manufacturer		*/\
+	kgi_ascii_t	model[64];	/* model/trademark	*/\
+	kgi_u32_t	flags;		/* special capabilities	*/\
+	kgi_u_t		mode_size;	/* private mode size	*/
+
+#define	__KGIM_SUBSYSTEM_MODE
+
+typedef struct {
+
+	__KGIM_SUBSYSTEM
+
+} kgim_subsystem_t;
+
 
 /* -----------------------------------------------------------------------------
 **	module internal I/O binding
@@ -152,7 +172,7 @@ typedef enum
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_INFO
+	__KGIM_SUBSYSTEM
 
 	kgi_ucoord_t	maxdots;		/* maximum resolution	*/
 	kgi_ucoord_t	size;			/* physical size in mm	*/
@@ -190,7 +210,7 @@ typedef enum
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_MODE
+	__KGIM_SUBSYSTEM_MODE
 
 	kgi_dot_port_mode_t	in;	/* input port		*/
 	kgi_ucoord_t		size;	/* phyiscal size in mm	*/
@@ -213,7 +233,7 @@ typedef struct
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_INFO
+	__KGIM_SUBSYSTEM
 
 	kgi_ucoord_t	maxdots;		/* maximum resolution	*/
 	kgi_urange_t	lclk;			/* lclk range		*/
@@ -223,7 +243,7 @@ typedef struct
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_MODE
+	__KGIM_SUBSYSTEM_MODE
 
 	const kgim_monitor_mode_t	*crt;
 
@@ -247,7 +267,7 @@ typedef enum
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_INFO
+	__KGIM_SUBSYSTEM
 
 	kgim_clock_type_t	type;
 	union
@@ -260,7 +280,7 @@ typedef struct
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_MODE
+	__KGIM_SUBSYSTEM_MODE
 
 } kgim_clock_mode_t;
 
@@ -302,7 +322,7 @@ typedef enum
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_INFO
+	__KGIM_SUBSYSTEM
 
 	kgi_ucoord_t	maxdots;		/* maximum resolution	*/
 	kgi_u_t		memory;			/* (total) memory 	*/
@@ -315,7 +335,7 @@ typedef struct
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_MODE
+	__KGIM_SUBSYSTEM_MODE
 
 	const kgim_monitor_mode_t	*crt;
 
@@ -408,24 +428,10 @@ typedef struct
 
 typedef struct
 {
-	__KGI_SUBSYSTEM_MODE
-
 	void *subsystem_mode[__KGIM_MAX_NR_SUBSYSTEMS];
 
 } kgim_display_mode_t;
 
-
-#define	KGIM_SUBSYSTEM_MODE(kgim_display_mode, subsys)	\
-		((kgim_display_mode)->subsystem_mode[KGIM_SUBSYSTEM_##subsys])
-
-#define	KGIM_SUBSYSTEM_META(kgim_display, subsys) \
-		((kgim_display)->subsystem[KGIM_SUBSYSTEM_##subsys].meta_data)
-
-#define	KGIM_SUBSYSTEM_IO(kgim_display, subsys) \
-		((kgim_display)->subsystem[KGIM_SUBSYSTEM_##subsys].meta_io)
-
-#define	KGIM_SUBSYSTEM_LANG(kgim_display, subsys) \
-		((kgim_display)->subsystem[KGIM_SUBSYSTEM_##subsys].meta_lang)
 
 /* -----------------------------------------------------------------------------
 **	meta-languages
@@ -504,7 +510,14 @@ typedef void kgim_meta_mode_leave_fn(void *meta, void *meta_io,
 	void meta##_mode_leave(meta##_t *, meta##_io_t *,		\
 		meta##_mode_t *, kgi_image_mode_t *, kgi_u_t);
 
+typedef kgi_resource_t *kgim_meta_image_resource_fn(void *meta, void *meta_mode,
+		kgi_image_mode_t *img, kgi_u_t image, kgi_u_t index);
 
+#define	KGIM_META_IMAGE_RESOURCE_FN(meta)				\
+	kgi_resource_t *meta##_image_resource(meta##_t *, meta##_mode_t *,\
+		kgi_image_mode_t *, kgi_u_t, kgi_u_t);
+		
+		
 /*	IRQ handlers are not really part of a meta-language (yet).
 **	However, use this macro to get a consistent prototype definition.
 */
@@ -526,6 +539,7 @@ struct kgim_meta_s
 	kgim_meta_mode_prepare_fn	*ModePrepare;
 	kgim_meta_mode_enter_fn		*ModeEnter;
 	kgim_meta_mode_leave_fn		*ModeLeave;
+	kgim_meta_image_resource_fn	*ImageResource;
 
 	kgi_size_t			data_size;
 	kgi_size_t			io_size;
