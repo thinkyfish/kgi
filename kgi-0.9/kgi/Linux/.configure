@@ -39,7 +39,10 @@ notyet)
 *)
 	echo "$1 linux-$LINUX_VERSION sources found."
 	PATCH=$DIR_SOURCE/patches/$PATCH.diff
-	PMAKE=$DIR_SOURCE/patches/$PMAKE-char-Makefile.diff
+	if [ $PMAKE ] 
+	then
+		PMAKE=$DIR_SOURCE/patches/$PMAKE-char-Makefile.diff
+	fi
 	;;
 esac
 
@@ -64,9 +67,12 @@ then
 	echo "done."
 
 
-	echo -n "$1 Applying $PMAKE, "
+	if [ $PMAKE ] 
+	then
+		echo -n "$1 Applying $PMAKE, "
 		(cd linux; patch $PATCH_OPTION -p1) < $PMAKE &> pmake.log
-	echo "done."
+		echo "done."
+	fi
 
 	if grep FAIL patch.log pmake.log
 	then

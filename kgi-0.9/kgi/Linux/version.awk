@@ -9,6 +9,10 @@
 #	with this software for details of these terms and conditions.
 #
 #	$Log: version.awk,v $
+#	Revision 1.2  2001/09/15 21:45:13  skids
+#	
+#	Patch rules for the 2.4.7 patch
+#	
 #	Revision 1.1.1.1  2000/04/18 08:50:46  seeger_s
 #	- initial import of pre-SourceForge tree
 #	
@@ -51,10 +55,8 @@ END {
 
 		if (LINUX_PATCH == 8) { 
 
-			printf  "\n\n\tWARNING: linux-2.2.8 has file system "
-			    "corruption problems!\n" > "/dev/stderr"
-			printf	"\tconfiguration process aborted.\n\n\n" > 
-			    "/dev/stderr"
+			printf  "\n\n\tWARNING: linux-2.2.8 has file system corruption problems!\n" > "/dev/stderr"
+			printf	"\tconfiguration process aborted.\n\n\n" > "/dev/stderr"
 			printf  "exit 1;\n"
 		}		
 	}
