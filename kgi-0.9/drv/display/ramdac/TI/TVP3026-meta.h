@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: TVP3026-meta.h,v $
+**	Revision 1.2  2000/04/26 14:07:08  seeger_s
+**	- minor cleanups
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -31,10 +34,6 @@ typedef struct
 	kgim_ramdac_mode_t		kgim;
 
 	const tvp3026_ramdac_mode_record_t	*rec;
-	struct {
-		struct { kgi_u_t x,y; }
-		pos, hot, shift;
-	}				ptr;
 
 	kgi_u8_t	CursorCtrl, PixelMask;
 	kgi_u8_t	ln, lm, lp;
@@ -45,9 +44,14 @@ typedef struct
 			ColKeyGreenL, ColKeyGreenH, ColKeyBlueL, ColKeyBlueH,
 			ColKeyControl;
 
-	kgi_u8_t	clut[3*256];
+	kgi_marker_t	cursor_ctrl;
+	kgi_ucoord_t	cursor_shift;
+
 	kgi_u8_t	cursor_clut[4*4];
 	kgi_u8_t	cursor_data[1024];
+
+	kgi_clut_t	clut_ctrl;
+	kgi_u8_t	clut[3*256];
 
 } tvp3026_ramdac_mode_t;
 
@@ -77,5 +81,6 @@ KGIM_META_INIT_FN(tvp3026_ramdac)
 KGIM_META_DONE_FN(tvp3026_ramdac)
 KGIM_META_MODE_CHECK_FN(tvp3026_ramdac)
 KGIM_META_MODE_ENTER_FN(tvp3026_ramdac)
+KGIM_META_IMAGE_RESOURCE_FN(tvp3026_ramdac)
 
 #endif	/* #ifndef _ramdac_TI_TVP3026_meta_h	*/

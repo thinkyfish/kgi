@@ -10,13 +10,18 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: IDAC-bind.c,v $
+**	Revision 1.2  2000/08/04 11:51:37  seeger_s
+**	- merged driver posted by Jos to kgi-develop
+**	- transferred maintenance to Steffen_Seeger
+**	- driver status 30% reported by Jos Hulzink
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.0 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
 #define	DEBUG_LEVEL	255
 
 #include <kgi/module.h>
@@ -70,6 +75,8 @@ const kgim_meta_t idac_clock_meta =
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	idac_clock_mode_enter,
 	(kgim_meta_mode_leave_fn *)	idac_clock_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
+
 	sizeof(idac_clock_t),
 	0,
 	sizeof(idac_clock_mode_t)

@@ -11,13 +11,18 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.2  2000/08/04 11:57:50  seeger_s
+**	- merged code posted by Jos Hulzink to kgi-develop
+**	- transferred maintenance to Steffen_Seeger
+**	- driver status 30% is reported by Jos Hulzink
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 0.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #ifndef DEBUG_LEVEL
 #define	DEBUG_LEVEL	255
@@ -74,6 +79,7 @@ static const kgim_meta_t virge_ramdac_meta =
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	virge_ramdac_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(virge_ramdac_t),
 	0,

@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-meta.c,v $
+**	Revision 1.2  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -89,17 +92,11 @@ static inline const vga_ramdac_mode_record_t *vga_ramdac_mode_record(
 #define	RCLK(m,d)	((dpm->rclk.mul == m) && (dpm->rclk.div == d))
 
 /* ----	text16 context functions --------------------------------------------*/
-#define	VGA_RAMDAC_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, ramdac)
-
-#define	VGA_RAMDAC_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, ramdac)
-
 
 static void vga_text16_set_ilut(void *ctx, void *ilut)
 {
-/*	vga_ramdac_io_t   *vga_io   = VGA_RAMDAC_IO(ctx);
-**	vga_ramdac_mode_t *vga_mode = VGA_RAMDAC_MODE(ctx);
+/*	vga_ramdac_io_t   *vga_io   = KGIM_TEXT16_IO(ctx, ramdac);
+**	vga_ramdac_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 */	kgi_u_t	cnt, src, dst;
 	
 	KRN_DEBUG(2, "vga_text16_set_ilut()");
@@ -149,8 +146,8 @@ static void vga_text16_set_ilut(void *ctx, void *ilut)
 void vga_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 	kgi_pointer64x64_t *ptr)
 {
-/*	vga_ramdac_io_t   *vga_io   = VGA_RAMDAC_IO(ctx);
-**	vga_ramdac_mode_t *vga_mode = VGA_RAMDAC_MODE(ctx);
+/*	vga_ramdac_io_t   *vga_io   = KGIM_TEXT16_IO(ctx, ramdac);
+**	vga_ramdac_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 */	kgi_u_t i;
 	
 	KRN_DEBUG(2, "vga_text16_hp_set_shape()");
@@ -193,8 +190,8 @@ void vga_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 static void vga_text16_hp_show(kgic_mode_text16context_t *ctx, 
 	kgi_u_t x, kgi_u_t y)
 {
-	vga_ramdac_io_t   *vga_io   = VGA_RAMDAC_IO(ctx);
-	vga_ramdac_mode_t *vga_mode = VGA_RAMDAC_MODE(ctx);
+	vga_ramdac_io_t   *vga_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	vga_ramdac_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 
 	KRN_DEBUG(2, "vga_text16_hp_show()");
 	
@@ -211,16 +208,14 @@ static void vga_text16_hp_show(kgic_mode_text16context_t *ctx,
 
 static void vga_text16_hp_hide(kgic_mode_text16context_t *ctx)
 {
-	vga_ramdac_io_t   *vga_io   = VGA_RAMDAC_IO(ctx);
-	vga_ramdac_mode_t *vga_mode = VGA_RAMDAC_MODE(ctx);
+	vga_ramdac_io_t   *vga_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	vga_ramdac_mode_t *vga_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 
 	KRN_DEBUG(2, "vga_text16_hp_hide()");
 	
 	vga_mode->ptr.pos.x = vga_mode->ptr.pos.y = 0x7FF;
 }
 
-#undef	VGA_RAMDAC_MODE
-#undef	VGA_RAMDAC_IO
 /* ---- end of text16 context functions ----------------------------------- */
 
 kgi_error_t vga_ramdac_init(vga_ramdac_t *vga, vga_ramdac_io_t *vga_io,

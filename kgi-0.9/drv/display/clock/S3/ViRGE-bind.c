@@ -10,10 +10,13 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Jon_Taylor
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.3 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
 #define	DEBUG_LEVEL	2
 
 #include <kgi/module.h>
@@ -75,6 +78,7 @@ static const kgim_meta_t virge_clock_meta =
 	(kgim_meta_mode_prepare_fn *)	virge_clock_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	virge_clock_mode_enter,
 	(kgim_meta_mode_leave_fn *)	virge_clock_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(virge_clock_t),
 	0,

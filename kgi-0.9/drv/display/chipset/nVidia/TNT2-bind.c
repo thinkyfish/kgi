@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: TNT2-bind.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:28  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -602,6 +605,7 @@ const kgim_meta_t tnt2_chipset_meta =
 	(kgim_meta_mode_prepare_fn *)	tnt2_chipset_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	tnt2_chipset_mode_enter,
 	(kgim_meta_mode_leave_fn *)	tnt2_chipset_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(tnt2_chipset_t),
 	sizeof(tnt2_chipset_io_t),

@@ -10,10 +10,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-bind.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:07  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -72,6 +75,7 @@ const kgim_meta_t vga_ramdac_meta =
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	vga_ramdac_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(vga_ramdac_t),
 	0,

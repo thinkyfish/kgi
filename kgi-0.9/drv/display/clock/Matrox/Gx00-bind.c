@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.2  2000/09/21 09:57:16  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:14  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
 
 #define DEBUG_LEVEL 255
 
@@ -157,6 +160,7 @@ const kgim_meta_t mgag_clock_meta =
 	(kgim_meta_mode_prepare_fn *)	mgag_clock_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	mgag_clock_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(mgag_clock_t),
 	0,

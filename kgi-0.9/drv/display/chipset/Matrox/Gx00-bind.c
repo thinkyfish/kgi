@@ -10,6 +10,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:23  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -17,7 +20,7 @@
 
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Johan_Karlberg
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -358,6 +361,7 @@ const kgim_meta_t mgag_chipset_meta = {
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	mgag_chipset_mode_enter,
 	(kgim_meta_mode_leave_fn *)	mgag_chipset_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(mgag_chipset_t),
 	sizeof(mgag_chipset_io_t),

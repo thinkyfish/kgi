@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: VGA-bind.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:20  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Jon_Taylor
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #define	DEBUG_LEVEL	2
 
@@ -327,6 +330,7 @@ const kgim_meta_t vga_chipset_meta =
 	(kgim_meta_mode_prepare_fn *)	vga_chipset_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	vga_chipset_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(vga_chipset_t),
 	sizeof(vga_chipset_io_t),

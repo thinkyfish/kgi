@@ -11,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: ViRGE-bind.c,v $
+**	Revision 1.3  2000/09/21 12:32:21  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.2  2000/08/04 11:39:08  seeger_s
 **	- merged version posted by Jos to kgi-develop
 **	- transferred maintenance to Steffen_Seeger
@@ -24,7 +27,7 @@
 #include <kgi/maintainers.h>
 #define	DEBUG_LEVEL	255
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
 
 #include <kgi/module.h>
 
@@ -715,6 +718,7 @@ const kgim_meta_t virge_chipset_meta =
 	(kgim_meta_mode_prepare_fn *)	virge_chipset_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	virge_chipset_mode_enter,
 	(kgim_meta_mode_leave_fn *)	virge_chipset_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(virge_chipset_t),
 	sizeof(virge_chipset_io_t),

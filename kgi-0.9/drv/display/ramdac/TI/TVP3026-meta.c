@@ -10,6 +10,9 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: TVP3026-meta.c,v $
+**	Revision 1.3  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.2  2000/04/26 14:07:08  seeger_s
 **	- minor cleanups
 **	
@@ -19,7 +22,7 @@
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
 
 #include <kgi/module.h>
 
@@ -121,64 +124,59 @@ static inline const tvp3026_ramdac_mode_record_t *tvp3026_ramdac_mode_record(
 #define	LCLK(m,d)	((dpm->lclk.mul == m) && (dpm->lclk.div == d))
 #define	RCLK(m,d)	((dpm->rclk.mul == m) && (dpm->rclk.div == d))
 
-/*
-** ----	text16 context functions ----------------------------------------------
+/* ----------------------------------------------------------------------------
+**	image resources
+** ----------------------------------------------------------------------------
 */
-#define	TVP3026_RAMDAC_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, ramdac)
 
-#define	TVP3026_RAMDAC_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, ramdac)
-#if 0
-static void tvp3026_text16_set_ilut(kgic_mode_text16context_t *ctx,
-	kgic_ilut_entries_t *ilut)
+static void tvp3026_ramdac_set_clut(kgi_clut_t *clut,
+	kgi_u_t table, kgi_u_t index, kgi_u_t count,
+	kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
-	tvp3026_ramdac_io_t   *tvp3026_io   = TVP3026_RAMDAC_IO(ctx);
-	tvp3026_ramdac_mode_t *tvp3026_mode = TVP3026_RAMDAC_MODE(ctx);
+	tvp3026_ramdac_mode_t *tvp3026_mode = clut->meta;
+	tvp3026_ramdac_io_t   *tvp3026_io   = clut->meta_io;
 	kgi_u_t	cnt, src, dst;
 
-	KRN_ASSERT(ilut->img == 0);
-	KRN_ASSERT(ilut->lut == 0);
-	KRN_ASSERT(ilut->cnt > 0);
+	KRN_ASSERT(table == 0);
+	KRN_ASSERT(count > 0);
 
-	cnt = ilut->cnt;
-	dst = ilut->cnt * 3;
+	cnt = count;
+	dst = index * 3;
 	src = 0;
 
 	while (cnt--) {
 
-		if (ilut->am & KGI_AM_COLOR1) {
+		if (am & KGI_AM_COLOR1) {
 
 			tvp3026_mode->clut[dst+0] = 
-				ilut->data[src++] >> TVP3026_SHIFT;
+				data[src++] >> TVP3026_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR2) {
+		if (am & KGI_AM_COLOR2) {
 
 			tvp3026_mode->clut[dst+1] =
-				ilut->data[src++] >> TVP3026_SHIFT;
+				data[src++] >> TVP3026_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR3) {
+		if (am & KGI_AM_COLOR3) {
 
 			tvp3026_mode->clut[dst+2] =
-				ilut->data[src++] >> TVP3026_SHIFT;
+				data[src++] >> TVP3026_SHIFT;
 		}
 		dst += 3;
 	}
 
-	src = 3 * ilut->idx;
-	cnt = 3 * ilut->cnt;
-
-	TVP3026_DAC_OUT8(tvp3026_io, ilut->idx, TVP3026_DAC_PW_INDEX);
+	TVP3026_DAC_OUT8(tvp3026_io, index, TVP3026_DAC_PW_INDEX);
 	TVP3026_DAC_OUTS8(tvp3026_io, TVP3026_DAC_P_DATA,
-		tvp3026_mode->clut + src, cnt);
+		tvp3026_mode->clut + 3*index, 3*count);
 }
-#endif
+
+#define	tvp3026_ramdac_select_clut	NULL
+
 #if 0
 void tvp3026_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 	kgi_pointer64x64 *ptr)
 {
-	tvp3026_ramdac_io_t   *tvp3026_io   = TVP3026_RAMDAC_IO(ctx);
-	tvp3026_ramdac_mode_t *tvp3026_mode = TVP3026_RAMDAC_MODE(ctx);
+	tvp3026_ramdac_io_t   *tvp3026_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	tvp3026_ramdac_mode_t *tvp3026_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 	kgi_u_t i;
 
 	tvp3026_mode->ptr.hot.x = ptr->hotx;
@@ -235,19 +233,19 @@ void tvp3026_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 }
 #endif
 
-static void tvp3026_text16_hp_show(kgic_mode_text16context_t *ctx, 
+static void tvp3026_ramdac_cursor_show(kgi_marker_t *cursor, 
 	kgi_u_t x, kgi_u_t y)
 {
-	tvp3026_ramdac_io_t   *tvp3026_io   = TVP3026_RAMDAC_IO(ctx);
-	tvp3026_ramdac_mode_t *tvp3026_mode = TVP3026_RAMDAC_MODE(ctx);
+	tvp3026_ramdac_mode_t *tvp3026_mode = cursor->meta;
+	tvp3026_ramdac_io_t   *tvp3026_io   = cursor->meta_io;
 
-	if ((tvp3026_mode->ptr.pos.x != x) || (tvp3026_mode->ptr.pos.y != y)) {
+	if ((cursor->pos.x != x) || (cursor->pos.y != y)) {
 
-		tvp3026_mode->ptr.pos.x = x;
-		tvp3026_mode->ptr.pos.y = y;
+		cursor->pos.x = x;
+		cursor->pos.y = y;
 
-		x += tvp3026_mode->ptr.shift.x - tvp3026_mode->ptr.hot.x;
-		y += tvp3026_mode->ptr.shift.y - tvp3026_mode->ptr.hot.y;
+		x += tvp3026_mode->cursor_shift.x - cursor->hot.x;
+		y += tvp3026_mode->cursor_shift.y - cursor->hot.y;
 
 		TVP3026_DAC_OUT8(tvp3026_io, x & 0xFF, 
 			TVP3026_DAC_CURSOR_XL);
@@ -260,12 +258,10 @@ static void tvp3026_text16_hp_show(kgic_mode_text16context_t *ctx,
 	}
 }
 
-static void tvp3026_text16_hp_hide(kgic_mode_text16context_t *ctx)
+static void tvp3026_ramdac_cursor_hide(kgi_marker_t *cursor)
 {
-	tvp3026_ramdac_io_t   *tvp3026_io   = TVP3026_RAMDAC_IO(ctx);
-	tvp3026_ramdac_mode_t *tvp3026_mode = TVP3026_RAMDAC_MODE(ctx);
-
-	tvp3026_mode->ptr.pos.x = tvp3026_mode->ptr.pos.y = 0xFFF;
+	tvp3026_ramdac_mode_t *tvp3026_mode = cursor->meta;
+	tvp3026_ramdac_io_t   *tvp3026_io   = cursor->meta_io;
 
 	TVP3026_DAC_OUT8(tvp3026_io, 0xFF, TVP3026_DAC_CURSOR_XL);
 	TVP3026_DAC_OUT8(tvp3026_io, 0x0F, TVP3026_DAC_CURSOR_XH);
@@ -273,11 +269,8 @@ static void tvp3026_text16_hp_hide(kgic_mode_text16context_t *ctx)
 	TVP3026_DAC_OUT8(tvp3026_io, 0x0F, TVP3026_DAC_CURSOR_YH);
 }
 
-#undef	TVP3026_RAMDAC_MODE
-#undef	TVP3026_RAMDAC_IO
-/*
-** ----	end of text16 context functions ---------------------------------------
-*/
+#define	tvp3026_ramdac_cursor_undo	NULL
+
 
 kgi_error_t tvp3026_ramdac_init(tvp3026_ramdac_t *tvp3026,
 	tvp3026_ramdac_io_t *tvp3026_io, const kgim_options_t *options)
@@ -522,14 +515,42 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 	tvp3026_mode->PixelMask = 0xFF;
 	tvp3026_mode->PalettePage = 0;
 
+	tvp3026_mode->clut_ctrl.meta	= tvp3026_mode;
+	tvp3026_mode->clut_ctrl.meta_io	= tvp3026_io;
+	tvp3026_mode->clut_ctrl.prot	= KGI_PF_DRV_RWS;
+	if (dpm->flags & KGI_DPF_CH_ALUT) {
+
+		tvp3026_mode->clut_ctrl.type = KGI_RT_ALUT_CONTROL;
+		tvp3026_mode->clut_ctrl.name = "alut control";
+	}
+	if (dpm->flags & KGI_DPF_CH_ILUT) {
+
+		tvp3026_mode->clut_ctrl.type = KGI_RT_ILUT_CONTROL;
+		tvp3026_mode->clut_ctrl.name = "ilut control";
+	}
+	tvp3026_mode->clut_ctrl.Set	= tvp3026_ramdac_set_clut;
+	tvp3026_mode->clut_ctrl.Select	= tvp3026_ramdac_select_clut;
+
 	/*	cursor setup
 	*/
 	tvp3026_mode->CursorCtrl = TVP3026_DAC09_CursorOff;
 	tvp3026_mode->CursorControl = 
 		((dpm->flags & KGI_DPF_MASK) == KGI_DPF_TP_LRTB_I1)
 			? TVP3026_EDAC06_InterlacedCursor : 0;
-	tvp3026_mode->ptr.pos.x = 0xFFF;
-	tvp3026_mode->ptr.pos.y = 0xFFF;
+
+	tvp3026_mode->cursor_ctrl.meta	= tvp3026_mode;
+	tvp3026_mode->cursor_ctrl.meta_io= tvp3026_io;
+	tvp3026_mode->cursor_ctrl.type	= KGI_RT_CURSOR_CONTROL;
+	tvp3026_mode->cursor_ctrl.prot	= KGI_PF_DRV_RWS;
+	tvp3026_mode->cursor_ctrl.name	= "pointer";
+	tvp3026_mode->cursor_ctrl.hot.x	= 0;
+	tvp3026_mode->cursor_ctrl.hot.y	= 0;
+	tvp3026_mode->cursor_ctrl.pos.x = 0xFFF;
+	tvp3026_mode->cursor_ctrl.pos.y = 0xFFF;
+	tvp3026_mode->cursor_ctrl.Show	= tvp3026_ramdac_cursor_show;
+	tvp3026_mode->cursor_ctrl.Hide	= tvp3026_ramdac_cursor_hide;
+	tvp3026_mode->cursor_ctrl.Undo	= tvp3026_ramdac_cursor_undo;
+
 #warning init tvp3026_mode->cursor_clut
 #warning init tvp3026_mode->cursor_data
 
@@ -753,6 +774,21 @@ kgi_error_t tvp3026_ramdac_mode_check(tvp3026_ramdac_t *tvp3026,
 	return KGI_EOK;
 }
 
+kgi_resource_t *tvp3026_ramdac_image_resource(tvp3026_ramdac_t *tvp3026,
+	tvp3026_ramdac_mode_t *tvp3026_mode, kgi_image_mode_t *img,
+	kgi_u_t image, kgi_u_t index)
+{
+	KRN_ASSERT((0 == image) && (NULL != img));
+
+	switch (index) {
+
+	case 0:	return (kgi_resource_t *) &(tvp3026_mode->cursor_ctrl);
+	case 1:	return (kgi_resource_t *) &(tvp3026_mode->clut_ctrl);
+
+	}
+	return NULL;
+}
+
 void tvp3026_ramdac_mode_enter(tvp3026_ramdac_t *tvp3026,
 	tvp3026_ramdac_io_t *tvp3026_io,
 	tvp3026_ramdac_mode_t *tvp3026_mode,
@@ -762,14 +798,14 @@ void tvp3026_ramdac_mode_enter(tvp3026_ramdac_t *tvp3026,
 		TVP3026_DAC_PIXEL_MASK);
 	TVP3026_DAC_OUT8(tvp3026_io, tvp3026_mode->CursorCtrl,
 		TVP3026_DAC_CURSOR_CTRL);
-	TVP3026_DAC_OUT8(tvp3026_io, tvp3026_mode->ptr.pos.x & 0xFF,
+	TVP3026_DAC_OUT8(tvp3026_io, tvp3026_mode->cursor_ctrl.pos.x & 0xFF,
 		TVP3026_DAC_CURSOR_XL);
-	TVP3026_DAC_OUT8(tvp3026_io, (tvp3026_mode->ptr.pos.x >> 8) & 0x0F,
-		TVP3026_DAC_CURSOR_XH);
-	TVP3026_DAC_OUT8(tvp3026_io, tvp3026_mode->ptr.pos.y & 0xFF,
+	TVP3026_DAC_OUT8(tvp3026_io, (tvp3026_mode->cursor_ctrl.pos.x >> 8) &
+		0x0F, TVP3026_DAC_CURSOR_XH);
+	TVP3026_DAC_OUT8(tvp3026_io, tvp3026_mode->cursor_ctrl.pos.y & 0xFF,
 		TVP3026_DAC_CURSOR_YL);
-	TVP3026_DAC_OUT8(tvp3026_io, (tvp3026_mode->ptr.pos.y >> 8) & 0x0F,
-		TVP3026_DAC_CURSOR_YH);
+	TVP3026_DAC_OUT8(tvp3026_io, (tvp3026_mode->cursor_ctrl.pos.y >> 8) &
+		0x0F, TVP3026_DAC_CURSOR_YH);
 
 	TVP3026_EDAC_OUT8(tvp3026_io, 0x00, TVP3026_EDAC_PLLAddress);
 	TVP3026_EDAC_OUT8(tvp3026_io, tvp3026_mode->ln, TVP3026_EDAC_LClkData);

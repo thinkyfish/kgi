@@ -10,13 +10,16 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: ramdac-meta.c,v $
+**	Revision 1.2  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:12  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	##AUTHOR##
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -114,17 +117,12 @@ static inline const ##meta##_ramdac_mode_record_t *##meta##_ramdac_mode_record(
 /*
 ** ----	text16 context functions ----------------------------------------------
 */
-#define	##META##_RAMDAC_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, ramdac)
-
-#define	##META##_RAMDAC_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, ramdac)
 #if 0
 static void ##meta##_text16_set_ilut(kgic_mode_text16context_t *ctx,
 	kgic_ilut_entries_t *ilut)
 {
-	##meta##_ramdac_io_t   *##meta##_io   = ##META##_RAMDAC_IO(ctx);
-	##meta##_ramdac_mode_t *##meta##_mode = ##META##_RAMDAC_MODE(ctx);
+	##meta##_ramdac_io_t   *##meta##_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	##meta##_ramdac_mode_t *##meta##_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 	kgi_u_t	cnt, src, dst;
 
 	KRN_ASSERT(ilut->img == 0);
@@ -165,8 +163,8 @@ static void ##meta##_text16_set_ilut(kgic_mode_text16context_t *ctx,
 void ##meta##_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 	kgi_pointer64x64 *ptr)
 {
-	##meta##_ramdac_io_t   *##meta##_io   = ##META##_RAMDAC_IO(ctx);
-	##meta##_ramdac_mode_t *##meta##_mode = ##META##_RAMDAC_MODE(ctx);
+	##meta##_ramdac_io_t   *##meta##_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	##meta##_ramdac_mode_t *##meta##_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 	kgi_u_t i;
 
 	##meta##_mode->ptr.hot.x = ptr->hotx;
@@ -206,8 +204,8 @@ void ##meta##_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 static void ##meta##_text16_hp_show(kgic_mode_text16context_t *ctx, 
 	kgi_u_t x, kgi_u_t y)
 {
-	##meta##_ramdac_io_t   *##meta##_io   = ##META##_RAMDAC_IO(ctx);
-	##meta##_ramdac_mode_t *##meta##_mode = ##META##_RAMDAC_MODE(ctx);
+	##meta##_ramdac_io_t   *##meta##_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	##meta##_ramdac_mode_t *##meta##_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 
 	if ((##meta##_mode->ptr.pos.x != x) || (##meta##_mode->ptr.pos.y != y)) {
 
@@ -223,16 +221,14 @@ static void ##meta##_text16_hp_show(kgic_mode_text16context_t *ctx,
 
 static void ##meta##_text16_hp_hide(kgic_mode_text16context_t *ctx)
 {
-	##meta##_ramdac_io_t   *##meta##_io   = ##META##_RAMDAC_IO(ctx);
-	##meta##_ramdac_mode_t *##meta##_mode = ##META##_RAMDAC_MODE(ctx);
+	##meta##_ramdac_io_t   *##meta##_io   = KGIM_TEXT16_IO(ctx, ramdac);
+	##meta##_ramdac_mode_t *##meta##_mode = KGIM_TEXT16_MODE(ctx, ramdac);
 
 	##meta##_mode->ptr.pos.x = ##meta##_mode->ptr.pos.y = 0x7FF;
 
 #warning hide hardware cursor (e.g. set postion outside visible range)
 }
 
-#undef	##META##_RAMDAC_MODE
-#undef	##META##_RAMDAC_IO
 /*
 ** ----	end of text16 context functions ---------------------------------------
 */
