@@ -1,16 +1,20 @@
 /* ----------------------------------------------------------------------------
 **	Matrox Gx00 ramdac meta definitions
 ** ----------------------------------------------------------------------------
-**	Copyright (C)	1999-2000	Johan Karlberg
+**	Copyright (C)	1999-2001	Johan Karlberg
+**					Rodolphe Ortalo
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
 **	with this software for details of these terms and conditions.
 **
 ** ----------------------------------------------------------------------------
-**	MAINTAINER	Johan_Karlberg
+**	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:06  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #ifndef	_ramdac_Matrox_Gx00_meta_h
@@ -27,34 +31,24 @@ typedef kgim_chipset_io_t mgag_ramdac_io_t;
 #define MGAG_DAC_OUT8(ctx, val, reg)	KGIM_DAC_OUT8((ctx), (val), (reg))
 #define MGAG_DAC_IN8(ctx, reg)		KGIM_DAC_IN8((ctx), (reg))
 
-typedef struct {
-
-	kgi_u8_t			depth;
-
-	kgi_u_t				ilut;
-	
-	kgi_u_t				pal_size;
-
-	kgi_u_t				r_shift;
-	kgi_u_t				g_shift;
-	kgi_u_t				b_shift;
-
-	kgi_attribute_mask_t		dam;
-
-	const kgi_u8_t			*bpda;
-
-} mgag_ramdac_mode_record_t;
+typedef struct mgag_ramdac_mode_record_s mgag_ramdac_mode_record_t;
 
 typedef struct {
 
-	kgi_u8_t			xzoom,
-					xgenctrl,
-					miscctrl,
-					composite;
-
-	kgim_ramdac_mode_t		kgim;
+	kgim_ramdac_mode_t kgim;
 
 	const mgag_ramdac_mode_record_t	*rec;
+
+	kgi_u8_t	xgenctrl;
+
+	kgi_clut_t	clut_ctrl;
+	kgi_u8_t	clut[3*256];
+
+	kgi_u8_t	xcurctrl;
+
+	kgi_marker_t	ptr_ctrl;
+	kgi_ucoord_t	ptr_hot;
+	kgi_ucoord_t	ptr_shift;
 
 } mgag_ramdac_mode_t;
 
@@ -76,6 +70,7 @@ typedef struct {
 		kgi_u8_t	xzoom,
 				xgenctrl,
 				xmulctrl,
+				xmiscctrl,
 				pixrdmsk;
 		
 		kgi_u8_t	clut[256*3];
@@ -87,7 +82,7 @@ typedef struct {
 KGIM_META_INIT_FN(mgag_ramdac)
 KGIM_META_DONE_FN(mgag_ramdac)
 KGIM_META_MODE_CHECK_FN(mgag_ramdac)
-KGIM_META_MODE_PREPARE_FN(mgag_ramdac)
 KGIM_META_MODE_ENTER_FN(mgag_ramdac)
+KGIM_META_IMAGE_RESOURCE_FN(mgag_ramdac)
 
 #endif	/* #ifndef _ramdac_Matrox_Gx00_meta_h	*/

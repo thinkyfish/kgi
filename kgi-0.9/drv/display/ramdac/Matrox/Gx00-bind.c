@@ -1,7 +1,8 @@
 /* ----------------------------------------------------------------------------
 **	Matrox Gx00 ramdac meta binding
 ** ----------------------------------------------------------------------------
-**	Copyright (C) 1999-2000		Johan Karlberg
+**	Copyright (C)	1999-2001	Johan Karlberg
+**					Rodolphe Ortalo
 **
 **	This file is distributed under the terms and conditions of the 
 **	MIT/X public license. Please see the file COPYRIGHT.MIT included
@@ -10,6 +11,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: Gx00-bind.c,v $
+**	Revision 1.3  2001/07/03 08:59:00  seeger_s
+**	- updated to changes in kgi/module.h
+**	
 **	Revision 1.2  2000/09/21 10:06:40  seeger_s
 **	- namespace cleanup: E() -> KGI_ERRNO()
 **	
@@ -19,10 +23,12 @@
 */
 
 #include <kgi/maintainers.h>
-#define	MAINTAINER		Johan_Karlberg
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
+#define	MAINTAINER		Rodolphe_Ortalo
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.3 $"
 
-#define DEBUG_LEVEL 255
+#ifndef	DEBUG_LEVEL
+#define	DEBUG_LEVEL	1
+#endif
 
 #include <kgi/module.h>
 #include "chipset/Matrox/Gx00.h"
@@ -35,7 +41,9 @@
 kgi_error_t mgag_ramdac_init_module(mgag_ramdac_t *mgag, 
 	mgag_ramdac_io_t *mgag_io, const kgim_options_t *options) 
 {
-	KRN_DEBUG(2, "ramdac_init_module() initiated");
+	kgi_u16_t vendor_id, device_id;
+
+	KRN_DEBUG(2, "entered");
 
 	KRN_ASSERT(mgag);
 	KRN_ASSERT(mgag_io);
@@ -54,8 +62,10 @@ kgi_error_t mgag_ramdac_init_module(mgag_ramdac_t *mgag,
 
 	mgag->ramdac.dclk.min = options->ramdac->dclk_min ? options->ramdac->dclk_min : 0;
 
-#warning Do not use function calls in macros!
-	switch (PCICFG_SIGNATURE(pcicfg_in16(MGAG_PCIDEV(mgag_io) + PCI_VENDOR_ID), pcicfg_in16(MGAG_PCIDEV(mgag_io) + PCI_DEVICE_ID))) {
+	vendor_id = pcicfg_in16(MGAG_PCIDEV(mgag_io) + PCI_VENDOR_ID);
+	device_id = pcicfg_in16(MGAG_PCIDEV(mgag_io) + PCI_DEVICE_ID);
+
+	switch (PCICFG_SIGNATURE(vendor_id,device_id)) {
 
 	case PCICFG_SIGNATURE(PCI_VENDOR_ID_MATROX, PCI_DEVICE_ID_MATROX_MYS):
 
@@ -102,7 +112,7 @@ kgi_error_t mgag_ramdac_init_module(mgag_ramdac_t *mgag,
 	KRN_NOTICE("%s %s driver " KGIM_RAMDAC_DRIVER, 
 		mgag->ramdac.vendor, mgag->ramdac.model);
 
-	KRN_DEBUG(2, "%s ramdac_init_module() completed");
+	KRN_DEBUG(2, "completed");
 
 	return KGI_EOK;
 }
@@ -118,7 +128,7 @@ const kgim_meta_t mgag_ramdac_meta =
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	mgag_ramdac_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
-	(kgim_meta_image_resource_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	mgag_ramdac_image_resource,
 
 	sizeof(mgag_ramdac_t),
 	0,

@@ -1,6 +1,6 @@
-1x64sg	Mystique 1x64sg	10	Johan_Karlberg
-G200_AGP	G200 AGP	10	Johan_Karlberg
-G200_PCI	G200 PCI	10	Johan_Karlberg
-G200_AGP_OEM	G200 AGP (OEM version)	10	Johan_Karlberg
-G200_PCI_OEM	G200 PCI (OEM version)	10	Johan_Karlberg
-G400	G400	10	Johan_Karlberg
+1x64sg	Mystique 1x64sg	30	Rodolphe_Ortalo
+G200_AGP	G200 AGP	10	Rodolphe_Ortalo
+G200_PCI	G200 PCI	10	Rodolphe_Ortalo
+G200_AGP_OEM	G200 AGP (OEM version)	10	Rodolphe_Ortalo
+G200_PCI_OEM	G200 PCI (OEM version)	10	Rodolphe_Ortalo
+G400	G400	40	Rodolphe_Ortalo
