@@ -1,0 +1,4 @@
+
+mkdir -p $DIR_TOP_BUILD/include/GL
+
+ln -sf $DIR_SOURCE/rgb.h	$DIR_TOP_BUILD/include/GL/rgb.h
