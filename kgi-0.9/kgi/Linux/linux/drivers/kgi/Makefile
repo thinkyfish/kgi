@@ -39,7 +39,11 @@ else
 endif
 
 ifeq ($(CONFIG_KGI_DEV_EVENT),y)
-	L_OBJS := $(L_OBJS)
+	L_OBJS += event.o
+else
+	ifeq ($(CONFIG_KGI_DEV_EVENT),m)
+		M_OBJS += event.o
+	endif
 endif
 
 ifeq ($(CONFIG_INPUT),y)
