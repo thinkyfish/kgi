@@ -10,6 +10,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-meta.h,v $
+**	Revision 1.2  2001/07/03 08:53:51  seeger_s
+**	- implemented image resources and export
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:17  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -138,14 +141,14 @@ typedef struct
 		IntEnable, VClkCtl, ApertureOne, ApertureTwo,
 		FIFODiscon, ChipConfig;
 	
-	} CS;
+	} cs;
 	
 	struct { kgi_u32_t
 
 		RomControl, BootAddress, MemConfig, BypassWriteMask,
 		FramebufferWriteMask;
 
-	} MC;
+	} mc;
 
 	struct { kgi_u32_t
 
@@ -154,7 +157,7 @@ typedef struct
 		VTotal, VbEnd, VsStart, VsEnd, VideoControl,
 		InterruptLine;
 
-	} VC;
+	} vc;
 
 } pgc_chipset_t;
 

@@ -10,6 +10,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-meta.c,v $
+**	Revision 1.3  2001/07/03 08:53:51  seeger_s
+**	- implemented image resources and export
+**	
 **	Revision 1.2  2000/09/21 09:57:15  seeger_s
 **	- name space cleanup: E() -> KGI_ERRNO()
 **	
@@ -19,7 +22,7 @@
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.3 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -49,7 +52,7 @@ static inline void pgc_chipset_examine(pgc_chipset_t *pgc)
 	/*
 	**	ChipConfig register
 	*/
-	foo = pgc->CS.ChipConfig;
+	foo = pgc->cs.ChipConfig;
 	KRN_DEBUG(1, "PGC_CS_ChipConfig = %.8x", foo);
 
 	mclk = 10 + ((foo & PGC_CS070_MClkPeriodMask) >>
@@ -132,7 +135,7 @@ static inline void pgc_chipset_examine(pgc_chipset_t *pgc)
 	/*
 	**	ROM Control
 	*/
-	foo = pgc->MC.RomControl;
+	foo = pgc->mc.RomControl;
 	KRN_DEBUG(1, "PGC_MC_RomControl = %.8x", foo);
 	KRN_DEBUG(1, "%s fitted", (foo & PGC_MC040_SDRAM) ? "SDRAM" : "SGRAM");
 	/*
@@ -143,9 +146,9 @@ static inline void pgc_chipset_examine(pgc_chipset_t *pgc)
 	/*
 	**	Memory Parameters
 	*/
-	KRN_DEBUG(1, "PGC_MC_BootAddress = %.8x", pgc->MC.BootAddress);
+	KRN_DEBUG(1, "PGC_MC_BootAddress = %.8x", pgc->mc.BootAddress);
 
-	foo = pgc->MC.MemConfig;
+	foo = pgc->mc.MemConfig;
 	KRN_DEBUG(1, "PGC_MC_MemConfig = %.8x", foo);
 
 	KRN_DEBUG(1, "RowCharge=%i, TimeRCD=%i, TimeRC=%i TimeRP=%i, "
@@ -215,7 +218,7 @@ static kgi_u_t pgc_chipset_calc_partials(kgi_u_t width, kgi_u_t *pp)
 
 				if (current_width >= width) {
 
-					KRN_DEBUG(2, "current_width = %i, "
+					KRN_DEBUG(1, "current_width = %i, "
 						"pp[] = { %i, %i, %i }",
 						current_width, p0, p1, p2); 
 					pp[0] = p0;
@@ -438,11 +441,11 @@ typedef struct
 
 } pgc_chipset_accel_context_t;
 
-static void pgc_chipset_accel_init(kgi_accel_t *accel, void *ctx)
+static void pgc_chipset_accel_init(kgi_accel_t *accel, void *context)
 {
 	pgc_chipset_t *pgc = accel->meta;
 	pgc_chipset_io_t *pgc_io = accel->meta_io;
-	pgc_chipset_accel_context_t *pgc_ctx = ctx;
+	pgc_chipset_accel_context_t *pgc_ctx = context;
 	kgi_size_t offset;
 
 	/*	To be able to load ctx->state via DMA we precalculate the
@@ -502,11 +505,11 @@ static void pgc_chipset_accel_init(kgi_accel_t *accel, void *ctx)
 	}
 }
 
-static void pgc_chipset_accel_done(kgi_accel_t *accel, void *ctx)
+static void pgc_chipset_accel_done(kgi_accel_t *accel, void *context)
 {
-	if (ctx == accel->ctx) {
+	if (context == accel->execution.context) {
 
-		accel->ctx = NULL;
+		accel->context = NULL;
 	}
 }
 
@@ -514,7 +517,7 @@ static inline void pgc_chipset_accel_save(kgi_accel_t *accel)
 {
 	pgc_chipset_t *pgc = accel->meta;
 	pgc_chipset_io_t *pgc_io = accel->meta_io;
-	pgc_chipset_accel_context_t *pgc_ctx = accel->ctx;
+	pgc_chipset_accel_context_t *pgc_ctx = accel->execution.context;
 	mem_vaddr_t gpr = pgc_io->control.base_virt + PGC_GPRegisterBase;
 
 	KRN_ASSERT(pgc);
@@ -784,7 +787,7 @@ static inline void pgc_chipset_accel_save(kgi_accel_t *accel)
 static inline void pgc_chipset_accel_restore(kgi_accel_t *accel)
 {
 	pgc_chipset_io_t *pgc_io = accel->meta_io;
-	pgc_chipset_accel_context_t *pgc_ctx = accel->ctx;
+	pgc_chipset_accel_context_t *pgc_ctx = accel->execution.context;
 
 	KRN_ASSERT(0 == PGC_CS_IN32(pgc_io, PGC_CS_DMACount));
 
@@ -798,22 +801,23 @@ static void pgc_chipset_accel_schedule(kgi_accel_t *accel)
 {
 #warning this must not be interrupted!
 	pgc_chipset_io_t *pgc_io = accel->meta_io;
-	kgi_accel_buffer_t *buffer = accel->exec_queue;
+	kgi_accel_buffer_t *buffer = accel->execution.queue;
 
 	KRN_ASSERT(buffer);
 
-	switch (buffer->exec_state) {
+	switch (buffer->execution.state) {
 
 	case KGI_AS_EXEC:
 		/*	Execution of the current buffer finished, so we 
-		**	mark it KGI_AS_IDLE and remove it from the queue.
+		**	mark it KGI_AS_IDLE and remove it from the execution
+		**	queue.
 		*/
-		accel->exec_queue = buffer->next;
-		buffer->next = NULL;
-		buffer->exec_state = KGI_AS_IDLE;
+		accel->execution.queue  = buffer->execution.next;
+		buffer->execution.next  = NULL;
+		buffer->execution.state = KGI_AS_IDLE;
 #warning wakeup buffer->executed !
 
-		if (NULL == accel->exec_queue) {
+		if (NULL == accel->execution.queue) {
 
 			/*	no further buffers queued, thus we are done.
 			*/
@@ -821,8 +825,8 @@ static void pgc_chipset_accel_schedule(kgi_accel_t *accel)
 			return;
 		}
 
-		buffer = accel->exec_queue;
-		KRN_ASSERT(KGI_AS_WAIT == buffer->exec_state);
+		buffer = accel->execution.queue;
+		KRN_ASSERT(KGI_AS_WAIT == buffer->execution.state);
 		/*	fall through
 		*/
 	case KGI_AS_WAIT:
@@ -830,28 +834,28 @@ static void pgc_chipset_accel_schedule(kgi_accel_t *accel)
 		**	re-enter here when the new context is loaded.
 		**	Otherwise we just initiate the buffer transfer.
 		*/
-		if (accel->ctx != buffer->exec_ctx) {
+		if (accel->execution.context != buffer->context) {
 
-			if (accel->ctx) {
+			if (accel->execution.context) {
 
 				pgc_chipset_accel_save(accel);
 			}
-			accel->ctx = buffer->exec_ctx;
+			accel->execution.context = buffer->context;
 			pgc_chipset_accel_restore(accel);
 			return;
 		}
 
 		KRN_ASSERT(0 == PGC_CS_IN32(pgc_io, PGC_CS_DMACount));
 
-		buffer->exec_state = KGI_AS_EXEC;
+		buffer->execution.state = KGI_AS_EXEC;
 		PGC_CS_OUT32(pgc_io, buffer->aperture.bus, PGC_CS_DMAAddress);
-		PGC_CS_OUT32(pgc_io, buffer->exec_size >> 2, PGC_CS_DMACount);
+		PGC_CS_OUT32(pgc_io, buffer->execution.size >> 2, PGC_CS_DMACount);
 
 		return;
 
 	default:
 		KRN_ERROR("PERMEDIA: invalid state %i for queued buffer",
-			buffer->exec_state);
+			buffer->execution.state);
 		KRN_INTERNAL_ERROR;
 		return;
 	}
@@ -862,30 +866,33 @@ static void pgc_chipset_accel_exec(kgi_accel_t *accel,
 {
 #warning check/validate validate data stream!!!
 #warning this must not be interrupted!
-	KRN_ASSERT(KGI_AS_FILL == buffer->exec_state);
+	KRN_ASSERT(KGI_AS_FILL == buffer->execution.state);
 
-	buffer->exec_state = KGI_AS_WAIT;
+	buffer->execution.state = KGI_AS_WAIT;
 
-	if (accel->exec_queue) {
+	if (accel->execution.queue) {
 
-		kgi_accel_buffer_t *queued = accel->exec_queue;
+		kgi_accel_buffer_t *queued = accel->execution.queue;
+		kgi_accel_buffer_t *next   = queued->execution.next;
+		
+		while (next && (next->priority >= buffer->priority)) {
 
-		while (queued->next &&
-			(queued->next->exec_pri >= buffer->exec_pri)) {
-
-			queued = queued->next;
+			queued = next;
+			next   = queued->execution.next;
 		}
 
-		buffer->next = queued->next;
-		queued->next = buffer;
+		buffer->execution.next = next;
+		queued->execution.next = buffer;
+
 		return;
 	}
 
-	buffer->next = NULL;
-	accel->exec_queue = buffer;
+	buffer->execution.next = NULL;
+	accel->execution.queue = buffer;
 
 	pgc_chipset_accel_schedule(accel);
 }
+
 /*
 **	IRQ and error handlers
 */
@@ -1091,34 +1098,34 @@ kgi_error_t pgc_chipset_init(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 		KRN_DEBUG(2, "chipset initialized, reading configuration");
 		pgc->flags |= PGC_CF_RESTORE_INITIAL;
 
-		pgc->CS.IntEnable   = PGC_CS_IN32(pgc_io, PGC_CS_IntEnable);
-		pgc->CS.VClkCtl     = PGC_CS_IN32(pgc_io, PGC_CS_VClkCtl);
-		pgc->CS.ApertureOne = PGC_CS_IN32(pgc_io, PGC_CS_ApertureOne);
-		pgc->CS.ApertureTwo = PGC_CS_IN32(pgc_io, PGC_CS_ApertureTwo);
-		pgc->CS.FIFODiscon  = PGC_CS_IN32(pgc_io, PGC_CS_FIFODiscon);
-		pgc->CS.ChipConfig  = PGC_CS_IN32(pgc_io, PGC_CS_ChipConfig);
+		pgc->cs.IntEnable   = PGC_CS_IN32(pgc_io, PGC_CS_IntEnable);
+		pgc->cs.VClkCtl     = PGC_CS_IN32(pgc_io, PGC_CS_VClkCtl);
+		pgc->cs.ApertureOne = PGC_CS_IN32(pgc_io, PGC_CS_ApertureOne);
+		pgc->cs.ApertureTwo = PGC_CS_IN32(pgc_io, PGC_CS_ApertureTwo);
+		pgc->cs.FIFODiscon  = PGC_CS_IN32(pgc_io, PGC_CS_FIFODiscon);
+		pgc->cs.ChipConfig  = PGC_CS_IN32(pgc_io, PGC_CS_ChipConfig);
 
-		pgc->MC.RomControl  = PGC_MC_IN32(pgc_io, PGC_MC_RomControl);
-		pgc->MC.BootAddress = PGC_MC_IN32(pgc_io, PGC_MC_BootAddress);
-		pgc->MC.MemConfig   = PGC_MC_IN32(pgc_io, PGC_MC_MemConfig);
-		pgc->MC.BypassWriteMask	=
+		pgc->mc.RomControl  = PGC_MC_IN32(pgc_io, PGC_MC_RomControl);
+		pgc->mc.BootAddress = PGC_MC_IN32(pgc_io, PGC_MC_BootAddress);
+		pgc->mc.MemConfig   = PGC_MC_IN32(pgc_io, PGC_MC_MemConfig);
+		pgc->mc.BypassWriteMask	=
 			PGC_MC_IN32(pgc_io, PGC_MC_BypassWriteMask);
-		pgc->MC.FramebufferWriteMask =
+		pgc->mc.FramebufferWriteMask =
 			PGC_MC_IN32(pgc_io, PGC_MC_FramebufferWriteMask);
 
-		pgc->VC.ScreenBase   = PGC_VC_IN32(pgc_io, PGC_VC_ScreenBase);
-		pgc->VC.ScreenStride = PGC_VC_IN32(pgc_io, PGC_VC_ScreenStride);
-		pgc->VC.HTotal       = PGC_VC_IN32(pgc_io, PGC_VC_HTotal);
-		pgc->VC.HgEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HgEnd);
-		pgc->VC.HbEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HbEnd);
-		pgc->VC.HsStart      = PGC_VC_IN32(pgc_io, PGC_VC_HsStart);
-		pgc->VC.HsEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HsEnd);
-		pgc->VC.VTotal       = PGC_VC_IN32(pgc_io, PGC_VC_VTotal);
-		pgc->VC.VbEnd        = PGC_VC_IN32(pgc_io, PGC_VC_VbEnd);
-		pgc->VC.VsStart      = PGC_VC_IN32(pgc_io, PGC_VC_VsStart);
-		pgc->VC.VsEnd        = PGC_VC_IN32(pgc_io, PGC_VC_VsEnd);
-		pgc->VC.VideoControl = PGC_VC_IN32(pgc_io, PGC_VC_VideoControl);
-		pgc->VC.InterruptLine =
+		pgc->vc.ScreenBase   = PGC_VC_IN32(pgc_io, PGC_VC_ScreenBase);
+		pgc->vc.ScreenStride = PGC_VC_IN32(pgc_io, PGC_VC_ScreenStride);
+		pgc->vc.HTotal       = PGC_VC_IN32(pgc_io, PGC_VC_HTotal);
+		pgc->vc.HgEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HgEnd);
+		pgc->vc.HbEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HbEnd);
+		pgc->vc.HsStart      = PGC_VC_IN32(pgc_io, PGC_VC_HsStart);
+		pgc->vc.HsEnd        = PGC_VC_IN32(pgc_io, PGC_VC_HsEnd);
+		pgc->vc.VTotal       = PGC_VC_IN32(pgc_io, PGC_VC_VTotal);
+		pgc->vc.VbEnd        = PGC_VC_IN32(pgc_io, PGC_VC_VbEnd);
+		pgc->vc.VsStart      = PGC_VC_IN32(pgc_io, PGC_VC_VsStart);
+		pgc->vc.VsEnd        = PGC_VC_IN32(pgc_io, PGC_VC_VsEnd);
+		pgc->vc.VideoControl = PGC_VC_IN32(pgc_io, PGC_VC_VideoControl);
+		pgc->vc.InterruptLine =
 			PGC_VC_IN32(pgc_io, PGC_VC_InterruptLine);
 
 		pgc->vga_SEQ_ControlReg =
@@ -1142,10 +1149,10 @@ kgi_error_t pgc_chipset_init(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			KRN_ERROR("PERMEDIA reset timeout!");
 		}
 
-		pgc->CS.ChipConfig  = PGC_CS_IN32(pgc_io, PGC_CS_ChipConfig);
+		pgc->cs.ChipConfig  = PGC_CS_IN32(pgc_io, PGC_CS_ChipConfig);
 
 		if ((pgc->flags & PGC_CF_PERMEDIA2) &&
-			(pgc->CS.ChipConfig & PGC_CS070_SubsystemROM)) {
+			(pgc->cs.ChipConfig & PGC_CS070_SubsystemROM)) {
 
 			const kgi_u16_t *offset;
 			const kgi_u32_t *table;
@@ -1182,9 +1189,9 @@ kgi_error_t pgc_chipset_init(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 			}
 		}
 
-		pgc->MC.RomControl  = PGC_MC_IN32(pgc_io, PGC_MC_RomControl);
-		pgc->MC.BootAddress = PGC_MC_IN32(pgc_io, PGC_MC_BootAddress);
-		pgc->MC.MemConfig   = PGC_MC_IN32(pgc_io, PGC_MC_MemConfig);
+		pgc->mc.RomControl  = PGC_MC_IN32(pgc_io, PGC_MC_RomControl);
+		pgc->mc.BootAddress = PGC_MC_IN32(pgc_io, PGC_MC_BootAddress);
+		pgc->mc.MemConfig   = PGC_MC_IN32(pgc_io, PGC_MC_MemConfig);
 
 		vga_text_chipset_init(&(pgc->vga), &(pgc_io->vga), options);
 	}
@@ -1193,7 +1200,7 @@ kgi_error_t pgc_chipset_init(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 
 	pgc->chipset.memory = options->chipset->memory
 		? options->chipset->memory
-		: 2 MB * (((pgc->MC.MemConfig & PGC_MC0C0_NumberBanksMask) >>
+		: 2 MB * (((pgc->mc.MemConfig & PGC_MC0C0_NumberBanksMask) >>
 			PGC_MC0C0_NumberBanksShift) + 1);
 
 	KRN_TRACE(2, pgc_chipset_examine(pgc));
@@ -1226,34 +1233,34 @@ void pgc_chipset_done(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 	if (pgc->flags & PGC_CF_RESTORE_INITIAL) {
 
 		KRN_DEBUG(2, "restoring initial chipset state");
-		PGC_CS_OUT32(pgc_io, pgc->CS.IntEnable, PGC_CS_IntEnable);
-		PGC_CS_OUT32(pgc_io, pgc->CS.VClkCtl, PGC_CS_VClkCtl);
-		PGC_CS_OUT32(pgc_io, pgc->CS.ApertureOne, PGC_CS_ApertureOne);
-		PGC_CS_OUT32(pgc_io, pgc->CS.ApertureTwo, PGC_CS_ApertureTwo);
-		PGC_CS_OUT32(pgc_io, pgc->CS.FIFODiscon, PGC_CS_FIFODiscon);
-		PGC_CS_OUT32(pgc_io, pgc->CS.ChipConfig, PGC_CS_ChipConfig);
+		PGC_CS_OUT32(pgc_io, pgc->cs.IntEnable, PGC_CS_IntEnable);
+		PGC_CS_OUT32(pgc_io, pgc->cs.VClkCtl, PGC_CS_VClkCtl);
+		PGC_CS_OUT32(pgc_io, pgc->cs.ApertureOne, PGC_CS_ApertureOne);
+		PGC_CS_OUT32(pgc_io, pgc->cs.ApertureTwo, PGC_CS_ApertureTwo);
+		PGC_CS_OUT32(pgc_io, pgc->cs.FIFODiscon, PGC_CS_FIFODiscon);
+		PGC_CS_OUT32(pgc_io, pgc->cs.ChipConfig, PGC_CS_ChipConfig);
 
-		PGC_MC_OUT32(pgc_io, pgc->MC.RomControl, PGC_MC_RomControl);
-		PGC_MC_OUT32(pgc_io, pgc->MC.BootAddress, PGC_MC_BootAddress);
-		PGC_MC_OUT32(pgc_io, pgc->MC.MemConfig, PGC_MC_MemConfig);
-		PGC_MC_OUT32(pgc_io, pgc->MC.BypassWriteMask,
+		PGC_MC_OUT32(pgc_io, pgc->mc.RomControl, PGC_MC_RomControl);
+		PGC_MC_OUT32(pgc_io, pgc->mc.BootAddress, PGC_MC_BootAddress);
+		PGC_MC_OUT32(pgc_io, pgc->mc.MemConfig, PGC_MC_MemConfig);
+		PGC_MC_OUT32(pgc_io, pgc->mc.BypassWriteMask,
 			PGC_MC_BypassWriteMask);
-		PGC_MC_OUT32(pgc_io, pgc->MC.FramebufferWriteMask,
+		PGC_MC_OUT32(pgc_io, pgc->mc.FramebufferWriteMask,
 			PGC_MC_FramebufferWriteMask);
 
-		PGC_VC_OUT32(pgc_io, pgc->VC.ScreenBase, PGC_VC_ScreenBase);
-		PGC_VC_OUT32(pgc_io, pgc->VC.ScreenStride, PGC_VC_ScreenStride);
-		PGC_VC_OUT32(pgc_io, pgc->VC.HTotal, PGC_VC_HTotal);
-		PGC_VC_OUT32(pgc_io, pgc->VC.HgEnd, PGC_VC_HgEnd);
-		PGC_VC_OUT32(pgc_io, pgc->VC.HbEnd, PGC_VC_HbEnd);
-		PGC_VC_OUT32(pgc_io, pgc->VC.HsStart, PGC_VC_HsStart);
-		PGC_VC_OUT32(pgc_io, pgc->VC.HsEnd, PGC_VC_HsEnd);
-		PGC_VC_OUT32(pgc_io, pgc->VC.VTotal, PGC_VC_VTotal);
-		PGC_VC_OUT32(pgc_io, pgc->VC.VbEnd, PGC_VC_VbEnd);
-		PGC_VC_OUT32(pgc_io, pgc->VC.VsStart, PGC_VC_VsStart);
-		PGC_VC_OUT32(pgc_io, pgc->VC.VsEnd, PGC_VC_VsEnd);
-		PGC_VC_OUT32(pgc_io, pgc->VC.VideoControl, PGC_VC_VideoControl);
-		PGC_VC_OUT32(pgc_io, pgc->VC.InterruptLine, 
+		PGC_VC_OUT32(pgc_io, pgc->vc.ScreenBase, PGC_VC_ScreenBase);
+		PGC_VC_OUT32(pgc_io, pgc->vc.ScreenStride, PGC_VC_ScreenStride);
+		PGC_VC_OUT32(pgc_io, pgc->vc.HTotal, PGC_VC_HTotal);
+		PGC_VC_OUT32(pgc_io, pgc->vc.HgEnd, PGC_VC_HgEnd);
+		PGC_VC_OUT32(pgc_io, pgc->vc.HbEnd, PGC_VC_HbEnd);
+		PGC_VC_OUT32(pgc_io, pgc->vc.HsStart, PGC_VC_HsStart);
+		PGC_VC_OUT32(pgc_io, pgc->vc.HsEnd, PGC_VC_HsEnd);
+		PGC_VC_OUT32(pgc_io, pgc->vc.VTotal, PGC_VC_VTotal);
+		PGC_VC_OUT32(pgc_io, pgc->vc.VbEnd, PGC_VC_VbEnd);
+		PGC_VC_OUT32(pgc_io, pgc->vc.VsStart, PGC_VC_VsStart);
+		PGC_VC_OUT32(pgc_io, pgc->vc.VsEnd, PGC_VC_VsEnd);
+		PGC_VC_OUT32(pgc_io, pgc->vc.VideoControl, PGC_VC_VideoControl);
+		PGC_VC_OUT32(pgc_io, pgc->vc.InterruptLine, 
 			PGC_VC_InterruptLine);
 
 		VGA_GRC_OUT8(&(pgc_io->vga), pgc->vga_GRC_Mode640Reg,
@@ -1682,9 +1689,9 @@ kgi_error_t pgc_chipset_mode_check(pgc_chipset_t *pgc, pgc_chipset_io_t *pgc_io,
 	a->flags |= KGI_AF_DMA_BUFFERS;
 	a->buffers = 3;
 	a->buffer_size = 8 KB;
-	a->ctx = NULL;
-	a->ctx_size = sizeof(pgc_chipset_accel_context_t);
-	a->exec_queue = NULL;
+	a->context_size = sizeof(pgc_chipset_accel_context_t);
+	a->execution.context = NULL;
+	a->execution.queue = NULL;
 #warning initialize a->idle!!!
 	a->Init = pgc_chipset_accel_init;
 	a->Done = pgc_chipset_accel_done;
