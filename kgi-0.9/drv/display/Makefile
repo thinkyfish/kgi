@@ -24,7 +24,7 @@ welcome.en.htf: $(DIR_SOURCE)/status2htf.awk $(wildcard $DIR_SOURCE/*/*/status)
 			echo $$file;					\
 			cat $$file;					\
 		done;							\
-	done ) | $(AWK_BIN) -F'\t' -f $(DIR_SOURCE)/status2htf.awk > $@
+	done ) | $(AWK_BIN) -v revision=`date +%Y-%m-%d/%H:%m` -F'\t' -f $(DIR_SOURCE)/status2htf.awk > $@
 
 menu:
 	(	echo -e "rel\ten\t\"Boards\"\twelcome.en.html#board";	\

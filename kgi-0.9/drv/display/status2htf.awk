@@ -25,7 +25,7 @@ BEGIN {
 	printf	"HTF_DESCRIPTION=\"This page gives a status evaluation of the drivers included with this distribution.\"\n"
 	printf	"HTF_KEYWORDS=\"KGI Display Driver; status; supported hardware\"\n"
 	printf	"HTF_AUTHOR=\"status2htf.awk\"\n"
-	printf	"HTF_REVISION=\"%s\"\n", strftime("%Y-%m-%d/%H:%m")
+	printf	"HTF_REVISION=\"%s\"\n", revision
 	printf	"cat <<-end-of-htf\n"
 }
 
