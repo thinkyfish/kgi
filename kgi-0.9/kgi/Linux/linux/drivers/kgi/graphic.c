@@ -1,6 +1,6 @@
+/* ------------------------------------------------------------------------ */
+#define DESC	"/dev/graphic special device file driver"
 /* ---------------------------------------------------------------------------
-**	/dev/graphic special device file driver
-** ---------------------------------------------------------------------------
 **	Copyright (C)	1995-1997		Andreas Beck
 **			1995-2000		Steffen Seeger
 **
@@ -14,6 +14,9 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.6  2001/10/08 07:13:17  seeger_s
+**	- added wait_event() patch by Rodolphe Ortalo
+**	
 **	Revision 1.5  2001/09/17 20:35:01  seeger_s
 **	- updated according to kgi_accel_buffer_s changes
 **	
@@ -1478,7 +1481,8 @@ static int graph_ioctl(struct inode *inode, struct file *kfile,
 
 			goto unlock;
 	        }
-		copy_from_user(io_ibuf, (void *) arg, KGIC_SIZE(cmd));
+		if (copy_from_user(io_ibuf, (void *) arg, KGIC_SIZE(cmd)))
+			return -EFAULT;
 
 	} else {
 
@@ -1516,11 +1520,13 @@ static int graph_ioctl(struct inode *inode, struct file *kfile,
 	
 		if (io_obuf) {
 
-			copy_to_user((void *) arg, io_obuf, io_size);
+			if (copy_to_user((void *) arg, io_obuf, io_size))
+				return -EFAULT;
 
 		} else {
 
-			clear_user((void *) arg, io_size);
+			if (clear_user((void *) arg, io_size))
+				return -EFAULT;
 		}
 	}
 
