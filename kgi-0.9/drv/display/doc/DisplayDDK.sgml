@@ -1,0 +1,240 @@
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article class="TechReport">
+	<artheader>
+		<author><firstname>Steffen</firstname><surname>Seeger</surname></author>
+		<title>The KGI Display Driver Development Kit</title>
+		<titleabbrev>KGI Display DDK</titleabbrev>
+		<!--
+			$Log: DisplayDDK.sgml,v $
+		-->
+		<revhistory>
+			<revision>
+				<revnumber>0.0</revnumber><date>2000-04-18</date>
+				<revremark>Draft version.</revremark>
+			</revision>
+		</revhistory>
+	</artheader>
+	<abstract>
+		<para>This article is intended to give a hands-on introduction to using the KGI Display Driver Development Kit
+		(KGI Display DDK).</para>
+	</abstract>
+	<section><title>A few words before you start</title>
+		<para>
+		This document is intended to help you getting started in writing a new KGI Display Driver.
+		It will sometimes make references to header files and/or code included with the KGI sample implementation
+		source distribution.
+		You should be aware that if information given in this document and the header files or code referenced
+		are contradictionary, this document should be considered to be out of date.
+		Thus the actual code of the sample implementation takes precedence over information presented
+		in this document.
+		However, if you spot a section where this is the case, please notify the author of this document about
+		this condition so he can update the section in question.
+		</para><para>
+		Writing a display driver is not really that difficult if you have mastered a good understanding of the
+		C programming language and managed to get good hardware documentation from the particular
+		hardware vendor.
+		Thus before you read this document, please make sure you have done the following preparations:
+		<itemizedlist>
+			<listitem>
+				<para>
+				Get detailed hardware level documentation from the manufacturer or vendor
+				of the particular device you want to add a driver for.
+				In particular, you will need a register definition and a programming guide that explain
+				how to initialize the device properly, what are safe operating conditions etc.
+				If you have another driver source code available, please be aware that this is
+				mostly work derived from such a specification and as such may not contain
+				all information as in the specification.
+				So, if you ever have a chance to get a detailed register set reference from your
+				vendor, get it.
+				Specifications from the hardware vendor provide the most accurate and definitive source
+				of information.
+				</para>
+			</listitem><listitem>
+				<para>
+				Sometimes references to particular header files and definitions will be made, it is
+				advisible you have a version of these at hand when reading this document.
+				</para>
+			</listitem><listitem>
+				<para>
+				Once you have read through this document, look at an exisiting driver (e.g. the driver
+				for the <trademark>3Dlabs Permedia</trademark> devices are a good reference)
+				and try at least to identify the driver parts described in this documents.
+				</para>
+			</listitem><listitem>
+				<para>
+				Before you actually start writing code, make sure you have read and understood the
+				C-Coding Style rules used with KGI source code.
+				It is important to maintain <emphasis>one</emphasis> consistent coding style over
+				the whole code base, so that other developers may help you easily.
+				</para>
+			</lisitem>
+		</itemizedlist>
+		Once you have read through this document, it is suggested you read through the chipset
+		documentation and get a good understanding how the particular device is supposed to work.
+		Done that, you should think about how to map the device capabilities to the KGI model and
+		then read through this document again.
+		Then start coding, following the steps described in this document.
+		</para><para>
+		On a final note, I hope you will find this document useful in getting started with developing
+		a driver for KGI.
+		If this document is unclear about particular issues or you have ideas how to improve this
+		document or KGI in general, don't hesitate to share your ideas with other developers.
+		Please see the KGI Project web site at http://kgi.sourceforge.net for instructions how to
+		get in contact with KGI developers.
+		</para>
+	</section>
+	<section><title>Understanding Meta-Languages</title>
+		<para>
+		Strictly speaking a meta-language is used to describe other languages.
+		</para>
+		<section><title>Driver Status File</title>
+			<para>
+			The driver status file is used when generating driver status documents to evaluate
+			the usability of the various drivers.
+			The status file consists of an arbitrary number of entries.
+			Each entry has to be given on one line, with four columns separated by a tab-stop.
+			The first column is the base name of the driver object file (without the
+			<filename>.o</filename> suffix).
+			The second column contains the 'verbose' name of the device supported by this driver.
+			If several devices by the same vendor are supported, you may give a separate entry
+			for each supported device.
+			The third column contains the driver status evaluation according to
+			the following table:
+			<informaltable>
+				<tgroup cols=2><tbody>
+					<row><entry>10</entry><entry>
+						Driver development has just started.
+						The driver in the CVS repository compiles, but is known not do anything useful yet.
+					</entry></row>
+					<row><entry>20</entry><entry>
+						Driver in the repository compiles and is capable of probing and analyzing the hardware it
+						claims to support.
+					</entry></row>
+					<row><entry>30</entry><entry>
+						Driver in the repository compiles and is capable of initializing the hardware it claims
+						to support.
+					</entry></row>
+					<row><entry>40</entry><entry>
+						Basic driver functionality is implemented and has undergone some testing, but there
+						may be known bugs or unsupported features.
+					</entry></row>
+					<row><entry>50</entry><entry>
+						Basic driver functionality is implemented, tested and found to be operational
+						with the authors devices and configuration.
+						There may be known bugs that make it unuseable for daily use.
+					</entry></row>
+					<row><entry>60</entry><entry>
+						Basic driver functionality is implemented, tested and found to be operational
+						with the authors devices and configuration.
+						Restricting to basic functionality, the driver may be suited for daily use
+						(alpha testing).
+						Extended functionality (acceleration, 'exotic' operation modes) is being implemented
+						but unlikely to work.
+					</entry></row>
+					<row><entry>70</entry><entry>
+						The driver implements full functionality, has been tested with the authors devices and
+						configurations but may contain known bugs that limit useablity.
+					</entry></row>
+					<row><entry>80</entry><entry>
+						The driver implements full functionality (acceleration, support for all operation modes, etc.).
+						Basic functionality is tested and found operational with the authors configuration and
+						devices.
+						The driver may still have known bugs, but all in all it should be stable for daily use (beta-testing).
+					</entry></row>
+					<row><entry>90</entry><entry>
+						The driver implements full functionality of the device, has been tested and found to be
+						operational with the authors devices and configuration.
+						The driver is believed to work well for all supported devices and configurations
+						but so far there was no report of successful testing received by the author.
+						Any unexpected behaviour indicates an unknown bug and should be reported
+						to the maintainer.
+					</entry></row>
+					<row><entry>ok</entry><entry>
+						The driver implements full functionality of the device, has been tested and found to be
+						operational with all devices and configurations it claims to support (to the best knowledge
+						of the author, that is).
+						Any unexpected behaviour indicates an unknown bug and should be reported
+						to the maintainer.
+					</entry></row>
+				</tbody></tgroup>
+			</informaltable>
+			If a driver depends on other drivers, the driver status may not be higher than the minimum status
+			over all driver it depends on.
+			</para>
+		</section>
+	</section>
+	<section><title>Modular Display Driver Implementation</title>
+		<section><title>Subsystem Drivers</title>
+			<para>
+			- purpose
+			- KGIM (KGI Module) extensions
+			</para>
+		</section>
+		<section><title>System Environment Driver</title>
+			<para>
+			- purpose
+			- not covered in much detail here.
+			</para>
+		</section>
+		<section><title>Board Driver</title>
+			<para>
+			- purpose
+			- how to add a new board
+			- board specification file syntax
+			</para>
+		</section>
+		<section><title>Chipset Driver</title>
+			<para>
+			- purpose
+			- explain how to add a new chipset driver
+			</para>
+		</section>
+		<section><title>Clock Driver</title>
+			<para>
+			- purpose
+			</para>
+			<section><title>Fixed Clock Drivers</title>
+				<para>
+				- fixed clock chip model
+				- syntax of fixed clock specification files (bindings)
+				</para>
+			</section>
+			<section><title>Phase-Locked-Loop (PLL) Drivers</title>
+				<para>
+				- PLL clock model
+				- implementation of a PLL driver using the DDK
+				</para>
+			</section>
+		</section>
+		<section><title>Digital Analog Converter (DAC) Driver</title>
+			<para>
+			- purpose
+			- implementation of a DAC driver using the DDK
+			</para>
+		</section>
+		<section><title>Monitor Driver</title>
+			<para>
+			- purpose
+			</para>
+			<section><title>Monitor Bindings</title>
+				<para>
+				- purpose
+				- explain how to add a new monitor specification
+				- explain monitor specification file syntax
+				</para>
+			</section>
+			<section><title>The Timelist Monitor Meta</title>
+				<para>
+				- explain underlying monitor model
+				- how to add a new timing set specification
+				</para>
+			</section>
+			<section><title>The Monosync Monitor Meta</title>
+				<para>
+				- explain underlying monitor model
+				- how to add a new timing set specification
+				</para>
+			</section>
+		</section>
+	</section>
+</article>
