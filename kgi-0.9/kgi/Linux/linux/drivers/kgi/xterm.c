@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: xterm.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:56  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -583,8 +586,6 @@ void xterm_do_reset(kgi_console_t *cons, int do_reset)
 		return;
 	}
 #endif
-	scroll_undo_gadgets(cons);
-
 	if (tty) {
 
 		tty->winsize.ws_col = cons->tb_size.x;
@@ -598,8 +599,8 @@ void xterm_do_reset(kgi_console_t *cons, int do_reset)
 /* !!!	kbd_reset(&KBD_STATE);
 */
 	kiidev_set_pointer_window(&cons->kii,
-		0, cons->tb_size.x * cons->tb_ctx.cell.x,
-		0, cons->tb_size.y * cons->tb_ctx.cell.y);
+		0, cons->tb_size.x * cons->text16->cell.x,
+		0, cons->tb_size.y * cons->text16->cell.y);
 
 	cons->mode	= 0;
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
@@ -645,7 +646,6 @@ void xterm_do_reset(kgi_console_t *cons, int do_reset)
 	scroll_gotoxy(cons, 0, 0);
 	scroll_erase_display(cons, 2);
 	scroll_sync(cons);
-	scroll_show_gadgets(cons);
 
 /* !!!	kbd_setleds(DEV.kbd); */
 }
@@ -752,8 +752,8 @@ static void xterm_report(kgi_console_t *cons, kgi_u_t what)
 #	define VT100ID	"\033[?1;2c"	/* VT100 with advanced video option */
 #	define VT102ID	"\033[?6c"
 
-#	define MOUSEX	('!' + (char)(cons->kii.ptr.x/cons->tb_ctx.cell.x))
-#	define MOUSEY	('!' + (char)(cons->kii.ptr.y/cons->tb_ctx.cell.y))
+#	define MOUSEX	('!' + (char)(cons->kii.ptr.x/cons->text16->cell.x))
+#	define MOUSEY	('!' + (char)(cons->kii.ptr.y/cons->text16->cell.y))
 
 	switch (what) {
 
@@ -1733,6 +1733,8 @@ int xterm_do_write(kgi_console_t *cons, int from_user, const char *buf, int coun
 		scroll_modified(cons, old_pos, (cons->flags & KGI_CF_NEED_WRAP)
 			? cons->wpos+1 : cons->wpos);
 	}
+
+	scroll_sync(cons);
 
 	return n;
 }

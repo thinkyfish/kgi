@@ -14,6 +14,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: console.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:47  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef _console_h
 #define	_console_h
@@ -161,9 +164,14 @@ struct kgi_console_s
 	kgi_u_t	(*AttrToPixel)(kgi_u_t attr);
 	kgi_u_t	(*PixelToAttr)(kgi_u_t pval);
 
-	/*	text buffer
+	/*	text buffer controls
 	*/
-	kgic_mode_text16context_t tb_ctx; /* text output device context	*/
+	kgi_text16_t	*text16;
+	kgi_ilut_t	*ilut;
+	kgi_tlut_t	*tlut;
+	kgi_marker_t	*cur;
+	kgi_marker_t	*ptr;
+
 	kgi_u16_t	*tb_buf;	/* background/scrollback buffer	*/
 	kgi_u_t		tb_total;	/* total characters in buffer	*/
 	kgi_u_t		tb_frame;	/* characters per visible frame	*/
@@ -249,8 +257,15 @@ extern void scroll_lf(kgi_console_t *cons);
 extern void scroll_reverse_lf(kgi_console_t *cons);
 extern void scroll_sync(kgi_console_t *cons);
 extern void scroll_gotoxy(kgi_console_t *cons, kgi_s_t new_x, kgi_s_t new_y);
+extern void scroll_hide_gadgets(kgi_console_t *cons);
+extern void scroll_undo_gadgets(kgi_console_t *cons);
+extern void scroll_show_gadgets(kgi_console_t *cons);
 
-extern kgi_console_font_t *default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
+extern kgi_console_font_t *	default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
+extern kgi_rgb_color_t		default_color[16];
+extern kgi_rgb_color_t		default_ptr_color[3];
+extern kgi_u8_t			default_ptr_64x64[1024];
+
 extern kgi_isochar_t console_font_ptoc(kgi_console_font_t *f, kgi_u_t p);
 extern kgi_u_t console_font_ctop(kgi_console_font_t *f, kgi_isochar_t c);
 
@@ -278,10 +293,6 @@ extern void scroll_bs(kgi_console_t *cons);
 extern void scroll_write(kgi_console_t *cons, kgi_isochar_t c);
 extern void scroll_need_sync(kgi_console_t *cons);
 extern void scroll_mksound(kgi_console_t *cons, kgi_u_t pitch, kgi_u_t duration);
-extern void scroll_hide_gadgets(kgi_console_t *cons);
-extern void scroll_undo_gadgets(kgi_console_t *cons);
-extern void scroll_show_gadgets(kgi_console_t *cons);
-
 #else
 
 #define	INLINE	extern inline
@@ -358,92 +369,6 @@ INLINE void scroll_mksound(kgi_console_t *cons, kgi_u_t pitch, kgi_u_t duration)
 {
 	KRN_DEBUG(0, "scroll_mksound(%p, %i, %i) not implemented yet.",
 		cons, pitch, duration);
-}
-
-INLINE void scroll_undo_gadgets(kgi_console_t *cons)
-{
-	if ((cons->kii.flags & KII_DF_FOCUSED) &&
-		(cons->kgi.flags & KGI_DF_FOCUSED)) {
-
-		if ((cons->flags & KGI_CF_POINTER_SHOWN) &&
-			cons->tb_ctx.PointerUndo) {
-
-			cons->tb_ctx.PointerUndo(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_POINTER_SHOWN;
-		}
-		if ((cons->flags & KGI_CF_CURSOR_SHOWN) &&
-			cons->tb_ctx.CursorUndo) {
-
-			cons->tb_ctx.CursorUndo(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_CURSOR_SHOWN;
-		}
-
-	} else {
-
-		KRN_ASSERT((cons->flags & (KGI_CF_POINTER_SHOWN |
-			KGI_CF_CURSOR_SHOWN)) == 0);
-	}
-}
-
-INLINE void scroll_hide_gadgets(kgi_console_t *cons)
-{
-	if ((cons->kii.flags & KII_DF_FOCUSED) &&
-		(cons->kgi.flags & KGI_DF_FOCUSED)) {
-
-		if (cons->flags & KGI_CF_POINTER_SHOWN) {
-
-			cons->tb_ctx.PointerHide(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_POINTER_SHOWN;
-		}
-		if (cons->flags & KGI_CF_CURSOR_SHOWN) {
-
-			cons->tb_ctx.CursorHide(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_CURSOR_SHOWN;
-		}
-
-	} else {
-
-		KRN_ASSERT((cons->flags & (KGI_CF_POINTER_SHOWN |
-			KGI_CF_CURSOR_SHOWN)) == 0);
-	}
-}
-
-INLINE void scroll_show_gadgets(kgi_console_t *cons)
-{
-	if (((cons->kii.flags & KII_DF_FOCUSED) && !cons->offset) &&
-		(cons->kgi.flags & KGI_DF_FOCUSED)) {
-
-		if ((cons->flags & KGI_CF_POINTER_SHOWN) &&
-			cons->tb_ctx.PointerUndo) {
-
-			cons->tb_ctx.PointerUndo(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_POINTER_SHOWN;
-		}
-		if ((cons->flags & KGI_CF_CURSOR_SHOWN) &&
-			cons->tb_ctx.CursorUndo) {
-
-			cons->tb_ctx.CursorUndo(&cons->tb_ctx);
-			cons->flags &= ~KGI_CF_CURSOR_SHOWN;
-		}
-
-		if (CONSOLE_MODE(cons, KGI_CM_SHOW_CURSOR)) {
-
-			cons->flags |= KGI_CF_CURSOR_SHOWN;
-			cons->tb_ctx.CursorShow(&cons->tb_ctx,
-				cons->x, cons->y);
-		}
-		if (CONSOLE_MODE(cons, KGI_CM_SHOW_POINTER)) {
-
-			cons->flags |= KGI_CF_POINTER_SHOWN;
-			cons->tb_ctx.PointerShow(&cons->tb_ctx, 
-				cons->kii.ptr.x, cons->kii.ptr.y);
-		}
-
-	} else {
-
-		KRN_ASSERT((cons->flags & (KGI_CF_CURSOR_SHOWN |
-			KGI_CF_POINTER_SHOWN)) == 0);
-	}
 }
 
 #endif	/* #if (!defined(DEBUG) || defined(COMPILING_CONSOLE_C)) */

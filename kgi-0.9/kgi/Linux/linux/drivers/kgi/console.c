@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: console.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:46  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -144,8 +147,14 @@ static kgi_u_t tb_ptoa_mono(kgi_u_t val)
 	return attr;
 }
 
-#define	tb_putcs(console, text, offset, count)	\
-	(console->tb_ctx.PutText16)(&(console->tb_ctx), offset, text, count)
+static inline void tb_putcs(kgi_console_t *cons, const kgi_u16_t *text,
+	kgi_u_t offset, kgi_u_t count)
+{
+	if (cons->text16) {
+
+		(cons->text16->PutText16)(cons->text16, offset, text, count);
+	}
+}
 
 /*
 **	console font handling
@@ -153,12 +162,10 @@ static kgi_u_t tb_ptoa_mono(kgi_u_t val)
 kgi_console_font_t *console_default_font(kgi_console_t *cons)
 {
 	kgi_u_t i = 0;
-	kgi_u_t y = cons->kgi.mode->img[0].out->dots.x / 
-		cons->kgi.mode->img[0].size.x;
-	KRN_DEBUG(3, "searching font for height %i", y);
 
+	KRN_DEBUG(3, "searching font for height %i", cons->text16->font.y);
 	for (i = 0; default_font[i] && 
-		(default_font[i]->size.y > y); i++) {
+		(default_font[i]->size.y > cons->text16->font.y); i++) {
 	}
 	KRN_DEBUG(3, "found font %i (%p)", i, default_font[i]);
 	return default_font[i];
@@ -243,7 +250,7 @@ extern kgi_console_t *console_arr[CONFIG_KGII_MAX_NR_CONSOLES];
 
 kii_s_t console_unmap_kii(kii_device_t *dev)
 {
-	scroll_undo_gadgets((kgi_console_t *) dev->priv.priv_ptr);
+	scroll_hide_gadgets((kgi_console_t *) dev->priv.priv_ptr);
 	return EOK;
 }
 
@@ -254,16 +261,52 @@ void console_map_kii(kii_device_t *dev)
 
 void console_do_kgi_unmap(kgi_console_t *cons)
 {
+	scroll_hide_gadgets(cons);
 	cons->flags |=  KGI_CF_SPLITLINE;
 	cons->flags &= ~KGI_CF_NO_HARDSCROLL;
-	if (cons->flags & (KGI_CF_POINTER_SHOWN | KGI_CF_CURSOR_SHOWN)) {
-
-		scroll_undo_gadgets(cons);
-	}
 }
 
 void console_do_kgi_map(kgi_console_t *cons)
 {
+	if (cons->tlut) {
+
+		if (cons->tlut->Set) {
+
+			(cons->tlut->Set)(cons->tlut, 0, 
+				0, cons->font->info->positions - 1,
+				cons->font->data);
+		}
+		if (cons->tlut->Select) {
+
+			(cons->tlut->Select)(cons->tlut, 0);
+		}
+	}
+
+	if (cons->ilut) {
+
+		if (cons->tlut->Set) {
+
+			(cons->ilut->Set)(cons->ilut, 0, 
+				0, 16, KGI_AM_COLORS, default_color);
+		}
+		if (cons->ilut->Select) {
+
+			(cons->ilut->Select)(cons->ilut, 0);
+		}
+	}
+	if (cons->ptr && 
+		(cons->ptr->modes & KGI_MM_3COLOR) &&
+		(cons->ptr->size.x == 64 && cons->ptr->size.y == 64)) {
+
+		(cons->ptr->SetMode)(cons->ptr, KGI_MM_3COLOR);
+		(cons->ptr->SetShape)(cons->ptr, 0, 
+			0,0, default_ptr_64x64, default_ptr_color);
+		if (cons->ptr->Select) {
+
+			(cons->ptr->Select)(cons->ptr, 0);
+		}
+	}
+
 	if (cons->kgi.mode->img[0].virt.y == cons->kgi.mode->img[0].size.y) {
 
 		kgi_s_t org = cons->origin - cons->offset;
@@ -298,9 +341,70 @@ void console_do_kgi_map(kgi_console_t *cons)
 	}
 	KRN_ASSERT(cons->kgi.flags & KGI_DF_FOCUSED);
 	scroll_sync(cons);
-	if (cons->kii.flags & KII_DF_FOCUSED) {
+}
 
-		scroll_show_gadgets(cons);
+void scroll_undo_gadgets(kgi_console_t *cons)
+{
+	if ((cons->flags & KGI_CF_POINTER_SHOWN) && cons->ptr->Undo) {
+
+		cons->ptr->Undo(cons->ptr);
+		cons->flags &= ~KGI_CF_POINTER_SHOWN;
+	}
+	if ((cons->flags & KGI_CF_CURSOR_SHOWN) && cons->cur->Undo) {
+
+		cons->cur->Undo(cons->cur);
+		cons->flags &= ~KGI_CF_CURSOR_SHOWN;
+	}
+}
+
+void scroll_hide_gadgets(kgi_console_t *cons)
+{
+	if (cons->flags & KGI_CF_POINTER_SHOWN) {
+
+		KRN_ASSERT(cons->ptr);
+		cons->ptr->Hide(cons->ptr);
+		cons->flags &= ~KGI_CF_POINTER_SHOWN;
+	}
+	if (cons->flags & KGI_CF_CURSOR_SHOWN) {
+
+		KRN_ASSERT(cons->cur);
+		cons->cur->Hide(cons->cur);
+		cons->flags &= ~KGI_CF_CURSOR_SHOWN;
+	}
+}
+
+void scroll_show_gadgets(kgi_console_t *cons)
+{
+	if ((cons->flags & KGI_CF_POINTER_SHOWN) && cons->ptr->Undo) {
+
+		cons->ptr->Undo(cons->ptr);
+		cons->flags &= ~KGI_CF_POINTER_SHOWN;
+	}
+	if ((cons->flags & KGI_CF_CURSOR_SHOWN) && cons->cur->Undo) {
+
+		cons->cur->Undo(cons->cur);
+		cons->flags &= ~KGI_CF_CURSOR_SHOWN;
+	}
+
+	if ((cons->kgi.flags & KGI_DF_FOCUSED) &&
+		(cons->kii.flags & KII_DF_FOCUSED) && !cons->offset) {
+
+		if (CONSOLE_MODE(cons, KGI_CM_SHOW_CURSOR) && cons->cur) {
+
+			cons->flags |= KGI_CF_CURSOR_SHOWN;
+			cons->cur->Show(cons->cur, cons->x, cons->y);
+		}
+		if (CONSOLE_MODE(cons, KGI_CM_SHOW_POINTER) && cons->ptr) {
+
+			cons->flags |= KGI_CF_POINTER_SHOWN;
+			cons->ptr->Show(cons->ptr,
+				cons->kii.ptr.x, cons->kii.ptr.y);
+		}
+
+	} else {
+
+		KRN_ASSERT(! (cons->flags & KGI_CF_CURSOR_SHOWN));
+		KRN_ASSERT(! (cons->flags & KGI_CF_POINTER_SHOWN));
 	}
 }
 
@@ -372,6 +476,8 @@ void scroll_sync(kgi_console_t *cons)
 			end = back;
 		}
 
+		scroll_undo_gadgets(cons);
+
 		if (frm < tb_total) {
 
 			if (tb_total >= end) {
@@ -389,6 +495,8 @@ void scroll_sync(kgi_console_t *cons)
 			tb_putcs(cons, tb+frm-tb_total, frm-orig, end-frm);
 		}
 
+		scroll_show_gadgets(cons);
+
 	} else {
 /*
 		if (cons->flags & KGI_CF_SCROLLED) {
@@ -401,7 +509,7 @@ void scroll_sync(kgi_console_t *cons)
 
 				kgi_s_t split = cons->font->size.y *
 					((orig+cons->tb_size.y < cons->tb_virt.y)
-						? cons->tb_ctx.size.y
+						? cons->text16.size.y
 						: cons->tb_virt.y - orig);
 
 				kgidev_set_split(&(cons->kgi), split - 1);
@@ -417,20 +525,63 @@ void scroll_sync(kgi_console_t *cons)
 
 static kgi_s_t scroll_init(kgi_console_t *cons)
 {
-	kgic_mode_text16context_request_t request;
-	void *result = &(cons->tb_ctx);
-	kgi_size_t result_size = sizeof(cons->tb_ctx);
+	kgi_u_t	index = 0;
+	kgi_resource_t *resource;
+	kgi_marker_t *marker;
 
-	request.revision = KGIC_MODE_TEXT16CONTEXT_REVISION;
-	request.image = 0;
-	if (kgidev_mode_command(&cons->kgi, KGIC_MODE_TEXT16CONTEXT, 
-		&request, &result, &result_size)) {
+	while ((index < __KGI_MAX_NR_IMAGE_RESOURCES) &&
+		(resource = cons->kgi.mode->img[0].resource[index])) {
 
-		KRN_DEBUG(1, "could not get text16 context");
+		switch (resource->type) {
+
+		case KGI_RT_TEXT16_CONTROL:
+			KRN_DEBUG(2, "text16: %s", resource->name);
+			cons->text16 = (kgi_text16_t *) resource;
+			break;
+
+		case KGI_RT_CURSOR_CONTROL:
+			marker = (kgi_marker_t *) resource;
+			if ((NULL == cons->cur) ||
+				(cons->cur->Undo && (NULL == marker->Undo))) {
+
+				KRN_DEBUG(2, "cursor: %s", resource->name);
+				cons->cur = marker;
+			}
+			break;
+
+		case KGI_RT_POINTER_CONTROL:
+			marker = (kgi_marker_t *) resource;
+			if ((NULL == cons->ptr) ||
+				(cons->ptr->Undo && (NULL == marker->Undo))) {
+
+				KRN_DEBUG(2, "pointer: %s", resource->name);
+				cons->ptr = marker;
+			}
+			break;
+
+		case KGI_RT_TLUT_CONTROL:
+			KRN_DEBUG(2, "tlut: %s", resource->name);
+			cons->tlut = (kgi_tlut_t *) resource;
+			break;
+
+		case KGI_RT_ILUT_CONTROL:
+			KRN_DEBUG(2, "ilut: %s", resource->name);
+			cons->ilut = (kgi_ilut_t *) resource;
+			break;
+
+		default:
+			break;
+		}
+		index++;
+	}
+	
+	if (! (cons->text16)) {
+
+		KRN_DEBUG(1, "could not get text16 resource "
+			"(text16 %p, cur %p, ptr %p)",
+			cons->text16, cons->cur, cons->ptr);
 		return -EINVAL;
 	}
-	KRN_ASSERT(result == &(cons->tb_ctx));
-	KRN_ASSERT(result_size == sizeof(cons->tb_ctx));
 
 	if (! cons->tb_buf) {
 
@@ -441,30 +592,31 @@ static kgi_s_t scroll_init(kgi_console_t *cons)
 		}
 		memset(cons->tb_buf, 0, CONFIG_KGII_CONSOLEBUFSIZE);
 	}
-	cons->tb_size.x = cons->tb_ctx.size.x;
-	cons->tb_size.y = cons->tb_ctx.size.y;
 
-	cons->tb_virt.x = cons->tb_ctx.size.x;
+	cons->tb_size.x = cons->text16->size.x;
+	cons->tb_size.y = cons->text16->size.y;
+
+	cons->tb_virt.x = cons->text16->size.x;
 	cons->tb_virt.y = CONFIG_KGII_CONSOLEBUFSIZE / 
 		(sizeof(*cons->tb_buf)*cons->tb_virt.x);
-	if (cons->tb_virt.y < 2*cons->tb_ctx.size.y) {
+	if (cons->tb_virt.y < 2*cons->text16->size.y) {
 
 		KRN_DEBUG(1, "text buffer too small, reset failed");
 		vfree(cons->tb_buf);
 		cons->tb_buf = NULL;
 		return -ENOMEM;
 	}
-	if (cons->tb_virt.y < cons->tb_ctx.size.y) {
+	if (cons->tb_virt.y < cons->text16->size.y) {
 
 		cons->kgi.mode->img[0].virt.y = (cons->tb_virt.y *
-			cons->kgi.mode->img[0].virt.y) / cons->tb_ctx.virt.y;
-		cons->tb_ctx.virt.y = cons->tb_virt.y;
+			cons->kgi.mode->img[0].virt.y) / cons->text16->virt.y;
+		cons->text16->virt.y = cons->tb_virt.y;
 	}
-	if (cons->tb_virt.y > cons->tb_ctx.size.y) {
+	if (cons->tb_virt.y > cons->text16->size.y) {
 
 		cons->kgi.mode->img[0].virt.y = (cons->tb_size.y *
-			cons->kgi.mode->img[0].virt.y) / cons->tb_ctx.virt.y;
-		cons->tb_ctx.virt.y = cons->tb_size.y;
+			cons->kgi.mode->img[0].virt.y) / cons->text16->virt.y;
+		cons->text16->virt.y = cons->tb_size.y;
 	}
 
 	cons->tb_frame = cons->tb_virt.x * cons->tb_size.y;
@@ -481,13 +633,13 @@ static kgi_s_t scroll_init(kgi_console_t *cons)
 
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
 #warning finish this!
-	KRN_ASSERT(cons->tb_ctx.size.x == cons->tb_size.x);
-	KRN_ASSERT(cons->tb_ctx.size.y == cons->tb_size.y);
-	KRN_ASSERT(cons->tb_ctx.virt.x == cons->tb_virt.x);
+	KRN_ASSERT(cons->text16->size.x == cons->tb_size.x);
+	KRN_ASSERT(cons->text16->size.y == cons->tb_size.y);
+	KRN_ASSERT(cons->text16->virt.x == cons->tb_virt.x);
 
 	KRN_DEBUG(4, "%ix%i (%ix%i virt) scroller initialized",
-		cons->tb_ctx.size.x, cons->tb_ctx.size.y,
-		cons->tb_ctx.virt.x, cons->tb_ctx.virt.y);
+		cons->text16->size.x, cons->text16->size.y,
+		cons->text16->virt.x, cons->text16->virt.y);
 	return EOK;
 }
 
@@ -1110,8 +1262,6 @@ static void console_printk(struct console *cp, const char *b, unsigned count)
 
 	old_pos = cons->wpos;
 
-	scroll_undo_gadgets(cons);
-
 	while (count--) {
 
 		c = *(b++);
@@ -1122,7 +1272,6 @@ static void console_printk(struct console *cp, const char *b, unsigned count)
 			if (c != ASCII_CR) {
 
 				scroll_modified(cons, old_pos, cons->wpos);
-
 				scroll_lf(cons);
 				scroll_sync(cons);
 			}
@@ -1142,10 +1291,8 @@ static void console_printk(struct console *cp, const char *b, unsigned count)
 	if (cons->wpos != old_pos) {
 
 		scroll_modified(cons, old_pos, cons->wpos);
-		scroll_sync(cons);
 	}
-	scroll_show_gadgets(cons);
-
+	scroll_sync(cons);
 	printing = 0;
 }
 
@@ -1193,8 +1340,6 @@ static void dumb_do_reset(kgi_console_t *cons, kgi_u_t do_reset)
 
 	cons->kii.event_mask = KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT;
 
-	scroll_undo_gadgets(cons);
-
 	cons->mode = 0;
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
 	CONSOLE_SET_MODE(cons, KGI_CM_AUTO_WRAP);
@@ -1218,11 +1363,10 @@ static void dumb_do_reset(kgi_console_t *cons, kgi_u_t do_reset)
 	scroll_update_attr(cons);
 	scroll_gotoxy(cons, 0, 0);
 	scroll_erase_display(cons, 2);
+
 	scroll_sync(cons);
 
 /* !!!	kbd_reset(&(KBD_STATE)); */
-
-	scroll_show_gadgets(cons);
 	/* !!! kbd_setleds */
 }
 
@@ -1382,9 +1526,7 @@ static void console_bottomhalf(void)
 
 			kgi_console_t *cons = console_arr[i];
 
-			scroll_undo_gadgets(cons);
 			scroll_sync(cons);
-			scroll_show_gadgets(cons);
 			clear_bit(i, console_need_sync);
 		}
 	}
@@ -1411,6 +1553,7 @@ static int console_open(struct tty_struct *tty, struct file *filp)
 		memset(cons, 0, sizeof(kgi_console_t));
 
 		cons->kgimode.images = 1;
+		cons->kgimode.img[0].flags |= KGI_IF_TEXT16;
 
 		cons->kgi.mode = &(cons->kgimode);
 		cons->kgi.flags |= KGI_DF_CONSOLE;
@@ -1542,10 +1685,8 @@ static int console_write(struct tty_struct *tty, int from_user,
 	kgi_console_t *cons = (kgi_console_t *) tty->driver_data;
 	int cnt;
 
-	scroll_undo_gadgets(cons);
 	cnt = cons->DoWrite(cons, from_user, buf, count);
 	scroll_sync(cons);
-	scroll_show_gadgets(cons);
 
 	return cnt;
 }
@@ -1554,7 +1695,6 @@ static void console_put_char(struct tty_struct *tty, unsigned char c)
 {
 	kgi_console_t *cons = (kgi_console_t *) tty->driver_data;
 
-	scroll_undo_gadgets(cons);
 	cons->DoWrite(cons, 0, &c, 1);
 	scroll_sync(cons);
 }
