@@ -1,5 +1,5 @@
 
-default.exit: ../lib.o
+default.exit:: ../lib.o
 
 OBJECTS = Xtrans.o
 

@@ -2,14 +2,14 @@
 #	Linux kernel tree build Makefile
 # -----------------------------------------------------------------------------
 
-default.exit: linux_build
+default.exit:: linux_build
 
-all.exit: linux_build
+all.exit:: linux_build
 
-clean.exit:
+clean.exit::
 	if [ -f linux/Makefile ]; then make -C linux/ clean; fi
 
-distclean.exit: clean.exit
+distclean.exit::
 	rm -f *.log
 	(cd linux;					\
 	for i in `find -type d`; do			\

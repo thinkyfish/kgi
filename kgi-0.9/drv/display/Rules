@@ -9,7 +9,7 @@
 #	generate driver object from metalanguage and bindings.
 #
 %.o:	%-meta.o
-	$(LD_BIN) -o $@ -r $^
+	$(LD) -o $@ -r $^
 
 CC_INCLUDE_PATH += $(KGIM_INCLUDE)
 

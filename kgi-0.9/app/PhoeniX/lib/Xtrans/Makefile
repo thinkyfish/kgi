@@ -1,5 +1,5 @@
 
-default.exit: ../Xtrans.o
+default.exit:: ../Xtrans.o
 
 
 OBJECTS = trans-x11.o	\

@@ -1,5 +1,5 @@
 
-default.exit: ../xaa.so
+default.exit:: ../xaa.so
 
 #
 #	stems for special objects

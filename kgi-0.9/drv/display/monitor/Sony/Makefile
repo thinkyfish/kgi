@@ -6,8 +6,8 @@ OBJECTS = CPD100GST.o CPD110EST.o CPD120AS.o CPD1730.o \
 	CPDL150.o \
 	GDMF400T9.o GDMF500.o GDMW900.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_MONITOR_VENDOR),Sony)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+default.entry:: $(CONFIG_MONITOR_MODEL).o
 endif

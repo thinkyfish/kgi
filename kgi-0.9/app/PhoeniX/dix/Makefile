@@ -1,5 +1,5 @@
 
-default.exit: ../dix.o
+default.exit:: ../dix.o
 
 OBJECTS = atom.o	\
 	colormap.o	\

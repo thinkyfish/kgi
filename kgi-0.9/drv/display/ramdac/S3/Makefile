@@ -2,10 +2,8 @@ OBJECTS = ViRGE.o
 
 ViRGE.o:	ViRGE-meta.o ViRGE-bind.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_RAMDAC_VENDOR),S3)
-default.entry: $(CONFIG_RAMDAC_MODEL).o
-else
-default.entry:
+default.entry:: $(CONFIG_RAMDAC_MODEL).o
 endif

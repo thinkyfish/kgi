@@ -2,8 +2,8 @@ OBJECTS = CM2111M.o CM2112M.o CM500U.o CM640U.o CM641U.o \
 	CM643U.o CM751U.o CM752U.o CM753U.o CM811U.o CM812U.o \
 	CM813U.o CM814U.o CMDT3140.o CML150.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_MONITOR_VENDOR),Hitachi)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+default.entry:: $(CONFIG_MONITOR_MODEL).o
 endif

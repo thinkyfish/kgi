@@ -9,7 +9,5 @@ OBJECTS = ##meta##.o
 all.entry: $(OBJECTS)
 
 ifeq ($(CONFIG_CHIPSET_VENDOR),##VENDOR##)
-default.entry: $(CONFIG_CHIPSET_MODEL).o
-else
-default.entry:
+default.entry:: $(CONFIG_CHIPSET_MODEL).o
 endif

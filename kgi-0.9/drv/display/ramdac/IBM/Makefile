@@ -2,10 +2,8 @@ OBJECTS = VGA.o
 
 VGA.o:	VGA-meta.o VGA-bind.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_RAMDAC_VENDOR),IBM)
-default.entry: $(CONFIG_RAMDAC_MODEL).o
-else
-default.entry:
+default.entry:: $(CONFIG_RAMDAC_MODEL).o
 endif

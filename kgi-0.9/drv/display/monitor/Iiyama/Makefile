@@ -4,9 +4,8 @@ OBJECTS = A101GT.o A102GT.o A201HT.o A702HT.o A901HT.o \
 	TSA3931HT.o TSA4632HT.o \
 	TXA3611HT.o TXA3811HT.o TXA3821HT.o
 
-
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_MONITOR_VENDOR),Iiyama)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+default.entry:: $(CONFIG_MONITOR_MODEL).o
 endif

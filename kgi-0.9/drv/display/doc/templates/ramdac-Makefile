@@ -2,10 +2,8 @@ OBJECTS = ##META##.o
 
 ##META##.o:	##META##-meta.o ##META##-bind.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_RAMDAC_VENDOR),##VENDOR##)
-default.entry: $(CONFIG_RAMDAC_MODEL).o
-else
-default.entry:
+default.entry:: $(CONFIG_RAMDAC_MODEL).o
 endif

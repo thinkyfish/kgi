@@ -2,13 +2,13 @@
 #	X11 build Makefile
 # -----------------------------------------------------------------------------
 
-default.exit:
+default.exit::
 	(cd xc; make World 2>&1 | tee ../make-World.log)
 
-clean.exit:
+clean.exit::
 	if [ -f xc/Makefile && -f xc/xmakefile ]; then make -C xc/ clean; fi
 
-distclean.exit: clean.exit
+distclean.exit::
 	rm -f *.log
 	(cd xc;						\
 	for i in `find -type d`; do			\

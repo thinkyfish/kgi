@@ -1,5 +1,5 @@
 
-default.exit: ../os.o
+default.exit:: ../os.o
 
 OBJECTS = WaitFor.o	\
 	access.o	\

@@ -1,4 +1,4 @@
-default.exit: modules/$(CONFIG_BOARD_VENDOR)/$(CONFIG_BOARD_MODEL).o
+default.exit:: modules/$(CONFIG_BOARD_VENDOR)/$(CONFIG_BOARD_MODEL).o
 
 SUBSYSTEMS = chipset/chipset.o clock/clock.o ramdac/ramdac.o monitor/monitor.o board/board.o
 #	system/system.o
@@ -7,12 +7,12 @@ SUBSYSTEMS = chipset/chipset.o clock/clock.o ramdac/ramdac.o monitor/monitor.o b
 modules/$(CONFIG_BOARD_VENDOR)/$(CONFIG_BOARD_MODEL).o:
 	@echo writing driver to $@
 	mkdir -p modules/$(CONFIG_BOARD_VENDOR)
-	$(LD_BIN) -o $@ -r $(SUBSYSTEMS)
+	$(LD) -o $@ -r $(SUBSYSTEMS)
 
-clean.exit:
+clean.exit::
 	rm -f menu welcome.*.htf
 
-distclean.exit:
+distclean.exit::
 	rm -rf modules
 
 welcome.en.htf: $(DIR_SOURCE)/status2htf.awk $(wildcard $DIR_SOURCE/*/*/status)

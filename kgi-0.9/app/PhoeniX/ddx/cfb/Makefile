@@ -1,5 +1,5 @@
 
-default.exit: ../cfb.so ../cfb08.so ../cfb16.so ../cfb24.so ../cfb32.so
+default.exit:: ../cfb.so ../cfb08.so ../cfb16.so ../cfb24.so ../cfb32.so
 
 #
 #	stems for shared sources

@@ -5,8 +5,8 @@ OBJECTS = Belinea101510.o Belinea102010.o Belinea103040.o \
 	Belinea107060.o Belinea107065.o Belinea108015.o \
 	Belinea108050.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_MONITOR_VENDOR),MAXDATA)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+default.entry:: $(CONFIG_MONITOR_MODEL).o
 endif

@@ -1,5 +1,5 @@
 
-default.exit:	../ddx.o
+default.exit::	../ddx.o
 
 OBJECTS = phoenixInput.o	\
 	phoenixOutput.o		\

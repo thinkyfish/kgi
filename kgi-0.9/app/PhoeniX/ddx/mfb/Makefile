@@ -1,4 +1,4 @@
-default.exit:	../mfb.so
+default.exit::	../mfb.so
 
 OBJECTS = mfbgc.o	\
 	mfbwindow.o	\

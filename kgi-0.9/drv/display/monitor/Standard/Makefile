@@ -1,7 +1,7 @@
 OBJECTS = MDA.o SVGA.o VGA.o
 
-all.entry: $(OBJECTS)
+all.entry:: $(OBJECTS)
 
 ifeq ($(CONFIG_MONITOR_VENDOR),Standard)
-default.entry: $(CONFIG_MONITOR_MODEL).o
+default.entry:: $(CONFIG_MONITOR_MODEL).o
 endif

@@ -1,5 +1,5 @@
 
-default.exit: ../mi.o
+default.exit:: ../mi.o
 
 OBJECTS = mivaltree.o	\
 	mipolyseg.o	\
