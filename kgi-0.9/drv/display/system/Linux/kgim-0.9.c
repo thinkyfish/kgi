@@ -11,6 +11,9 @@
 ** ---------------------------------------------------------------------------
 **
 ** 	$Log: kgim-0.9.c,v $
+** 	Revision 1.1.1.1  2000/04/18 08:51:03  seeger_s
+** 	- initial import of pre-SourceForge tree
+** 	
 */
 
 #define	MODULE
@@ -19,6 +22,7 @@
 
 #include <linux/kernel.h>
 #include <linux/string.h>
+#include <linux/module.h>
 
 #include <kgi/module.h>
 
@@ -218,7 +222,7 @@ static kgi_error_t kgim_display_command(void *ctx, kgi_u_t cmd, void *in,
 {
 	KRN_DEBUG(2, "kgim_display_command(cmd = %d)", cmd);
 	
-	return -E(DRIVER, INVAL);
+	return -KGI_ERRNO(DRIVER, INVAL);
 }
 
 static kgi_error_t kgim_display_mode_command(void *ctx,
@@ -226,7 +230,7 @@ static kgi_error_t kgim_display_mode_command(void *ctx,
 {
 	KRN_DEBUG(2, "kgim_display_mode_command(cmd = %d)", cmd);
 	
-	return -E(DRIVER, INVAL);
+	return -KGI_ERRNO(DRIVER, INVAL);
 }
 
 static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
@@ -247,7 +251,7 @@ static kgi_error_t kgim_display_check_mode(kgi_display_t *kgi_dpy,
 	if (1 != images) {
 
 		KRN_DEBUG(1, "%i images not yet supported");
-		return -E(DRIVER, NOSUP);
+		return -KGI_ERRNO(DRIVER, NOSUP);
 	}
 
 #warning for KGI_TC_CHECK too??
@@ -460,6 +464,7 @@ static void kgim_display_set_mode(kgi_display_t *kgi_dpy,
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
 		if (meta && meta->ModePrepare) {			\
 									\
+			KRN_DEBUG(3, "preparing " #sys);		\
 			meta->ModePrepare(				\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_data,\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_io,\
