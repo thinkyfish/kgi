@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: 1.9 $" 
+HTF_REVISION="$Revision: 1.10 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -45,6 +45,19 @@ things documented. -- <i>Steffen Seeger</i>
 	<td><b>Snapshots</b></td>
 	<td><b>Release Notes</b></td>
 </tr>
+<tr VALIGN=TOP BGCOLOR="#FFFFCC">
+	<td><a href="$KGI_DOWNLOAD_URL/0.9/kgi-0.9-20010703.tar.bz2">2001-07-03</a></td>
+	<td><ul>
+		<li>PhoeniX server enhancments (XAA, SGIs OpenGL 
+			and GLX sample implementation added)</li>
+		<li>KGI environment improvements (per-image resources,
+			Permedia sample driver almost works as boot 
+			driver substitute)</li>
+		<li>Permedia and VGA-text drivers improved (text handling,
+			cursor support and color/texture look up table
+			support)</li>
+	</ul></td>
+</tr>
 <tr valign=top bgcolor="#FFFFCC">
 	<td><a href="$KGI_DOWNLOAD_URL/0.9/kgi-0.9-20001011.tar.gz">2000-10-11</a></td>
 	<td><ul>
@@ -58,19 +71,6 @@ things documented. -- <i>Steffen Seeger</i>
 	<li>some minor cleanups</li>
 	<li>improvements on the DisplayDDK documentation</li>
 	</li>
-	</ul></td>
-</tr>
-<tr VALIGN=TOP BGCOLOR="#FFFFCC">
-	<td><a href="$KGI_DOWNLOAD_URL/0.9/kgi-0.9-20000418.tar.gz">2000-04-18</a></td>
-	<td><ul>
-		<li>it compiles again (except the X server), also in a 
-			separate build tree.</li>
-        	<li>moved source tree to SourceForge, this opportunity 
-			has been used to clean the tree and to unify the 
-			build/configuration process for clock and monitor
-			drivers as well as to make some minor clean-ups</li>
-		<li>added first version of a driver development SDK</li>
-		<li>added TI TVP3026 ramdac driver (PLL still missing)</li>
 	</ul></td>
 </tr>
 
