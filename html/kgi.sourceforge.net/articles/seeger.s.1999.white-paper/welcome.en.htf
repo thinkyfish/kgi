@@ -288,7 +288,7 @@ etc. being available. However, if present they may benefit from this. This
 allows KGI driver to be used as userspace drivers or in-kernel drivers
 without modification.
 <br>The intra-display driver interface is defined in 
-<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/include/kgi/module.h"><tt>file:kgi-0.9/drv/display/include/kgi/module.h</tt></a>
+<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/kgi/module.h"><tt>kgi-0.9/drv/display/kgi/module.h</tt></a>
 </blockquote>
 
 <h4><a name="environment"></a>The Physical I/O and Environment OS Support</h4>
