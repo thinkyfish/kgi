@@ -13,10 +13,13 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: kgi.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:52  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	VERSION		"$Revision: 1.19 $"
+#define	VERSION		"$Revision: 1.1.1.1 $"
 
 #define	DEBUG_LEVEL	1
 
@@ -36,11 +39,6 @@ typedef struct wait_queue *wait_queue_head_t;
 #define	KGI_SYS_NEED_IO
 #include <linux/kgii.h>
 
-/*
-#include "default/clut.inc"
-#include "default/pointer.inc"
-*/
-
 kgi_u8_t console_map[CONFIG_KGII_MAX_NR_FOCUSES][CONFIG_KGII_MAX_NR_CONSOLES];
 kgi_u8_t graphic_map[CONFIG_KGII_MAX_NR_FOCUSES][CONFIG_KGII_MAX_NR_CONSOLES];
 kgi_u8_t focus_map[CONFIG_KGII_MAX_NR_DEVICES];
@@ -53,90 +51,6 @@ static kgi_display_t	*kgidpy[KGI_MAX_NR_DISPLAYS];
 /*
 **	display handling
 */
-#if 0
-/*	Hide the cursor and pointer, even if they are in hardware.
-*/
-void kgidev_hide_gadgets(kgi_device_t *dev)
-{
-	kgi_display_t *dpy = kgidpy[dev->dpy_id];
-
-	KRN_ASSERT(dev->flags & KGI_DF_FOCUSED);
-
-	if ((dev->flags & KGI_DF_POINTER_SHOWN) && dpy->PointerHide) {
-
-		(dpy->PointerHide)(dpy);
-		dev->flags &= ~(KGI_DF_POINTER_FB_MODIFIED |
-			KGI_DF_POINTER_SHOWN);
-	}
-
-	if ((dev->flags & KGI_DF_CURSOR_SHOWN) && dpy->CursorHide) {
-
-		(dpy->CursorHide)(dpy);
-		dev->flags &= ~(KGI_DF_CURSOR_FB_MODIFIED |
-			KGI_DF_CURSOR_SHOWN);
-	}
-}
-
-/*	Undo fb modifications, does nothing if we have hardware cursor/pointer.
-*/
-void kgidev_undo_gadgets(kgi_device_t *dev)
-{
-	kgi_display_t *dpy = kgidpy[dev->dpy_id];
-
-	KRN_ASSERT(dev->flags & KGI_DF_FOCUSED);
-
-	if ((dev->flags & KGI_DF_POINTER_FB_MODIFIED) && dpy->PointerUndo) {
-
-		(dpy->PointerUndo)(dpy);
-		dev->flags &= ~(KGI_DF_POINTER_FB_MODIFIED |
-			KGI_DF_POINTER_SHOWN);
-	}
-
-	if ((dev->flags & KGI_DF_CURSOR_FB_MODIFIED) && dpy->CursorUndo) {
-
-		(dpy->CursorUndo)(dpy);
-		dev->flags &= ~(KGI_DF_CURSOR_FB_MODIFIED |
-			KGI_DF_CURSOR_SHOWN);
-	}
-}
-
-/*	Update cursor and pointer, undo fb modifications before.
-*/
-void kgidev_show_gadgets(kgi_device_t *dev)
-{
-	kgi_display_t *dpy = kgidpy[dev->dpy_id];
-
-	KRN_ASSERT(dev->flags & KGI_DF_FOCUSED);
-
-	if ((dev->flags & KGI_DF_POINTER_FB_MODIFIED) && dpy->PointerUndo) {
-
-		(dpy->PointerUndo)(dpy);
-	}
-
-	if ((dev->flags & KGI_DF_CURSOR_FB_MODIFIED) && dpy->CursorUndo) {
-
-		(dpy->CursorUndo)(dpy);
-	}
-
-	if (dev->flags & KGI_DF_SHOW_GADGETS) {
-
-		if ((dev->flags & KGI_DF_CURSOR_TO_SHOW) && dpy->CursorShow) {
-
-			(dpy->CursorShow)(dpy, dev->cur.x, dev->cur.y);
-			dev->flags |= KGI_DF_CURSOR_SHOWN | (dpy->CursorUndo
-				? KGI_DF_CURSOR_FB_MODIFIED : 0);
-		}
-
-		if ((dev->flags & KGI_DF_POINTER_TO_SHOW) && dpy->PointerShow) {
-
-			(dpy->PointerShow)(dpy, dev->ptr.x,dev->ptr.y);
-			dev->flags |= KGI_DF_POINTER_SHOWN | (dpy->PointerUndo
-				? KGI_DF_POINTER_FB_MODIFIED : 0);
-		}
-	}
-}
-#endif
-
 kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *in,
 	void **out, kgi_size_t *out_size)
 {
@@ -144,7 +58,7 @@ kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *in,
 
 		return -EPROTO;
 	}
-	if (!KGI_VALID_DISPLAY_ID(dev->dpy_id) ||
+	if (! KGI_VALID_DISPLAY_ID(dev->dpy_id) ||
 		(NULL == kgidpy[dev->dpy_id])) {
 
 		KRN_DEBUG(1, "no valid display device");
@@ -156,29 +70,6 @@ kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *in,
 		: (kgidpy[dev->dpy_id]->Command)(kgidpy[dev->dpy_id],
 			cmd, in, out, out_size);
 }
-
-kgi_error_t kgidev_mode_command(kgi_device_t *dev, kgi_u_t cmd, void *in,
-	void **out, kgi_size_t *out_size)
-{
-	kgic_mode_context_t ctx;
-	KRN_ASSERT((cmd & KGIC_TYPE_MASK) == KGIC_MODE_COMMAND);
-
-	if (! (KGI_VALID_DISPLAY_ID(dev->dpy_id) && 
-		kgidpy[dev->dpy_id] &&
-		kgidpy[dev->dpy_id]->ModeCommand)) {
-
-		KRN_DEBUG(1, "invalid mode request");
-		return -EINVAL;
-	}
-	ctx.dpy      = kgidpy[dev->dpy_id];
-	ctx.dev_mode = dev->mode->dev_mode;
-	ctx.images   = dev->mode->images;
-	ctx.img      = dev->mode->img;
-	return (NULL == ctx.dpy->ModeCommand)
-		? -ENXIO
-		: (ctx.dpy->ModeCommand)(&ctx, cmd, in, out, out_size);
-}
-
 
 /*	Check if a mode is valid. This returns a valid <mode> and KGI_EOK if
 **	the mode can be done. NOTE: <cmd> must be either KGI_TC_PROPOSE or
@@ -408,9 +299,21 @@ static void kgi_reattach_device(kgi_s_t id)
 
 static inline kgi_u_t kgi_can_do_console(kgi_display_t *dpy)
 {
-	KRN_ASSERT(dpy);
+	kgi_mode_t mode;
+	kgi_error_t err;
 
-	return 0;
+	memset(&mode, 0, sizeof(mode));
+	mode.images = 1;
+	mode.img[0].flags |= KGI_IF_TEXT16;
+
+	err = kgidpy_check_mode(dpy, &mode, KGI_TC_PROPOSE);
+
+	if (mode.dev_mode) {
+
+		kfree(mode.dev_mode);
+	}
+
+	return (KGI_EOK == err) ? 0 : (mode.img[0].flags & KGI_IF_TEXT16);
 }
 
 static inline kgi_u_t kgi_must_do_console(kgi_display_t *dpy)
@@ -690,6 +593,9 @@ void kgi_init(void)
 	dev_console_init();
 #ifdef CONFIG_KGI_DEV_GRAPHIC
 	dev_graphic_init();
+#endif
+#ifdef CONFIG_KGI_DEV_EVENT
+	dev_event_init();
 #endif
 	/* !!!	vcs_init();	*/
 }
