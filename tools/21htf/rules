@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 #	htf implicit rules
 #
-GMAKE_CLEAN_INIT+= "*.gif" "*.jpg" "*.html"
+GMAKE_CLEAN_INIT += "*.gif" "*.jpeg" "*.png" "*.html"
 
 #	*.html documents are generated from "HyperTextFragments" (htf).
 #	These are the part between the "<body>" and "</body>" directives. 
