@@ -1,0 +1,25 @@
+/* ----------------------------------------------------------------------------
+**	default ANSI textmode palette
+** ----------------------------------------------------------------------------
+*/
+#define	I(x)	((0xFFFF * (x))/100)
+static const kgi_u16_t console_text16_ilut[3*16] =
+{
+	I(  0), I(  0), I(  0),		/* black		*/
+	I(  0), I(  0), I( 66),		/* blue			*/
+	I(  0), I( 66), I(  0),		/* green		*/
+	I(  0), I( 66), I( 66),		/* cyan			*/
+	I( 66), I(  0), I(  0),		/* red			*/
+	I( 66), I(  0), I( 66),		/* magenta		*/
+	I( 66), I( 66), I(  0),		/* brown		*/
+	I( 66), I( 66), I( 66),		/* light gray		*/
+	I( 33), I( 33), I( 33),		/* dark gray		*/
+	I( 33), I( 33), I(100),		/* light blue		*/
+	I( 33), I(100), I( 33),		/* light green		*/
+	I( 33), I(100), I(100),		/* light cyan		*/
+	I(100), I( 33), I( 33),		/* light red		*/
+	I(100), I( 33), I(100),		/* light magenta	*/
+	I(100), I(100), I( 33),		/* yellow		*/
+	I(100), I(100), I(100)		/* white		*/
+};
+#undef	I
