@@ -14,12 +14,19 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: graphic.c,v $
+**	Revision 1.3  2001/09/13 08:48:00  seeger_s
+**	- bugfix: calculation of exec_size wrong in graph_accel_nopage()
+**	
 **	Revision 1.2  2001/07/03 08:52:36  seeger_s
 **	- mode commands removed (will be replaced by image resource mapping)
 **	
 **	Revision 1.1.1.1  2000/04/18 08:50:48  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
+** 	- vm_offset changed to vm_pgoff in 2.3.25
+**	- MAP_NR / virt_to_page: Argument type changed in 2.4.0-test6-pre8
+**	- Other changes at unknown version levels, grep for "What version"
+**	  and fix to correct version if you know.
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -36,6 +43,23 @@
 #include <linux/malloc.h>
 #include <asm/io.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+#include <linux/highmem.h>
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+#define private_data private_data
+#define vm_private_data vm_private_data
+#define NOPAGE_SIGBUS_RETVAL NOPAGE_SIGBUS
+#else
+#define private_data private
+#define vm_private_data vm_private
+#define NOPAGE_SIGBUS_RETVAL 1
+#define VM_KGIUNMAP 0
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
 typedef struct wait_queue *wait_queue_head_t;
 #define	init_waitqueue_head(head)	*((wait_queue_head_t *)(head)) = NULL
@@ -47,6 +71,11 @@ typedef struct wait_queue *wait_queue_head_t;
 #include <kgi/graphic.h>
 
 #include <asm/uaccess.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+#include <asm/pgalloc.h>
+#include <asm/semaphore.h>
+#endif
 #include <linux/poll.h>
 #include <linux/wrapper.h>
 
@@ -134,8 +163,11 @@ static inline void fast_remap_page_range(struct mm_struct *mm,
 			addr += PAGE_SIZE;
 		}
 	}
-
+	/* #ifdef CONFIG_SMP
+	   smp_flush_tlb();
+	   #else */
 	flush_tlb_range(mm, beg, end);
+	/* #endif */
 }
 
 /*	unmap a range of pages in the mapping table <mm> that are mapped
@@ -302,14 +334,14 @@ static inline void graph_unmap_mappings(graph_mapping_t *map)
 
 static void graph_mapping_open(struct vm_area_struct *vma)
 {
-	graph_mapping_t *map = (graph_mapping_t *) VM(private);
+	graph_mapping_t *map = (graph_mapping_t *) VM(private_data);
 
 	if (map) {
 
 		if (vma != map->vma) {
 
 			KRN_DEBUG(1, "invalidating cloned vma %p", vma);
-			VM(private) = NULL;
+			VM(private_data) = NULL;
 		}
 	}
 
@@ -321,7 +353,12 @@ static void graph_mapping_close(struct vm_area_struct *vma)
 {
 	KRN_ASSERT(graph_device_id(VM(file)->f_dentry->d_inode->i_rdev) >= 0);
 	graph_dev[graph_device_id(VM(file)->f_dentry->d_inode->i_rdev)].cnt--;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version?  Should this be done for all versions? */
+	atomic_dec(&VM(file)->f_count);
+#else
 	VM(file)->f_count--;
+#endif
 }
 
 
@@ -329,17 +366,24 @@ static void graph_mapping_close(struct vm_area_struct *vma)
 **	MMIO resource mapping
 ** -----------------------------------------------------------------------------
 */
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+static struct page *graph_mmio_nopage(struct vm_area_struct *vma,
+	unsigned long addr, int write)
+#else
 static unsigned long graph_mmio_nopage(struct vm_area_struct *vma,
 	unsigned long addr, int write)
+#endif
 {
 	graph_mmio_mapping_t *map;
 	kgi_mmio_region_t *mmio;
 
-	map = (graph_mmio_mapping_t *) VM(private);
+	map = (graph_mmio_mapping_t *) VM(private_data);
 	if (map == NULL) {
 
 		KRN_DEBUG(1, "invalid (cloned ?) vma %p, sending signal", vma);
-		return 1;
+		return NOPAGE_SIGBUS_RETVAL;
 	}
 	KRN_ASSERT(map->vma == vma);
 
@@ -394,7 +438,7 @@ static unsigned long graph_mmio_nopage(struct vm_area_struct *vma,
 
 		default:
 			KRN_INTERNAL_ERROR;
-			return 1;
+			return NOPAGE_SIGBUS_RETVAL;
 		}
 
 		KRN_DEBUG(1, "mmio_nopage @%.8lx, remap vma %p, %.8lx-%.8lx "
@@ -418,15 +462,22 @@ static unsigned long graph_mmio_nopage(struct vm_area_struct *vma,
 		fast_remap_page_range(map->vma->vm_mm, (map->mstart = mstart),
 			(map->mend = mend), mmio->win.phys + pstart, map->prot);
 
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+		/* What version? */
+		KRN_DEBUG(1, "mmio_nopage() done ; 0");
+		return virt_to_page(mend); /* XXX */
+#else
 		KRN_DEBUG(1, "mmio_nopage() done");
 		return 0;
+#endif
 
 	} else {
 
 		/* !!!	do the neccessary background actions here.
 		*/
 		KRN_DEBUG(1, "mmio_nopage() in background!");
-		return 1;
+		return NOPAGE_SIGBUS_RETVAL;
 	}
 }
 
@@ -441,22 +492,29 @@ static void graph_mmio_unmap(struct vm_area_struct *vma, unsigned long start,
 	KRN_ASSERT(VM(start) == start);
 	KRN_ASSERT(VM(end) == start + len);
 
-	graph_delete_mapping((graph_mapping_t *) VM(private));
-	VM(private) = NULL;
+	graph_delete_mapping((graph_mapping_t *) VM(private_data));
+	VM(private_data) = NULL;
 }
 
 static struct vm_operations_struct graph_mmio_vmops =
 {
-	graph_mapping_open,	/* open		*/
-	graph_mapping_close,	/* close	*/
-	graph_mmio_unmap,	/* unmap	*/
-	NULL,                   /* protect	*/
-	NULL,                   /* sync		*/
-	NULL,                   /* advise	*/
-	graph_mmio_nopage,	/* nopage	*/
-	NULL,                   /* wppage	*/
-	NULL,                   /* swapout	*/
-	NULL,                   /* swapin	*/
+	open:	graph_mapping_open,
+	close:	graph_mapping_close,
+	unmap:	graph_mmio_unmap,
+	nopage: graph_mmio_nopage
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+	/* What version? */
+	/* Does GCC guarantee this w/o these lines? */
+	,
+	protect: NULL,
+	sync:    NULL,
+	advise:  NULL,
+	wppage:  NULL,
+	swapout: NULL,
+	swapin:  NULL
+#endif
+
 };
 
 static int graph_mmio_domap(graph_file_t *file, kgi_mmio_region_t *mmio,
@@ -500,8 +558,9 @@ static int graph_mmio_domap(graph_file_t *file, kgi_mmio_region_t *mmio,
 	map->resource = (kgi_resource_t *) mmio;
 	map->vma = vma;
 
-	VM(private) = map;
+	VM(private_data) = map;
 	VM(ops) = &graph_mmio_vmops;
+	VM(flags) |= VM_KGIUNMAP;
 
 	graph_add_mapping(file, (graph_mapping_t *) map);
 
@@ -514,19 +573,26 @@ static int graph_mmio_domap(graph_file_t *file, kgi_mmio_region_t *mmio,
 **	Accelerator resource mappings
 ** -----------------------------------------------------------------------------
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	/* What version? */
+static struct page *graph_accel_nopage(struct vm_area_struct *vma, 
+	unsigned long addr, int write)
+#else
 static unsigned long graph_accel_nopage(struct vm_area_struct *vma, 
 	unsigned long addr, int write)
+#endif
+
 {
 	graph_accel_mapping_t *map;
 	kgi_accel_t *accel;
 	unsigned long offset = addr - VM(start);
 	unsigned long nstart, nend;
 
-	map = (graph_accel_mapping_t *) VM(private);
+	map = (graph_accel_mapping_t *) VM(private_data);
 	if (map == NULL) {
 
 		KRN_DEBUG(1, "invalid (cloned ?) vma %p, sending signal", vma);
-		return 1;
+		return NOPAGE_SIGBUS_RETVAL;
 	}
 	KRN_ASSERT(vma == map->vma);
 
@@ -541,7 +607,7 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 
 		KRN_DEBUG(1, "offset %.8lx not in %.8lx-%.8lx for next buffer",
 			offset, nstart, nend);
-		return 1;
+		return NOPAGE_SIGBUS_RETVAL;
 	}
 
 	if (map->buf->next->exec_state != KGI_AS_IDLE) {
@@ -573,21 +639,27 @@ static unsigned long graph_accel_nopage(struct vm_area_struct *vma,
 	KRN_DEBUG(1, "mapped buffer %.8lx to vma %p, %.8lx-%.8lx",
 		map->buf->aperture.phys, map->vma, map->mstart, map->mend);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+	return virt_to_page(map->mend); /* XXX ? */
+#else
 	return 0;
+#endif
+
 }
 
 
 static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 	size_t len)
 {
-	graph_accel_mapping_t *map = (graph_accel_mapping_t *) VM(private);
+	graph_accel_mapping_t *map = (graph_accel_mapping_t *) VM(private_data);
 	kgi_accel_t *accel = (kgi_accel_t *) map->resource;
 	kgi_accel_buffer_t *buf;
 
 	KRN_ASSERT(VM(start) == start);
 	KRN_ASSERT(VM(end) == start + len);
 
-	map = (graph_accel_mapping_t *) VM(private);
+	map = (graph_accel_mapping_t *) VM(private_data);
 	if (map == NULL) {
 
 		return;
@@ -643,15 +715,25 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 	KRN_ASSERT(buf->next);
 	KRN_ASSERT(buf->next != map->buf);
 	do {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+/* What version? */
+		struct page *page;
+		kgi_accel_buffer_t *next = buf->next;
+
+		for (page = virt_to_page(buf->aperture.virt); page <= virt_to_page(buf->aperture.virt + map->buf_size); page++)
+			mem_map_unreserve(page);
+#else
 		unsigned long mstart = MAP_NR(buf->aperture.phys);
 		unsigned long mend = MAP_NR(buf->aperture.phys + map->buf_size);
 		unsigned int i;
 		kgi_accel_buffer_t *next = buf->next;
 
-		for (i = mstart; i < mend; i++) {
 
+		for (i = mstart; i < mend; i++) {
 			mem_map_unreserve(i);
 		}
+#endif
+
 		KRN_DEBUG(1, "freeing %.8lx with order %i",
 			buf->aperture.virt, map->buf_order);
 		free_pages((unsigned long) buf->aperture.virt, map->buf_order);
@@ -664,22 +746,29 @@ static void graph_accel_unmap(struct vm_area_struct *vma, unsigned long start,
 	KRN_TRACE(1, map->buf = NULL);
 
 	graph_delete_mapping((graph_mapping_t *) map);
-	VM(private) = NULL;
+	VM(private_data) = NULL;
 }
 
 
 static struct vm_operations_struct graph_accel_vmops =
 {
-	graph_mapping_open,	/* open		*/
-	graph_mapping_close,	/* close	*/
-	graph_accel_unmap,	/* unmap	*/
-	NULL,			/* protect	*/
-	NULL,			/* sync		*/
-	NULL,			/* advise	*/
-	graph_accel_nopage,	/* nopage	*/
-	NULL,			/* wppage	*/
-	NULL,			/* swapout	*/
-	NULL,			/* swapin	*/
+	open:	graph_mapping_open,
+	close:	graph_mapping_close,
+	unmap:	graph_accel_unmap,
+	nopage:	graph_accel_nopage
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+	/* What version? */
+	/* Does GCC guarantee this w/o these lines? */
+	,
+	protect: NULL,
+	sync:    NULL,
+	advise:  NULL,
+	wppage:  NULL,
+	swapout: NULL,
+	swapin:  NULL
+#endif
+
 };
 
 
@@ -691,6 +780,16 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 	kgi_accel_buffer_t *buf[16];
 	kgi_accel_context_t *context = NULL;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+	min_order = (VM(pgoff) & GRAPH_MMAP_ACCEL_MINSIZE) >>
+		GRAPH_MMAP_ACCEL_MINSIZE_SHIFT;
+	order = max_order = (VM(pgoff) & GRAPH_MMAP_ACCEL_MAXSIZE) >>
+		GRAPH_MMAP_ACCEL_MAXSIZE_SHIFT;
+	buffers = 1 << ((VM(pgoff) & GRAPH_MMAP_ACCEL_BUFFERS) >>
+		GRAPH_MMAP_ACCEL_BUFFERS_SHIFT);
+	priority = (VM(pgoff) & GRAPH_MMAP_ACCEL_PRIORITY) >>
+		GRAPH_MMAP_ACCEL_PRIORITY_SHIFT;
+#else
 	min_order = (VM(offset) & GRAPH_MMAP_ACCEL_MINSIZE) >>
 		GRAPH_MMAP_ACCEL_MINSIZE_SHIFT;
 	order = max_order = (VM(offset) & GRAPH_MMAP_ACCEL_MAXSIZE) >>
@@ -699,6 +798,7 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 		GRAPH_MMAP_ACCEL_BUFFERS_SHIFT);
 	priority = (VM(offset) & GRAPH_MMAP_ACCEL_PRIORITY) >>
 		GRAPH_MMAP_ACCEL_PRIORITY_SHIFT;
+#endif
 	memset(buf, 0, sizeof(buf));
 
 	if (buffers > sizeof(buf)/sizeof(buf[0])) {
@@ -798,8 +898,13 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 	*/
 	for (i = 0; i < buffers; i++) {
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	  /* What version? */
+		struct page *page;
+#else
 		unsigned long mstart, mend, m;
 
+#endif
 		buf[i]->next = buf[((i + 1) < buffers) ? (i + 1) : 0];
 		buf[i]->exec = NULL;
 
@@ -811,6 +916,12 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 		buf[i]->aperture.phys = virt_to_phys(buf[i]->aperture.virt);
 		buf[i]->aperture.bus  = virt_to_bus(buf[i]->aperture.virt);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+		/* What version? */
+		for (page = virt_to_page(buf[i]->aperture.virt); page <= virt_to_page(buf[i]->aperture.virt + buf[i]->aperture.size); page++) {
+			mem_map_reserve(page);
+		}
+#else
 		mstart = MAP_NR(buf[i]->aperture.phys);
 		mend   = MAP_NR(buf[i]->aperture.phys + buf[i]->aperture.size);
 		for (m = mstart; m < mend; m++) {
@@ -818,6 +929,7 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 			mem_map_reserve(m);
 		}
 
+#endif
 		init_waitqueue_head(buf[i]->executed);
 	}
 
@@ -829,8 +941,9 @@ static int graph_accel_domap(graph_file_t *file, kgi_accel_t *accel,
 	map->resource = (kgi_resource_t *) accel;
 	map->vma = vma;
 
-	VM(private) = map;
+	VM(private_data) = map;
 	VM(ops) = &graph_accel_vmops;
+	VM(flags) |= VM_KGIUNMAP;
 
 	graph_add_mapping(file, (graph_mapping_t *) map);
 
@@ -879,22 +992,37 @@ no_memory:
 **	* one vm_area_struct per mapping
 **	* vm_area_structs served by VM_FASTHANDLER are not merged together
 */
+#undef private_data
 static int graph_mmap(struct file *kfile, struct vm_area_struct *vma)
 {
 	int err;
 	graph_file_t *file = (graph_file_t *) kfile->private_data;
 	const kgi_resource_t *resource = NULL;
 
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+	if (GRAPH_MMAP_RESOURCE(VM(pgoff)) < __KGI_MAX_NR_RESOURCES) {
+#else
 	if (GRAPH_MMAP_RESOURCE(VM(offset)) < __KGI_MAX_NR_RESOURCES) {
+#endif
 
 		resource = file->device->kgi.mode ?
 			file->device->kgi.mode->resource[
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+			GRAPH_MMAP_RESOURCE(VM(pgoff))] : NULL;
+#else
 			GRAPH_MMAP_RESOURCE(VM(offset))] : NULL;
+#endif
 	}
 	if (resource == NULL) {
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+		KRN_DEBUG(1, "invalid resource %i specified! (mode == %p)",
+			GRAPH_MMAP_RESOURCE(VM(pgoff)), file->device->kgi.mode);
+#else
 		KRN_DEBUG(1, "invalid resource %i specified! (mode == %p)",
 			GRAPH_MMAP_RESOURCE(VM(offset)), file->device->kgi.mode);
+#endif
 		return -ENXIO;
 	}
 
@@ -914,8 +1042,13 @@ static int graph_mmap(struct file *kfile, struct vm_area_struct *vma)
 	switch (resource->type & KGI_RT_MASK) {
 
 	case KGI_RT_MMIO:
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+		err = (GRAPH_MMAP_TYPE(VM(pgoff)) != GRAPH_MMAP_TYPE_MMIO)
+			? -EINVAL : KGI_EOK;
+#else
 		err = (GRAPH_MMAP_TYPE(VM(offset)) != GRAPH_MMAP_TYPE_MMIO)
 			? -EINVAL : KGI_EOK;
+#endif
 		if (err || (err = graph_mmio_domap(file, (kgi_mmio_region_t *)
 			resource, vma))) {
 
@@ -926,8 +1059,13 @@ static int graph_mmap(struct file *kfile, struct vm_area_struct *vma)
 		break;
 
 	case KGI_RT_ACCEL:
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+		err = (GRAPH_MMAP_TYPE(VM(pgoff)) != GRAPH_MMAP_TYPE_ACCEL)
+			? -EINVAL : KGI_EOK;
+#else
 		err = (GRAPH_MMAP_TYPE(VM(offset)) != GRAPH_MMAP_TYPE_ACCEL)
 			? -EINVAL : KGI_EOK;
+#endif
 		KRN_ASSERT(err == KGI_EOK);
 		if (err || (err = graph_accel_domap(file, (kgi_accel_t *)
 			resource, vma))) {
@@ -938,8 +1076,13 @@ static int graph_mmap(struct file *kfile, struct vm_area_struct *vma)
 		break;
 
 	default:
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,25)
+		KRN_DEBUG(1, "unkown mapping type %.8x", 
+			GRAPH_MMAP_TYPE(VM(pgoff)));
+#else
 		KRN_DEBUG(1, "unkown mapping type %.8x", 
 			GRAPH_MMAP_TYPE(VM(offset)));
+#endif
 		return -ENXIO;
 	}
 	/*	We do inode reference counting in graph_mapping_{open,close}.
@@ -947,7 +1090,12 @@ static int graph_mmap(struct file *kfile, struct vm_area_struct *vma)
 	KRN_ASSERT(VM(ops)->open == graph_mapping_open);
 	KRN_ASSERT(VM(ops)->close == graph_mapping_close);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+        /* What version?  All versions? */
+	atomic_add(1,&kfile->f_count);
+#else
 	kfile->f_count++;
+#endif
 	VM(file) = kfile;
 	VM(flags) |= VM_FASTHANDLER;
 	VM(ops)->open(vma);
@@ -1412,7 +1560,12 @@ static int graph_device_init(int device_id)
 		kfree(device);
 		return -ENOMEM;
 	}
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	/* What version? */
+	init_MUTEX(&device->cmd_mutex);
+#else
 	device->cmd_mutex = MUTEX;
+#endif
 
 	graph_dev[device_id].pid = current->pid;
 	graph_dev[device_id].gid = current->gid;
@@ -1518,9 +1671,9 @@ static int graph_release(struct inode *inode, struct file *kfile)
 	KRN_DEBUG(1, "closing graph device %i (refcnt %i)", 
 		device_id, graph_dev[device_id].cnt);
 
-	/*	Delete all mappings for this file. The vm_area_structs remain
-	**	valid until the process explicitely unmaps them; if they are
-	**	referenced but have no valid vm_private field we send SIGBUS.
+	/* Delete all mappings for this file. The vm_area_structs remain
+	** valid until the process explicitely unmaps them; if they are
+	** referenced but have no valid vm_private_data field we send SIGBUS.
 	*/
 	while (file->mappings) {
 
@@ -1533,7 +1686,7 @@ static int graph_release(struct inode *inode, struct file *kfile)
 			fast_unmap_page_range(map->vma->vm_mm, map->mstart,
 				map->mend);
 		}
-		map->vma->vm_private = NULL;
+		map->vma->vm_private_data = NULL;
 		graph_delete_mapping(map);
 	}
 
@@ -1558,21 +1711,25 @@ static int graph_release(struct inode *inode, struct file *kfile)
 
 static struct file_operations graph_fops =
 {
-	NULL,		/* llseek	*/
-	NULL,		/* read		*/
-	NULL,		/* write	*/
-	NULL,		/* readdir	*/
-	NULL,		/* poll		*/
-	graph_ioctl,	/* ioctl	*/
-	graph_mmap,	/* mmap		*/
-	graph_open,	/* open		*/
-	NULL,		/* flush	*/
-	graph_release,	/* release	*/
-	NULL,		/* fsync	*/
-	NULL,		/* fasync	*/
-	NULL,		/* check_media_change	*/
-	NULL,		/* revalidate		*/
-	NULL		/* lock		*/
+	ioctl:			graph_ioctl,
+	mmap:			graph_mmap,
+	open:			graph_open,
+	release:		graph_release,
+	/* Does GCC guarantee NULLs w/o explicit inits here? */
+	flush:			NULL,
+	llseek:			NULL,
+	read:			NULL,
+	write:			NULL,
+	readdir:		NULL,
+	poll:			NULL,
+	fsync:			NULL,
+	fasync:			NULL,
+	lock:			NULL,
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,0)
+	check_media_change:	NULL,
+	revalidate:		NULL,
+#endif
+
 };
 
 /*
