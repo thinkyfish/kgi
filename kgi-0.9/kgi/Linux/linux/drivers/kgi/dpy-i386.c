@@ -13,6 +13,9 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: dpy-i386.c,v $
+**	Revision 1.3  2001/07/03 08:51:17  seeger_s
+**	- text16 handling now via image resources
+**	
 **	Revision 1.2  2000/06/02 09:17:17  seeger_s
 **	- fixed broken compile with SPLASH screen enabled
 **	
@@ -919,7 +922,11 @@ void no_scroll(char *str, int *ints)
 **	There are no kernel services (PCI scan, kgi_malloc_*() working
 **	when this is called!
 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 ulong kgi_boot_init(ulong kmem_start, ulong kmem_end)
+#else 
+void kgi_boot_init(void)
+#endif
 {
 #	ifdef CONFIG_VT_CONSOLE
 		kgi_boot_need_wrap = (ORIG_X == ORIG_VIDEO_COLS);
@@ -939,7 +946,9 @@ ulong kgi_boot_init(ulong kmem_start, ulong kmem_end)
 		register_console(&kgi_boot_console);
 #	endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 	return kmem_start;
+#endif
 }
 
 /*	dpy_i386_init() has to scan for displays the kernel can support.
