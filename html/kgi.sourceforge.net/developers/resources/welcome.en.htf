@@ -3,7 +3,7 @@ HTF_TITLE="Developer Resources"
 HTF_DESCRIPTION="How to become a developer, report bugs and get the latest sources."
 HTF_KEYWORDS="KGI Project; Developer Resources"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.5 $" 
+HTF_REVISION="$Revision: 1.6 $" 
 
 cat <<end-of-htf
 <h2><a name="cvs"></a>CVS Repository</h2>
@@ -69,7 +69,7 @@ cat <<end-of-htf
 		</p></dd>
 	<dt><h4>Browse the CVS Repository online</h4><dd>
 		Just pointing your browser to 
-		<a href="http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=kgi">http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=kgi</a>. This 
+		<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/kgi">http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/kgi</a>. This 
 		allows you to examine the CVS Repository online.
 		</dd>
 	<dt><h4>Get a daily snapshot of the CVS tree</h4><dd>
