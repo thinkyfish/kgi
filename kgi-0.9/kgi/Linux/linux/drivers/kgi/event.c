@@ -1,6 +1,6 @@
+/* ------------------------------------------------------------------------ */
+#define DESC	"/dev/event special device file driver"
 /* ---------------------------------------------------------------------------
-**	/dev/event special device file driver
-** ---------------------------------------------------------------------------
 **	Copyright (C)	2000		Steffen Seeger
 **
 **	This file is distributed under the terms and conditions of the 
@@ -13,6 +13,12 @@
 ** ---------------------------------------------------------------------------
 **
 **	$Log: event.c,v $
+**	Revision 1.2  2001/09/09 23:39:53  skids
+**	
+**	Use newer wait-queue interface when compiling for 2.4.x kernels.
+**	Use labeled format in initializing structures as recommended in
+**	new kernel DocBook.
+**	
 **	Revision 1.1  2000/09/21 09:14:34  seeger_s
 **	- added first version of /dev/event mapper
 **	
@@ -295,7 +301,8 @@ static int event_ioctl(struct inode *inode, struct file *kfile,
 
 			goto unlock;
 	        }
-		copy_from_user(io_ibuf, (void *) arg, KIIC_SIZE(cmd));
+		if (copy_from_user(io_ibuf, (void *) arg, KIIC_SIZE(cmd)))
+			return -EFAULT;
 
 	} else {
 
@@ -326,11 +333,13 @@ static int event_ioctl(struct inode *inode, struct file *kfile,
 	
 		if (io_obuf) {
 
-			copy_to_user((void *) arg, io_obuf, io_size);
+			if (copy_to_user((void *) arg, io_obuf, io_size))
+				return -EFAULT;
 
 		} else {
 
-			clear_user((void *) arg, io_size);
+			if (clear_user((void *) arg, io_size))
+				return -EFAULT;
 		}
 	}
 
@@ -447,7 +456,7 @@ static ssize_t event_read(struct file *kfile, char *buffer,
 #endif
 		add_wait_queue(&(event_dev[file->device_id].proc_list), &wait);
 #endif
-		current->state = TASK_INTERRUPTIBLE;
+		set_current_state(TASK_INTERRUPTIBLE);
 		retval = 0;
 
 		while (file->queue.head == file->queue.tail) {
@@ -462,7 +471,7 @@ static ssize_t event_read(struct file *kfile, char *buffer,
 			schedule();
 		}
 
-		current->state = TASK_RUNNING;
+		set_current_state(TASK_RUNNING);
 		
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
 		remove_wait_queue(&event_dev[file->device_id].proc_list, &wait);
