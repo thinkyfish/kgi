@@ -12,6 +12,13 @@
 **	MAINTAINER	Rodolphe_Ortalo
 **
 **	$Log: Gx00.h,v $
+**	Revision 1.6  2001/11/04 17:36:04  ortalo
+**	DMA command buffer checking/validation (for G400,G200,1x64).
+**	Experimental new userspace "header" library for managing commands.
+**	Added new demo programs (boxes, lines, 3D) that uses this library.
+**	Testing/validation done on the G200 (AGP) as well as G400 and Mystique.
+**	Several bugs correction: 16/15bpp palette, G200 power up, etc.
+**	
 **	Revision 1.5  2001/10/03 21:33:19  ortalo
 **	 * Implemented experimental support for the WARP 3D setup
 **	engine hardware accelerator.
@@ -1026,12 +1033,31 @@
 /* tag length in bytes (must be a multiple of 4) */
 #define MGAG_ACCEL_TAG_LENGTH 4
 
+/*
+** Buffer type definition
+*/
+#define MGAG_ACCEL_TAG_TYPE_MASK 0xF
 /* drawing engine type: regular display list (reg,val) */
 #define MGAG_ACCEL_TAG_DRAWING_ENGINE 0x1
+/* setup engine type: vertex - G200+ only */
+#define MGAG_ACCEL_TAG_WARP_TRIANGLE_LIST 0x2
+#define MGAG_ACCEL_TAG_WARP_TRIANGLE_STRIP 0x3
+#define MGAG_ACCEL_TAG_WARP_TRIANGLE_FAN 0x4
 
-/* setup engine type: vertex list */
-#define MGAG_ACCEL_TAG_WARP_TGZ 0x2
-/* TODO: define other WARP tags (TGZF, T2GZ, etc.) */
+/*
+ * Pipe type definition
+ */
+/* G(ouraud) and Z(buffer) are implicit (all pipes)
+*/
+/* Specular highlight */
+#define MGA_ACCEL_TAG_WARP_SPEC  (1 << 4)
+/* Alpha channel */
+#define MGA_ACCEL_TAG_WARP_ALPHA (1 << 5)
+/* Vertex fog interpolation */
+#define MGA_ACCEL_TAG_WARP_FOG   (1 << 6)
+/* dual texture stage - G400+ only */
+#define MGA_ACCEL_TAG_WARP_T2    (1 << 7)
+
 
 /* to be OR (|) to last accel register setup to activate engine */
 

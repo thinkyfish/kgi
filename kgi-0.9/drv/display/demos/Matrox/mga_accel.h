@@ -285,6 +285,7 @@ static void mga_accel_init(mga_accel_state_t *state,
   mga_dma_out_reg(state->ring, WACCEPTSEQ_SEQOFF | WACCEPTSEQ_WSAMETAG,
 		  WACCEPTSEQ);
   mga_dma_out_reg(state->ring, 1, ALPHACTRL);
+  mga_dma_out_reg(state->ring, 0xAAAAAAAA, FOGCOL);
 
   /* other user level state */
   state->free_space_offset = state->zbuffer

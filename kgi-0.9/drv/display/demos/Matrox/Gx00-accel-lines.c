@@ -20,8 +20,8 @@
 #ifndef CHIPSET_G400
 #ifndef CHIPSET_MYSTIQUE
 /* One of those should be set to 1 before including mga_accel.h */
-#define CHIPSET_G200 1
-//#define CHIPSET_G400 1
+//#define CHIPSET_G200 1
+#define CHIPSET_G400 1
 //#define CHIPSET_MYSTIQUE 1
 #endif
 #endif
@@ -241,7 +241,10 @@ kgi_error_t kgiPrintResourceInfo(kgi_context_t *ctx, kgi_u_t resource)
 /*
 ** DMA buffer size (do *not* change for the moment)
 */
-#define BUFFER_SIZE (4 * 1024)
+#define BUFFER_SIZE_LN2 2
+#define BUFFER_SIZE ((1 << BUFFER_SIZE_LN2) * 4 * 1024)
+#define BUFFER_NUMBER_LN2 2 /* TODO: !!!!! */
+#define BUFFER_NUMBER (1 << BUFFER_NUMBER_LN2)
 
 int main(int argc, char *argv[])
 {
@@ -312,12 +315,18 @@ int main(int argc, char *argv[])
   /*
   ** Then, we map the accelerator
   */
-  accel = mmap(NULL, (2 * BUFFER_SIZE),
+  accel = mmap(NULL, BUFFER_SIZE * BUFFER_NUMBER,
 	       PROT_READ | PROT_WRITE, MAP_SHARED,
 	       ctx.mapper.fd,
 	       GRAPH_MMAP_TYPE_ACCEL
-	       | 0x00001000
+	       | (BUFFER_SIZE_LN2 << GRAPH_MMAP_ACCEL_MINSIZE_SHIFT)
+	       | (BUFFER_SIZE_LN2 << GRAPH_MMAP_ACCEL_MAXSIZE_SHIFT)
+#if 0 /* TODO: !!!!! */
+	       | (1 << GRAPH_MMAP_ACCEL_PRIORITY_SHIFT)
+#endif
+	       | (BUFFER_NUMBER_LN2 << GRAPH_MMAP_ACCEL_BUFFERS_SHIFT)
 	       | (2 << GRAPH_MMAP_RESOURCE_SHIFT));
+
   if (((int)accel) <= 0) {
     printf("ACCEL mmap() failed (ret = %.8x)\n", accel);
     exit(1);
@@ -326,9 +335,9 @@ int main(int argc, char *argv[])
   }
 
 #if BUFFER_IN_MEMORY
-  mga_dma_init(&my_ring, buffer_test, BUFFER_SIZE, 2);
+  mga_dma_init(&my_ring, buffer_test, BUFFER_SIZE, BUFFER_NUMBER);
 #else
-  mga_dma_init(&my_ring, accel, BUFFER_SIZE, 2);
+  mga_dma_init(&my_ring, accel, BUFFER_SIZE, BUFFER_NUMBER);
 #endif
   mga_accel_init(&my_state, &my_ring, &mode);
 

@@ -15,6 +15,7 @@
 ** KGI Matrox driver) - but there is no guarantee!! (Be careful not to
 ** try this then...)
 */
+/* NB: For Marie... R.O. */
 
 #ifndef CHIPSET_G200
 #ifndef CHIPSET_G400
@@ -30,7 +31,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 10
+#define TEST_DURATION 15
 
 #define BUFFER_IN_MEMORY 0
 
@@ -239,11 +240,11 @@ kgi_error_t kgiPrintResourceInfo(kgi_context_t *ctx, kgi_u_t resource)
 }
 
 /*
-** DMA buffer size (do *not* change for the moment)
+** DMA buffer size and number
 */
-#define BUFFER_SIZE_LN2 1
+#define BUFFER_SIZE_LN2 0
 #define BUFFER_SIZE ((1 << BUFFER_SIZE_LN2) * 4 * 1024)
-#define BUFFER_NUMBER_LN2 2 /* TODO: !!!!! */
+#define BUFFER_NUMBER_LN2 2
 #define BUFFER_NUMBER (1 << BUFFER_NUMBER_LN2)
 
 int main(int argc, char *argv[])
@@ -253,11 +254,23 @@ int main(int argc, char *argv[])
   kgi_image_mode_t mode;
   kgi_u_t	i, x, y;
   kgi_u16_t *fb;
-  kgi_u8_t *accel, *ping, *pong, *warp, *wping, *wpong, *ptr;
+  kgi_u8_t *accel, *ptr;
   kgi_u_t no = 0;
   struct timeval end_time;
   struct timeval current_time;
   float actual_duration;
+  kgi_u32_t warp_tag;
+#if 0
+  mga_vertex_color_t col1 = { 0, 255, 0, 0 }; /* Green, semi opaque */
+  mga_vertex_color_t col2 = { 255,0,0,0 }; /* Blue, semi opaque */
+  mga_vertex_color_t col3 = { 0,0,255,0 }; /* Red, semi opaque */
+#else
+  mga_vertex_color_t col1 = { 196, 196, 196, 0 };
+  mga_vertex_color_t col2 = { 110, 110, 110, 0 };
+  mga_vertex_color_t col3 = { 240, 240, 240, 0 };
+#endif
+  mga_vertex_color_t spcol = { 128,192,64,128 }; /* Gray, fog=128 */
+  mga_vertex_color_t black = { 0,0,0,0 }; /* Black */
   char buffer_test[2*BUFFER_SIZE];
 
   mga_dma_ring_t my_ring;
@@ -326,7 +339,6 @@ int main(int argc, char *argv[])
 #endif
 	       | (BUFFER_NUMBER_LN2 << GRAPH_MMAP_ACCEL_BUFFERS_SHIFT)
 	       | (2 << GRAPH_MMAP_RESOURCE_SHIFT));
-
   if (((int)accel) <= 0) {
     printf("ACCEL mmap() failed (ret = %.8x)\n", accel);
     exit(1);
@@ -341,43 +353,88 @@ int main(int argc, char *argv[])
 #endif
   mga_accel_init(&my_state, &my_ring, &mode);
 
+  /*
+  ** "Zeroes" the Zbuffer
+  */
+  {
+    kgi_u16_t *ptr = (kgi_u16_t*)((kgi_u_t)fb + my_state.zbuffer);
+    printf("Z-buffer offset: %.8x (%f MB)\n",
+	   my_state.zbuffer,
+	   (float)my_state.zbuffer / (1024.0 * 1024.0));
+    for (y = 0; y < mode.virt.y; y++)
+      {
+	for (x = 0; x < mode.virt.x; x++)
+	  {
+	    (*ptr) = ~0x0;
+	    ptr++;
+	  }
+      }
+  }
+
   gettimeofday(&end_time,NULL);
   end_time.tv_sec += TEST_DURATION;
 
   do
     {
       {
-	int xmin = 50;
-	int xmax = 1000;
-	int ymin = 50;
-	int ymax = 750;
-
-	int top,left,width,height;
 	mga_vertex_color_t color;
+	mga_vertex_t vert[3];
+	mga_vertex_t fixvert[3];
 
-	left = xmin + (rand() % (xmax - xmin));
-	width = (rand() % (xmax - left + 1)) + 1;
-	top = ymin + (rand() % (ymax - ymin));
-	height = (rand() % (ymax - top + 1)) + 1;
-	color.blue = (random() & 0xFF);
-	color.green = (random() & 0xFF);
-	color.red = (random() & 0xFF);
-	color.alpha = (random() & 0xFF);
-#if 0
-	printf("left=%i,right=%i,top=%i,bottom=%i "
-	       "color=RGBA(%.2x,%.2x,%.2x,%.2x)\n",
-	       left,right,top,bottom,color.red,color.green,color.blue,
-	       color.alpha);
-#endif
-	mga_accel_set_foreground(&my_state, color);
-	mga_accel_draw_box(&my_state, left, top, width, height);
-
-#if 0 /* run once */
-	mga_accel_flush(&my_state);
-	exit();
-#endif
-
+	for (i = 0; i < 3; i++)
+	  {
+	    kgi_u_t r = (rand() % 3);
+	    vert[i].rhw = 1.0;
+	    vert[i].tu0 = 0.0;
+	    vert[i].tv0 = 0.0;
+	    vert[i].x = (float)(rand() % 10000) * 0.1 + 5;
+	    vert[i].y = (float)(rand() % 7000)  * 0.1 + 5;
+	    vert[i].z = (float)(rand() % 99) * 0.01; // 0.0; // 0.01;
+	    //vert[i].color = (r == 0) ? col1 : ((r==1) ? col2 : col3);
+	    vert[i].color = (i == 0) ? col1 : ((i==1) ? col2 : col3);
+	    vert[i].specular = black;
+	    vert[i].specular = spcol; /* strange effect */
+	  }
+	mga_accel_draw_triangle(&my_state, &(vert[0]), &(vert[1]), &(vert[2]));
 	no++;
+
+	for (i = 0; i < 3; i++)
+	  {
+	    fixvert[i].specular = black;
+	  }
+	fixvert[0].x = 200.0;
+	fixvert[0].y = 250.0;
+	fixvert[0].z = 0.001;
+	fixvert[0].color = col1;
+	fixvert[0].rhw = 1.0;
+	fixvert[0].tu0 = 0.0;
+	fixvert[0].tv0 = 1.0;
+
+	fixvert[1].x = 600.0;
+	fixvert[1].y = 150.0;
+	fixvert[1].z = 0.006;
+	fixvert[1].color = col2;
+	fixvert[1].rhw = 0.5;
+	fixvert[1].tu0 = 3.324;
+	fixvert[1].tv0 = 0.0;
+
+	fixvert[2].x = 800.0;
+	fixvert[2].y = 750.0;
+	fixvert[2].z = 0.008;
+	fixvert[2].color = col3;
+	fixvert[2].rhw = 1.0;
+	fixvert[2].tu0 = 2.0;
+	fixvert[2].tv0 = 2.0;
+
+	mga_accel_draw_triangle(&my_state,
+				&(fixvert[0]), &(fixvert[1]), &(fixvert[2]));
+	no++;
+
+#if 0
+	mga_accel_flush(&my_state);
+	exit(1);
+#endif
+
       }
 
       gettimeofday(&current_time,NULL);
@@ -392,7 +449,7 @@ int main(int argc, char *argv[])
     (current_time.tv_sec - end_time.tv_sec + TEST_DURATION)
     + 1e-6 * (current_time.tv_usec - end_time.tv_usec);
 	 
-  printf("%i boxes in %f seconds, i.e. %f box/s\n",
+  printf("%i gouraud triangles in %f seconds, i.e. %f gtri/s\n",
 	 no, actual_duration, ((float)no)/actual_duration);
 	
   return 0;

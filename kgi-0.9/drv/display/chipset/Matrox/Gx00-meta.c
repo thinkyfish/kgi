@@ -10,12 +10,12 @@
 **
 ** ----------------------------------------------------------------------------
 **
-**	$Id: Gx00-meta.c,v 1.7 2001/10/03 21:33:19 ortalo Exp $
+**	$Id: Gx00-meta.c,v 1.8 2001/11/04 17:36:04 ortalo Exp $
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		Rodolphe_Ortalo
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.7 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.8 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
@@ -398,10 +398,11 @@ mgag_chipset_irq_state_t;
 /*
 ** Enable, disable, save and restore IRQs
 */
-
+#define DO_VSYNC_IRQ 0
 static void mgag_chipset_irq_enable(mgag_chipset_io_t *mgag_io)
 {
   KRN_DEBUG(2, "enabling some IRQs");
+#if DO_VSYNC_IRQ
   MGAG_GC_OUT32(mgag_io, IEN_SOFTRAPIEN | IEN_VLINEIEN /*| IEN_EXTIEN */,
 		IEN);
   MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
@@ -409,6 +410,14 @@ static void mgag_chipset_irq_enable(mgag_chipset_io_t *mgag_io)
 		VGA_CRT_VSYNCEND);
   MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
 		| VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+#else
+  /* Disable vsync and line int. */
+  MGAG_GC_OUT32(mgag_io, IEN_SOFTRAPIEN /* | IEN_VLINEIEN | IEN_EXTIEN */,
+		IEN);
+  MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
+		| VGA_CR11_DISABLE_VSYNC_IRQ,
+		VGA_CRT_VSYNCEND);
+#endif
 }
 
 static void mgag_chipset_irq_block(mgag_chipset_io_t *mgag_io,
@@ -436,11 +445,13 @@ static void mgag_chipset_irq_restore(mgag_chipset_io_t *mgag_io,
   MGAG_GC_OUT32(mgag_io, mgag_irq_state->ien, IEN);
   /* TODO: Check this VSYNC interrupt issue... -- ortalo */
 #if 1
+#if DO_VSYNC_IRQ
   MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
 		& ~(VGA_CR11_DISABLE_VSYNC_IRQ | VGA_CR11_CLEAR_VSYNC_IRQ),
 		VGA_CRT_VSYNCEND);
   MGAG_CRT_OUT8(mgag_io, MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND)
 		| VGA_CR11_CLEAR_VSYNC_IRQ, VGA_CRT_VSYNCEND);
+#endif
 #else
   {
     kgi_u8_t r = MGAG_CRT_IN8(mgag_io, VGA_CRT_VSYNCEND);
@@ -476,6 +487,7 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
 
   kgi_u32_t iclear = 0x00000000;
   kgi_u32_t flags;
+  int do_schedule = 0; /* TODO: Do cleanly!!! */
   mgag_chipset_irq_state_t irq_state;
 
   KRN_ASSERT(mgag);
@@ -483,9 +495,9 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
 
   KRN_DEBUG(5, "chipset IRQ handler initiated.");
 
-  flags = MGAG_GC_IN32(mgag_io, STATUS);
-
   mgag_chipset_irq_block(mgag_io, &irq_state);
+
+  flags = MGAG_GC_IN32(mgag_io, STATUS);
 
   /*
   ** All Matrox chipsets interrupts
@@ -544,7 +556,8 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
 	      switch (softrap)
 		{
 		case MGAG_SOFTRAP_ENGINE:
-		  mgag_chipset_accel_schedule(&(mgag->mode->mgag.engine));
+		  do_schedule = 1;
+		  //mgag_chipset_accel_schedule(&(mgag->mode->mgag.engine));
 		  break;
 		default:
 		  KRN_ERROR("Unknown softrap origin!");
@@ -618,6 +631,11 @@ kgi_error_t mgag_chipset_irq_handler(mgag_chipset_t *mgag,
   KRN_TRACE(0, mgag->interrupt.handler_total++);
 
   mgag_chipset_irq_restore(mgag_io, &irq_state);
+
+  if (do_schedule)
+    {
+      mgag_chipset_accel_schedule(&(mgag->mode->mgag.engine));
+    }
 
   KRN_DEBUG(5, "chipset IRQ handler completed.");
 
@@ -1200,7 +1218,7 @@ static void mgag_chipset_warp_do_buffer(mgag_chipset_io_t *mgag_io,
     | SECADDRESS_DMAMOD_VERTEX_WRITE;
   mgag_ctx->dma_fast.secend = buffer->aperture.bus + buffer->execution.size;
   mgag_ctx->dma_fast.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(1,"Executing one WARP buffer "
+  KRN_DEBUG(2,"Executing one WARP buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
 	    mgag_ctx->aperture_fast.bus,
@@ -1240,7 +1258,7 @@ static void mgag_chipset_engine_do_buffer(mgag_chipset_io_t *mgag_io,
     | SECADDRESS_DMAMOD_GENERAL_WRITE;
   mgag_ctx->dma_fast.secend = buffer->aperture.bus + buffer->execution.size;
   mgag_ctx->dma_fast.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(1,"Executing one accel buffer "
+  KRN_DEBUG(2,"Executing one accel buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
 	    mgag_ctx->aperture_fast.bus,
@@ -1252,8 +1270,9 @@ static void mgag_chipset_engine_do_buffer(mgag_chipset_io_t *mgag_io,
   MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
 		| PRIMADDRESS_DMAMOD_GENERAL_WRITE,
 		PRIMADDRESS);
-  MGAG_GC_OUT32(mgag_io, mgag_ctx->aperture_fast.bus
-		+ mgag_ctx->aperture_fast.size,
+  MGAG_GC_OUT32(mgag_io, ((mgag_ctx->aperture_fast.bus
+			  + mgag_ctx->aperture_fast.size)
+			  & PRIMEND_ADDRESS_MASK),
 		PRIMEND);
 }
 
@@ -1267,7 +1286,7 @@ static void mgag_chipset_g200_do_buffer_ctx(mgag_chipset_io_t *mgag_io,
     | SECADDRESS_DMAMOD_GENERAL_WRITE;
   mgag_ctx->dma_with_context.g200.secend = buffer->aperture.bus + buffer->execution.size;
   mgag_ctx->dma_with_context.g200.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(1,"Executing one accel buffer "
+  KRN_DEBUG(2,"Executing one accel buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
 	    mgag_ctx->aperture_with_ctx.bus,
@@ -1297,7 +1316,7 @@ static void mgag_chipset_g400_do_buffer_ctx(mgag_chipset_io_t *mgag_io,
     | SECADDRESS_DMAMOD_GENERAL_WRITE;
   mgag_ctx->dma_with_context.g400.secend = buffer->aperture.bus + buffer->execution.size;
   mgag_ctx->dma_with_context.g400.softrap = MGAG_SOFTRAP_ENGINE;
-  KRN_DEBUG(1,"Executing one accel buffer "
+  KRN_DEBUG(2,"Executing one accel buffer "
 	    "(primaddress=%.8x,primend=%.8x,"
 	    "secaddress=%8.x,secend=%.8x,size=%.4x)",
 	    mgag_ctx->aperture_with_ctx.bus,
@@ -2704,7 +2723,7 @@ static kgi_u_t mga_chipset_accel_validate(kgi_accel_t *accel,
 	ret = 0;
       }
       break;
-    case MGAG_ACCEL_TAG_WARP_TGZ:
+    case MGAG_ACCEL_TAG_WARP_TRIANGLE_LIST:
       if (dword_size < (3 * 8))
 	{
 	  KRN_DEBUG(1, "Skipping warp TGZ DMA buffer"
@@ -2916,13 +2935,12 @@ static void mgag_chipset_accel_done(kgi_accel_t *accel, void *ctx)
 /* TODO: remove this dependency needed for wake_up() */
 #include <linux/sched.h>
 
-/* This must not be interrupted! */
+/* This must not be interrupted and must be protected! */
 static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 {
   mgag_chipset_t *mgag = accel->meta;
   mgag_chipset_io_t *mgag_io = accel->meta_io;
   kgi_accel_buffer_t *buffer = accel->execution.queue;
-
 #if 0
   KRN_ASSERT(buffer);
 #else
@@ -2947,6 +2965,8 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	accel->execution.queue = cur;
 
 #warning wakeup buffer->executed portably!
+	KRN_DEBUG(2,"before wake_up: buffer:%.8x adress:%.8x value: %i",
+		  buffer, &(buffer->execution.state), buffer->execution.state);
 	wake_up(buffer->executed);
 
 	if (cur == NULL)
@@ -2964,6 +2984,8 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	  KRN_DEBUG(1, "Exec logic problem!");
 
 	buffer = cur;
+	KRN_DEBUG(2,"going to next: buffer:%.8x adress:%.8x value: %i",
+		  buffer, &(buffer->execution.state), buffer->execution.state);
       }
       /*
       ** FALL THROUGH! (to execute next buffer)
@@ -2983,7 +3005,13 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 	  }
 	
 	buffer->execution.state = KGI_AS_EXEC;
-	
+
+	/* Wait for the engine to be idle in case a command is still
+	** in progress (impossible theoretically but...)
+	** TODO: Remove?
+	*/
+	mgag_chipset_wait_engine_idle(mgag_io);
+
 	{
 	  mgag_chipset_accel_context_t *mgag_ctx = accel->context;
 	  /* Recovers the buffer tag */
@@ -3008,7 +3036,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 		  }
 		}
 	      break;
-	    case MGAG_ACCEL_TAG_WARP_TGZ:
+	    case MGAG_ACCEL_TAG_WARP_TRIANGLE_LIST:
 	      if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200)) {
 		mgag_chipset_warp_do_buffer(mgag_io, buffer, mgag_ctx);
 	      } else {
@@ -3041,6 +3069,7 @@ static void mgag_chipset_accel_schedule(kgi_accel_t *accel)
 static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 				    kgi_accel_buffer_t *buffer)
 {
+  unsigned long flags;
   mgag_chipset_t *mgag = accel->meta;
   mgag_chipset_io_t *mgag_io = accel->meta_io;
   /* Recovers the buffer tag */
@@ -3087,7 +3116,7 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 			| OPMODE_DMAMOD_GENERAL_WRITE,
 			OPMODE);
 	  break;
-	case MGAG_ACCEL_TAG_WARP_TGZ:
+	case MGAG_ACCEL_TAG_WARP_TRIANGLE_LIST:
 	  KRN_ERROR("There is no WARP engine on the 1x64!");
 	  break;
 	default:
@@ -3099,6 +3128,7 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
     }
   else if ((mgag->flags & MGAG_CF_G400) || (mgag->flags & MGAG_CF_G200))
     {
+      kgi_u_t do_schedule = 0;
       mgag_chipset_irq_state_t irq_state;
       /*
       ** The buffer is fetched by the chipset itself via DMA.
@@ -3131,15 +3161,18 @@ static void mgag_chipset_accel_exec(kgi_accel_t *accel,
 	  /* Points the beginning of the exec queue on this buffer */
 	  accel->execution.queue = buffer;
 	  /* Starts execution if no other buffer running */
-	  mgag_chipset_accel_schedule(accel);
+	  do_schedule = 1;
 	}
 
       mgag_chipset_irq_restore(mgag_io, &irq_state);
 
+      if (do_schedule)
+	  mgag_chipset_accel_schedule(accel);
+
       /* TODO: Fixme! (We wait for the engine to be idle before returning
       ** TODO: while we should let the DMA buffers go...
       */
-      mgag_chipset_wait_engine_idle(mgag_io);
+      //mgag_chipset_wait_engine_idle(mgag_io);
     }
   else
     {
@@ -3432,10 +3465,13 @@ static void mgag_chipset_power_up(mgag_chipset_t *mgag,
   /* Finally, does a softreset of the accel engine */
   mgag_chipset_softreset(mgag_io);
 
+#if 1
   /* TODO: No need to re-enable the video in theory, remove? */
+  /* TODO: Remove definitely after checking. STILL NEEDED! */
   MGAG_SEQ_OUT8(mgag_io,
 	       MGAG_SEQ_IN8(mgag_io,VGA_SEQ_CLOCK) & ~VGA_SR01_DISPLAY_OFF,
 	       VGA_SEQ_CLOCK);
+#endif
 
   KRN_DEBUG(2, "completed.");
 }

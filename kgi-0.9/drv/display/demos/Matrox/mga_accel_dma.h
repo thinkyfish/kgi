@@ -227,7 +227,7 @@ static void mga_dma_buffer_reset(mga_dma_buffer_t *buf,
       break;
     case MGA_DMA_VERTEX_TRIANGLE_LIST:
       /* tag the buffer */
-      *(buf->mem_start) = MGAG_ACCEL_TAG_WARP_TGZ;
+      *(buf->mem_start) = MGAG_ACCEL_TAG_WARP_TRIANGLE_LIST;
       buf->current.vertex = (mga_vertex_t*)(buf->mem_start + 1);
       break;
     default:

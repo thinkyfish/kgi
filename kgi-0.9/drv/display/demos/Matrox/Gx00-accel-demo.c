@@ -20,8 +20,8 @@
 #ifndef CHIPSET_G400
 #ifndef CHIPSET_MYSTIQUE
 /* One of those should be set to 1 before including mga_accel.h */
-#define CHIPSET_G200 1
-//#define CHIPSET_G400 1
+//#define CHIPSET_G200 1
+#define CHIPSET_G400 1
 //#define CHIPSET_MYSTIQUE 1
 #endif
 #endif
@@ -30,7 +30,7 @@
 /*
 ** Test duration parameter (in s)
 */
-#define TEST_DURATION 10
+#define TEST_DURATION 6
 
 #define BUFFER_IN_MEMORY 0
 
@@ -346,7 +346,10 @@ static void draw_icosahedron(mga_accel_state_t *state,
 /*
 ** DMA buffer size (do *not* change for the moment)
 */
-#define BUFFER_SIZE (4 * 1024)
+#define BUFFER_SIZE_LN2 0
+#define BUFFER_SIZE ((1 << BUFFER_SIZE_LN2) * 4 * 1024)
+#define BUFFER_NUMBER_LN2 2 /* TODO: !!!!! */
+#define BUFFER_NUMBER (1 << BUFFER_NUMBER_LN2)
 
 int main(int argc, char *argv[])
 {
@@ -355,7 +358,7 @@ int main(int argc, char *argv[])
   kgi_image_mode_t mode;
   kgi_u_t	i, x, y;
   kgi_u16_t *fb;
-  kgi_u8_t *accel, *ping, *pong, *warp, *wping, *wpong, *ptr;
+  kgi_u8_t *accel, *ptr;
   kgi_u_t no = 0;
   struct timeval end_time;
   struct timeval current_time;
@@ -370,7 +373,7 @@ int main(int argc, char *argv[])
   mga_vertex_color_t col2 = { 110, 110, 110, 0 };
   mga_vertex_color_t col3 = { 240, 240, 240, 0 };
 #endif
-  mga_vertex_color_t spcol = { 128,128,128,128 }; /* Gray, fog=128 */
+  mga_vertex_color_t spcol = { 128,192,64,128 }; /* Gray, fog=128 */
   mga_vertex_color_t black = { 0,0,0,0 }; /* Black */
   char buffer_test[2*BUFFER_SIZE];
 
@@ -463,11 +466,16 @@ int main(int argc, char *argv[])
   /*
   ** Then, we map the accelerator
   */
-  accel = mmap(NULL, (2 * BUFFER_SIZE),
+  accel = mmap(NULL, BUFFER_SIZE * BUFFER_NUMBER,
 	       PROT_READ | PROT_WRITE, MAP_SHARED,
 	       ctx.mapper.fd,
 	       GRAPH_MMAP_TYPE_ACCEL
-	       | 0x00001000
+	       | (BUFFER_SIZE_LN2 << GRAPH_MMAP_ACCEL_MINSIZE_SHIFT)
+	       | (BUFFER_SIZE_LN2 << GRAPH_MMAP_ACCEL_MAXSIZE_SHIFT)
+#if 0 /* TODO: !!!!! */
+	       | (1 << GRAPH_MMAP_ACCEL_PRIORITY_SHIFT)
+#endif
+	       | (BUFFER_NUMBER_LN2 << GRAPH_MMAP_ACCEL_BUFFERS_SHIFT)
 	       | (2 << GRAPH_MMAP_RESOURCE_SHIFT));
   if (((int)accel) <= 0) {
     printf("ACCEL mmap() failed (ret = %.8x)\n", accel);
@@ -477,9 +485,9 @@ int main(int argc, char *argv[])
   }
 
 #if BUFFER_IN_MEMORY
-  mga_dma_init(&my_ring, buffer_test, BUFFER_SIZE, 2);
+  mga_dma_init(&my_ring, buffer_test, BUFFER_SIZE, BUFFER_NUMBER);
 #else
-  mga_dma_init(&my_ring, accel, BUFFER_SIZE, 2);
+  mga_dma_init(&my_ring, accel, BUFFER_SIZE, BUFFER_NUMBER);
 #endif
   mga_accel_init(&my_state, &my_ring, &mode);
 
@@ -592,8 +600,8 @@ int main(int argc, char *argv[])
 	    vert[i].z = (float)(rand() % 99) * 0.01; // 0.0; // 0.01;
 	    //vert[i].color = (r == 0) ? col1 : ((r==1) ? col2 : col3);
 	    vert[i].color = (i == 0) ? col1 : ((i==1) ? col2 : col3);
-	    //vert[i].specular = spcolor; /* strange effect */
 	    vert[i].specular = black;
+	    vert[i].specular = spcol; /* strange effect */
 	  }
 	mga_accel_draw_triangle(&my_state, &(vert[0]), &(vert[1]), &(vert[2]));
 
