@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: PERMEDIA2-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:03  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_ramdac_3Dlabs_PERMEDIA2_meta_h
 #define	_ramdac_3Dlabs_PERMEDIA2_meta_h
@@ -29,14 +32,15 @@ typedef struct
 	kgim_ramdac_mode_t		kgim;
 
 	const pgc_ramdac_mode_record_t	*rec;
-	struct {
-		struct { kgi_u_t x,y; }
-		pos, hot, shift;
-	}				ptr;
 
-	kgi_u8_t			ext1E, ext06;
+	kgi_u8_t	ext1E, ext06;
 
-	kgi_u8_t			clut[3*256];
+	kgi_marker_t	ptr_ctrl;
+	kgi_ucoord_t	ptr_hot;
+	kgi_ucoord_t	ptr_shift;
+
+	kgi_clut_t	clut_ctrl;
+	kgi_u8_t	clut[3*256];
 
 } pgc_ramdac_mode_t;
 
@@ -67,5 +71,6 @@ KGIM_META_INIT_FN(pgc_ramdac)
 KGIM_META_DONE_FN(pgc_ramdac)
 KGIM_META_MODE_CHECK_FN(pgc_ramdac)
 KGIM_META_MODE_ENTER_FN(pgc_ramdac)
+KGIM_META_IMAGE_RESOURCE_FN(pgc_ramdac)
 
 #endif	/* #ifndef _dac_3Dlabs_PERMEDIA2_meta_h	*/

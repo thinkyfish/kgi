@@ -10,19 +10,22 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA2v-meta.c,v $
+**	Revision 1.2  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
-
-#include <kgi/module.h>
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #ifndef	DEBUG_LEVEL
-#define	DEBUG_LEVEL	2
+#define	DEBUG_LEVEL	1
 #endif
+
+#include <kgi/module.h>
 
 #include "ramdac/3Dlabs/PERMEDIA2v.h"
 #include "ramdac/3Dlabs/PERMEDIA2v-meta.h"
@@ -160,93 +163,96 @@ static inline const pgc2v_ramdac_mode_record_t *pgc2v_ramdac_mode_record(
 #undef	PGC2v_RAMDAC_MODE_MATCH
 }
 
-/* ----	text16 context functions ----------------------------------------------
-**
-**	
+/* ---------------------------------------------------------------------------
+**	image resources
+** ---------------------------------------------------------------------------
 */
-#define	PGC2v_RAMDAC_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, ramdac)
 
-#define	PGC2v_RAMDAC_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, ramdac)
-#if 0
-static void pgc2v_text16_set_ilut(kgic_mode_text16context_t *ctx,
-	kgic_ilut_entries_t *ilut)
+/*	CLUT control
+*/
+static void pgc2v_ramdac_clut_set(kgi_clut_t *clut,
+		kgi_u_t table, kgi_u_t index, kgi_u_t count,
+		kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
-	pgc2v_ramdac_io_t   *pgc2v_io   = PGC2v_RAMDAC_IO(ctx);
-	pgc2v_ramdac_mode_t *pgc2v_mode = PGC2v_RAMDAC_MODE(ctx);
+	pgc2v_ramdac_mode_t *pgc2v_mode = clut->meta;
+	pgc2v_ramdac_io_t   *pgc2v_io   = clut->meta_io;
+
 	kgi_u_t	cnt, src, dst;
 
-	KRN_ASSERT(ilut->img == 0);
-	KRN_ASSERT(ilut->lut == 0);
-	KRN_ASSERT(ilut->cnt > 0);
+	KRN_ASSERT(table == 0);
+	KRN_ASSERT(count > 0);
 
-	cnt = ilut->cnt;
-	dst = ilut->cnt * 3;
+	cnt = count;
+	dst = index * 3;
 	src = 0;
 
 	while (cnt--) {
 
-		if (ilut->am & KGI_AM_COLOR1) {
+		if (am & KGI_AM_COLOR1) {
 
-			pgc2v_mode->clut[dst+0] =
-				ilut->data[src++] >> PGC2v_SHIFT;
+			pgc2v_mode->clut[dst+0] = data[src++] >> PGC2v_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR2) {
+		if (am & KGI_AM_COLOR2) {
 
-			pgc2v_mode->clut[dst+1] =
-				ilut->data[src++] >> PGC2v_SHIFT;
+			pgc2v_mode->clut[dst+1] = data[src++] >> PGC2v_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR3) {
+		if (am & KGI_AM_COLOR3) {
 
-			pgc2v_mode->clut[dst+2] =
-				ilut->data[src++] >> PGC2v_SHIFT;
+			pgc2v_mode->clut[dst+2] = data[src++] >> PGC2v_SHIFT;
 		}
 		dst += 3;
 	}
 
-	src = 3 * ilut->idx;
-	cnt = 3 * ilut->cnt;
-	PGC2v_DAC_OUT8(pgc2v_io, ilut->idx, PGC2v_DAC_PW_INDEX);
-	PGC2v_DAC_OUTS8(pgc2v_io, PGC2v_DAC_P_DATA, pgc2v_mode->clut + src, cnt);
+	PGC2v_DAC_OUT8(pgc2v_io, index, PGC2v_DAC_PaletteWriteAddress);
+	PGC2v_DAC_OUTS8(pgc2v_io, PGC2v_DAC_PaletteData,
+		pgc2v_mode->clut + 3*index, 3*count);
 }
-#endif
-#if 0
-void pgc2v_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
-	kgi_pointer64x64 *ptr)
-{
-	pgc2v_ramdac_io_t   *pgc2v_io   = PGC2v_RAMDAC_IO(ctx);
-	pgc2v_ramdac_mode_t *pgc2v_mode = PGC2v_RAMDAC_MODE(ctx);
-	kgi_u_t i;
 
-	pgc2v_mode->RD.CursorHotSpotX = ptr->hot.x;
-	pgc2v_mode->RD.CursorHotSpotY = ptr->hot.y;
+
+void pgc2v_ramdac_ptr_set_mode(kgi_marker_t *ptr, kgi_marker_mode_t mode)
+{
+	pgc2v_ramdac_mode_t *pgc2v_mode = ptr->meta;
+	pgc2v_ramdac_io_t   *pgc2v_io	= ptr->meta_io;
 
 	pgc2v_mode->RD.CursorMode = PGC2v_E005_CursorMode0 |
 		PGC2v_E005_CursorEnable;
-	switch (ptr->mode) {
 
-	case KGI_PM_WINDOWS:
+	switch (mode) {
+
+	case KGI_MM_WINDOWS:
 		pgc2v_mode->RD.CursorMode |= PGC2v_E005_CursorWindows;
 		break;
 
-	case KGI_PM_X11:
+	case KGI_MM_X11:
 		pgc2v_mode->RD.CursorMode |= PGC2v_E005_CursorX;
 		break;
 
-	case KGI_PM_THREE_COLOR:
+	case KGI_MM_3COLOR:
 		pgc2v_mode->RD.CursorMode |= PGC2v_E005_Cursor3Color;
 		break;
 
 	default:
 		KRN_INTERNAL_ERROR;
 	}
-
 	pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorMode);
 	PGC2v_DAC_OUT8(pgc2v_io,
 			pgc2v_mode->RD.CursorMode, PGC2v_DAC_IndexData);
 	PGC2v_DAC_OUT8(pgc2v_io,
 			pgc2v_mode->RD.CursorControl, PGC2v_DAC_IndexData);
+}
+
+void pgc2v_ramdac_ptr_set_shape(kgi_marker_t *ptr, kgi_u_t shape,
+	kgi_u_t hot_x, kgi_u_t hot_y, const void *data,
+	const kgi_rgb_color_t *color)
+{
+	pgc2v_ramdac_mode_t *pgc2v_mode = ptr->meta;
+	pgc2v_ramdac_io_t   *pgc2v_io	= ptr->meta_io;
+
+	const kgi_u8_t *and_mask, *xor_mask;
+	kgi_u_t i;
+
+	pgc2v_mode->RD.CursorHotSpotX = hot_x;
+	pgc2v_mode->RD.CursorHotSpotY = hot_y;
 
 	pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorHotSpotX);
 	PGC2v_DAC_OUT8(pgc2v_io,
@@ -256,10 +262,12 @@ void pgc2v_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 
 	/*	set pattern
 	*/
+	and_mask = data;
+	xor_mask = and_mask + 512;
         for (i = 0; i < 512; i++) {
 
-		kgi_u16_t xor = ptr->xor_mask[i];
-		kgi_u16_t and = ptr->and_mask[i];
+		kgi_u16_t and = and_mask[i];
+		kgi_u16_t xor = xor_mask[i];
 		kgi_u16_t pattern;
 
 		xor += (xor & ~0x0001);
@@ -288,41 +296,31 @@ void pgc2v_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 	pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorPaletteBase);
 	for (i = 0; i < 3; i++) {
 
-		PGC2v_DAC_OUT8(pgc2v_io, ptr->col[i].r >> PGC2v_SHIFT,
+		PGC2v_DAC_OUT8(pgc2v_io, color[i].r >> PGC2v_SHIFT,
 			PGC2v_DAC_IndexData);
-		PGC2v_DAC_OUT8(pgc2v_io, ptr->col[i].g >> PGC2v_SHIFT,
+		PGC2v_DAC_OUT8(pgc2v_io, color[i].g >> PGC2v_SHIFT,
 			PGC2v_DAC_IndexData);
-		PGC2v_DAC_OUT8(pgc2v_io, ptr->col[i].b >> PGC2v_SHIFT,
+		PGC2v_DAC_OUT8(pgc2v_io, color[i].b >> PGC2v_SHIFT,
 			PGC2v_DAC_IndexData);
 	}
 }
-#endif
 
-static void pgc2v_text16_hp_show(kgic_mode_text16context_t *ctx, 
-	kgi_u_t x, kgi_u_t y)
+static void pgc2v_ramdac_ptr_show(kgi_marker_t *ptr, kgi_u_t x, kgi_u_t y)
 {
-	pgc2v_ramdac_io_t   *pgc2v_io   = PGC2v_RAMDAC_IO(ctx);
-	pgc2v_ramdac_mode_t *pgc2v_mode = PGC2v_RAMDAC_MODE(ctx);
+	pgc2v_ramdac_mode_t	*pgc2v_mode = ptr->meta;
+	pgc2v_ramdac_io_t	*pgc2v_io   = ptr->meta_io;
 
-	if ((pgc2v_mode->ptr_x != x) || (pgc2v_mode->ptr_y != y)) {
-
-		pgc2v_mode->ptr_x = x;
-		pgc2v_mode->ptr_y = y;
-
-		pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorXLow);
-		PGC2v_DAC_OUT8(pgc2v_io, x,      PGC2v_DAC_IndexData);
-		PGC2v_DAC_OUT8(pgc2v_io, x >> 8, PGC2v_DAC_IndexData);
-		PGC2v_DAC_OUT8(pgc2v_io, y,      PGC2v_DAC_IndexData);
-		PGC2v_DAC_OUT8(pgc2v_io, y >> 8, PGC2v_DAC_IndexData);
-	}
+	pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorXLow);
+	PGC2v_DAC_OUT8(pgc2v_io, x,      PGC2v_DAC_IndexData);
+	PGC2v_DAC_OUT8(pgc2v_io, x >> 8, PGC2v_DAC_IndexData);
+	PGC2v_DAC_OUT8(pgc2v_io, y,      PGC2v_DAC_IndexData);
+	PGC2v_DAC_OUT8(pgc2v_io, y >> 8, PGC2v_DAC_IndexData);
 }
 
-static void pgc2v_text16_hp_hide(kgic_mode_text16context_t *ctx)
+static void pgc2v_ramdac_ptr_hide(kgi_marker_t *ptr)
 {
-	pgc2v_ramdac_io_t   *pgc2v_io   = PGC2v_RAMDAC_IO(ctx);
-	pgc2v_ramdac_mode_t *pgc2v_mode = PGC2v_RAMDAC_MODE(ctx);
-
-	pgc2v_mode->ptr_x = pgc2v_mode->ptr_y = 0x7FFF;
+	pgc2v_ramdac_mode_t	*pgc2v_mode = ptr->meta;
+	pgc2v_ramdac_io_t	*pgc2v_io   = ptr->meta_io;
 
 	pgc2v_ramdac_set_index(pgc2v_io, PGC2v_EDAC_CursorXLow);
 	PGC2v_DAC_OUT8(pgc2v_io, 0xFF, PGC2v_DAC_IndexData);
@@ -331,11 +329,6 @@ static void pgc2v_text16_hp_hide(kgic_mode_text16context_t *ctx)
 	PGC2v_DAC_OUT8(pgc2v_io, 0x7F, PGC2v_DAC_IndexData);
 }
 
-#undef	PGC2v_RAMDAC_MODE
-#undef	PGC2v_RAMDAC_IO
-/*
-** ----	end of text16 context functions ---------------------------------------
-*/
 
 kgi_error_t pgc2v_ramdac_init(pgc2v_ramdac_t *pgc2v,
 	pgc2v_ramdac_io_t *pgc2v_io, const kgim_options_t *options)
@@ -562,7 +555,6 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 			PGC2v_E005_CursorDisable;
 		pgc2v_mode->RD.CursorControl = PGC2v_E006_ReadbackLastPosition;
 
-		pgc2v_mode->ptr_x = pgc2v_mode->ptr_y = 0x7FFF;
 		pgc2v_mode->RD.CursorXLow = pgc2v_mode->RD.CursorYLow = 0xFF;
 		pgc2v_mode->RD.CursorXHigh = pgc2v_mode->RD.CursorYHigh = 0x7F;
 
@@ -570,6 +562,44 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 			pgc2v_mode->RD.CursorHotSpotY = 0;
 
 		pgc2v_mode->RD.CheckControl = 0;
+
+		/*	hardware pointer control
+		*/
+		pgc2v_mode->ptr_ctrl.meta	= pgc2v_mode;
+		pgc2v_mode->ptr_ctrl.meta_io	= pgc2v_io;
+		pgc2v_mode->ptr_ctrl.type	= KGI_RT_POINTER_CONTROL;
+		pgc2v_mode->ptr_ctrl.prot	= KGI_PF_DRV_RWS;
+		pgc2v_mode->ptr_ctrl.name	= "Permedia2v pointer control";
+
+		pgc2v_mode->ptr_ctrl.modes	=
+			KGI_MM_WINDOWS | KGI_MM_X11 | KGI_MM_3COLOR;
+		pgc2v_mode->ptr_ctrl.shapes	= 1;
+		pgc2v_mode->ptr_ctrl.size.x	= 64;
+		pgc2v_mode->ptr_ctrl.size.y	= 64;
+		pgc2v_mode->ptr_ctrl.SetMode	= pgc2v_ramdac_ptr_set_mode;
+		pgc2v_mode->ptr_ctrl.Select	= NULL;
+		pgc2v_mode->ptr_ctrl.SetShape	= pgc2v_ramdac_ptr_set_shape;
+		
+		pgc2v_mode->ptr_ctrl.Show	= pgc2v_ramdac_ptr_show;
+		pgc2v_mode->ptr_ctrl.Hide	= pgc2v_ramdac_ptr_hide;
+		pgc2v_mode->ptr_ctrl.Undo	= NULL;
+
+		/*	color/attribute look up table control
+		*/
+		pgc2v_mode->clut_ctrl.meta	= pgc2v_mode;
+		pgc2v_mode->clut_ctrl.meta_io	= pgc2v_io;
+		pgc2v_mode->clut_ctrl.prot	= KGI_PF_DRV_RWS;
+		if (dpm->flags & KGI_DPF_CH_ALUT) {
+
+			pgc2v_mode->clut_ctrl.type	= KGI_RT_ALUT_CONTROL;
+			pgc2v_mode->clut_ctrl.name	= "alut control";
+		}
+		if (dpm->flags & KGI_DPF_CH_ILUT) {
+
+			pgc2v_mode->clut_ctrl.type	= KGI_RT_ILUT_CONTROL;
+			pgc2v_mode->clut_ctrl.name	= "ilut control";
+		}
+		pgc2v_mode->clut_ctrl.Set	= pgc2v_ramdac_clut_set;
 
 		return KGI_EOK;
 
@@ -579,7 +609,22 @@ kgi_error_t pgc2v_ramdac_mode_check(pgc2v_ramdac_t *pgc2v,
 	}
 }
 
-void pgc2v_ramdac_mode_enter(pgc2v_ramdac_t *pgc, pgc2v_ramdac_io_t *pgc2v_io,
+kgi_resource_t *pgc2v_ramdac_image_resource(pgc2v_ramdac_t *pgc2v,
+	pgc2v_ramdac_mode_t *pgc2v_mode, kgi_image_mode_t *img,
+	kgi_u_t image, kgi_u_t index)
+{
+	KRN_ASSERT((0 == image) && (NULL != img));
+
+	switch (index) {
+
+	case 0:	return (kgi_resource_t *) &(pgc2v_mode->clut_ctrl);
+	case 1:	return (kgi_resource_t *) &(pgc2v_mode->ptr_ctrl);
+
+	}
+	return NULL;
+}
+
+void pgc2v_ramdac_mode_enter(pgc2v_ramdac_t *pgc2v, pgc2v_ramdac_io_t *pgc2v_io,
 	pgc2v_ramdac_mode_t *pgc2v_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
 	kgi_u_t x, y;

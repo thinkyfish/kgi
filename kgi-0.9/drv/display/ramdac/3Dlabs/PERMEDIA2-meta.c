@@ -10,13 +10,16 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA2-meta.c,v $
+**	Revision 1.2  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:03  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_RAMDAC_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -122,76 +125,66 @@ static inline const pgc_ramdac_mode_record_t *pgc_ramdac_mode_record(
 #define	LCLK(m,d)	((dpm->lclk.mul == m) && (dpm->lclk.div == d))
 #define	RCLK(m,d)	((dpm->rclk.mul == m) && (dpm->rclk.div == d))
 
-/* ----	text16 context functions ----------------------------------------------
-**
-**	
+/* ----------------------------------------------------------------------------
+**	image resources
+** ----------------------------------------------------------------------------
 */
-#define	PGC_RAMDAC_IO(ctx)	\
-	KGIM_SUBSYSTEM_IO((kgim_display_t *) ctx->meta_object, ramdac)
 
-#define	PGC_RAMDAC_MODE(ctx)	\
-	KGIM_SUBSYSTEM_MODE((kgim_display_mode_t *) ctx->meta_mode, ramdac)
-#if 0
-static void pgc_text16_set_ilut(kgic_mode_text16context_t *ctx,
-	kgic_ilut_entries_t *ilut)
+static void pgc_ramdac_set_clut(kgi_clut_t *clut,
+	kgi_u_t table, kgi_u_t index, kgi_u_t count,
+	kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
-	pgc_ramdac_io_t   *pgc_io   = PGC_RAMDAC_IO(ctx);
-	pgc_ramdac_mode_t *pgc_mode = PGC_RAMDAC_MODE(ctx);
+	pgc_ramdac_mode_t *pgc_mode = clut->meta;
+	pgc_ramdac_io_t   *pgc_io   = clut->meta_io;
 	kgi_u_t	cnt, src, dst;
 
-	KRN_ASSERT(ilut->img == 0);
-	KRN_ASSERT(ilut->lut == 0);
-	KRN_ASSERT(ilut->cnt > 0);
+	KRN_ASSERT(table == 0);
+	KRN_ASSERT(count > 0);
 
-	cnt = ilut->cnt;
-	dst = ilut->cnt * 3;
+	cnt = count;
+	dst = index * 3;
 	src = 0;
 
 	while (cnt--) {
 
-		if (ilut->am & KGI_AM_COLOR1) {
-			pgc_mode->clut[dst+0] = ilut->data[src++] >> PGC_SHIFT;
+		if (am & KGI_AM_COLOR1) {
+
+			pgc_mode->clut[dst+0] = data[src++] >> PGC_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR2) {
-			pgc_mode->clut[dst+1] = ilut->data[src++] >> PGC_SHIFT;
+		if (am & KGI_AM_COLOR2) {
+
+			pgc_mode->clut[dst+1] = data[src++] >> PGC_SHIFT;
 		}
-		if (ilut->am & KGI_AM_COLOR3) {
-			pgc_mode->clut[dst+2] = ilut->data[src++] >> PGC_SHIFT;
+		if (am & KGI_AM_COLOR3) {
+
+			pgc_mode->clut[dst+2] = data[src++] >> PGC_SHIFT;
 		}
 		dst += 3;
 	}
 
-	src = 3 * ilut->idx;
-	cnt = 3 * ilut->cnt;
-	PGC_DAC_OUT8(pgc_io, ilut->idx, PGC_DAC_PW_INDEX);
-	PGC_DAC_OUTS8(pgc_io, PGC_DAC_P_DATA, pgc_mode->clut + src, cnt);
+	PGC_DAC_OUT8(pgc_io, index, PGC_DAC_PW_INDEX);
+	PGC_DAC_OUTS8(pgc_io, PGC_DAC_P_DATA,
+		pgc_mode->clut + 3*index, 3*count);
 }
-#endif
-#if 0
-void pgc_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
-	kgi_pointer64x64 *ptr)
+
+
+static void pgc_ramdac_ptr_set_mode(kgi_marker_t *ptr, kgi_marker_mode_t mode)
 {
-	pgc_ramdac_io_t   *pgc_io   = PGC_RAMDAC_IO(ctx);
-	pgc_ramdac_mode_t *pgc_mode = PGC_RAMDAC_MODE(ctx);
-	kgi_u_t i;
+	pgc_ramdac_mode_t *pgc_mode = ptr->meta;
+	pgc_ramdac_io_t	*pgc_io = ptr->meta_io;
 
-	pgc_mode->ptr.hot.x = ptr->hotx;
-	pgc_mode->ptr.hot.y = ptr->hoty;
-
-	/*	update private state
-	*/
 	pgc_mode->ext06 = PGC_EDAC06_Cursor64x64;
-	switch (ptr->mode) {
+	switch (mode) {
 
-	case KGI_PM_WINDOWS:
+	case KGI_MM_WINDOWS:
 		pgc_mode->ext06 |= PGC_EDAC06_CursorXGA;
 		break;
 
-	case KGI_PM_X11:
+	case KGI_MM_X11:
 		pgc_mode->ext06 |= PGC_EDAC06_CursorX;
 		break;
 
-	case KGI_PM_THREE_COLOR:
+	case KGI_MM_3COLOR:
 		pgc_mode->ext06 |= PGC_EDAC06_CursorThreeColor;
 		break;
 
@@ -199,17 +192,32 @@ void pgc_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 		KRN_INTERNAL_ERROR;
 	}
 	PGC_EDAC_OUT8(pgc_io, pgc_mode->ext06, 0x06);
+}
+
+static void pgc_ramdac_ptr_set_shape(kgi_marker_t *ptr, kgi_u_t shape,
+	kgi_u_t hot_x, kgi_u_t hot_y, const void *data,
+	const kgi_rgb_color_t *color)
+{
+	pgc_ramdac_mode_t *pgc_mode = ptr->meta;
+	pgc_ramdac_io_t   *pgc_io   = ptr->meta_io;
+	const kgi_u8_t *mask = data;
+	kgi_u_t i;
+
+	pgc_mode->ptr_hot.x = hot_x;
+	pgc_mode->ptr_hot.y = hot_y;
+
+	PGC_EDAC_OUT8(pgc_io, pgc_mode->ext06, 0x06);
         PGC_DAC_OUT8(pgc_io, 0x00, 0x00); /* Reset A0 - A7 */
 
 	/*	set pattern
 	*/
         for (i = 0; i < 512; i++) {
 
-        	PGC_DAC_OUT8(pgc_io, ptr->xor_mask[i], PGC_DAC_CURSOR_RAM_DATA);
+        	PGC_DAC_OUT8(pgc_io, mask[i], PGC_DAC_CURSOR_RAM_DATA);
         }
         for (i = 0; i < 512; i++) {
 
-        	PGC_DAC_OUT8(pgc_io, ptr->and_mask[i], PGC_DAC_CURSOR_RAM_DATA);
+        	PGC_DAC_OUT8(pgc_io, mask[i+512], PGC_DAC_CURSOR_RAM_DATA);
         }
 
 	/*	set colors
@@ -217,40 +225,30 @@ void pgc_text16_hp_set_shape(kgic_mode_text16context_t *ctx,
 	PGC_DAC_OUT8(pgc_io, 1, PGC_DAC_CW_INDEX);
 	for (i = 0; i < 3; i++) {
 
-		PGC_DAC_OUT8(pgc_io, ptr->col[i].r >> SHIFT, PGC_DAC_C_DATA);
-		PGC_DAC_OUT8(pgc_io, ptr->col[i].g >> SHIFT, PGC_DAC_C_DATA);
-		PGC_DAC_OUT8(pgc_io, ptr->col[i].b >> SHIFT, PGC_DAC_C_DATA);
-	}
-}
-#endif
-
-static void pgc_text16_hp_show(kgic_mode_text16context_t *ctx, 
-	kgi_u_t x, kgi_u_t y)
-{
-	pgc_ramdac_io_t   *pgc_io   = PGC_RAMDAC_IO(ctx);
-	pgc_ramdac_mode_t *pgc_mode = PGC_RAMDAC_MODE(ctx);
-
-	if ((pgc_mode->ptr.pos.x != x) || (pgc_mode->ptr.pos.y != y)) {
-
-		pgc_mode->ptr.pos.x = x;
-		pgc_mode->ptr.pos.y = y;
-
-		x += pgc_mode->ptr.shift.x - pgc_mode->ptr.hot.x;
-		y += pgc_mode->ptr.shift.y - pgc_mode->ptr.hot.y;
-
-		PGC_DAC_OUT8(pgc_io, x,      PGC_DAC_CURSOR_XL);
-		PGC_DAC_OUT8(pgc_io, x >> 8, PGC_DAC_CURSOR_XH);
-		PGC_DAC_OUT8(pgc_io, y,      PGC_DAC_CURSOR_YL);
-		PGC_DAC_OUT8(pgc_io, y >> 8, PGC_DAC_CURSOR_YH);
+		PGC_DAC_OUT8(pgc_io, color[i].r >> PGC_SHIFT, PGC_DAC_C_DATA);
+		PGC_DAC_OUT8(pgc_io, color[i].g >> PGC_SHIFT, PGC_DAC_C_DATA);
+		PGC_DAC_OUT8(pgc_io, color[i].b >> PGC_SHIFT, PGC_DAC_C_DATA);
 	}
 }
 
-static void pgc_text16_hp_hide(kgic_mode_text16context_t *ctx)
+static void pgc_ramdac_ptr_show(kgi_marker_t *ptr, kgi_u_t x, kgi_u_t y)
 {
-	pgc_ramdac_io_t   *pgc_io   = PGC_RAMDAC_IO(ctx);
-	pgc_ramdac_mode_t *pgc_mode = PGC_RAMDAC_MODE(ctx);
+	pgc_ramdac_mode_t *pgc_mode = ptr->meta;
+	pgc_ramdac_io_t   *pgc_io   = ptr->meta_io;
 
-	pgc_mode->ptr.pos.x = pgc_mode->ptr.pos.y = 0x7FF;
+	x += pgc_mode->ptr_shift.x - pgc_mode->ptr_hot.x;
+	y += pgc_mode->ptr_shift.y - pgc_mode->ptr_hot.y;
+
+	PGC_DAC_OUT8(pgc_io, x,      PGC_DAC_CURSOR_XL);
+	PGC_DAC_OUT8(pgc_io, x >> 8, PGC_DAC_CURSOR_XH);
+	PGC_DAC_OUT8(pgc_io, y,      PGC_DAC_CURSOR_YL);
+	PGC_DAC_OUT8(pgc_io, y >> 8, PGC_DAC_CURSOR_YH);
+}
+
+static void pgc_ramdac_ptr_hide(kgi_marker_t *ptr)
+{
+	pgc_ramdac_mode_t *pgc_mode = ptr->meta;
+	pgc_ramdac_io_t   *pgc_io   = ptr->meta_io;
 
 	PGC_DAC_OUT8(pgc_io, 0xFF, PGC_DAC_CURSOR_XL);
 	PGC_DAC_OUT8(pgc_io, 0x07, PGC_DAC_CURSOR_XH);
@@ -258,11 +256,8 @@ static void pgc_text16_hp_hide(kgic_mode_text16context_t *ctx)
 	PGC_DAC_OUT8(pgc_io, 0x07, PGC_DAC_CURSOR_YH);
 }
 
-#undef	PGC_RAMDAC_MODE
-#undef	PGC_RAMDAC_IO
-/*
-** ----	end of text16 context functions ---------------------------------------
-*/
+#define	pgc_ramdac_ptr_undo	NULL
+
 
 kgi_error_t pgc_ramdac_init(pgc_ramdac_t *pgc, pgc_ramdac_io_t *pgc_io,
 	const kgim_options_t *options)
@@ -445,15 +440,52 @@ kgi_error_t pgc_ramdac_mode_check(
 			pgc_mode->ext1E |= PGC_EDAC1E_BlankPedestral;
 		}
 
+		/*	hardware pointer setup
+		*/
 		pgc_mode->ext06 = PGC_EDAC06_Cursor64x64 | PGC_EDAC06_CursorOff;
-		pgc_mode->ptr.pos.x = pgc_mode->ptr.pos.y = 0x7FF;
-		pgc_mode->ptr.hot.x = pgc_mode->ptr.hot.y = 0;
-		pgc_mode->ptr.shift.x = 64 +
+
+		pgc_mode->ptr_shift.x	 = 64 +
 			pgc_mode->kgim.crt->x.total -
 			pgc_mode->kgim.crt->x.blankend;
-		pgc_mode->ptr.shift.y = 64 +
+		pgc_mode->ptr_shift.y	 = 64 +
 			pgc_mode->kgim.crt->y.total -
 			pgc_mode->kgim.crt->y.blankend;
+
+		pgc_mode->ptr_ctrl.meta		= pgc_mode;
+		pgc_mode->ptr_ctrl.meta_io	= pgc_io;
+		pgc_mode->ptr_ctrl.type		= KGI_RT_POINTER_CONTROL;
+		pgc_mode->ptr_ctrl.prot		= KGI_PF_DRV_RWS;
+		pgc_mode->ptr_ctrl.name		= "pointer";
+		pgc_mode->ptr_ctrl.modes	=
+			KGI_MM_WINDOWS | KGI_MM_X11 | KGI_MM_3COLOR;
+		pgc_mode->ptr_ctrl.shapes	= 1;
+		pgc_mode->ptr_ctrl.size.x	= 64;
+		pgc_mode->ptr_ctrl.size.y	= 64;
+		pgc_mode->ptr_ctrl.SetMode	= pgc_ramdac_ptr_set_mode;
+		pgc_mode->ptr_ctrl.Select	= NULL;
+		pgc_mode->ptr_ctrl.SetShape	= pgc_ramdac_ptr_set_shape;
+		pgc_mode->ptr_ctrl.Show		= pgc_ramdac_ptr_show;
+		pgc_mode->ptr_ctrl.Hide		= pgc_ramdac_ptr_hide;
+		pgc_mode->ptr_ctrl.Undo		= pgc_ramdac_ptr_undo;
+#warning init pgc_mode->cursor_clut
+#warning init pgc_mode->cursor_data
+
+		/*	clut setup
+		*/
+		pgc_mode->clut_ctrl.meta	= pgc_mode;
+		pgc_mode->clut_ctrl.meta_io	= pgc_io;
+		pgc_mode->clut_ctrl.prot	= KGI_PF_DRV_RWS;
+		if (dpm->flags & KGI_DPF_CH_ALUT) {
+
+			pgc_mode->clut_ctrl.type = KGI_RT_ALUT_CONTROL;
+			pgc_mode->clut_ctrl.name = "alut control";
+		}
+		if (dpm->flags & KGI_DPF_CH_ILUT) {
+
+			pgc_mode->clut_ctrl.type = KGI_RT_ILUT_CONTROL;
+			pgc_mode->clut_ctrl.name = "ilut control";
+		}
+		pgc_mode->clut_ctrl.Set = pgc_ramdac_set_clut;
 
 		return KGI_EOK;
 
@@ -463,11 +495,24 @@ kgi_error_t pgc_ramdac_mode_check(
 	}
 }
 
+kgi_resource_t *pgc_ramdac_image_resource(pgc_ramdac_t *pgc,
+	pgc_ramdac_mode_t *pgc_mode, kgi_image_mode_t *img, kgi_u_t image,
+	kgi_u_t index)
+{
+	KRN_ASSERT((0 == image) && (NULL != img));
+
+	switch (index) {
+
+	case 0:		return (kgi_resource_t *) &(pgc_mode->clut_ctrl);
+	case 1:		return (kgi_resource_t *) &(pgc_mode->ptr_ctrl);
+
+	}
+	return NULL;
+}
+
 void pgc_ramdac_mode_enter(pgc_ramdac_t *pgc, pgc_ramdac_io_t *pgc_io,
 	pgc_ramdac_mode_t *pgc_mode, kgi_image_mode_t *img, kgi_u_t images)
 {
-	kgi_u_t x, y;
-
 	PGC_EDAC_OUT8(pgc_io, pgc_mode->rec->ext40, 0x40);
 	PGC_EDAC_OUT8(pgc_io, 0, PGC_EDAC_OverlayKey);
 	PGC_EDAC_OUT8(pgc_io, 0, PGC_EDAC_RedKey);
@@ -475,19 +520,16 @@ void pgc_ramdac_mode_enter(pgc_ramdac_t *pgc, pgc_ramdac_io_t *pgc_io,
 	PGC_EDAC_OUT8(pgc_io, 0, PGC_EDAC_BlueKey);
 	PGC_EDAC_OUT8(pgc_io, 0, PGC_EDAC_PalettePage);
 
-	x = pgc_mode->ptr.pos.x + pgc_mode->ptr.shift.x - pgc_mode->ptr.hot.x;
-	y = pgc_mode->ptr.pos.y + pgc_mode->ptr.shift.y - pgc_mode->ptr.hot.y;
-
 /*
 	clut
 	cursor clut
 	cursor shape
 */
 	PGC_EDAC_OUT8(pgc_io, pgc_mode->ext06, 0x06);
-	PGC_DAC_OUT8(pgc_io, x,      PGC_DAC_CURSOR_XL);
-	PGC_DAC_OUT8(pgc_io, x >> 8, PGC_DAC_CURSOR_XH);
-	PGC_DAC_OUT8(pgc_io, y,      PGC_DAC_CURSOR_YL);
-	PGC_DAC_OUT8(pgc_io, y >> 8, PGC_DAC_CURSOR_YH);
+	PGC_DAC_OUT8(pgc_io, 0xFF, PGC_DAC_CURSOR_XL);
+	PGC_DAC_OUT8(pgc_io, 0x07, PGC_DAC_CURSOR_XH);
+	PGC_DAC_OUT8(pgc_io, 0xFF, PGC_DAC_CURSOR_YL);
+	PGC_DAC_OUT8(pgc_io, 0x07, PGC_DAC_CURSOR_YH);
 
 	PGC_EDAC_OUT8(pgc_io, pgc_mode->rec->ext18, 0x18);
 	PGC_EDAC_OUT8(pgc_io, PGC_EDAC19_FrontBuffer, 0x19);
