@@ -13,6 +13,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: psaux.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
@@ -64,8 +67,11 @@ static int psaux_queue_packet(struct psaux_queue *queue, const kii_u8_t *buf)
 	queue->buf[queue->head++ & PSAUX_BUF_MASK] = buf[2];
 
 	if (queue->fasync) {
-
-		kill_fasync(queue->fasync, SIGIO);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+		kill_fasync(&queue->fasync, SIGIO);
+#else
+		kill_fasync(&queue->fasync, SIGIO, POLL_IN);
+#endif
 	}
 	wake_up_interruptible(&queue->proc_list);
 
