@@ -11,6 +11,9 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: PERMEDIA2v.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:04  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #ifndef	_ramdac_3Dlabs_PERMEDIA2v_h
 #define	_ramdac_3Dlabs_PERMEDIA2v_h
@@ -18,7 +21,7 @@
 #define	PGC2v_DAC_PaletteWriteAddress	0x00
 #define	PGC2v_DAC_PaletteData		0x01
 #define	PGC2v_DAC_PixelMask		0x02
-#define	PGC2v_DAC_PaletteReadMask	0x03
+#define	PGC2v_DAC_PaletteReadAddress	0x03
 #define	PGC2v_DAC_IndexLow		0x04
 #define	PGC2v_DAC_IndexHigh		0x05
 #define	PGC2v_DAC_IndexData		0x06
