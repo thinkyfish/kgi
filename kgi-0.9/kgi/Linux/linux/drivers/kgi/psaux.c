@@ -13,6 +13,10 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: psaux.c,v $
+**	Revision 1.2  2001/09/09 23:35:15  skids
+**	
+**	Use different kill_fasync call when building for 2.4.x kernels.
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:53  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -46,7 +50,10 @@ static struct psaux_queue
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,2) /* 2.3.1 ??? */
 	struct wait_queue	*proc_list;
 #else
-	struct wait_queue_head_t	*proc_list;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) /* What version? */
+	struct 
+#endif
+	wait_queue_head_t	*proc_list;
 #endif
 	struct fasync_struct	*fasync;
 	kii_u8_t			buf[PSAUX_BUF_SIZE];
@@ -73,7 +80,11 @@ static int psaux_queue_packet(struct psaux_queue *queue, const kii_u8_t *buf)
 		kill_fasync(&queue->fasync, SIGIO, POLL_IN);
 #endif
 	}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) /* What version? */
 	wake_up_interruptible(&queue->proc_list);
+#else
+	wake_up_interruptible(queue->proc_list);
+#endif
 
 	return EOK;
 }
@@ -178,7 +189,12 @@ static ssize_t psaux_read(struct file *file, char *buffer,
 
 			return -EAGAIN;
 		}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) /* What version? */
 		add_wait_queue(&queue->proc_list, &wait);
+#else
+		add_wait_queue(queue->proc_list, &wait);
+#endif
+
 repeat:		current->state = TASK_INTERRUPTIBLE;
 		if ((queue->head == queue->tail) &&
 			! signal_pending(current)) {
@@ -187,7 +203,11 @@ repeat:		current->state = TASK_INTERRUPTIBLE;
 			goto repeat;
 		}
 		current->state = TASK_RUNNING;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) /* What version? */
 		remove_wait_queue(&queue->proc_list, &wait);
+#else
+		remove_wait_queue(queue->proc_list, &wait);
+#endif
 	}
 
 	if (queue->head - queue->tail < count) {
@@ -227,24 +247,33 @@ static unsigned int psaux_poll(struct file *file, poll_table *wait)
 
 	KRN_ASSERT(queue);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) /* What version? */
 	poll_wait(file, &queue->proc_list, wait);
+#else
+	poll_wait(file, queue->proc_list, wait);
+#endif
 	return (queue->head == queue->tail) ? 0 : POLLIN | POLLRDNORM;
 }
 
 static struct file_operations psaux_fops =
 {
-	NULL,		/* seek		*/
-	psaux_read,	/* read		*/
-	psaux_write,	/* write	*/
-	NULL,		/* readdir	*/
-	psaux_poll,	/* poll		*/
-	NULL,		/* ioctl	*/
-	NULL,		/* mmap		*/
-	psaux_open,	/* open		*/
-	NULL,		/* flush	*/
-	psaux_close,	/* release	*/
-	NULL,		/* 		*/
-	psaux_fasync	/* fasync	*/
+	read:		psaux_read,
+	write:		psaux_write,
+	poll:		psaux_poll,
+	open:		psaux_open,
+	release:	psaux_close,
+	fasync:		psaux_fasync,
+	/* Will GCC guarantee NULL if we don't explicitly init here? */
+	readdir:	NULL,
+	ioctl:		NULL,
+	mmap:		NULL,
+	flush:		NULL
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,0)
+	,
+        check_media_change:     NULL,
+        revalidate:             NULL,
+#endif
+
 };
 
 struct miscdevice psaux_device =
