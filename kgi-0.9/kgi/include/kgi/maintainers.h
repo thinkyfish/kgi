@@ -13,5 +13,6 @@
 #define	Brian_S_Julin	"Brian S. Julin <kgi-develop@lists.sourceforge.net>"
 #define	Jos_Hulzink	"Jos Hulzink <kgi-develop@lists.sourceforge.net>"
 #define	Johan_Karlberg	"Johan Karlberg <kgi-develop@lists.sourceforge.net>"
+#define	Rodolphe_Ortalo	"Rodolphe Ortalo <kgi-develop@lists.sourceforge.net>"
 
 #endif	/* _kgi_maintainers_h */
