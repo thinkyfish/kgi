@@ -43,8 +43,10 @@ SOFTWARE.
 
 /* $TOG: glyphcurs.c /main/29 1998/02/09 14:19:46 kaleb $ */
 
+#include "config.h"
+
 #include "misc.h"
-#include "fontstruct.h"
+#include "X11/fonts/fontstruct.h"
 #include "dixfontstr.h"
 #include "scrnintstr.h"
 #include "gcstruct.h"

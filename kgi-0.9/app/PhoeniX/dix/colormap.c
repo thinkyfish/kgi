@@ -44,9 +44,11 @@ SOFTWARE.
 
 /* $TOG: colormap.c /main/74 1998/03/24 18:17:31 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_EVENTS
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "misc.h"
 #include "dix.h"
 #include "colormapst.h"

@@ -44,8 +44,10 @@ SOFTWARE.
 
 /* $TOG: atom.c /main/11 1998/02/09 14:17:45 kaleb $ */
 
-#include "X.h"
-#include "Xatom.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xatom.h"
 #include "misc.h"
 #include "resource.h"
 #include "dix.h"

@@ -80,18 +80,20 @@ Author:  Adobe Systems Incorporated
 
 /* $TOG: dixutils.c /main/34 1998/02/09 14:18:57 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "misc.h"
 #include "windowstr.h"
 #include "dixstruct.h"
 #include "pixmapstr.h"
 #include "scrnintstr.h"
 #define  XK_LATIN1
-#include "keysymdef.h"
+#include "X11/keysymdef.h"
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "security.h"
+#include "X11/extensions/security.h"
 #endif
 
 /*

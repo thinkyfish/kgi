@@ -43,10 +43,12 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: tables.c /main/15 1998/02/09 14:20:53 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_EVENTS
 #define NEED_REPLIES
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "windowstr.h"
 #include "extnsionst.h"
 #include "dixstruct.h"

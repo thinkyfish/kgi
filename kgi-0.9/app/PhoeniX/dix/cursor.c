@@ -45,8 +45,10 @@ SOFTWARE.
 
 /* $TOG: cursor.c /main/20 1998/02/09 14:18:18 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "servermd.h"
 #include "scrnintstr.h"
 #include "dixstruct.h"

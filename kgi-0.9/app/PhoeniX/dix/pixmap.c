@@ -24,7 +24,9 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/Xserver/dix/pixmap.c,v 3.3 1998/10/04 09:38:10 dawes Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "misc.h"
 #include "os.h"

@@ -24,7 +24,9 @@ from The Open Group.
 */
 /* $XFree86: xc/programs/Xserver/dix/privates.c,v 3.6 1999/12/30 02:37:06 robin Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "scrnintstr.h"
 #include "misc.h"
 #include "os.h"

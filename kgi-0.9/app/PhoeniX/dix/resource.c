@@ -90,8 +90,10 @@ SOFTWARE.
  */
 /* $XFree86: xc/programs/Xserver/dix/resource.c,v 3.6 2000/01/02 00:23:47 mvojkovi Exp $ */
 
+#include "config.h"
+
 #define NEED_EVENTS
-#include "X.h"
+#include "X11/X.h"
 #include "misc.h"
 #include "os.h"
 #include "resource.h"
@@ -105,8 +107,8 @@ SOFTWARE.
 #include "dixgrabs.h"
 #include "cursor.h"
 #ifdef PANORAMIX
-#include "panoramiX.h"
-#include "panoramiXsrv.h"
+#include "X11/extensions/panoramiX.h"
+#include "X11/extensions/panoramiXsrv.h"
 #endif
 extern WindowPtr *WindowTable;
 #include <assert.h>

@@ -68,6 +68,8 @@ SOFTWARE.
 
 /* $XFree86: xc/programs/Xserver/dix/window.c,v 3.21 2000/02/21 01:16:28 mvojkovi Exp $ */
 
+#include "config.h"
+
 #include "misc.h"
 #include "scrnintstr.h"
 #include "os.h"
@@ -82,19 +84,19 @@ SOFTWARE.
 #include "gcstruct.h"
 #include "servermd.h"
 #ifdef PANORAMIX
-#include "panoramiX.h"
-#include "panoramiXsrv.h"
+#include "X11/extensions/panoramiX.h"
+#include "X11/extensions/panoramiXsrv.h"
 #else
 #include "dixevents.h"
 #endif
 #include "globals.h"
 
 #ifdef XAPPGROUP
-#include "Xagsrv.h"
+#include "X11/extensions/Xagsrv.h"
 #endif
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "security.h"
+#include "X11/extensions/security.h"
 #endif
 
 extern Bool permitOldBugs;

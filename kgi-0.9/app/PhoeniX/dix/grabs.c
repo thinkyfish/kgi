@@ -44,10 +44,12 @@ SOFTWARE.
 */
 /* $XFree86: xc/programs/Xserver/dix/grabs.c,v 3.1 1998/10/04 09:38:09 dawes Exp $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #include "misc.h"
 #define NEED_EVENTS
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "windowstr.h"
 #include "inputstr.h"
 #include "cursorstr.h"

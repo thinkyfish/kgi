@@ -47,10 +47,12 @@ SOFTWARE.
 
 /* $TOG: dixfonts.c /main/61 1998/05/28 15:47:54 kaleb $ */
 
+#include "config.h"
+
 #define NEED_REPLIES
-#include "X.h"
-#include "Xmd.h"
-#include "Xproto.h"
+#include "X11/X.h"
+#include "X11/Xmd.h"
+#include "X11/Xproto.h"
 #include "scrnintstr.h"
 #include "resource.h"
 #include "dixstruct.h"
@@ -65,7 +67,7 @@ SOFTWARE.
 #endif
 
 #ifdef PANORAMIX
-#include "panoramiX.h"
+#include "X11/extensions/panoramiX.h"
 #endif
 
 #define QUERYCHARINFO(pci, pr)  *(pr) = (pci)->metrics

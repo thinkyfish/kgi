@@ -43,10 +43,12 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: extension.c /main/37 1998/02/09 14:19:21 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_EVENTS
 #define NEED_REPLIES
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "misc.h"
 #include "dixstruct.h"
 #include "extnsionst.h"
@@ -55,7 +57,7 @@ SOFTWARE.
 #include "dispatch.h"
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "security.h"
+#include "X11/extensions/security.h"
 #endif
 
 #define EXTENSION_BASE  128

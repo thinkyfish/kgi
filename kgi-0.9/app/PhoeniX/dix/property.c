@@ -43,10 +43,12 @@ SOFTWARE.
 ******************************************************************/
 /* $TOG: property.c /main/42 1998/02/09 14:20:24 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_REPLIES
 #define NEED_EVENTS
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "windowstr.h"
 #include "propertyst.h"
 #include "dixstruct.h"
@@ -54,7 +56,7 @@ SOFTWARE.
 #include "swaprep.h"
 #ifdef XCSECURITY
 #define _SECURITY_SERVER
-#include "security.h"
+#include "X11/extensions/security.h"
 #endif
 
 #if defined(LBX) || defined(LBX_COMPAT)

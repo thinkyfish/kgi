@@ -22,8 +22,10 @@ from The Open Group.
 
 /* $TOG: xpstubs.c /main/2 1998/02/09 14:21:15 kaleb $ */
 
+#include "config.h"
+
 #include "misc.h"
-#include "font.h"
+#include "X11/fonts/font.h"
 
 Bool
 XpClientIsBitmapClient(client)

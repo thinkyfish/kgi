@@ -44,8 +44,10 @@ SOFTWARE.
 
 /* $TOG: globals.c /main/21 1998/02/09 14:19:40 kaleb $ */
 
-#include "X.h"
-#include "Xmd.h"
+#include "config.h"
+
+#include "X11/X.h"
+#include "X11/Xmd.h"
 #include "misc.h"
 #include "windowstr.h"
 #include "scrnintstr.h"

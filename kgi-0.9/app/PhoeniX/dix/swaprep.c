@@ -44,13 +44,15 @@ SOFTWARE.
 
 /* $TOG: swaprep.c /main/26 1998/02/09 14:20:38 kaleb $ */
 
-#include "X.h"
+#include "config.h"
+
+#include "X11/X.h"
 #define NEED_REPLIES
 #define NEED_EVENTS
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "misc.h"
 #include "dixstruct.h"
-#include "fontstruct.h"
+#include "X11/fonts/fontstruct.h"
 #include "scrnintstr.h"
 #include "swaprep.h"
 #include "globals.h"

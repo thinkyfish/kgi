@@ -23,6 +23,8 @@ The Open Group.
 
 */
 
+#include "config.h"
+
 int
 ffs(int i)
 {

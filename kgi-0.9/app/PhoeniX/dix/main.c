@@ -66,10 +66,12 @@ SOFTWARE.
 
 /* $TOG: main.c /main/86 1998/02/09 14:20:03 kaleb $ */
 
+#include "config.h"
+
 #define NEED_EVENTS
-#include "X.h"
-#include "Xos.h"   /* for unistd.h  */
-#include "Xproto.h"
+#include "X11/X.h"
+#include "X11/Xos.h"   /* for unistd.h  */
+#include "X11/Xproto.h"
 #include "scrnintstr.h"
 #include "misc.h"
 #include "os.h"
@@ -84,7 +86,7 @@ SOFTWARE.
 #include "colormap.h"
 #include "colormapst.h"
 #include "cursorstr.h"
-#include "font.h"
+#include "X11/fonts/font.h"
 #include "opaque.h"
 #include "servermd.h"
 #include "site.h"
@@ -96,7 +98,7 @@ SOFTWARE.
 
 #ifdef DPMSExtension
 #define DPMS_SERVER
-#include "dpms.h"
+#include "X11/extensions/dpms.h"
 #endif
 
 void ddxGiveUp();
