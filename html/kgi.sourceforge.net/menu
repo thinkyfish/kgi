@@ -1,3 +1,4 @@
+title	en	"Site Index"
 abs	en	"Articles"	articles/index.en.html
 rel	en	"Download"	ftp://kgi.sourceforge.net/pub/kgi
 abs	en	"Driver Status"	source/index.en.html
