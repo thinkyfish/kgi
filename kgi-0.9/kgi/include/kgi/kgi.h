@@ -11,6 +11,10 @@
 **	MAINTAINER	Steffen_Seeger
 **
 **	$Log: kgi.h,v $
+**	Revision 1.2  2001/07/03 08:47:52  seeger_s
+**	- image resources added
+**	- minor clean ups and reordering
+**	
 **	Revision 1.1.1.1  2000/04/18 08:50:43  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
@@ -287,21 +291,24 @@ typedef struct
 
 } kgi_accel_context_t;
 
-typedef struct kgi_accel_buffer_s
+typedef struct kgi_accel_buffer_s kgi_accel_buffer_t;
+
+struct kgi_accel_buffer_s
 {
-	struct kgi_accel_buffer_s	*next;	/* next of same mapping	*/
-	struct kgi_accel_buffer_s	*exec;	/* next in exec queue	*/
-
+	kgi_accel_buffer_t *next;	/* next of same mapping		*/
 	kgi_aperture_t	aperture;	/* buffer aperture location	*/
-
-	kgi_u_t		exec_pri;	/* execution priority		*/
-	void		*exec_ctx;	/* mapping context		*/
-	kgi_size_t	exec_size;	/* bytes to execute from chunk	*/
-	kgi_accel_state_t exec_state;	/* current buffer state		*/
-
+	void		*context;	/* mapping context		*/
+	kgi_u_t		priority;	/* execution priority		*/
 	kgi_wait_queue_t executed;	/* wakeup when buffer executed	*/
 
-} kgi_accel_buffer_t;
+	struct {
+
+		kgi_accel_state_t	state;	/* current buffer state	*/
+		kgi_accel_buffer_t	*next;	/* next in exec queue	*/
+		kgi_size_t		size;	/* bytes to execute	*/
+
+	} execution;
+};
 
 struct kgi_accel_s;
 
@@ -325,10 +332,15 @@ typedef struct kgi_accel_s
 	kgi_u_t		buffers;	/* recommended number buffers	*/
 	kgi_u_t		buffer_size;	/* recommended buffer size	*/
 
-	void	*ctx;			/* current context		*/
-	kgi_u_t		ctx_size;	/* context buffer size		*/
+	void		*context;	/* current context		*/
+	kgi_u_t		context_size;	/* context buffer size		*/
 
-	kgi_accel_buffer_t *exec_queue;	/* execution queue		*/
+	struct {
+
+		kgi_accel_buffer_t *queue;	/* buffers to execute	*/
+		void *context;			/* current context	*/
+
+	} execution;			/* dynamic state		*/
 
 	kgi_wait_queue_t	idle;	/* wakeup when becoming idle	*/
 
