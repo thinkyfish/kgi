@@ -13,6 +13,9 @@
 ** -----------------------------------------------------------------------------
 **
 **	$Log: dpy-i386.c,v $
+**	Revision 1.1.1.1  2000/04/18 08:50:47  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 #define	DEBUG_LEVEL	2
 
@@ -820,7 +823,7 @@ static void kgi_boot_console_printk(struct console *cp, const char *s,
 
 #		ifdef CONFIG_KGI_SPLASH
 
-			kgi_boot_fb[boot_pos] = *s | (boot_fb[boot_pos] & 0xFF00);
+			kgi_boot_fb[kgi_boot_pos] = *s | (kgi_boot_fb[kgi_boot_pos] & 0xFF00);
 
 			/*	slow down to be able to read early boot messages
 			**	even when they scroll up.
