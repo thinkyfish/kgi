@@ -10,6 +10,9 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-meta.h,v $
+**	Revision 1.1.1.1  2000/04/18 08:51:17  seeger_s
+**	- initial import of pre-SourceForge tree
+**	
 */
 
 #ifndef	_chipset_3Dlabs_PERMEDIA_meta_h
@@ -163,5 +166,6 @@ KGIM_META_MODE_RESOURCE_FN(pgc_chipset)
 KGIM_META_MODE_PREPARE_FN(pgc_chipset)
 KGIM_META_MODE_ENTER_FN(pgc_chipset)
 KGIM_META_MODE_LEAVE_FN(pgc_chipset)
+KGIM_META_IMAGE_RESOURCE_FN(pgc_chipset)
 
 #endif	/* #ifdef _chipset_3Dlabs_PERMEDIA_meta_h */

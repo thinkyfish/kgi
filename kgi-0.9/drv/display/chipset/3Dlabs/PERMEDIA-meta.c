@@ -10,19 +10,22 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: PERMEDIA-meta.c,v $
+**	Revision 1.2  2000/09/21 09:57:15  seeger_s
+**	- name space cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:17  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	Steffen_Seeger
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
-
-#include <kgi/module.h>
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #ifndef	DEBUG_LEVEL
 #define	DEBUG_LEVEL	1
 #endif
+
+#include <kgi/module.h>
 
 #define	__3Dlabs_Permedia
 #define	__3Dlabs_Permedia2
@@ -1694,7 +1697,7 @@ kgi_resource_t *pgc_chipset_mode_resource(pgc_chipset_t *pgc,
 	pgc_chipset_mode_t *pgc_mode, kgi_image_mode_t *img,
 	kgi_u_t images, kgi_u_t index)
 {
-	if (img->fam & KGI_AM_TEXTURE_INDEX) {
+	if (img[0].fam & KGI_AM_TEXTURE_INDEX) {
 
 		return vga_text_chipset_mode_resource(&pgc->vga, &pgc_mode->vga,
 			img, images, index);
@@ -1706,6 +1709,21 @@ kgi_resource_t *pgc_chipset_mode_resource(pgc_chipset_t *pgc,
 	case 1:	return	(kgi_resource_t *) &pgc_mode->pgc.aperture2;
 	case 2:	return	(kgi_resource_t *) &pgc_mode->pgc.gp_fifo;
 	case 3:	return	(kgi_resource_t *) &pgc_mode->pgc.gp_regs;
+
+	}
+	return NULL;
+}
+
+kgi_resource_t *pgc_chipset_image_resource(pgc_chipset_t *pgc,
+	pgc_chipset_mode_t *pgc_mode, kgi_image_mode_t *img,
+	kgi_u_t image, kgi_u_t index)
+{
+	KRN_ASSERT(image == 0);
+
+	if (img[0].fam & KGI_AM_TEXTURE_INDEX) {
+
+		return vga_text_chipset_image_resource(&(pgc->vga),
+			&(pgc_mode->vga), img, image, index);
 	}
 	return NULL;
 }
