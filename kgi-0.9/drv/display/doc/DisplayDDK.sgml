@@ -6,6 +6,9 @@
 		<titleabbrev>KGI Display DDK</titleabbrev>
 		<!--
 			$Log: DisplayDDK.sgml,v $
+			Revision 1.1  2000/04/26 14:03:08  seeger_s
+			- early draft of DisplayDDK guide
+			
 		-->
 		<revhistory>
 			<revision>
@@ -67,7 +70,7 @@
 				It is important to maintain <emphasis>one</emphasis> consistent coding style over
 				the whole code base, so that other developers may help you easily.
 				</para>
-			</lisitem>
+			</listitem>
 		</itemizedlist>
 		Once you have read through this document, it is suggested you read through the chipset
 		documentation and get a good understanding how the particular device is supposed to work.
@@ -79,91 +82,378 @@
 		a driver for KGI.
 		If this document is unclear about particular issues or you have ideas how to improve this
 		document or KGI in general, don't hesitate to share your ideas with other developers.
-		Please see the KGI Project web site at http://kgi.sourceforge.net for instructions how to
-		get in contact with KGI developers.
+		Please see <ulink url="http://www.kgi-project.org">The KGI Project web site</ulink> for instructions
+		how to get in contact with KGI developers.
 		</para>
 	</section>
 	<section><title>Understanding Meta-Languages</title>
 		<para>
 		Strictly speaking a meta-language is used to describe other languages.
+		In this document, we will use this concept to describe and specifiy the expected
+		behaviour of drivers.
+		Don't be frightened by the impressive name, there is nothing complicated about
+		meta-langagues.
+		You might think of a meta-language as a set of rules and specifications
+		a driver complying to that meta-language specification has to conform to.
+		Such a driver is also referred to as an instance of a particular meta-language.
+		For example, a working chipset driver for a <trademark>3Dlabs Permedia</trademark>
+		chipset is an instance of the chipset meta-language, a driver for an
+		<trademark>Brooktree Bt485</trademark> ramdac is an instance of the ramdac
+		meta-language etc.
+		</para><para>
+		For the modular display driver implementation the following meta-languages are defined:
+		<itemizedlist>
+			<listitem>
+				<para>
+				chipset meta-language: Chipset drivers are the most complex drivers and
+				implement the main functionality of the display driver.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+				clock meta-languages: Clock drivers provide access to timing
+				generation subsystems of the display.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+				ramdac meta-language:  Ramdac drivers provide access to the functionality of
+				digital to analog converters used to generate analog signals from the frame buffer content.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+				monitor meta-language: Monitor drivers mainly ensure safe operating conditions in terms of the
+				monitor that is part of the display system.
+				</para>
+			</listitem>
+		</itemizedlist>
+		If you write a driver, you will usually have to implement at least a chipset driver, and probably a clock driver
+		and ramdac driver too.
+		However, each chipset driver must not make assuptions about the ramdac driver and vice versa, so as the
+		driver code base grows, chances increase you will not have to write all of the above drivers from scratch.
 		</para>
-		<section><title>Driver Status File</title>
+		<section><title>Naming Conventions for Meta-Languages</title>
 			<para>
-			The driver status file is used when generating driver status documents to evaluate
-			the usability of the various drivers.
-			The status file consists of an arbitrary number of entries.
-			Each entry has to be given on one line, with four columns separated by a tab-stop.
-			The first column is the base name of the driver object file (without the
-			<filename>.o</filename> suffix).
-			The second column contains the 'verbose' name of the device supported by this driver.
-			If several devices by the same vendor are supported, you may give a separate entry
-			for each supported device.
-			The third column contains the driver status evaluation according to
-			the following table:
-			<informaltable>
-				<tgroup cols=2><tbody>
-					<row><entry>10</entry><entry>
-						Driver development has just started.
-						The driver in the CVS repository compiles, but is known not do anything useful yet.
-					</entry></row>
-					<row><entry>20</entry><entry>
-						Driver in the repository compiles and is capable of probing and analyzing the hardware it
-						claims to support.
-					</entry></row>
-					<row><entry>30</entry><entry>
-						Driver in the repository compiles and is capable of initializing the hardware it claims
-						to support.
-					</entry></row>
-					<row><entry>40</entry><entry>
-						Basic driver functionality is implemented and has undergone some testing, but there
-						may be known bugs or unsupported features.
-					</entry></row>
-					<row><entry>50</entry><entry>
-						Basic driver functionality is implemented, tested and found to be operational
-						with the authors devices and configuration.
-						There may be known bugs that make it unuseable for daily use.
-					</entry></row>
-					<row><entry>60</entry><entry>
-						Basic driver functionality is implemented, tested and found to be operational
-						with the authors devices and configuration.
-						Restricting to basic functionality, the driver may be suited for daily use
-						(alpha testing).
-						Extended functionality (acceleration, 'exotic' operation modes) is being implemented
-						but unlikely to work.
-					</entry></row>
-					<row><entry>70</entry><entry>
-						The driver implements full functionality, has been tested with the authors devices and
-						configurations but may contain known bugs that limit useablity.
-					</entry></row>
-					<row><entry>80</entry><entry>
-						The driver implements full functionality (acceleration, support for all operation modes, etc.).
-						Basic functionality is tested and found operational with the authors configuration and
-						devices.
-						The driver may still have known bugs, but all in all it should be stable for daily use (beta-testing).
-					</entry></row>
-					<row><entry>90</entry><entry>
-						The driver implements full functionality of the device, has been tested and found to be
-						operational with the authors devices and configuration.
-						The driver is believed to work well for all supported devices and configurations
-						but so far there was no report of successful testing received by the author.
-						Any unexpected behaviour indicates an unknown bug and should be reported
-						to the maintainer.
-					</entry></row>
-					<row><entry>ok</entry><entry>
-						The driver implements full functionality of the device, has been tested and found to be
-						operational with all devices and configurations it claims to support (to the best knowledge
-						of the author, that is).
-						Any unexpected behaviour indicates an unknown bug and should be reported
-						to the maintainer.
-					</entry></row>
-				</tbody></tgroup>
-			</informaltable>
-			If a driver depends on other drivers, the driver status may not be higher than the minimum status
-			over all driver it depends on.
+			In order to maintain consistent and uniqe naming of driver functions, files and directories,
+			each driver (an instance or implementation of a meta-language) has to comply to the following rules:
+			<itemizedlist>
+				<listitem>
+					<para>
+					Sources for the drivers conforming to a given meta-language are located in
+					subdirectories to the <filename>kgi-0.9/drv/display</filename> directory, organized by
+					the name of the meta-language.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+					For each meta-language, drivers are organized in subdirectories named by
+					the so-called vendor-ID.
+					Vendor-ID's are choosen as an meaningful or commonly used abbreviation of the
+					official name of the vendor who manufactures the device the driver supports.
+					In order to maintain consistent assignments of ID's to vendors, there is a registry file
+					<filename>kgi-0.9/drv/display/vendors</filename> that contains a list of vendor
+					ID's assigned so far.
+					Each vendor information is given on a separate line, with three fields separated by
+					a TAB character.
+					The first field is the vendor ID, which may only contain digits or lower and upper
+					case letters from the ASCII code set.
+					The second field is the full official vendor name, which may contain any ASCII
+					characters except control codes and TAB.
+					The third field is optional and may contain the URL to the vendor's internet presence.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+					For each driver, all global identifiers (names of source and header files, functions,
+					global variables, types, structures etc.) have the driver name, either upper or
+					lower case, as prefix.
+					The upper case version is used for filenames and preprocessor names,
+					while the lower case version is reserved for function names, variable names, etc.
+					In the following text we will use meta and META to indicate where use of the lower case
+					or upper case function is expected.
+					Of course, when writing your driver you need to replace these prefixes with the one
+					of your meta-language implementation.
+					</para>
+				</listitem>
+			</itemizedlist>
+			So, when you start writing your driver, you should first find out about the official
+			vendor name and name(s) of the )device(s) your driver will support.
+			Then find out if there are already other devices by the same vendor in the registry,
+			simply by checking the file  <filename>kgi-0.9/drv/display/vendors</filename> or choose a
+			new vendor ID and enter it into the registry.
+			Then you can use the scripts and templates explained in the next sections to generate
+			some working driver stub and start fill it with the actual driver code.
 			</para>
+		</section>
+		<section><title>Files required for a driver</title>
+			<para>
+			In the subdirectory for the given meta-language implementations and vendor the following
+			files have to exist so that the configuration and build system knows what to do.
+			It is recommended you do not create those files by hand but rather use one of the
+			template scripts to generate stub-files for a new driver.
+			The following files contain information for the configuraiton and build frameworks and
+			are shared among the drivers in a given vendor directory:
+			<itemizedlist>
+				<listitem><para>the configuration file <filename>.configure</filename></para></listitem>
+				<listitem><para>the driver status file <filename>status</filename></para></listitem>
+				<listitem><para>the <application>make</application>-utility file <filename>Makefile</filename></para></listitem>
+			</itemizedlist>
+			In contrast to this, a set of (at least) five files constitutes one instance of a meta-language:
+			<itemizedlist>
+				<listitem><para>the register definitions <filename>META.h</filename></para></listitem>
+				<listitem><para>the driver implementation definitions <filename>META-meta.h</filename></para></listitem>
+				<listitem><para>the driver implementation <filename>META-meta.c</filename></para></listitem>
+				<listitem><para>the driver binding definitions <filename>META-bind.h</filename></para></listitem>
+				<listitem><para>the driver binding 	<filename>META-bind.c</filename></para></listitem>
+			</itemizedlist>
+			We will now examine each of the files constituing a driver in more detail.
+			</para>
+			<section><title>The Configuration File (<filename>.configure</filename>)</title>
+				<para>
+				This file indicates that the subdirectory should be included in the configuration and
+				build process, during which (in the build tree) the configuration file <filename>.config</filename>
+				and toplevel makefile <filename>GNUmakefile</filename> are created.
+				This should be an empty file, but has to exist in order for the configuration and build process
+				to work.				
+				</para>
+			</section>
+			<section><title>The Driver Status File (<filename>status</filename>)</title>
+				<para>
+				The driver status file is used when generating driver status documents to evaluate
+				the usability of the various drivers.
+				The status file consists of an arbitrary number of entries.
+				Each entry has to be given on one line, with four columns separated by a tab-stop.
+				The first column is the base name of the driver object file (without the
+				<filename>.o</filename> suffix).
+				The second column contains the 'verbose' name of the device supported by this driver.
+				If several devices by the same vendor are supported, you may give a separate entry
+				for each supported device.
+				The third column contains the driver status evaluation according to
+				the following table:
+				<informaltable>
+					<tgroup cols=2><tbody>
+						<row><entry>10</entry><entry>
+							Driver development has just started.
+							The driver in the CVS repository compiles, but is known not to do anything useful yet.
+						</entry></row>
+						<row><entry>20</entry><entry>
+							Driver in the repository compiles and is capable of probing and analyzing the hardware it
+							claims to support.
+						</entry></row>
+						<row><entry>30</entry><entry>
+							Driver in the repository compiles and is capable of initializing the hardware it claims
+							to support.
+						</entry></row>
+						<row><entry>40</entry><entry>
+							Basic driver functionality is implemented and has undergone some testing, but there
+							may be known bugs or unsupported features.
+						</entry></row>
+						<row><entry>50</entry><entry>
+							Basic driver functionality is implemented, tested and found to be operational
+							with the authors devices and configuration.
+							There may be known bugs that make it unuseable for daily use.
+						</entry></row>
+						<row><entry>60</entry><entry>
+							Basic driver functionality is implemented, tested and found to be operational
+							with the authors devices and configuration.
+							Restricting to basic functionality, the driver may be suited for daily use
+							(alpha testing).
+							Extended functionality (acceleration, 'exotic' operation modes) is being implemented
+							but unlikely to work.
+						</entry></row>
+						<row><entry>70</entry><entry>
+							The driver implements full functionality, has been tested with the authors devices and
+							configurations but may contain known bugs that limit useablity.
+						</entry></row>
+						<row><entry>80</entry><entry>
+							The driver implements full functionality (acceleration, support for all operation modes, etc.).
+							Basic functionality is tested and found operational with the authors configuration and
+							devices.
+							The driver may still have known bugs, but all in all it should be stable for daily use (beta-testing).
+						</entry></row>
+						<row><entry>90</entry><entry>
+							The driver implements full functionality of the device, has been tested and found to be
+							operational with the authors devices and configuration.
+							The driver is believed to work well for all supported devices and configurations
+							but so far there was no report of successful testing received by the author.
+							Any unexpected behaviour indicates an unknown bug and should be reported
+							to the maintainer.
+						</entry></row>
+						<row><entry>ok</entry><entry>
+							The driver implements full functionality of the device, has been tested and found to be
+							operational with all devices and configurations it claims to support (to the best knowledge
+							of the author, that is).
+							Any unexpected behaviour indicates an unknown bug and should be reported
+							to the maintainer.
+						</entry></row>
+					</tbody></tgroup>
+				</informaltable>
+				If a driver depends on other drivers, the driver status may not be higher than the minimum status
+				over all driver it depends on.
+				So, in general this would look like the following example for two <filename>ramdac</filename>
+				drivers <filename>DRIVER1</filename> and <filename>DRIVER2</filename>:
+				<programlisting>
+				DRIVER1        device1 ramdac driver        10        Other_Name
+				DRIVER2        device2 ramdac driver        10        Your_Name
+				</programlisting>
+				</para>
+			</section>
+			<section><title>The <application>make</application>-utitlity file (<filename>Makefile</filename>)</title>
+				<para>
+				This file contains the rules which object files have to be linked to obtain the final driver,
+				and a list which drivers should be build if all driver object files are to be generated.
+				In general this would look like the following example for two ramdac drivers
+				<filename>DRIVER1</filename> and <filename>DRIVER2</filename> from
+				the vendor with ID <filename>VendorID</filename>.
+				<programlisting>
+				OBJECTS = DRIVER1.o DRIVER2.o
+
+				DRIVER1.o:	DRIVER1-meta.o DRIVER1-bind.o
+					
+				DRIVER2.o:	DRIVER2-meta.o DRIVER2-bind.o
+
+				all.entry: $(OBJECTS)
+					
+				ifeq ($(CONFIG_RAMDAC_VENDOR),VendorID)
+				default.entry: $(CONFIG_RAMDAC_MODEL).o
+				else
+				default.entry:
+				endif
+				</programlisting>
+				You do not need to give extra dependencies e.g. of the <filename>.c</filename> files
+				on the included <filename>.h</filename> files, these will be generated automatically.
+				However, all files belonging to one driver must have the same META prefix, in the example
+				above <filename>DRIVER1</filename> or <filename>DRIVER2</filename>.
+				</para>
+			</section>
+			<section><title>The Device Register Definitions (<filename>META.h</filename>)</title>
+				<para>
+				This is a normal C header file which contains only device specific register and structure definitions.
+				The phrase 'device specific' hereby indicates that this file should not contain any definitions or
+				declarations that make any assumption about the actual driver implementation.
+				Usually this would just be a listing of device specific register names, indices and their bit-definitions.
+				There isn't much difficulty in deriving this file from a good hardware reference manual,
+				but you should take the following points of advice into consideration when writing this part of the driver:
+				<itemizedlist>
+					<listitem>
+						<para>
+						Take particular care when implementing this file.
+						Especially you should double-check if the constants and definitions in this file are
+						correct or if you have made any typographic errors (spelling, mistaken numbers, etc).
+						Usually any time spent checking this file for correctness would save you at least
+						the same amount of time spent hunting bugs due to typos in this file.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						If the device is divided into subsystems, use an (abbreviated) name of the subsystem
+						as a prefix to register names for that subsystem.
+						E.g.if a ramdac has a set of extended registers, the following naming would be advisable:
+						<programlisting>
+						#define	DRIVER_EDAC_CursorControl   0x00
+						#define	DRIVER_EDAC_ExtStatus       0x01
+						#define	DRIVER_EDAC_SystemID        0x02
+						</programlisting>
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						For definitions of bits or masks for particular registers, use also the (hexadecimal)
+						register number as prefix for the register name.
+						For example, if bit 0 of the CursorControl register in the example above controls
+						visiblity, and bit 1 and 2 control the display mode, we would use the following
+						definitions:
+						<programlisting>
+						#define	DRIVER_EDAC00_CursorOn      0x01
+						#define	DRIVER_EDAC00_ModeMask      0x06
+						#define	DRIVER_EDAC00_Mode0         0x00
+						#define	DRIVER_EDAC00_Mode1         0x02
+						#define	DRIVER_EDAC00_Mode2         0x04
+						</programlisting>
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						It is advisable to 'recycle' any register names or abbreviations found in the manual,
+						so that you can easily retranslate the code you have written into the manual terminology.
+						If, for example the manual talks about a CursorControl register, the corresponding definition
+						should reflect this as closely as possible.
+						Especially avoid introducing new abbreviations, except for those already made in the manual.
+						</para>
+					</listitem>
+				</itemizedlist>
+				For a real-world example, have a look at the register definitions for the
+				<trademark>Texas Instruments TVP3026</trademark> register definitions found
+				in <filename>kgi-0.9/drv/display/ramdac/TI/TVP3026.h</filename>.
+				</para>
+			</section>
+			<section><title>The Driver Meta-Language Implementation
+				(<filename>META-meta.h</filename> and <filename>META-meta.c</filename>)</title>
+				<para>
+				The actual driver is implemented in the files <filename>META-meta.h</filename> and
+				<filename>META-meta.c</filename>.
+				The header file contains all data structure definitions and public function declarations of the driver,
+				while the C code file contains the actual implementation.
+				Though the expected behaviour of a given implementation is subject to the meta-language
+				it complies to, some general rules must be obeyed by the drivers:
+				<itemizedlist>
+					<listitem>
+						<para>
+						All global data structures must be constant.
+						No global variables are allowed.
+						This is neccessary to avoid the driver having to take care of synchronization issues
+						in multi-processor environments.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						The driver must not make calls to functions other than those of the KGI environment.
+						This is neccessary to avoid dependencies on the underlying host operating system.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						Any functions exported by the driver must be declared in the header file.
+						Especially there must not be any extern declarations in the driver implementation.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+						The driver implementation must not make any direct calls to the I/O operations
+						defined by the KGI environment.
+						Instead, I/O operations to the various subsystems have to be abstracted and
+						have to be implemented in the binding driver.
+						</para>
+					</listitem>
+				</itemizedlist>
+				</para>
+			</section>
+			<section><title>Driver Meta-Language Binding Implementation
+				(<filename>META-bind.h</filename> and <filename>META-bind.c</filename>)</title>
+				<para>
+				The code in these two files contains the code to access the actual hardware in a
+				particular implementation of the hardware.
+				This is also referred to as a 'binding' of a driver.
+				So, while the driver implementation itself implements most of the functionality and
+				interaction with the KGI environment, this part of the driver is mostly concerned
+				with the interaction of the driver with the hardware.
+				This splitting of the implementation of the device access allows to re-use the
+				actual driver (e.g. a VGA chipset driver) in a different hardware environment
+				(e.g. if the VGA chipset is integrated in a more complicated chipset and the
+				I/O operations are now done via memory mapped I/O instead of direct I/O instructions.)
+				In this case you just have to supply some new binding driver, but not to modify
+				the driver itself.
+				</para>
+			</section>
 		</section>
 	</section>
 	<section><title>Modular Display Driver Implementation</title>
+		<para>
+		In this section we will give a specification of the meta-languages mentioned
+		in the beginning of this section and give detailed instructions how to get started
+		with a new driver for the particular devices.
+		</para>
 		<section><title>Subsystem Drivers</title>
 			<para>
 			- purpose
