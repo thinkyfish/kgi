@@ -28,7 +28,7 @@ SOFTWARE.
 #define FONT_H
 
 #ifndef BitmapFormatByteOrderMask
-#include	"fsmasks.h"
+#include	"X11/fonts/fsmasks.h"
 #endif
 
 /* data structures */

@@ -29,7 +29,7 @@ from The Open Group.
 #define CLOSESTR_H
 
 #define	NEED_REPLIES
-#include "Xproto.h"
+#include "X11/Xproto.h"
 #include "closure.h"
 #include "dix.h"
 #include "misc.h"
