@@ -1,6 +1,6 @@
 title	en	"Site Index"
 abs	en	"Articles"	articles/index.en.html
-rel	en	"Download"	ftp://kgi.sourceforge.net/pub/kgi
+rel	en	"Download"	$KGI_DOWNLOAD_URL
 abs	en	"Driver Status"	source/index.en.html
 abs	en	"Support"	support/index.en.html
 abs	en	"Developers"	developers/index.en.html
