@@ -64,4 +64,46 @@ ifeq ($(CONFIG_KGI_TERM_XTERM),y)
 	L_OBJS   += xterm.o
 endif
 
+
+# These rules are for 2.4.x kernel build system.  They do not seem
+# to collide with the above.
+
+# The target object and module list name.
+
+O_TARGET	:= kgi.a
+
+# Objects that export symbols.
+
+export-objs	:=
+
+# Object file lists.
+
+obj-y	:= console.o default.o  kgi.o kii.o system.o
+obj-m	:=
+obj-n	:=
+obj-	:=
+
+# Each configuration option enables a list of files.
+
+ifeq ($(CONFIG_KGI_VT_LINUX),y)
+	obj-y			+= vt.o
+ifneq ($(CONFIG_INPUT),y)
+	obj-y			+= psaux.o
+endif
+endif
+ifeq ($(CONFIG_INPUT),y)
+	obj-y			+= input.o
+else
+	obj-y			+= kbd-i386.o
+endif
+obj-$(CONFIG_KGI_DEV_GRAPHIC)	+= graphic.o
+obj-$(CONFIG_KGI_DEV_EVENT)	+= event.o
+obj-$(CONFIG_KGI_DPY_NULL)	+= dpy-null.o
+obj-$(CONFIG_KGI_DPY_I386)	+= dpy-i386.o
+obj-$(CONFIG_KGI_TERM_XTERM)	+= xterm.o
+
+# The global Rules.make.
+
 include $(TOPDIR)/Rules.make
+
+
