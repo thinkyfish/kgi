@@ -13,6 +13,12 @@ config-parse)
 	;;
 
 config-help)
+	cat <<end-of-config-help
+GNU make options (gmake/configure.sh)
+	GMAKE_CLEAN_INIT		files removed for target clean.init
+	GMAKE_REALCLEAN_INIT		files removed for target realclean.init
+	GMAKE_DISTCLEAN_INIT		files removed for target distclean.init
+end-of-config-help
 	;;
 
 config-file)
