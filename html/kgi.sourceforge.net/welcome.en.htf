@@ -5,7 +5,7 @@ HTF_KEYWORDS="KGI Project; homepage"
 HTF_AUTHOR="Steffen Seeger"
 HTF_DOCUMENT_TITLE="<center><img src=\"kgi-project.jpeg\" alt=\"[The KGI Project Logo]\" height=100 width=600></center>"
 HTF_BACKLINK="http://sourceforge.net/project/?group_id=3788"
-HTF_REVISION="$Revision: 1.10 $" 
+HTF_REVISION="$Revision: 1.11 $" 
 
 cat <<end-of-htf
 <h1><u>Welcome to the KGI Project</u></h1><hr noshade>
@@ -26,18 +26,17 @@ things documented. -- <i>Steffen Seeger</i>
 <center><table WIDTH="100%">
 <tr VALIGN=TOP BGCOLOR="#CCFFFF">
 	<td rowspan="3"><b>News</b></td>
-	<td>2000-10-11</td>
+	<td>2001-07-03</td>
 	<td>new snaphsot released</td>
 </td>
+<tr valign=top bgcolor="#CCFFFF">
+	<td>2000-10-11</td>
+	<td>new snapshot released</td>
+</tr>
 <tr valign=top bgcolor="#CCFFFF">
 	<td>2000-10-06</td>
 	<td>port to alpha-architecture started</td>
 </tr> 
-<tr valign=top bgcolor="#CCFFFF">
-	<td>2000-10-06</td>
-	<td>The project homepage may now be reached via the toplevel domain 
-		<a href="http://www.kgi-project.org" target="_top"><tt>http://www.kgi-project.org</tt></a>
-</tr>
 
 
 <tr VALIGN=TOP BGCOLOR="#FFFFCC">
