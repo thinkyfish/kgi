@@ -64,6 +64,8 @@ kgi_error_t kgiInit(kgi_context_t *ctx, const char *client,
 		cb.result.mapper_version.extra);
 	ctx->mapper.resources =
 		cb.result.resources;
+
+	return KGI_EOK;
 }
 
 kgi_error_t kgiSetImages(kgi_context_t *ctx, kgi_u_t images)
@@ -203,9 +205,17 @@ void *kgiInitFramebuffer(kgi_u_t sizex, kgi_u_t sizey)
 	kgi_u_t	i, x, y;
 	kgi_u8_t *fb;
 
-	kgiInit(&ctx, "PhoenixKGI", &testKGI_version);
+	if (KGI_EOK != kgiInit(&ctx, "PhoenixKGI", &testKGI_version)) {
 
-	kgiSetImages(&ctx, 1);
+		printf("failed to initialize KGI\n");
+		return NULL;
+	}
+
+	if (KGI_EOK != kgiSetImages(&ctx, 1)) {
+
+		printf("failed to set images");
+		return NULL;
+	}
 
 	memset(&mode, 0, sizeof(mode));
 	mode.fam |= KGI_AM_COLOR_INDEX;
@@ -231,6 +241,6 @@ void *kgiInitFramebuffer(kgi_u_t sizex, kgi_u_t sizey)
 		ctx.mapper.fd, 
 		GRAPH_MMAP_TYPE_MMIO | (0 << GRAPH_MMAP_RESOURCE_SHIFT));
 
-	return fb;
+	return (MAP_FAILED == fb) ? NULL : fb;
 }
 
