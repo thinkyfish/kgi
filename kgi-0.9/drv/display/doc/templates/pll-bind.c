@@ -10,13 +10,17 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: pll-bind.c,v $
+**	Revision 1.2  2000/04/26 14:01:35  seeger_s
+**	- more resonable PLL limits
+**	- minor enhancements of the templates
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER		##AUTHOR##
-#define	KGIM_CLOCK_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CLOCK_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -86,6 +90,7 @@ const kgim_meta_t ##meta##_clock_meta =
 	(kgim_meta_mode_prepare_fn *)	NULL,
 	(kgim_meta_mode_enter_fn *)	##meta##_clock_mode_enter,
 	(kgim_meta_mode_leave_fn *)	NULL,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(##meta##_clock_t),
 	0,

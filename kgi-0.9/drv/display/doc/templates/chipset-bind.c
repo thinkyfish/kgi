@@ -10,13 +10,16 @@
 ** ----------------------------------------------------------------------------
 **
 **	$Log: chipset-bind.c,v $
+**	Revision 1.2  2000/09/21 10:06:40  seeger_s
+**	- namespace cleanup: E() -> KGI_ERRNO()
+**	
 **	Revision 1.1.1.1  2000/04/18 08:51:11  seeger_s
 **	- initial import of pre-SourceForge tree
 **	
 */
 #include <kgi/maintainers.h>
 #define	MAINTAINER	##AUTHOR##
-#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.1.1.1 $"
+#define	KGIM_CHIPSET_DRIVER	"$Revision: 1.2 $"
 
 #include <kgi/module.h>
 
@@ -414,6 +417,7 @@ const kgim_meta_t ##meta##_chipset_meta =
 	(kgim_meta_mode_prepare_fn *)	##meta##_chipset_mode_prepare,
 	(kgim_meta_mode_enter_fn *)	##meta##_chipset_mode_enter,
 	(kgim_meta_mode_leave_fn *)	##meta##_chipset_mode_leave,
+	(kgim_meta_image_resource_fn *)	NULL,
 
 	sizeof(##meta##_chipset_t),
 	sizeof(##meta##_chipset_io_t),
