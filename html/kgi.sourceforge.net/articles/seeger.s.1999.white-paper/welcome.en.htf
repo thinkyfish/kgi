@@ -4,7 +4,7 @@ HTF_LONG_TITLE="White Paper on KGI, the  Kernel Graphics Interface"
 HTF_DESCRIPTION="This article gives and a short introduction to the KGI project, its goals and design concepts."
 HTF_KEYWORDS="KGI Project; introduction"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.0 $"
+HTF_REVISION="$Revision: 1.1.1.1 $"
 
 cat <<end-of-htf
 
@@ -288,7 +288,7 @@ etc. being available. However, if present they may benefit from this. This
 allows KGI driver to be used as userspace drivers or in-kernel drivers
 without modification.
 <br>The intra-display driver interface is defined in 
-<a href="$KGI_SOURCE_URL/kgi-0.9/driver/graphics/include/kgi/module.h"><tt>file:kgi-0.9/driver/graphics/include/kgi/module.h</tt></a>
+<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/include/kgi/module.h"><tt>file:kgi-0.9/drv/display/include/kgi/module.h</tt></a>
 </blockquote>
 
 <h4><a name="environment"></a>The Physical I/O and Environment OS Support</h4>

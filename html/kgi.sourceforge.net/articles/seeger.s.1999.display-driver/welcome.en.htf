@@ -4,7 +4,7 @@ HTF_LONG_TITLE="KGI Display Hardware Driver Overview"
 HTF_DESCRIPTION="A short introduction to the display hardware driver design."
 HTF_KEYWORDS="KGI Project; display drivers"
 HTF_AUTHOR="Steffen Seeger"
-HTF_REVISION="$Revision: 1.0 $"
+HTF_REVISION="$Revision: 1.1.1.1 $"
 
 cat <<end-of-htf
 
@@ -454,7 +454,8 @@ the final visible image.
 	filled-in operation mode description and auto-negotiate the proper
 	operation mode.
 	<p>This modular display driver internal interface is defined in 
-	driver/graphic/include/kgi/module.h, but is adopted to allow an easier
+	<a href="$KGI_SOURCE_URL/kgi-0.9/drv/display/include/kgi/module.h"><tt>kgi-0.9/drv/display/include/kgi/module.h</tt></a>,
+	but is adopted to allow an easier
 	mapping to the UDI driver model and not yet finalized.
 
 <a name="summary"></a><h2><u>Summary</u></h2>
