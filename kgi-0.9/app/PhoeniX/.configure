@@ -10,7 +10,7 @@ cat >> .config.tmp <<-end-of-config
 #
 #	PhoeniX X-server configuration
 #
-CC_OPT_DEBUG=""
+CC_OPT_DEBUG="-g"
 CC_OPT_WARN=""
 X11_TOP_DIR=$DIR_SOURCE
 X11R6_DIR=$X11R6_DIR
