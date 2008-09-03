@@ -1,0 +1,88 @@
+// RELEASE //
+
+03/04/10
+++++++++
+	- First issue
+
+03/04/14
+++++++++
+	- Improvement of /dev management thanks to new GET_UNIT ioctl.
+	  Now you can fully work with /dev/event and /dev/graphic as
+	  generic entrypoints. See how the GGI patch the alloc/attachement.
+	- dev/disp renamed to dev/display.
+	- Fix of console switching especially console vs graphic switch.
+	- Fix ALT/CTRL/ALTGR modifier constants for /dev/event clients.
+	- Distribution of drivers changed. KGI original code is in a
+	  seperate tarball named kgidrv.tgz
+	- kgim, kgxx, kvga, kmach removed from adviced configuration. You
+	  have to install kgidrv.
+	- Make the patch compatible with R5.0
+
+03/05/18
+++++++++
+	- Fix Gxx driver loading for G450. G450 tested as primary (still
+	  have a green line at top of the screen).
+	- Implement Linux Framebuffer driver compatibility layer for aty
+	  fbdev driver.
+	- Distribute fbdev drivers in a separate tarball named lfbdrv.tgz
+	- FreeBSD R5.1 jump
+
+03/06/20
+++++++++
+	- Continue of lfbm
+	- Clean-up of patch for R5.1 with no more $FreeBSD$ mess
+	  which probably failed the release of 20030518
+
+03/10/12
+++++++++
+	- Rename KGI modules to kik, kgy, kgc...
+	- Re-organize sources, breakdown some files
+	- Rename /usr/share/mk/bsd.kgi.mk to bsd.kgim.mk
+	- Fix G450 board compilation
+	- Make use of kobj for KGC scroller and render
+	- Make gfbrndr working for 8 and 16 bit modes
+	- Introduce consolectl for mouse emulation (sysmouse not tested)
+	- Start port of matroxfb. Make atyfb running (still have to synch with linux
+	  latest update)
+	- Return to originaly mapped device when leaving a graphic dev
+	- Switch to console when entering debugger then return on continue
+	- Enable/test use of CRT driver (good stuff) - monosync becomes obsolete
+	- Synch with R5.1-current of september
+	- Make DDC1 working for my G200 and Iiyama monitor
+	- Modify DDC1 code significantly using XFree86
+	- Perform test with XGGI 3.3.6, still some memory leaks...
+	- Fix the locking problem due to atkbd ready for char because of psm activity
+
+04/02/03
+++++++++
+	- Support background PCX 8bits bitmaps (use splash screen)
+	- Yet another rework of the file layout kie/kgg/kip...
+	- Cleanup of the API between input drivers and the KII core
+	- Fix of a bug in scroller/render code that provoked mem used after free
+	- gfb render basic cursor implementation
+	- mix console and ttyv0 on the first VT
+	- FreeBSD R5.2 
+
+04/03/18
+++++++++
+        - Change kie to kiu and kgg to kgu in NOTES
+
+04/03/22
+++++++++
+        - Add kip in NOTES
+
+04/04/04
+++++++++
+	- ANSI with xterm emulation
+	- Multihead with virtual consoles
+	- New distribution way with only diffs, NOTES updated accordingly
+
+18/04/09
+++++++++
+	- Rework of dev/kgi sources
+	- Improvement of KGI VM
+	- Implementation of accel (still need to be tested)
+	- No much done on console (keymap, xterm, usb kbd...)
+	- Graphic drivers suppressed from kernel distribution, see http://nsouch.free.fr
+
+// EOF //

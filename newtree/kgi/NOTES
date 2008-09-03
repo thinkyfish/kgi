@@ -1,0 +1,97 @@
+// NOTES //
+
+PLEASE, PLEASE PLEASE, PLEASE PLEASE, PLEASE
+
+Read this file carefully and report any misbehaviour
+of the advices / rules here after.
+
+This file is given with no warranty on the result.
+Especially, you are encouraged to save your /boot/kernel
+directory to something /boot/kernel.works before starting.
+
+You are supposed to know how to patch a source tree,
+configure and compile a kernel.
+
+PLEASE, PLEASE PLEASE, PLEASE PLEASE, PLEASE
+
+#########
+ INSTALL
+#########
+
+Check you have a source tree installed in /usr/src.
+
+Get the file kgi4bsd-Rxxx-yymmdd.diffs in /usr/src directory.
+
+Patch the sources with (use -C option if you want to try before applying)
+
+patch -p5 < kgi4bsd-Rxxx-yymmdd.diffs
+
+If you plan to compile graphic driver modules,
+
+cp share/mk/bsd.kgim.mk /usr/share/mk
+
+Edit your machine file and do the following:
+
+Add:
+---
+
+# KGI
+#options        KGI_NOSPLASH
+options         KGI_COMPAT
+options         KGI_DBG_LEVEL=0
+device          kgi            # Kernel Graphic Interface
+device		kip	       # KII input parser
+device          kgy            # KGI VESA compatible display
+device		scemul         # syscons emulation for KGC
+device		kgc            # KGI console
+device		kgu            # KGI graphic user interface
+device		kiu            # KGI input user interface
+device		kgim		# KGI module driver interface
+
+Remove:
+------
+
+#device		sc
+#device         splash
+
+Keep (or add):
+-------------
+
+options 	VESA
+device		vga		# VGA screen
+
+Recompile ../usr.sbin/config and use it to configure your kernel.
+
+sys/i386/conf/KGI4BSD is a good starting point (it's GENERIC with KGI added).
+
+To install / compile GGI, you must (supposing your sources are in /usr/src):
+
+	- ln -s /usr/src/sys/dev/kii /usr/include/dev
+	- ln -s /usr/src/sys/dev/kgi /usr/include/dev
+	- ./configure with both --enable-kii in libgii and
+	  --enable-kgi --disable-accel --with-extra-includes=/usr/include/dev
+	  in libggi
+
+To startup GGI tests:
+
+export GGI_DEBUG=4
+export GGI_DEFMODE=S800x600V800x600F1[C16]
+export GGI_DISPLAY=kgi:-device=/dev/graphic:-no3d:
+export GII_INPUT=kii:
+
+Doesn't work? Is your VESA version at least >=2.0 so that you
+have linear framebuffering? (check at VESA module power-up).
+Check also it with the following command:
+
+vidcontrol -i mode < /dev/ttyv0
+
+to know the available modes for you graphic HW.
+
+For more info, please register to the kgi-develop list at SF or
+ask on #kgi at irc.freenode.net
+
+http://lists.sourceforge.net/lists/listinfo/kgi-develop
+
+Nicholas - nsouch@freebsd.org
+
+// EOF //
