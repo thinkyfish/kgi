@@ -163,11 +163,11 @@ sce_init_vt(struct tty *tp)
 		return (ENXIO);
 	}
 
-	KRN_DEBUG(2, "Creating VT %d", unit);
+	KRN_DEBUG(3, "Creating VT %d", unit);
 	cons = (kgi_console_t *)sce_consoles[unit];
 
 	if (!cons) {
-		KRN_DEBUG(2, "Allocating console %d...", unit);
+		KRN_DEBUG(3, "Allocating console %d...", unit);
 
 		cons = kgi_kmalloc(sizeof(sce_console));
 		if (!cons) {
