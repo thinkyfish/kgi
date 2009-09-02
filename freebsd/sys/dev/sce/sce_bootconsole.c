@@ -66,9 +66,7 @@ static cn_checkc_t	sce_cncheckc;
 static cn_putc_t	sce_cnputc;
 
 #ifdef notyet
-CONS_DRIVER(sce, sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc,
-	    sce_cncheckc, sce_cnputc, NULL);
-//CONSOLE_DRIVER(sce);
+CONSOLE_DRIVER(sce);
 #else
 /* Define manually until we activate the CONSOLE_DRIVER macro. */
 static struct consdev sce_consdev = {
@@ -86,9 +84,11 @@ static kgi_u16_t sce_buf[CONFIG_KGII_CONSOLEBUFSIZE];
 static void 
 console_printk(char *b, unsigned count)
 {
-	kgi_console_t *cons = (kgi_console_t *)&scecons;
+	kgi_console_t *cons;
 	kgi_u_t c;
 	static int printing = 0;
+
+	cons = (kgi_console_t *)&scecons;
 
 	if (printing || !cons) 
 		return;
@@ -220,12 +220,12 @@ handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 static void
 sce_cnprobe(struct consdev *cp)
 {
-	int unit = 0;
-	int i;
+	int i, unit;
 
 	/*
 	 * sce is the internal console of the system.
 	 */
+	unit = 0;
 	cp->cn_pri = CN_INTERNAL;
 
 	/* See if this driver is disabled in probe hint. */ 
@@ -269,7 +269,7 @@ sce_cninit(struct consdev *cp)
 	 * Init the renderer for the KGI device registered to device 0
 	 */
 	if (RENDER_INIT((render_t)cons->render, 0))   
-		panic("Could not init render!");
+		panic("Could not init renderer!");
 
 	if (kii_register_device(&(cons->kii), 0))  
 		panic("Could not register input!");
@@ -302,8 +302,9 @@ sce_cnterm(struct consdev *cp)
 static void
 sce_cnputc(struct consdev *cd, int c)
 {
-	char cc = (char)c;
+	char cc;
 
+ 	cc = (char)c;
 	console_printk(&cc, 1);
 }
 

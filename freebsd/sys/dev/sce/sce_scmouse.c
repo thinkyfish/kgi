@@ -54,16 +54,31 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/sce/sce_syscons.h>
 
-typedef struct {
+struct sce_mouse {
 	kii_u_t		last;
 	kii_input_t	input;
 	kii_u_t		opened;
-} sce_mouse_t;
+};
 
-static sce_mouse_t sce_mouses[KII_MAX_NR_FOCUSES];
+static int sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td);
+static int sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
+			 struct thread *td);
+static int sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td);
+
+
+static struct cdevsw scectl_cdevsw = {
+	.d_flags 	= D_NEEDGIANT,
+	.d_close 	= sce_ctlclose,
+	.d_ioctl 	= sce_ctlioctl,
+	.d_open	 	= sce_ctlopen,
+	.d_version  = D_VERSION,
+	.d_name 	= "scectl"
+};
+
+static struct sce_mouse sce_mouses[KII_MAX_NR_FOCUSES];
 
 static int
-mouse_event(sce_mouse_t *mouse, mouse_info_t *info)
+mouse_event(struct sce_mouse *mouse, mouse_info_t *info)
 {
 	kii_event_t event;
 
@@ -125,36 +140,6 @@ mouse_event(sce_mouse_t *mouse, mouse_info_t *info)
 }
 
 static int
-sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
-{
-	sce_mouse_t *mouse;
-
-	KRN_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
-			  devtoname(dev), dev2unit(dev));
-
-	mouse = &sce_mouses[dev2unit(dev)];
-
-	if (mouse->opened)
-		return (EBUSY);
-
-	snprintf(mouse->input.vendor, KII_MAX_VENDOR_STRING, "FreeBSD");
-	snprintf(mouse->input.model, KII_MAX_VENDOR_STRING, "consolectl");
-	
-	mouse->input.focus = KII_INVALID_FOCUS;
-	mouse->input.id = KII_INVALID_DEVICE;
-	mouse->input.events = KII_EM_POINTER & ~KII_EM_PTR_ABSOLUTE;
-	mouse->input.report = KII_EM_PTR_RELATIVE | KII_EM_PTR_BUTTON;
-	mouse->input.priv.priv_ptr = mouse;
-	
-	if (kii_register_input(dev2unit(dev), &mouse->input))
-		KRN_ERROR("Could not register sce_mouse %d", dev2unit(dev));
-
-	mouse->opened = 1;
-
-	return (0);
-}
-
-static int
 sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td)
 {
 
@@ -170,9 +155,12 @@ static int
 sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 			 struct thread *td)
 {
-	sce_mouse_t *mouse = &sce_mouses[dev2unit(dev)];
+	struct sce_mouse *mouse;
 	mouse_info_t *info;
-	int error = 0;
+	int error;
+
+	mouse = &sce_mouses[dev2unit(dev)];	
+	error = 0;
 
 	switch (cmd) {
 	case CONS_MOUSECTL:		/* Control mouse arrow. */
@@ -211,14 +199,35 @@ sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 	return (ENOIOCTL);
 }
 
-static struct cdevsw scectl_cdevsw = {
-	.d_flags 	= D_TTY | D_NEEDGIANT,
-	.d_close 	= sce_ctlclose,
-	.d_ioctl 	= sce_ctlioctl,
-	.d_open	 	= sce_ctlopen,
-	.d_version  = D_VERSION,
-	.d_name 	= "scectl"
-};
+static int
+sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
+{
+	struct sce_mouse *mouse;
+
+	KRN_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
+			  devtoname(dev), dev2unit(dev));
+
+	mouse = &sce_mouses[dev2unit(dev)];
+
+	if (mouse->opened)
+		return (EBUSY);
+
+	snprintf(mouse->input.vendor, KII_MAX_VENDOR_STRING, "FreeBSD");
+	snprintf(mouse->input.model, KII_MAX_VENDOR_STRING, "consolectl");
+	
+	mouse->input.focus = KII_INVALID_FOCUS;
+	mouse->input.id = KII_INVALID_DEVICE;
+	mouse->input.events = KII_EM_POINTER & ~KII_EM_PTR_ABSOLUTE;
+	mouse->input.report = KII_EM_PTR_RELATIVE | KII_EM_PTR_BUTTON;
+	mouse->input.priv.priv_ptr = mouse;
+	
+	if (kii_register_input(dev2unit(dev), &mouse->input))
+		KRN_ERROR("Could not register sce_mouse %d", dev2unit(dev));
+
+	mouse->opened = 1;
+
+	return (0);
+}
 
 int 
 sce_mouse_init()
@@ -226,10 +235,8 @@ sce_mouse_init()
 	int focus;
 
 	bzero(sce_mouses, sizeof(sce_mouses));
-
 	make_dev(&scectl_cdevsw, 0, UID_ROOT, GID_WHEEL, 0600, "consolectl");
-
-	for (focus=1; focus<KII_MAX_NR_FOCUSES; focus++) {
+	for (focus = 1; focus < KII_MAX_NR_FOCUSES; focus++) {
 		make_dev(&scectl_cdevsw, focus, UID_ROOT, GID_WHEEL, 0600,
 				 "consolectl" "%d", focus);
 	}

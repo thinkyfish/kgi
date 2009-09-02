@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * From FreeBSD: /head/sys/dev/syscons/sysmouse.c -r193018
+ * From FreeBSD: /head/sys/dev/syscons/sysmouse.c -r196539M
  */
 
 #include <sys/cdefs.h>
@@ -34,9 +34,9 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/conf.h>
+#include <sys/priv.h>
+#include <sys/serial.h>
 #include <sys/tty.h>
-#include <sys/ttydisc.h>
 #include <sys/kernel.h>
 #include <sys/consio.h>
 #include <sys/mouse.h>
@@ -59,83 +59,69 @@ typedef struct {
 	struct tty	*tty;
 	int		level;	/* sysmouse protocol level */
 	mousestatus_t	status;
-} sce_sysmouse_t;
+}sce_sysmouse;
 
-static tsw_close_t	scesm_close;
-static tsw_ioctl_t	scesm_ioctl;
-static tsw_open_t	scesm_open;
-static tsw_param_t	scesm_param;
+static tsw_close_t		sce_smclose;
+static tsw_ioctl_t		sce_smioctl;
+// static tsw_open_t		sce_smopen;
+static tsw_param_t		sce_smparam;
+// static tsw_outputq_t	sce_smoutwakeup
 
 static struct ttydevsw scesm_ttydevsw = {
-	.tsw_flags	= TF_NOPREFIX | D_NEEDGIANT,
-	.tsw_close	= scesm_close,
-	.tsw_ioctl	= scesm_ioctl,
-	.tsw_open	= scesm_open,
-	.tsw_param	= scesm_param
+	.tsw_flags		= TF_NOPREFIX,
+	.tsw_close		= sce_smclose,
+	.tsw_ioctl		= sce_smioctl,
+// 	.tsw_open		= sce_smopen,
+	.tsw_param		= sce_smparam,
+// 	.tsw_outwakeup	= sce_smoutwakeup
 };
 
-static sce_sysmouse_t sce_sysmouse;
+static sce_sysmouse sysmouse;
 
-static int
-scesm_param(struct tty *tp, struct termios *t)
-{
-	/*
-	 * Set the output baud rate to zero. The mouse device supports
-	 * no output, so we don't want to waste buffers.
-	 */
-	t->c_ispeed = TTYDEF_SPEED;
-	t->c_ospeed = B0;
-	
-	return (0);
-}
-/*
-// XXX
-// What the fuck is all this for?
-// more to outp?
-static void
-scesm_start(struct tty *tp)
-{
-	u_char buf[PCBURST];
+// static void
+// sce_smoutwakeup(struct tty *tp)
+// {
+// 	u_char buf[PCBURST];
+// 
+// 	tty_lock(tp);
+// 	if (!(tp->t_flags & (TF_BUSY | TF_STOPPED))) {
+// 		tp->t_flags |= TF_BUSY;
+// 		while (rbp->c_cc)
+// 			q_to_b(rbp, buf, PCBURST);
+// 		tp->t_state &= ~TS_BUSY;
+// 	}
+// 	tty_unlock(tp);
+// }
 
-	tty_lock(tp);
-	if (!(tp->t_flags & (TF_BUSY | TF_STOPPED))) {
-		tp->t_flags |= TF_BUSY;
-		while (rbp->c_cc)
-			q_to_b(rbp, buf, PCBURST);
-		tp->t_state &= ~TS_BUSY;
-	}
-	tty_unlock(tp);
-}*/
-
-static int
-scesm_open(struct tty *tp)
-{
-
-	if (!(tp->t_flags & TF_OPENED)) {
-		tty_lock(tp);
-		ttydisc_modem(tp, 1);
-		tty_unlock(tp);
-	} else if (tp->t_flags & TF_EXCLUDE ) 
-		return (EBUSY);
-	
-//	tty_lock(tp);
-//	return ((int)ttydisc_open(tp));
-//	tty_unlock(tp);
-	tty_lock(tp);
-	ttydisc_open(tp);
-	tty_unlock(tp);
-
-return (0);
-}
+// static int
+// sce_smopen(struct tty *tp)
+// {
+// 
+// 	if (!(tp->t_flags & TF_OPENED)) {
+// 		tty_lock(tp);
+// 		ttydisc_modem(tp, 1);
+// 		tty_unlock(tp);
+// 	} else if (tp->t_flags & TF_EXCLUDE ) 
+// 		return (EBUSY);
+// 	
+// 	/*
+// 	 * The ttydisc_open() no longer returns anything in the new TTY layer.
+// 	 */
+// 	tty_lock(tp);
+// 	ttydisc_open(tp);
+// 	tty_unlock(tp);
+// 
+// 	return (0);
+// }
 
 static void
-scesm_close(struct tty *tp)
+sce_smclose(struct tty *tp)
 {
 	int s;
 
 	s = spltty();
-	sce_sysmouse.level = 0;
-	sce_sysmouse.tty = NULL;
+	sysmouse.level = 0;
+	sysmouse.tty = NULL;
 	tty_lock(tp);
 	ttydisc_close(tp);
 	tty_unlock(tp);
@@ -145,11 +131,11 @@ scesm_close(struct tty *tp)
 }
 
 static int
-scesm_ioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
+sce_smioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
 	mousehw_t *hw;
 	mousemode_t *mode;
-	int error;
+// 	int error;
 	int s;
 
 	switch (cmd) {
@@ -163,7 +149,7 @@ scesm_ioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 		return (0);
 	case MOUSE_GETMODE:	/* get protocol/mode */
 		mode = (mousemode_t *)data;
-		mode->level = sce_sysmouse.level;
+		mode->level = sysmouse.level;
 		switch (mode->level) {
 		case 0: /* emulate MouseSystems protocol */
 			mode->protocol = MOUSE_PROTO_MSC;
@@ -192,24 +178,24 @@ scesm_ioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 		else if ((mode->level < 0) || (mode->level > 1))
 			return (EINVAL);
 		else
-			sce_sysmouse.level = mode->level;
+			sysmouse.level = mode->level;
 		return (0);
 	case MOUSE_GETLEVEL:	/* get operation level */
-		*(int *)data = sce_sysmouse.level;
+		*(int *)data = sysmouse.level;
 		return (0);
 	case MOUSE_SETLEVEL:	/* set operation level */
 		if ((*(int *)data  < 0) || (*(int *)data > 1))
 			return (EINVAL);
-		sce_sysmouse.level = *(int *)data;
+		sysmouse.level = *(int *)data;
 		return (0);
 	case MOUSE_GETSTATUS:	/* get accumulated mouse events */
 		s = spltty();
-		*(mousestatus_t *)data = sce_sysmouse.status;
-		sce_sysmouse.status.flags = 0;
-		sce_sysmouse.status.obutton = sce_sysmouse.status.button;
-		sce_sysmouse.status.dx = 0;
-		sce_sysmouse.status.dy = 0;
-		sce_sysmouse.status.dz = 0;
+		*(mousestatus_t *)data = sysmouse.status;
+		sysmouse.status.flags = 0;
+		sysmouse.status.obutton = sysmouse.status.button;
+		sysmouse.status.dx = 0;
+		sysmouse.status.dy = 0;
+		sysmouse.status.dz = 0;
 		splx(s);
 		return (0);
 #ifdef notyet
@@ -222,18 +208,30 @@ scesm_ioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 		return (ENODEV);
 	}
 
-	error = tty_ioctl(tp, cmd, data, td);
-	if (error != ENOIOCTL)
-		return (error);
-
-	return (ENOTTY);
+// 	error = tty_ioctl(tp, cmd, data, td);
+// 	if (error != ENOIOCTL)
+// 		return (error);
+// 
+// 	return (ENOTTY);
+	return (ENOIOCTL);
 }
 
-void sce_sysmouse_event(kii_event_t *ev)
+static int
+sce_smparam(struct tty *tp, struct termios *t)
 {
-	/* XXX FIXME */
-	sce_sysmouse_t *sysm = &sce_sysmouse;
+	/*
+	 * Set the output baud rate to zero. The mouse device supports
+	 * no output, so we don't want to waste buffers.
+	 */
+	t->c_ispeed = TTYDEF_SPEED;
+	t->c_ospeed = B0;
+	
+	return (0);
+}
 
+void 
+sce_sysmouse_event(kii_event_t *ev)
+{	
 	/* MOUSE_BUTTON?DOWN -> MOUSE_MSC_BUTTON?UP */
 	static int butmap[8] = {
 	    MOUSE_MSC_BUTTON1UP | MOUSE_MSC_BUTTON2UP | MOUSE_MSC_BUTTON3UP,
@@ -245,9 +243,12 @@ void sce_sysmouse_event(kii_event_t *ev)
 	    MOUSE_MSC_BUTTON1UP,
 	    0,
 	};
+	/* XXX FIXME */
+	sce_sysmouse *sysm;
 	u_char buf[8];
-	int x, y, z;
-	int i;
+	int i, x, y, z;
+
+	sysm = &sysmouse;
 
 	switch (ev->pbutton.type) {
 	case KII_EV_PTR_RELATIVE:
@@ -285,13 +286,10 @@ void sce_sysmouse_event(kii_event_t *ev)
 	y = -imax(imin(y, 255), -256);
 	buf[2] = y >> 1;
 	buf[4] = y - buf[2];
+
 	tty_lock(sysm->tty);
-	for (i = 0; i < MOUSE_MSC_PACKETSIZE; ++i) {
+	for (i = 0; i < MOUSE_MSC_PACKETSIZE; ++i)
 		ttydisc_rint(sysm->tty, (char)buf[i], 0);
-		ttydisc_rint_done(sysm->tty);
-	}
-	
-	tty_unlock(sysm->tty);
 	
 	if (sysm->level >= 1) {		
 		/* extended part */
@@ -301,12 +299,13 @@ void sce_sysmouse_event(kii_event_t *ev)
         /* buttons 4-10 */
         buf[7] = (~sysm->status.button >> 3) & 0x7f;
 		tty_lock(sysm->tty);
-        for (i = MOUSE_MSC_PACKETSIZE; i < MOUSE_SYS_PACKETSIZE; ++i) {
+        for (i = MOUSE_MSC_PACKETSIZE; i < MOUSE_SYS_PACKETSIZE; ++i)
 			ttydisc_rint(sysm->tty, (char)buf[i], 0);			
-			ttydisc_rint_done(sysm->tty);
-		}
-		tty_unlock(sysm->tty);
+	
 	}	
+
+	ttydisc_rint_done(sysm->tty);
+	tty_unlock(sysm->tty);
 
 	return;
 }
@@ -315,15 +314,12 @@ int
 sce_sysmouse_init(void)
 {
 
-	bzero(&sce_sysmouse, sizeof(sce_sysmouse_t));	
-	sce_sysmouse.tty = tty_alloc(&scesm_ttydevsw, &Giant);
-	tty_makedev(sce_sysmouse.tty, NULL, "sysmouse");
-//	make_dev(&scesm_cdevsw, SC_MOUSE, UID_ROOT, GID_WHEEL, 0600,
-//		 "sysmouse");
+	bzero(&sysmouse, sizeof(sce_sysmouse));	
+	sysmouse.tty = tty_alloc(&scesm_ttydevsw, NULL);
+	tty_makedev(sysmouse.tty, NULL, "sysmouse");
 
 	return (0);
 }
-
 SYSINIT(sce_sysmouse, SI_SUB_DRIVERS, SI_ORDER_MIDDLE, sce_sysmouse_init, NULL);
 
 #endif /* !SC_NO_SYSMOUSE */

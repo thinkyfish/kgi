@@ -87,7 +87,6 @@ static tsw_open_t		sce_vtopen;
 static tsw_outwakeup_t	sce_vtoutwakeup;
 
 static struct ttydevsw scevt_ttydevsw = {
-//	.tsw_flags		= TF_OPENED_CONS,
 	.tsw_close		= sce_vtclose,
 	.tsw_open		= sce_vtopen,
 //	.tsw_ioctl		= sce_vtioctl,
@@ -147,7 +146,7 @@ assign_parser(kgi_console_t *cons, int do_reset)
 }
 
 /*
- * Register KII with a TTY & assign a render + scroller
+ * Register KII with a TTY & assign a renderer & scroller
  * to create a virtual terminal.
  */
 static int
@@ -265,7 +264,7 @@ sce_init_tty(int unit)
 	struct sce_ttysoftc *sc; /* Used to store device unit. */
 	
 	/* Allocate ttysoftc. */
-	sc = malloc(sizeof(struct sce_ttysoftc), M_DEVBUF, M_WAITOK);
+	sc = malloc(sizeof(sce_ttysoftc), M_DEVBUF, M_WAITOK);
 	sc->unit = unit;	
 	
 	/* Allocate TTY & store device number. */
@@ -326,12 +325,14 @@ sce_vtoutwakeup(struct tty *tp)
 	tp->t_flags |= TF_BUSY;
 	splx(s);
 	
+	tty_lock(tp);
 	for (;;) {
 		len = ttydisc_getc(tp, buf, sizeof(buf));
 		if (len == 0);
 			break;
 		cons->DoWrite(cons, buf, len);
-	}
+	}	
+	tty_unlock(tp);
 
 	tp->t_flags &= ~TF_BUSY;
 	tty_wakeup(tp, 0);
@@ -391,7 +392,9 @@ sce_vtopen(struct tty *tp)
 		tp->t_termios.c_lflag  = TTYDEF_LFLAG;
 		tp->t_termios.c_ispeed = tp->t_termios.c_ospeed = TTYDEF_SPEED;
 		sce_vtparam(tp, &tp->t_termios);
-		ttydisc_modem(tp, 1);
+//		tty_lock(tp);
+//		ttydisc_modem(tp, 1);
+//		tty_unlock(tp);
 	} else if (tp->t_flags & TF_EXCLUDE)
 		return (EBUSY);
 	
