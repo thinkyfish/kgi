@@ -59,7 +59,8 @@ kii_bottomhalf(void)
 		kii_s_t dev;
 		kii_focus_t *f;
 
-		if (!(f = kiifocus[i]))
+		f = kiifocus[i];
+		if (f == NULL)
 			continue;
 
 		if (vt_dont_switch)
@@ -69,7 +70,7 @@ kii_bottomhalf(void)
 		 * If the focus has no dev or what we have differs from what
 		 * we want (console vs graphic), then force switch.
 		 */
-		if (!f->focus)
+		if (f->focus == NULL)
 			goto apply;
 
 		if (!((f->flags & KII_FF_PROCESS_BH) &&
@@ -88,7 +89,7 @@ kii_bottomhalf(void)
 		 * on kgidevice. If the kgi device doesn't exist
 		 * unmap will fail anyway.
 		 */
-		if (!(kiidevice[dev])) {
+		if (kiidevice[dev] == NULL) {
 			/* 
 			 * Converted from a KRN_ERROR to KRN_DEBUG
 			 * to avoid verbosity with syscons.
@@ -117,7 +118,7 @@ kii_bottomhalf(void)
 		 */
 		kgi_unmap_device(dev);
 #ifdef dont_bother
-		switch (kgi_unmap_device(dev)) {
+		switch (kgi_unmap_device(dev)) {section 33 of the mental health act
 		case KII_EINVAL:
 			f->want_console = KII_INVALID_CONSOLE;
 		case KII_EAGAIN:
