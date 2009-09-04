@@ -157,7 +157,7 @@ sce_init_vt(struct tty *tp)
 	kgi_error_t err;
 
 	unit = sce_dev2unit(tp);
-	if (unit >= MAXCONS) {
+	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
 		KRN_ERROR("Reached maximum amount of consoles.");
 		return (ENXIO);
 	}
@@ -165,11 +165,10 @@ sce_init_vt(struct tty *tp)
 	KRN_DEBUG(3, "Creating VT %d", unit);
 	cons = (kgi_console_t *)sce_consoles[unit];
 
-	if (!cons) {
+	if (cons == NULL) {
 		KRN_DEBUG(3, "Allocating console %d...", unit);
-
 		cons = kgi_kmalloc(sizeof(sce_console));
-		if (!cons) {
+		if (cons == NULL) {
 			KRN_ERROR("Failed: Not enough memory.");
 			return (ENOMEM);
 		}
@@ -187,48 +186,52 @@ sce_init_vt(struct tty *tp)
 	/*
 	 * Check if console is setup.
 	 */
-	if (!sce_consoles[unit]) {
-		if ((err = kii_register_device(&(cons->kii), unit))) {
+	if (sce_consoles[unit] == NULL) {
+		err = kii_register_device(&(cons->kii), unit);
+		if (err != KII_EOK) {
 			KRN_ERROR("Failed: Could not register input on %d %d", unit, err);
-			goto failed1;
+			goto fail_reg_device;
 		}
 
 		/*
 		 * Allocate a new render instance based on the render class
 		 * registered to our display.
 		 */
-		if (!(cons->render = kgc_render_alloc(unit, NULL))) {			
+		cons->render = kgc_render_alloc(unit, NULL);
+		if (cons->render == NULL) {			
 			KRN_ERROR("Failed: Could not allocate render device %d", unit);
-			goto failed2;
+			goto fail_rend_alloc;
 		}
+
 		((render_t) cons->render)->cons = cons;			/* XXX */
 		if (RENDER_INIT((render_t)cons->render, 0)) {			
 			KRN_ERROR("Failed: Could not init render!");
-			goto failed3;
+			goto fail_rend_init;
 		}
 
 		/*
 		 * Allocate a new scroller instance based on the scroller class
 		 * registered to our display.
 		 */
-		if (!(cons->scroller = kgc_scroller_alloc(unit, NULL))) {			
+		cons->scroller = kgc_scroller_alloc(unit, NULL);
+		if (cons->scroller == NULL) {			
 			KRN_ERROR("Failed: Could not allocate scroller device %d", unit);
-			goto failed4;
+			goto fail_scroll_alloc;
 		}
+
 		((render_t)cons->scroller)->cons = cons;		/* XXX */		
 		if (SCROLLER_INIT((scroller_t)cons->scroller, NULL)) {
 			KRN_ERROR("Failed: Could not reset console");
-			goto failed5;
+			goto fail_scroll_init;
 		}
 
-		/*
-		 * Initialization OK. Set console now from working copy (cons).
-		 */
-		sce_consoles[unit] = (sce_console *)cons;
-
-		if (!kii_current_focus(cons->kii.focus_id))
+		if (kii_current_focus(cons->kii.focus_id) == NULL)
 			kii_map_device(cons->kii.id);
 
+		/*
+		 * Initialization OK.
+		 */
+		sce_consoles[unit] = (sce_console *)cons;
 		KRN_DEBUG(4, "VT Console %i allocated.", unit);
 	}
 
@@ -236,15 +239,15 @@ sce_init_vt(struct tty *tp)
 
 	return (KGI_EOK);
 
- failed5: /* Fall thru. */
+ fail_scroll_init: /* Fall thru. */
 	kgc_scroller_release(unit);
- failed4: /* Fall thru. */
+ fail_scroll_alloc: /* Fall thru. */
 	RENDER_DONE((render_t)cons->render);
- failed3: /* Fall thru. */
+ fail_rend_init: /* Fall thru. */
 	kgc_render_release(unit);
- failed2: /* Fall thru. */
+ fail_rend_alloc: /* Fall thru. */
 	kii_unregister_device(&(cons->kii));
- failed1:
+ fail_reg_device:
 	if ((cons && unit) || (cons && first_minor_allocated)) {
 		kgi_kfree(cons);
 		sce_consoles[unit] = NULL;
@@ -312,7 +315,7 @@ sce_vtoutwakeup(struct tty *tp)
 
 	unit = sce_dev2unit(tp);
 	cons = (kgi_console_t *)sce_consoles[unit];
-	if (!cons)
+	if (cons == NULL)
 		return;
 
 /*	cons->kii.flags |= KII_DF_SCROLL_LOCK; */
@@ -325,14 +328,14 @@ sce_vtoutwakeup(struct tty *tp)
 	tp->t_flags |= TF_BUSY;
 	splx(s);
 	
-	tty_lock(tp);
+//	tty_lock(tp);
 	for (;;) {
 		len = ttydisc_getc(tp, buf, sizeof(buf));
 		if (len == 0);
 			break;
 		cons->DoWrite(cons, buf, len);
 	}	
-	tty_unlock(tp);
+//	tty_unlock(tp);
 
 	tp->t_flags &= ~TF_BUSY;
 	tty_wakeup(tp, 0);
