@@ -94,7 +94,7 @@ kii_bottomhalf(void)
 			 * Converted from a KRN_ERROR to KRN_DEBUG
 			 * to avoid verbosity with syscons.
 			 */
-			KRN_DEBUG(2, "Invalid device %i (console %i)", 
+			KRN_DEBUG(20, "Invalid device %i (console %i)", 
 				  dev, f->want_console);
 			f->want_console = KII_INVALID_CONSOLE;
 			continue;
@@ -118,7 +118,7 @@ kii_bottomhalf(void)
 		 */
 		kgi_unmap_device(dev);
 #ifdef dont_bother
-		switch (kgi_unmap_device(dev)) {section 33 of the mental health act
+		switch (kgi_unmap_device(dev)) {
 		case KII_EINVAL:
 			f->want_console = KII_INVALID_CONSOLE;
 		case KII_EAGAIN:
@@ -161,7 +161,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	if (event->any.type != KII_EV_KEY_PRESS) 
 		return;
 
-	KRN_DEBUG(3, "Doing special key sym=%.4x code=%d effect=%d", event->key.sym,
+	KRN_DEBUG(20, "Doing special key sym=%.4x code=%d effect=%d", event->key.sym,
 		  event->key.code, event->key.effect);
 
 	switch(event->key.sym) {
@@ -306,7 +306,7 @@ kii_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;	
 
-	KRN_DEBUG(3, "Key %s, code 0x%.2x, sym %.2x", 
+	KRN_DEBUG(20, "Key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
