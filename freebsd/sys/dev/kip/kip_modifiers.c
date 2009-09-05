@@ -43,7 +43,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	register kii_unicode_t ksym = event->key.sym;
 	kii_u_t effect = f->effect;
 
-	KRN_DEBUG(3, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
+	KRN_DEBUG(20, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
 		f->effect, f->normal, f->locked, f->sticky, ksym);
 
 	/*
@@ -162,7 +162,7 @@ do_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;
 
-	KRN_DEBUG(3, "key %s, code 0x%.2x, sym %.2x", 
+	KRN_DEBUG(20, "key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
@@ -217,7 +217,7 @@ kii_handle_input(kii_event_t *event)
 			event->key.sym = keymap_toggled_case(event->key.sym);
 
 		sym_string = keysyms_pretty_print(event->key.sym);
-		KRN_DEBUG(3, "key %i %s, sym %.4x <%s>", event->key.code,
+		KRN_DEBUG(20, "key %i %s, sym %.4x <%s>", event->key.code,
 			(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 			event->key.sym, sym_string);
 	}
