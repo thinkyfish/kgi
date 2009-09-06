@@ -5,7 +5,8 @@ Prerequisites:
  * Knowledge of using svn(or cvs/csup) to checkout a FreeBSD source tree.
  * Kernel configuration.
  * Building and installing FreeBSD custom kernels.
- * VESA must be >= 2.0 see "vidcontrol -i mode < /dev/ttyv0"
+ * VESA must be >= 2.0 see "vidcontrol -i mode"
+   Make sure to load vesa.ko before executing the above. 
  
 Installation:
  * Your KGI checkout needs to be copied to a working copy of your FreeBSD src
