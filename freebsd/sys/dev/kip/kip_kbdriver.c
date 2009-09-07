@@ -380,14 +380,10 @@ kip_kbd_register(keyboard_t *kbd, int index)
 		 * Try to get exclusive access to this kbd
 		 */
 		KRN_DEBUG(1, "Attempting to allocate keyboard %s", kbd->kb_name);
-		/*
-		 * XXX
-		 * kbd_allocate is always returning -1 (or KBD_IS_BUSY).
-		 * Is using KBD_UNBUSY & KBD_VALID a safe & correct method
-		 * for grabbing the keybaord?
-		 */
+
 		KBD_UNBUSY(kbd);
-//		KBD_VALID(kbd);
+		KBD_VALID(kbd);
+		KBD_DEACTIVATE(kbd);
 		ka = kbd_allocate(kbd->kb_name, kbd->kb_unit, (void *)&sc->kbd,
 				 kbdriver_event, sc);
 		KRN_DEBUG(2, "kbd_allocate() returned '%d'", ka);
