@@ -90,12 +90,12 @@ static struct ttydevsw scevt_ttydevsw = {
 	.tsw_outwakeup	= sce_tswoutwakeup
 };
 
-static d_ioctl_t scevtctl_ioctl;
+static d_ioctl_t scevt_ioctl;
 
 static struct cdevsw scevt_devsw = {
 	.d_version	= D_VERSION,
 	.d_flags	= D_NEEDGIANT,
-	.d_ioctl	= scevtctl_ioctl,
+	.d_ioctl	= scevt_ioctl,
 	.d_name		= "scevt"
 };
 
@@ -333,7 +333,7 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
 
 	switch (cmd) {
-					 /* Translate from KII to KBD format. */
+		/* Translate from KII to KBD format. */
 	case GIO_KEYMAP: /* Get keyboard translation table. */					 
 	case PIO_KEYMAP: /* Set keyboard translation table. */
 	case GIO_KEYMAPENT:	/* Get keyboard translation table entry. */
@@ -352,7 +352,7 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 }
 
 /*
- * Receive data from TTY system and pass it on to the KGC terminal system.
+ * Receive data from the TTY system and pass it on to the KGC system.
  */
 static void 
 sce_tswoutwakeup(struct tty *tp)
@@ -382,7 +382,7 @@ sce_tswoutwakeup(struct tty *tp)
 }
 
 static int
-scevtctl_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
+scevt_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 		struct thread *td)
 {
 
@@ -405,7 +405,7 @@ scevt_mod_event(module_t mod, int type, void *data)
 		 * XXX 
 		 * MAXCONS used here should be auto at kbd plug?
 		 */
-		for(unit = 0; unit < MAXCONS; unit++) {
+		for (unit = 0; unit < MAXCONS; unit++) {
 			tp = sce_create_tty(unit);
 			sce_init(tp);
 		}
