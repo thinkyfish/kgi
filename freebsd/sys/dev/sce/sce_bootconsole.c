@@ -56,8 +56,6 @@ __FBSDID("$FreeBSD$");
 #include "scroller_if.h"
 #include "render_if.h"
 
-#define CDEV_MAJOR	12
-
 static cn_probe_t	sce_cnprobe;
 static cn_init_t	sce_cninit;
 static cn_term_t	sce_cnterm;
@@ -90,7 +88,7 @@ console_printk(char *b, unsigned count)
 
 	cons = (kgi_console_t *)&scecons;
 
-	if (printing || !cons) 
+	if (printing || cons == NULL) 
 		return;
 
 	printing = 1;

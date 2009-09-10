@@ -162,7 +162,6 @@ typedef struct {
 
 typedef struct sce_ttysoftc {
 	int unit;
-	//mutex;
 } sce_ttysoftc;
 
 extern sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];

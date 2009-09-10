@@ -12,7 +12,7 @@
  */
  
  /*
-  * KGI console driver
+  * KGI console driver.
   */
   
 #include <sys/cdefs.h>
@@ -71,52 +71,33 @@ __FBSDID("$FreeBSD$");
 
 static int first_minor_allocated = 0;
 sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
-//tsw_ioctl_t *sce_tsw_ioctl;
 
 /* Prototypes */
-static void handle_kii_event(kii_device_t *dev, kii_event_t *e);
 static void assign_parser(kgi_console_t *cons, int do_reset);
-static int sce_init_vt(struct tty *tp);
-static struct tty* sce_init_tty(int unit);
-static int sce_dev2unit(struct tty *tp);
+static void handle_kii_event(kii_device_t *dev, kii_event_t *e);
+static int sce_ttytounit(struct tty *tp);
+static int sce_init(struct tty *tp);
+static struct tty* sce_create_tty(int unit);
 
 /* TTY */
-static tsw_close_t		sce_vtclose;
-static tsw_open_t		sce_vtopen;
-//static tsw_ioctl_t		sce_vtioctl;
-static tsw_outwakeup_t	sce_vtoutwakeup;
+static tsw_close_t		sce_tswclose;
+static tsw_ioctl_t		sce_tswioctl;
+static tsw_outwakeup_t	sce_tswoutwakeup;
 
 static struct ttydevsw scevt_ttydevsw = {
-	.tsw_close		= sce_vtclose,
-	.tsw_open		= sce_vtopen,
-//	.tsw_ioctl		= sce_vtioctl,
-	.tsw_outwakeup	= sce_vtoutwakeup
+	.tsw_close		= sce_tswclose,
+	.tsw_ioctl		= sce_tswioctl,
+	.tsw_outwakeup	= sce_tswoutwakeup
 };
+
+static d_ioctl_t scevtctl_ioctl;
 
 static struct cdevsw scevt_devsw = {
 	.d_version	= D_VERSION,
 	.d_flags	= D_NEEDGIANT,
+	.d_ioctl	= scevtctl_ioctl,
 	.d_name		= "scevt"
 };
-
-static void 
-handle_kii_event(kii_device_t *dev, kii_event_t *e)
-{
-
-	/* Forward to sysmouse pointer events */
- 	if ((1 << e->any.type) & KII_EM_POINTER) {
- 		sce_sysmouse_event(e);
- 		return;
- 	}
-#ifdef KGC_TERM_XTERM
-	xterm_handle_kii_event(dev, e);
-#else
-#ifndef KGC_TERM_DUMB
-#error KGC_TERM_DUMB not defined
-#endif
-	dumb_handle_kii_event(dev, e);
-#endif
-}
 
 /*
  * XXX
@@ -145,24 +126,42 @@ assign_parser(kgi_console_t *cons, int do_reset)
 #endif
 }
 
+static void 
+handle_kii_event(kii_device_t *dev, kii_event_t *e)
+{
+
+	/* Forward to sysmouse pointer events */
+ 	if ((1 << e->any.type) & KII_EM_POINTER) {
+ 		sce_sysmouse_event(e);
+ 		return;
+ 	}
+#ifdef KGC_TERM_XTERM
+	xterm_handle_kii_event(dev, e);
+#else
+#ifndef KGC_TERM_DUMB
+#error KGC_TERM_DUMB not defined
+#endif
+	dumb_handle_kii_event(dev, e);
+#endif
+}
+
 /*
- * Register KII with a TTY & assign a renderer & scroller
- * to create a virtual terminal.
+ * Create a console & associate a TTY with it.
  */
 static int
-sce_init_vt(struct tty *tp)
+sce_init(struct tty *tp)
 {	
 	kgi_u_t unit;
 	kgi_console_t *cons;
 	kgi_error_t err;
 
-	unit = sce_dev2unit(tp);
+	unit = sce_ttytounit(tp);
 	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
 		KRN_ERROR("Reached maximum amount of consoles.");
 		return (ENXIO);
 	}
 
-	KRN_DEBUG(3, "Creating VT %d", unit);
+	KRN_DEBUG(3, "Creating virtual terminal %d", unit);
 	cons = (kgi_console_t *)sce_consoles[unit];
 
 	if (cons == NULL) {
@@ -184,7 +183,8 @@ sce_init_vt(struct tty *tp)
 	cons->kii.priv.priv_ptr = cons;
 
 	/*
-	 * Check if console is setup.
+	 * Check if console is setup & attach KGI's scroller and renderer
+	 * classes to it.
 	 */
 	if (sce_consoles[unit] == NULL) {
 		err = kii_register_device(&(cons->kii), unit);
@@ -200,13 +200,13 @@ sce_init_vt(struct tty *tp)
 		cons->render = kgc_render_alloc(unit, NULL);
 		if (cons->render == NULL) {			
 			KRN_ERROR("Failed: Could not allocate render device %d", unit);
-			goto fail_rend_alloc;
+			goto fail_render_alloc;
 		}
 
-		((render_t) cons->render)->cons = cons;			/* XXX */
+		((render_t) cons->render)->cons = cons;	/* XXX */
 		if (RENDER_INIT((render_t)cons->render, 0)) {			
-			KRN_ERROR("Failed: Could not init render!");
-			goto fail_rend_init;
+			KRN_ERROR("Failed: Could not initialize renderer!");
+			goto fail_render_init;
 		}
 
 		/*
@@ -216,13 +216,13 @@ sce_init_vt(struct tty *tp)
 		cons->scroller = kgc_scroller_alloc(unit, NULL);
 		if (cons->scroller == NULL) {			
 			KRN_ERROR("Failed: Could not allocate scroller device %d", unit);
-			goto fail_scroll_alloc;
+			goto fail_scroller_alloc;
 		}
 
 		((render_t)cons->scroller)->cons = cons;		/* XXX */		
 		if (SCROLLER_INIT((scroller_t)cons->scroller, NULL)) {
 			KRN_ERROR("Failed: Could not reset console");
-			goto fail_scroll_init;
+			goto fail_scroller_init;
 		}
 
 		if (kii_current_focus(cons->kii.focus_id) == NULL)
@@ -232,20 +232,20 @@ sce_init_vt(struct tty *tp)
 		 * Initialization OK.
 		 */
 		sce_consoles[unit] = (sce_console *)cons;
-		KRN_DEBUG(4, "VT Console %i allocated.", unit);
+		KRN_DEBUG(4, "Virtual terminal console %i allocated.", unit);
 	}
 
 	assign_parser(cons, (unit) ? 1 : 0);
 
 	return (KGI_EOK);
 
- fail_scroll_init: /* Fall thru. */
+ fail_scroller_init: /* Fall thru. */
 	kgc_scroller_release(unit);
- fail_scroll_alloc: /* Fall thru. */
+ fail_scroller_alloc: /* Fall thru. */
 	RENDER_DONE((render_t)cons->render);
- fail_rend_init: /* Fall thru. */
+ fail_render_init: /* Fall thru. */
 	kgc_render_release(unit);
- fail_rend_alloc: /* Fall thru. */
+ fail_render_alloc: /* Fall thru. */
 	kii_unregister_device(&(cons->kii));
  fail_reg_device:
 	if ((cons && unit) || (cons && first_minor_allocated)) {
@@ -258,10 +258,20 @@ sce_init_vt(struct tty *tp)
 }
 
 /*
+ * Get unit number of TTY device.
+ */
+static inline int 
+sce_ttytounit(struct tty *tp)
+{
+
+	return (((sce_ttysoftc* )tty_softc(tp))->unit);
+}
+
+/*
  * Allocate and create TTY device.
  */
 static struct tty *
-sce_init_tty(int unit)
+sce_create_tty(int unit)
 {
 	struct tty *tp;
 	struct sce_ttysoftc *sc; /* Used to store device unit. */
@@ -280,79 +290,13 @@ sce_init_tty(int unit)
 	return (tp);
 }
 
-/*
- * Get unit number of TTY device.
- */
-static int 
-sce_dev2unit(struct tty *tp)
-{
-	int unit;
-	
-	unit = ((sce_ttysoftc* )tty_softc(tp))->unit;
-
-	return (unit);	
-}
-
-static int 
-sce_vtparam(struct tty *tp, struct termios *t)
-{
-
-	tp->t_termios.c_ispeed = t->c_ispeed;
-	tp->t_termios.c_ospeed = t->c_ospeed;
-	tp->t_termios.c_cflag  = t->c_cflag;
-
-	return (0);
-}
-
-static void 
-sce_vtoutwakeup(struct tty *tp)
-{
-	int s;
-	int unit;
-	kgi_console_t *cons;
-	size_t len;
-	u_char buf[PCBURST];
-
-	unit = sce_dev2unit(tp);
-	cons = (kgi_console_t *)sce_consoles[unit];
-	if (cons == NULL)
-		return;
-
-/*	cons->kii.flags |= KII_DF_SCROLL_LOCK; */
-	s = spltty();
-	kiidev_sync(&(cons->kii), KII_SYNC_LED_FLAGS);
-
-	if (tp->t_flags & (TF_BUSY | TF_STOPPED))
-		goto out;
-
-	tp->t_flags |= TF_BUSY;
-	splx(s);
-	
-//	tty_lock(tp);
-	for (;;) {
-		len = ttydisc_getc(tp, buf, sizeof(buf));
-		if (len == 0);
-			break;
-		cons->DoWrite(cons, buf, len);
-	}	
-//	tty_unlock(tp);
-
-	tp->t_flags &= ~TF_BUSY;
-	tty_wakeup(tp, 0);
-	return;
-
-out:
-	splx(s);
-	return;
-}
-
 static void
-sce_vtclose(struct tty *tp)
+sce_tswclose(struct tty *tp)
 {
 	kgi_u_t unit;
 	kgi_console_t *cons;
 	
-	unit = sce_dev2unit(tp);
+	unit = sce_ttytounit(tp);
 	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
 		KRN_ERROR("Bad console %i", unit);
 		return; //(EINVAL);
@@ -385,73 +329,71 @@ sce_vtclose(struct tty *tp)
 }
 
 static int
-sce_vtopen(struct tty *tp)
+sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
-	
-	if (!tty_opened(tp)) {
-		tp->t_termios.c_iflag  = TTYDEF_IFLAG;
-		tp->t_termios.c_oflag  = TTYDEF_OFLAG;
-		tp->t_termios.c_cflag  = TTYDEF_CFLAG;
-		tp->t_termios.c_lflag  = TTYDEF_LFLAG;
-		tp->t_termios.c_ispeed = tp->t_termios.c_ospeed = TTYDEF_SPEED;
-		sce_vtparam(tp, &tp->t_termios);
-//		tty_lock(tp);
-//		ttydisc_modem(tp, 1);
-//		tty_unlock(tp);
-	} else if (tp->t_flags & TF_EXCLUDE)
-		return (EBUSY);
-	
-	return (KGI_EOK);
+
+	switch (cmd) {
+					 /* Translate from KII to KBD format. */
+	case GIO_KEYMAP: /* Get keyboard translation table. */					 
+	case PIO_KEYMAP: /* Set keyboard translation table. */
+	case GIO_KEYMAPENT:	/* Get keyboard translation table entry. */
+	case PIO_KEYMAPENT:	/* Set keyboard translation table entry. */
+	case GIO_DEADKEYMAP: /* Get accent key translation table. */
+	case PIO_DEADKEYMAP: /* Set accent key translation table. */
+	case GETFKEY:		 /* Get functionkey string. */
+	case SETFKEY:		 /* Set functionkey string. */
+		return (ENOTTY);
+	default:
+		break;
+	}
+
+	/* Leave ioctl up to the TTY system. */
+	return (ENOIOCTL);
 }
 
-// static int
-// sce_vtioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
-// {
-// 	int error;
-// 
-// 	//error = (*sce_tsw_ioctl)(tp, cmd, data, td);
-// 	error = tty_ioctl(tp, cmd, data, td);
-// 	if (error != ENOIOCTL)
-// 		return (error);
-// 
-// 	switch (cmd) {
-// 	case GIO_KEYMAP:	/* get keyboard translation table */
-// 		/* Translate from KII to KBD format */
-// 		break;
-// 	case PIO_KEYMAP:	/* set keyboard translation table */
-// #ifndef KBD_DISABLE_KEYMAP_LOAD
-// #endif
-// 		break;
-// 	case GIO_KEYMAPENT:	/* get keyboard translation table entry */
-// 		break;
-// 	case PIO_KEYMAPENT:	/* set keyboard translation table entry */
-// #ifndef KBD_DISABLE_KEYMAP_LOAD
-// #endif
-// 		break;
-// 	case GIO_DEADKEYMAP:	/* get accent key translation table */
-// 		break;
-// 	case PIO_DEADKEYMAP:	/* set accent key translation table */
-// #ifndef KBD_DISABLE_KEYMAP_LOAD
-// #endif
-// 		break;
-// 	case GETFKEY:		/* get functionkey string */
-// 		break;
-// 	case SETFKEY:		/* set functionkey string */
-// #ifndef KBD_DISABLE_KEYMAP_LOAD
-// #endif
-// 		break;
-// 	default:
-// 		break;
-// 	}
-// 
-// 	return (ENOTTY);
-// }
+/*
+ * Receive data from TTY system and pass it on to the KGC terminal system.
+ */
+static void 
+sce_tswoutwakeup(struct tty *tp)
+{
+ 	int s, unit;
+	kgi_console_t *cons;
+	size_t len;
+	u_char buf[PCBURST];
+
+	unit = sce_ttytounit(tp);
+	cons = (kgi_console_t *)sce_consoles[unit];
+	if (cons == NULL)
+		return;
+
+ 	s = spltty();
+ 	kiidev_sync(&(cons->kii), KII_SYNC_LED_FLAGS);
+ 	splx(s);
+	
+	for (;;) {
+		/* Fill buffer. */
+		len = ttydisc_getc(tp, buf, sizeof(buf));
+		if (len == 0);
+			break;
+		/* KGC handles writting to the physical side of the system. */
+		cons->DoWrite(cons, buf, len);
+	}	
+}
+
+static int
+scevtctl_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
+		struct thread *td)
+{
+
+	return sce_tswioctl(dev->si_drv1, cmd, data, td);
+}
 
 /*
  * Load the syscons emulator virtual console.
  */
 static int
-sce_vt_mod_event(module_t mod, int type, void *data)
+scevt_mod_event(module_t mod, int type, void *data)
 {
 	int unit;
 	struct cdev *dev;
@@ -461,11 +403,11 @@ sce_vt_mod_event(module_t mod, int type, void *data)
 	case MOD_LOAD:
 		/* 
 		 * XXX 
-		 * MAXCONS should be auto at kbd plug?
+		 * MAXCONS used here should be auto at kbd plug?
 		 */
 		for(unit = 0; unit < MAXCONS; unit++) {
-			tp = sce_init_tty(unit);
-			sce_init_vt(tp);
+			tp = sce_create_tty(unit);
+			sce_init(tp);
 		}
 		dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
 #ifndef SC_NO_SYSMOUSE
@@ -484,7 +426,7 @@ sce_vt_mod_event(module_t mod, int type, void *data)
 
 static moduledata_t scevt_mod = {
 	"scevt",
-	sce_vt_mod_event,
+	scevt_mod_event,
 	NULL,
 };
 
