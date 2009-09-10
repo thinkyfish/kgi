@@ -41,7 +41,9 @@ static int vt_dont_switch = 0;	/* XXX should be in vt.c */
  */
 
 static void 
-make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration){
+make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration)
+{
+
 	KRN_DEBUG(2, "make_sound() not implemented yet!");
 }
 
@@ -161,7 +163,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	if (event->any.type != KII_EV_KEY_PRESS) 
 		return;
 
-	KRN_DEBUG(20, "Doing special key sym=%.4x code=%d effect=%d", event->key.sym,
+	KRN_DEBUG(6, "Doing special key sym=%.4x code=%d effect=%d", event->key.sym,
 		  event->key.code, event->key.effect);
 
 	switch(event->key.sym) {
@@ -224,7 +226,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	case K_INCRCONSOLE: {
 		register kii_s_t start, search;
 
-		if (! KII_VALID_CONSOLE_ID(f->curr_console)) {
+		if (!KII_VALID_CONSOLE_ID(f->curr_console)) {
 			search = (start = 0) + 1;
 		} else {
 			KRN_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
@@ -258,7 +260,6 @@ do_special(kii_focus_t *f, kii_event_t *event)
 #ifdef notavail	/* XXX */
 			if (kill_proc(((pid_t) f->focus->spawnpid.priv_u), 
 				f->focus->spawnsig.priv_u, 1)) {
-
 				f->focus->spawnpid.priv_u = 0;
 			}
 #endif
@@ -276,9 +277,9 @@ do_special(kii_focus_t *f, kii_event_t *event)
 
 		f->flags |= KII_FF_SYSTEM_REQUEST;
 		
-		if ((curdev = kgi_current_devid(0)) != -1) {
+		if ((curdev = kgi_current_devid(0)) != -1) 
 			kgi_unmap_device(curdev);
-		}
+
 		kgi_map_device(0);
 
 		kdb_enter(KDB_WHY_UNSET, "KII escape to debugger.");
@@ -306,15 +307,14 @@ kii_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;	
 
-	KRN_DEBUG(20, "Key %s, code 0x%.2x, sym %.2x", 
+	KRN_DEBUG(6, "Key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
 	switch (event->key.sym & K_TYPE_MASK) {
 	case K_TYPE_SPECIAL:
-		if (sym < K_LAST_SPECIAL) {
+		if (sym < K_LAST_SPECIAL)
 			do_special(f, event); 
-		}
 		return;
 	case K_TYPE_CONSOLE:
 		sym -= K_FIRST_CONSOLE;

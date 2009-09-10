@@ -43,7 +43,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	register kii_unicode_t ksym = event->key.sym;
 	kii_u_t effect = f->effect;
 
-	KRN_DEBUG(20, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
+	KRN_DEBUG(6, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
 		f->effect, f->normal, f->locked, f->sticky, ksym);
 
 	/*
@@ -73,7 +73,6 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	 * the effect of the corresponding LOCKED modifier too.
 	 */
 	if ((K_FIRST_NORMAL <= ksym) && (ksym < K_LAST_NORMAL)) {
-
 		register kii_u_t mask = 1 << (ksym - K_FIRST_NORMAL);
 
 		KRN_DEBUG(3, "normal modifier key");
@@ -97,7 +96,6 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 
 	if ((event->any.type == KII_EV_KEY_RELEASE) && (f->effect != effect) && 
 		(f->npadch != K_VOID)) {
-
 		kii_event_t npadch;
 		struct timeval tv;
 
@@ -162,7 +160,7 @@ do_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;
 
-	KRN_DEBUG(20, "key %s, code 0x%.2x, sym %.2x", 
+	KRN_DEBUG(6, "key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
@@ -182,8 +180,7 @@ do_action(kii_focus_t *f, kii_event_t *event)
 			do_ascii(f, event);
 		return;
 	case K_TYPE_DEAD:
-		if ((sym < K_LAST_DEAD) &&
-			(event->key.type == KII_EV_KEY_PRESS ||
+		if ((sym < K_LAST_DEAD) && (event->key.type == KII_EV_KEY_PRESS ||
 			 event->key.type == KII_EV_KEY_REPEAT)) {
 			do_dead(f, event);
 		}
@@ -217,7 +214,7 @@ kii_handle_input(kii_event_t *event)
 			event->key.sym = keymap_toggled_case(event->key.sym);
 
 		sym_string = keysyms_pretty_print(event->key.sym);
-		KRN_DEBUG(20, "key %i %s, sym %.4x <%s>", event->key.code,
+		KRN_DEBUG(6, "key %i %s, sym %.4x <%s>", event->key.code,
 			(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 			event->key.sym, sym_string);
 	}
