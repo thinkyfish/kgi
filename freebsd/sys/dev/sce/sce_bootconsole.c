@@ -63,14 +63,14 @@ static cn_getc_t	sce_cngetc;
 static cn_checkc_t	sce_cncheckc;
 static cn_putc_t	sce_cnputc;
 
-#ifdef notyet
-CONSOLE_DRIVER(sce);
-#else
-/* Define manually until we activate the CONSOLE_DRIVER macro. */
+
+/*
+ * Define manually until we activate the CONSOLE_DRIVER macro.
+ * Use of CONSOLE_DRIVER(sce) currently causes a panic.
+ */
 static struct consdev sce_consdev = {
 	sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc,
 	sce_cncheckc, sce_cnputc, 0};
-#endif
 
 /* Define here for early init without allocation. */
 static sce_console scecons;
