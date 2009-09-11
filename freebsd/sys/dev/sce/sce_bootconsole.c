@@ -232,8 +232,8 @@ sce_cnprobe(struct consdev *cp)
 
 	if (cp->cn_pri == CN_DEAD)
 		return;
-
-	sprintf(cp->cn_name, "ttyv%r", 0);
+	
+	strcpy(cp->cn_name, "ttyv0");
 }
 
 /*
