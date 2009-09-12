@@ -62,7 +62,7 @@ struct sce_mouse {
 
 static int sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td);
 static int sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
-			 struct thread *td);
+		struct thread *td);
 static int sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td);
 
 

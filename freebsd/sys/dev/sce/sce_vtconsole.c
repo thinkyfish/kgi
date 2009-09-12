@@ -173,7 +173,7 @@ sce_init(struct tty *tp)
 		}
 		memset(cons, 0, sizeof(sce_console));
 
-		/* If the minor is null, the console was not initialized */
+		/* If the minor is null, the console was not initialized. */
 		if (unit == 0)
 			first_minor_allocated = 1;
 	}	
@@ -219,7 +219,7 @@ sce_init(struct tty *tp)
 			goto fail_scroller_alloc;
 		}
 
-		((render_t)cons->scroller)->cons = cons;		/* XXX */		
+		((render_t)cons->scroller)->cons = cons; /* XXX */		
 		if (SCROLLER_INIT((scroller_t)cons->scroller, NULL)) {
 			KRN_ERROR("Failed: Could not reset console");
 			goto fail_scroller_init;
@@ -357,7 +357,7 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 static void 
 sce_tswoutwakeup(struct tty *tp)
 {
- 	int s, unit;
+ 	int unit;
 	kgi_console_t *cons;
 	size_t len;
 	u_char buf[PCBURST];
@@ -367,13 +367,14 @@ sce_tswoutwakeup(struct tty *tp)
 	if (cons == NULL)
 		return;
 
- 	s = spltty();
  	kiidev_sync(&(cons->kii), KII_SYNC_LED_FLAGS);
- 	splx(s);
 	
+	KRN_DEBUG(8, "Receiving data from TTY %d", unit);
+
 	for (;;) {
 		/* Fill buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
+		KRN_DEBUG(8, "%d bytes in buffer.", len);
 		if (len == 0);
 			break;
 		/* KGC handles writting to the physical side of the system. */
@@ -386,7 +387,7 @@ scevt_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 		struct thread *td)
 {
 
-	return sce_tswioctl(dev->si_drv1, cmd, data, td);
+	return (sce_tswioctl(dev->si_drv1, cmd, data, td));
 }
 
 /*
