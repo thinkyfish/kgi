@@ -538,12 +538,12 @@ SI_DEBUG		opt_debug_si.h
 KGI_COMPAT		opt_kgi.h
 KGI_DBG_LEVEL		opt_kgi.h
 KGC_DEFAULT_FONT	opt_kgi.h
+KGI_IGNORE_VGAPCI       opt_kgi.h
 KGC_RENDER_BACKGROUND	opt_kgi.h
 KGC_RENDER_1024x768	opt_kgi.h
 KGC_RENDER_800x600	opt_kgi.h
 KGC_RENDER_16BITS	opt_kgi.h
 KGC_RENDER_32BITS	opt_kgi.h
-KGI_IGNORE_SYS_VGA	opt_kgi.h
 
 # Fb options
 FB_DEBUG		opt_fb.h

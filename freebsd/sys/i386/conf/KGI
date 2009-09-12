@@ -2,14 +2,14 @@ include	GENERIC
 ident	KGI
 
 # KGI (Kernel Graphic Interface)
-options	KGI_COMPAT			# Enables KGI compatibility.
+options	KGI_COMPAT		# Enables KGI compatibility.
 options	KGI_DBG_LEVEL=9		# KGI debug output level.
 
 # Restrict building of dev/pci/vga_pci.c to avoid probing.
-options	KGI_IGNORE_SYS_VGA	
+options	KGI_IGNORE_VGAPCI	
 
 # Text based splash screen at loader.
-options KGI_NOSPLASH
+#options KGI_NOSPLASH
 
 # Graphics console setup:
 # Define one of the following modes for a higher resolution;
@@ -17,7 +17,7 @@ options KGI_NOSPLASH
 #options	KGC_RENDER_1024x768
 
 # Define a colour mode (bpp);
-options	KGC_RENDER_16BITS		# Use 16bit mode.
+options	KGC_RENDER_16BITS	# Use 16bit mode.
 
 # Enable console background - currently 8bit only;
 #options	KGC_RENDER_BACKGROUND
@@ -35,10 +35,10 @@ device	kgi	# Kernel Graphic Interface core system (includes KII)
 device	kip	# Default KIP.
 
 # Input and graphic user interfaces (e.g /dev/graphic and /dev/event)
-device	kgu		# KGI graphic user interface.
-device	kiu		# KGI input user interface.
-device	kgc		# Kernel graphic console.
-device	kgy		# KGI VESA compatible display.
+device	kgu	# KGI graphic user interface.
+device	kiu	# KGI input user interface.
+device	kgc	# Kernel graphic console.
+device	kgy	# KGI VESA compatible display.
 device	kgim	# KGI module driver interface.
 
 # Experimental FreeBSD adapter implementation on top of KGI.

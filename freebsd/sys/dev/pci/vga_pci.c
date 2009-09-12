@@ -30,7 +30,9 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
-#ifndef KGI_IGNORE_SYS_VGA
+#include "opt_kgi.h"
+
+#ifndef KGI_IGNORE_VGAPCI
 
 /*
  * Simple driver for PCI VGA display devices.  Drivers such as agp(4) and
@@ -428,6 +430,5 @@ static driver_t vga_pci_driver = {
 static devclass_t vga_devclass;
 
 DRIVER_MODULE(vgapci, pci, vga_pci_driver, vga_devclass, 0, 0);
-
-#endif /* KGI_IGNORE_SYS_VGA */
+#endif /* KGI_IGNORE_VGAPCI */
 
