@@ -10,7 +10,7 @@
  * COPYRIGHT.GPL included with this software for details of these terms
  * and conditions.
  */
- 
+
  /*
   * KGI console driver.
   */
@@ -75,17 +75,16 @@ sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
 /* Prototypes */
 static void assign_parser(kgi_console_t *cons, int do_reset);
 static void handle_kii_event(kii_device_t *dev, kii_event_t *e);
+static int sce_close_vt(int unit);
 static int sce_ttytounit(struct tty *tp);
-static int sce_init(struct tty *tp);
+static int sce_init_vt(struct tty *tp);
 static struct tty* sce_create_tty(int unit);
 
 /* TTY */
-static tsw_close_t		sce_tswclose;
 static tsw_ioctl_t		sce_tswioctl;
 static tsw_outwakeup_t	sce_tswoutwakeup;
 
 static struct ttydevsw scevt_ttydevsw = {
-	.tsw_close		= sce_tswclose,
 	.tsw_ioctl		= sce_tswioctl,
 	.tsw_outwakeup	= sce_tswoutwakeup
 };
@@ -149,7 +148,7 @@ handle_kii_event(kii_device_t *dev, kii_event_t *e)
  * Create a console & associate a TTY with it.
  */
 static int
-sce_init(struct tty *tp)
+sce_init_vt(struct tty *tp)
 {	
 	kgi_u_t unit;
 	kgi_console_t *cons;
@@ -161,11 +160,10 @@ sce_init(struct tty *tp)
 		return (ENXIO);
 	}
 
-	KRN_DEBUG(3, "Creating virtual terminal %d", unit);
 	cons = (kgi_console_t *)sce_consoles[unit];
 
 	if (cons == NULL) {
-		KRN_DEBUG(3, "Allocating console %d...", unit);
+		KRN_DEBUG(3, "Creating virtual terminal %d", unit);
 		cons = kgi_kmalloc(sizeof(sce_console));
 		if (cons == NULL) {
 			KRN_ERROR("Failed: Not enough memory.");
@@ -258,6 +256,47 @@ sce_init(struct tty *tp)
 }
 
 /*
+ * Cleanup and remove virtual terminals.
+ */
+static int
+sce_close_vt(int unit)
+{
+	kgi_console_t *cons;
+	
+	cons = (kgi_console_t *)sce_consoles[unit];
+
+	unit = sce_ttytounit(cons->kii.tty);
+	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
+		KRN_ERROR("Bad console %i", unit);
+		return (EINVAL);
+	}
+	
+	if (cons && (unit || first_minor_allocated)) {
+		KRN_DEBUG(2, "Freeing console %i", unit);
+
+		if (cons->kii.flags & KII_DF_FOCUSED)
+			kii_unmap_device(cons->kii.id);
+
+		kii_unregister_device(&cons->kii);
+
+		SCROLLER_DONE((scroller_t)cons->scroller);
+		cons->scroller = NULL;
+		kgc_scroller_release(unit);
+
+		RENDER_DONE((render_t)cons->render);
+		cons->render = NULL;
+		kgc_render_release(unit);
+
+		sce_consoles[unit] = NULL;
+		kgi_kfree(cons);
+
+		if ((unit == 0) && first_minor_allocated)
+			first_minor_allocated = 0;
+	}
+	return (KGI_EOK);
+}
+
+/*
  * Get unit number of TTY device.
  */
 static inline int 
@@ -288,44 +327,6 @@ sce_create_tty(int unit)
 	tty_makedev(tp, NULL, "v%r", unit);
 	
 	return (tp);
-}
-
-static void
-sce_tswclose(struct tty *tp)
-{
-	kgi_u_t unit;
-	kgi_console_t *cons;
-	
-	unit = sce_ttytounit(tp);
-	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
-		KRN_ERROR("Bad console %i", unit);
-		return; //(EINVAL);
-	}
-
-	cons = (kgi_console_t *)sce_consoles[unit];
-
-	if (cons && (unit || first_minor_allocated)) {
-		KRN_DEBUG(2, "Freeing console %i", unit);
-
-		if (cons->kii.flags & KII_DF_FOCUSED)
-			kii_unmap_device(cons->kii.id);
-
-		kii_unregister_device(&cons->kii);
-
-		SCROLLER_DONE((scroller_t)cons->scroller);
-		cons->scroller = NULL;
-		kgc_scroller_release(unit);
-
-		RENDER_DONE((render_t)cons->render);
-		cons->render = NULL;
-		kgc_render_release(unit);
-
-		sce_consoles[unit] = NULL;
-		kgi_kfree(cons);
-
-		if ((unit == 0) && first_minor_allocated)
-			first_minor_allocated = 0;
-	}
 }
 
 static int
@@ -377,7 +378,6 @@ sce_tswoutwakeup(struct tty *tp)
 		KRN_DEBUG(8, "%d bytes in buffer.", len);
 		if (len == 0);
 			break;
-		/* KGC handles writting to the physical side of the system. */
 		cons->DoWrite(cons, buf, len);
 	}	
 }
@@ -396,7 +396,7 @@ scevt_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 static int
 scevt_mod_event(module_t mod, int type, void *data)
 {
-	int unit;
+	int err, unit;
 	struct cdev *dev;
 	struct tty *tp;
 
@@ -408,7 +408,7 @@ scevt_mod_event(module_t mod, int type, void *data)
 		 */
 		for (unit = 0; unit < MAXCONS; unit++) {
 			tp = sce_create_tty(unit);
-			sce_init(tp);
+			sce_init_vt(tp);
 		}
 		dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
 #ifndef SC_NO_SYSMOUSE
@@ -417,6 +417,13 @@ scevt_mod_event(module_t mod, int type, void *data)
 #endif
 		return (0);
 	case MOD_UNLOAD:
+		for (unit = 0; unit < MAXCONS; unit++) {
+			err = sce_close_vt(unit);
+			if (err != KGI_EOK) {
+				KRN_ERROR("Failed to remove console %d", unit);
+				continue; /* There may be others that still can be removed? */
+			}				
+		}
 		return (ENXIO);
 	default:
 		break;
