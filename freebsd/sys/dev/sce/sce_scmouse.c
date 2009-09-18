@@ -11,7 +11,7 @@
  */
 
 /* 
- * KII syscons mouse emulation input
+ * KII syscons mouse emulation input.
  */
 
 #include <sys/cdefs.h>
@@ -65,7 +65,6 @@ static int sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 		struct thread *td);
 static int sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td);
 
-
 static struct cdevsw scectl_cdevsw = {
 	.d_flags 	= D_NEEDGIANT,
 	.d_close 	= sce_ctlclose,
@@ -83,12 +82,11 @@ mouse_event(struct sce_mouse *mouse, mouse_info_t *info)
 	kii_event_t event;
 
 	bzero(&event, sizeof(event));
-
 	event.any.focus  = mouse->input.focus;
 	event.any.device = mouse->input.id;
 
 	switch (info->operation) {
-	case MOUSE_ACTION:
+	case MOUSE_ACTION: /* Fall thru. */
 	case MOUSE_MOTION_EVENT:
 		event.pmove.size = sizeof(kii_pmove_event_t);
 
@@ -127,7 +125,7 @@ mouse_event(struct sce_mouse *mouse, mouse_info_t *info)
 	}
 
 	if (event.pbutton.type && (mouse->input.report & 
-							   (1 << event.pbutton.type))) {		
+			(1 << event.pbutton.type))) {		
 		KRN_DEBUG(2, "%s", 
 			  (event.pbutton.type == KII_EV_PTR_BUTTON_PRESS)
 			  ? "KII_EV_PTR_BUTTON_PRESS" 
@@ -144,7 +142,7 @@ sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td)
 {
 
 	KRN_DEBUG(2, "sce_ctlclose: dev:%s, vty:,%d\n", 
-			  devtoname(dev), dev2unit(dev));
+			devtoname(dev), dev2unit(dev));
 
 	sce_mouses[dev2unit(dev)].opened = 0;
 
@@ -163,21 +161,21 @@ sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 	error = 0;
 
 	switch (cmd) {
-	case CONS_MOUSECTL:		/* Control mouse arrow. */
+	case CONS_MOUSECTL: /* Control mouse arrow. */
 		info = (mouse_info_t*)data;
 
 		random_harvest(info, sizeof(mouse_info_t), 2, 0, RANDOM_MOUSE);
 
 		switch (info->operation) {
-		case MOUSE_MODE:
-		case MOUSE_SHOW:
-		case MOUSE_HIDE:
-		case MOUSE_MOVEABS:
-		case MOUSE_MOVEREL:
-		case MOUSE_GETINFO:
+		case MOUSE_MODE: /* Fall thru. */
+		case MOUSE_SHOW: /* Fall thru. */
+		case MOUSE_HIDE: /* Fall thru. */
+		case MOUSE_MOVEABS: /* Fall thru. */
+		case MOUSE_MOVEREL: /* Fall thru. */
+		case MOUSE_GETINFO: /* Fall thru. */
 			return (EINVAL);
 			/* Send out mouse event on /dev/sysmouse. */
-		case MOUSE_ACTION:
+		case MOUSE_ACTION: /* Fall thru. */
 		case MOUSE_MOTION_EVENT:
 			error = mouse_event(mouse, info);
 			break;
@@ -188,7 +186,7 @@ sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 				
 			error = mouse_event(mouse, info);
 			break;
-		case MOUSE_MOUSECHAR:
+		case MOUSE_MOUSECHAR: /* Fall thru. */
 		default:
 			return (EINVAL);
 		}
@@ -205,7 +203,7 @@ sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
 	struct sce_mouse *mouse;
 
 	KRN_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
-			  devtoname(dev), dev2unit(dev));
+			devtoname(dev), dev2unit(dev));
 
 	mouse = &sce_mouses[dev2unit(dev)];
 

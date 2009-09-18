@@ -22,8 +22,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * From FreeBSD: /head/sys/dev/syscons/sysmouse.c -r196539M
+ */
+
+/*
+ * From FreeBSD: sys/dev/syscons/sysmouse.c -r196539M
  */
 
 #include <sys/cdefs.h>
@@ -49,70 +51,30 @@ __FBSDID("$FreeBSD$");
 #include <dev/kgc/kgc_console.h>
 #include <dev/kgc/kgc_emuxterm.h>
 #include <dev/kgc/kgc_emudumb.h>
+
 #include <dev/sce/sce_syscons.h>
 
 #ifndef SC_NO_SYSMOUSE
 
-#define SC_MOUSE 	128		/* minor number */
-
 typedef struct {
-	struct tty	*tty;
-	int		level;	/* sysmouse protocol level */
-	mousestatus_t	status;
+	struct tty *tty;
+	int level;	/* sysmouse protocol level. */
+	mousestatus_t status;
 }sce_sysmouse;
 
 static tsw_close_t		sce_smclose;
 static tsw_ioctl_t		sce_smioctl;
-// static tsw_open_t		sce_smopen;
 static tsw_param_t		sce_smparam;
-// static tsw_outputq_t	sce_smoutwakeup
 
 static struct ttydevsw scesm_ttydevsw = {
 	.tsw_flags		= TF_NOPREFIX,
 	.tsw_close		= sce_smclose,
 	.tsw_ioctl		= sce_smioctl,
-// 	.tsw_open		= sce_smopen,
 	.tsw_param		= sce_smparam,
-// 	.tsw_outwakeup	= sce_smoutwakeup
+
 };
 
 static sce_sysmouse sysmouse;
-
-// static void
-// sce_smoutwakeup(struct tty *tp)
-// {
-// 	u_char buf[PCBURST];
-// 
-// 	tty_lock(tp);
-// 	if (!(tp->t_flags & (TF_BUSY | TF_STOPPED))) {
-// 		tp->t_flags |= TF_BUSY;
-// 		while (rbp->c_cc)
-// 			q_to_b(rbp, buf, PCBURST);
-// 		tp->t_state &= ~TS_BUSY;
-// 	}
-// 	tty_unlock(tp);
-// }
-
-// static int
-// sce_smopen(struct tty *tp)
-// {
-// 
-// 	if (!(tp->t_flags & TF_OPENED)) {
-// 		tty_lock(tp);
-// 		ttydisc_modem(tp, 1);
-// 		tty_unlock(tp);
-// 	} else if (tp->t_flags & TF_EXCLUDE ) 
-// 		return (EBUSY);
-// 	
-// 	/*
-// 	 * The ttydisc_open() no longer returns anything in the new TTY layer.
-// 	 */
-// 	tty_lock(tp);
-// 	ttydisc_open(tp);
-// 	tty_unlock(tp);
-// 
-// 	return (0);
-// }
 
 static void
 sce_smclose(struct tty *tp)
@@ -122,9 +84,6 @@ sce_smclose(struct tty *tp)
 	s = spltty();
 	sysmouse.level = 0;
 	sysmouse.tty = NULL;
-	tty_lock(tp);
-	ttydisc_close(tp);
-	tty_unlock(tp);
 	splx(s);
 
 	return;
@@ -135,32 +94,31 @@ sce_smioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
 	mousehw_t *hw;
 	mousemode_t *mode;
-// 	int error;
 	int s;
 
 	switch (cmd) {
-	case MOUSE_GETHWINFO:	/* get device information */
+	case MOUSE_GETHWINFO: /* Get device information. */
 		hw = (mousehw_t *)data;
-		hw->buttons = 10;		/* XXX unknown */
+		hw->buttons = 10; /* XXX unknown. */
 		hw->iftype = MOUSE_IF_SYSMOUSE;
 		hw->type = MOUSE_MOUSE;
 		hw->model = MOUSE_MODEL_GENERIC;
 		hw->hwid = 0;
 		return (0);
-	case MOUSE_GETMODE:	/* get protocol/mode */
+	case MOUSE_GETMODE:	/* Get protocol/mode. */
 		mode = (mousemode_t *)data;
 		mode->level = sysmouse.level;
 		switch (mode->level) {
-		case 0: /* emulate MouseSystems protocol */
+		case 0: /* Emulate MouseSystems protocol. */
 			mode->protocol = MOUSE_PROTO_MSC;
-			mode->rate = -1;		/* unknown */
-			mode->resolution = -1;	/* unknown */
-			mode->accelfactor = 0;	/* disabled */
+			mode->rate = -1;		/* Unknown. */
+			mode->resolution = -1;	/* Unknown. */
+			mode->accelfactor = 0;	/* Disabled. */
 			mode->packetsize = MOUSE_MSC_PACKETSIZE;
 			mode->syncmask[0] = MOUSE_MSC_SYNCMASK;
 			mode->syncmask[1] = MOUSE_MSC_SYNC;
 			break;
-		case 1: /* sysmouse protocol */
+		case 1: /* sysmouse protocol. */
 			mode->protocol = MOUSE_PROTO_SYSMOUSE;
 			mode->rate = -1;
 			mode->resolution = -1;
@@ -171,24 +129,24 @@ sce_smioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 			break;
 		}
 		return (0);
-	case MOUSE_SETMODE:	/* set protocol/mode */
+	case MOUSE_SETMODE:	/* Set protocol/mode. */
 		mode = (mousemode_t *)data;
 		if (mode->level == -1)
-			; 	/* don't change the current setting */
+			; 	/* Don't change the current setting. */
 		else if ((mode->level < 0) || (mode->level > 1))
 			return (EINVAL);
 		else
 			sysmouse.level = mode->level;
 		return (0);
-	case MOUSE_GETLEVEL:	/* get operation level */
+	case MOUSE_GETLEVEL: /* Get operation level. */
 		*(int *)data = sysmouse.level;
 		return (0);
-	case MOUSE_SETLEVEL:	/* set operation level */
+	case MOUSE_SETLEVEL: /* Set operation level. */
 		if ((*(int *)data  < 0) || (*(int *)data > 1))
 			return (EINVAL);
 		sysmouse.level = *(int *)data;
 		return (0);
-	case MOUSE_GETSTATUS:	/* get accumulated mouse events */
+	case MOUSE_GETSTATUS: /* Get accumulated mouse events. */
 		s = spltty();
 		*(mousestatus_t *)data = sysmouse.status;
 		sysmouse.status.flags = 0;
@@ -199,26 +157,22 @@ sce_smioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 		splx(s);
 		return (0);
 #ifdef notyet
-	case MOUSE_GETVARS:	/* get internal mouse variables */
-	case MOUSE_SETVARS:	/* set internal mouse variables */
+	case MOUSE_GETVARS:	/* Get internal mouse variables. */
+	case MOUSE_SETVARS:	/* Set internal mouse variables. */
 		return (ENODEV);
 #endif
-	case MOUSE_READSTATE:	/* read status from the device */
-	case MOUSE_READDATA:	/* read data from the device */
+	case MOUSE_READSTATE: /* Read status from the device. */
+	case MOUSE_READDATA:  /* Read data from the device.   */
 		return (ENODEV);
 	}
 
-// 	error = tty_ioctl(tp, cmd, data, td);
-// 	if (error != ENOIOCTL)
-// 		return (error);
-// 
-// 	return (ENOTTY);
 	return (ENOIOCTL);
 }
 
 static int
 sce_smparam(struct tty *tp, struct termios *t)
 {
+
 	/*
 	 * Set the output baud rate to zero. The mouse device supports
 	 * no output, so we don't want to waste buffers.
@@ -232,6 +186,7 @@ sce_smparam(struct tty *tp, struct termios *t)
 void 
 sce_sysmouse_event(kii_event_t *ev)
 {	
+	
 	/* MOUSE_BUTTON?DOWN -> MOUSE_MSC_BUTTON?UP */
 	static int butmap[8] = {
 	    MOUSE_MSC_BUTTON1UP | MOUSE_MSC_BUTTON2UP | MOUSE_MSC_BUTTON3UP,
@@ -257,7 +212,7 @@ sce_sysmouse_event(kii_event_t *ev)
 		y = ev->pmove.y;
 		z = ev->pmove.wheel;
 		break;
-	case KII_EV_PTR_BUTTON_PRESS:
+	case KII_EV_PTR_BUTTON_PRESS: /* Fall thru. */
 	case KII_EV_PTR_BUTTON_RELEASE:
 		x = y = z = 0;
 		sysm->status.button |= ev->pbutton.state;
@@ -274,10 +229,10 @@ sce_sysmouse_event(kii_event_t *ev)
 	if (sysm->status.flags == 0)
 		return;
 
-	if ((sysm->tty == NULL) || !(sysm->tty->t_flags & TF_OPENED))
+	if ((sysm->tty == NULL) || !tty_opened(sysm->tty))
 		return;
 
-	/* the first five bytes are compatible with MouseSystems' */
+	/* The first five bytes are compatible with MouseSystems' */
 	buf[0] = MOUSE_MSC_SYNC
 		 | butmap[sysm->status.button & MOUSE_STDBUTTONS];
 	x = imax(imin(x, 255), -256);
@@ -292,16 +247,14 @@ sce_sysmouse_event(kii_event_t *ev)
 		ttydisc_rint(sysm->tty, (char)buf[i], 0);
 	
 	if (sysm->level >= 1) {		
-		/* extended part */
+		/* Extended part. */
         z = imax(imin(z, 127), -128);
         buf[5] = (z >> 1) & 0x7f;
         buf[6] = (z - (z >> 1)) & 0x7f;
-        /* buttons 4-10 */
+        /* Buttons 4-10 */
         buf[7] = (~sysm->status.button >> 3) & 0x7f;
-		tty_lock(sysm->tty);
         for (i = MOUSE_MSC_PACKETSIZE; i < MOUSE_SYS_PACKETSIZE; ++i)
-			ttydisc_rint(sysm->tty, (char)buf[i], 0);			
-	
+			ttydisc_rint(sysm->tty, (char)buf[i], 0);				
 	}	
 
 	ttydisc_rint_done(sysm->tty);
