@@ -376,7 +376,7 @@ sce_tswoutwakeup(struct tty *tp)
 		/* Fill buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
 		KRN_DEBUG(8, "%d bytes in buffer.", len);
-		if (len == 0);
+		if (len == 0)
 			break;
 		cons->DoWrite(cons, buf, len);
 	}	
