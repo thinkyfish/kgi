@@ -74,7 +74,7 @@ fetchBuildLogs() {
 runPython () {
     INFRA=$GGICVS/html/infrastructure
     PPATH=$INFRA:$INFRA/depend:$PYTHONPATH
-    PYTHON=`which python2.3 2>/dev/null`
+    PYTHON=`which python26 2>/dev/null`
     PYTHON=${PYTHON:-python}
     GGIUSETREE=$GGIUSETREE GGIHTML=$GGIHTML GGIPACKAGES=$GGIPACKAGES GGICVS=$GGICVS PYTHONPATH=$PPATH GGITIMESTAMPFILES=$GGITIMESTAMPFILES $PYTHON $INFRA/ggitools/ggi.py $*
 }

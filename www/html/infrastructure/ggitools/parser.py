@@ -15,15 +15,15 @@ class Navigation:
         self.prev    = prev
         self.up      = up
         self.menu    = [
-            ('Home',		  'index.html'),
-            ('Contact',		  'contact.html'),
-            ('Credits',		  'credits.html'),			
-			('Development',   'development.html'),
+            ('Home',	      'index.html'),
+            ('Contact',	      'contact.html'),
+            ('Credits',       'credits.html'),			
+            ('Development',   'development.html'),
             ('Documentation', 'documentation.html'),
             ('Download',      'download.html'),
-			('Licensing',     'licensing.html'),
-			('Links',         'links.html'),
-            ('Screenshots',	  'screenshots.html')
+            ('Licensing',     'licensing.html'),
+            ('Links',         'links.html'),
+            ('Screenshots',   'screenshots.html')
           ]
         self.submenu = submenu
 
