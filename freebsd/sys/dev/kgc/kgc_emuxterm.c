@@ -84,7 +84,7 @@ static kgi_u8_t colormap[16] = {
 #define	CTRL_ALWAYS 0x0800f581	/* can not be overridden by DISP_CTRL	*/
 
 /*
- * forward declaration of the font translation tables. See the end of this
+ * Forward declaration of the font translation tables. See the end of this
  * file for the initializer.
  */
 static kgi_unicode_t translation[4][256];
@@ -118,7 +118,8 @@ xterm_set_charset(kgi_console_t *cons, kgi_u_t nr, char c)
 		xterm->translate = translation[xterm->g[nr]];
 }
 
-enum {	cursor, id, status, 
+enum {	
+	cursor, id, status, 
 	mouseup, 
 	mousedown1, mousedown2, mousedown3
 };
@@ -143,7 +144,6 @@ xterm_do_set_mode(kgi_console_t *cons, kgi_s_t mode, kgi_s_t on)
 			SCROLLER_MODIFIED(cons->scroller, cons->org,
 				cons->org + cons->fsize);
 #endif
-
 			SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl, &erase); 
 			attrfl ^= KGI_CA_REVERSE;
 			SCROLLER_SET(cons->scroller, attrfl, erase); 
@@ -217,29 +217,49 @@ xterm_par_to_mode(register int ques, register int par)
 
 	if (ques) {
 		switch (par) {
-		case    1:	return KGI_CM_XT_CURSOR_KEY;
-		case    3:	return KGI_CM_XT_COLUMN132;
-		case    4:	return KGI_CM_SMOOTH_SCROLL;
-		case    5:	return KGI_CM_REVERSE_VIDEO;
-		case    6:	return KGI_CM_ORIGIN;
-		case    7:	return KGI_CM_AUTO_WRAP;
-		case    8:	return KGI_CM_AUTO_REPEAT;
-		case    9:	return KGI_CM_XT_X10_MOUSE;
-		case   38:	return KGI_CM_XT_TEXTRONIX_MODE;
-		case   40:	return KGI_CM_XT_ALLOW_132MODE;
-		case   41:	return KGI_CM_XT_CURSES_FIX;
-		case   44:	return KGI_CM_XT_MARGIN_BELL;
-		case   45:	return KGI_CM_REVERSE_WRAP;
-		case   46:	return KGI_CM_XT_LOGGING;
-		case   47:	return KGI_CM_ALT_SCREEN;
-		case 1000:	return KGI_CM_XT_REPORT_MOUSE;
-		case 1001:	return KGI_CM_XT_TRACK_MOUSE;
+		case 1:
+			return (KGI_CM_XT_CURSOR_KEY);
+		case 3:
+			return (KGI_CM_XT_COLUMN132);
+		case 4:
+			return (KGI_CM_SMOOTH_SCROLL);
+		case 5:
+			return (KGI_CM_REVERSE_VIDEO);
+		case 6:
+			return (KGI_CM_ORIGIN);
+		case 7:
+			return (KGI_CM_AUTO_WRAP);
+		case 8:
+			return (KGI_CM_AUTO_REPEAT);
+		case 9:
+			return (KGI_CM_XT_X10_MOUSE);
+		case 38:
+			return (KGI_CM_XT_TEXTRONIX_MODE);
+		case 40:
+			return (KGI_CM_XT_ALLOW_132MODE);
+		case 41:
+			return (KGI_CM_XT_CURSES_FIX);
+		case 44:
+			return (KGI_CM_XT_MARGIN_BELL);
+		case 45:
+			return (KGI_CM_REVERSE_WRAP);
+		case 46:
+			return (KGI_CM_XT_LOGGING);
+		case 47:
+			return (KGI_CM_ALT_SCREEN);
+		case 1000:
+			return (KGI_CM_XT_REPORT_MOUSE);
+		case 1001:
+			return (KGI_CM_XT_TRACK_MOUSE);
 		}
 	} else {
 		switch (par) {
-		case    3:	return KGI_CM_XT_DISPLAY_CTRL;
-		case    4:	return KGI_CM_XT_INSERT;
-		case   20:	return KGI_CM_XT_NEWLINE;
+		case 3:
+			return (KGI_CM_XT_DISPLAY_CTRL);
+		case 4:
+			return (KGI_CM_XT_INSERT);
+		case 20:
+			return (KGI_CM_XT_NEWLINE);
 		}
 	}
 
@@ -322,7 +342,7 @@ xterm_save_cur(kgi_console_t *cons)
 
 	/*
 	 * XXX
-	 * warning save reverse_mode too!
+	 * Warning save reverse_mode too!
      */
 	SCROLLER_SAVE(cons->scroller);
 
@@ -460,7 +480,7 @@ csi_m(kgi_console_t *cons)
 			CONSOLE_SET_MODE(cons, KGI_CM_XT_TOGGLE_META);
 			break;
 #endif
-		case 21:
+		case 21: /* Fall thru. */
 		case 22:
 			attrfl &= ~KGI_CA_INTENSITY;
 			attrfl |= KGI_CA_NORMAL;
@@ -486,7 +506,6 @@ csi_m(kgi_console_t *cons)
 			 * default foreground).
 			 */
 			attrfl |= KGI_CA_UNDERLINE;
-
 			attrfl &= ~0xFF00;
 			attrfl |= KGI_CC_WHITE << 8;
 			break;
@@ -610,7 +629,7 @@ xterm_put_char(kgi_console_t *cons, kgi_ascii_t c)
 {
 	struct tty *tp;
 	
-	tp = cons->kii.tty;	
+	tp = cons->kii.tty;
 	tty_lock(tp);
 	ttydisc_rint(tp, (char)c, 0);
 	ttydisc_rint_done(tp);
@@ -653,7 +672,7 @@ xterm_numpad_key(kgi_console_t *cons, kgi_u8_t val, kii_u_t shift)
 
 	if (!(cons->flags & KGI_CF_XT_NUM_LOCK)) {
 		switch(K_SYM(K_TYPE_NUMPAD, val)) {
-		case K_PCOMMA:
+		case K_PCOMMA: /* Fall thru. */
 		case K_PDOT:
 			xterm_function_key(cons, K_VALUE(K_REMOVE));
 			return;
@@ -873,29 +892,28 @@ xterm_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 			}
 			break;
 		case K_TYPE_NUMPAD:
-			xterm_numpad_key(cons, K_VALUE(sym),
-				ev->key.normal);
+			xterm_numpad_key(cons, K_VALUE(sym), ev->key.normal);
 			break;
 		case K_TYPE_CURSOR:
 			xterm_application_key(cons, cur[K_VALUE(sym)],
 					CONSOLE_MODE(cons, KGI_CM_XT_CURSOR_KEY));
 			break;
-		case K_TYPE_SHIFT:
-		case K_TYPE_CONSOLE:
-		case K_TYPE_ASCII:
-		case K_TYPE_DEAD:
+		case K_TYPE_SHIFT: /* Fall thru. */
+		case K_TYPE_CONSOLE: /* Fall thru. */
+		case K_TYPE_ASCII: /* Fall thru. */
+		case K_TYPE_DEAD: /* Fall thru. */
 			return;
 		default:
 			if (CONSOLE_MODE(cons, KGI_CM_XT_UTF8)) {
 				if (sym < 0x80) {
 					xterm_put_char(cons, sym);
 				} else if (sym < 0x800) {
-					xterm_put_char(cons,0xC0|(sym >> 6));
-					xterm_put_char(cons,0x80|(sym & 0x3F));
+					xterm_put_char(cons, 0xC0 | (sym >> 6));
+					xterm_put_char(cons, 0x80 | (sym & 0x3F));
 				} else {
-					xterm_put_char(cons,0xE0|(sym >> 12));
-					xterm_put_char(cons,0x80|(sym >> 6));
-					xterm_put_char(cons,0x80|(sym & 0x3F));
+					xterm_put_char(cons, 0xE0 | (sym >> 12));
+					xterm_put_char(cons, 0x80 | (sym >> 6));
+					xterm_put_char(cons, 0x80 | (sym & 0x3F));
 				}
 				/*
 				 * UTF-8 is defined to up to 31 bits,
@@ -915,17 +933,18 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 {
 	kgi_console_xterm_t *xterm;
 	kgi_u_t n, erase, attrfl, top, bottom;
-	kgi_isochar_t c;		/* 8-bit character to process	*/
-	kgi_isochar_t tc;		/* translated character		*/
+	kgi_isochar_t c;  /* 8-bit character to process. */
+	kgi_isochar_t tc; /* Translated character.		 */
 	kgi_u_t printable;
 
 	n = 0;
  	xterm = (kgi_console_xterm_t *)cons;
+
 	SCROLLER_MARK(cons->scroller);
 
 	while (count) {
 		c = *buf;
-		c &= 0xff;		/* !!! make positive */
+		c &= 0xff; /* !!! Make positive. */
 		buf++; n++; count--;
 
 		/*
@@ -968,7 +987,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			TRACE(printf("<BEL>"));
 			if (xterm->bell.pitch && xterm->bell.duration) {
 				SCROLLER_MKSOUND(cons->scroller, xterm->bell.pitch,
-						 xterm->bell.duration);
+						xterm->bell.duration);
 			}
 			continue;	
 		case ASCII_BS:
@@ -983,9 +1002,9 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			SCROLLER_HT(cons->scroller);
 			SCROLLER_MARK(cons->scroller);
 			continue;
-		case ASCII_LF:
-		case ASCII_VT:
-		case ASCII_FF:
+		case ASCII_LF: /* Fall thru. */
+		case ASCII_VT: /* Fall thru. */
+		case ASCII_FF: /* Fall thru. */
 			TRACE(printf("<LF>"));
 			SCROLLER_MODIFIED_MARK(cons->scroller);
 			SCROLLER_LF(cons->scroller);
@@ -1010,7 +1029,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			xterm->translate = translation[xterm->g[0]];
 			CONSOLE_CLEAR_MODE(cons, KGI_CM_XT_DISPLAY_CTRL);
 			continue;
-		case ASCII_CAN:
+		case ASCII_CAN: /* Fall thru. */
 		case ASCII_SUB:
 			TRACE(printf("<CAN>"));
 			xterm->state = ESnormal; /* XXX display checkerboard! */
@@ -1034,7 +1053,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			TRACE(printf("%c", (char) c));
 			xterm->state = ESnormal;
 			/*
-			 * handle sequences that do not change cursor
+			 * Handle sequences that do not change cursor
 			 * position first.
 			 */
 			switch(c) {
@@ -1154,14 +1173,12 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				xterm->state = ESfunckey;
 				continue;
 			}
-
 			if (c == '?') {
 				TRACE(printf("%c", (char) c));
 				cons->flags |= KGI_CF_XT_QUESTION;
 				continue;
 			}
-			/* fall through if ((c != '[') && (c != '?')) */
-
+			/* Fall through if ((c != '[') && (c != '?')) */
 		case ESgetpars:
 			if ((c == ';') && (xterm->npar < XTERM_MAX_NPAR-1)) {
 				TRACE(printf("%c", (char) c));
@@ -1177,7 +1194,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 					xterm->state = ESgotpars;
 				}
 			}
-			/* fall through when parameters are complete! */
+			/* Fall through when parameters are complete! */
 		case ESgotpars:
 			xterm->state = ESnormal;
 			TRACE(printf("%c", (char) c));
