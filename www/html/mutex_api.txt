@@ -1,0 +1,155 @@
+=========
+MuteX API
+=========
+
+.. navigation::
+   :submenu: KGI APIs : apis.html,
+             kgi_mutex_t : mutex_api.html#kgi-mutex-t,
+             kgi_mutex_alloc : mutex_api.html#kgi-mutex-alloc,
+             kgi_mutex_free : mutex_api.html#kgi-mutex-free,
+             kgi_mutex_init : mutex_api.html#kgi-mutex-init,
+             kgi_mutex_done : mutex_api.html#kgi-mutex-done,
+             kgi_mutex_lock : mutex_api.html#kgi-mutex-lock,
+             kgi_mutex_unlock : mutex_api.html#kgi-mutex-unlock,
+             kgi_mutex_wait : mutex_api.html#kgi-mutex-wait,
+             kgi_mutex_signal : mutex_api.html#kgi-mutex-signal
+
+Types
+=====
+
+kgi_mutex_t
+-----------
+
+The kgi_mutex_t is an opaque structure. One shall use it with the following
+methods and never access it directly. It is OS specific and its content, its
+size may vary from one platform to another.
+
+Functions
+=========
+
+kgi_mutex_alloc()
+-----------------
+
+Allocate a mutex. mtx must be null. The return parameter is 0 (KGI_EOK) in
+case of success.
+
+If the mutex has to be owned in the context of event synchronisation
+mechanisms, the number of different events has to be specified, otherwise
+KGI_MUTEX_NOEVENT shall be passed. Anyway nb_event can't exceed the maximum
+number KGI_MUTEX_MAXEVENT::
+
+ kgi_u_t kgi_mutex_alloc(
+
+	 /* Comment: pointer to the mutex to initialize */
+	 kgi_mutex_t *mtx,
+
+	 /* Comment: max number of events */
+	 kgi_u_t nb_events
+ );
+
+kgi_mutex_free()
+----------------
+
+Free a mutex. The mutex must have be done before free. mtx is null when
+returning from this function. Memory allocated for event management is also
+freed::
+
+ void kgi_mutex_free(
+
+	 /* Comment: pointer to the mutex to free */
+	 kgi_mutex_t *mtx
+ );
+
+
+kgi_mutex_init()
+----------------
+
+Initialize a pre-allocated mutex. The name passed is used for debug etc::
+
+ void kgi_mutex_init(
+
+	 /* Comment: pointer to the mutex to initialize */
+	 kgi_mutex_t *mtx,
+
+	 /* Comment: name of the mutex */
+	 const char *name
+ );
+
+kgi_mutex_done()
+----------------
+
+Release a mutex. Memory allocated for the mutex itself is not freed::
+
+ void kgi_mutex_done(
+
+	 /* Comment: pointer to the mutex to release */
+	 kgi_mutex_t *mtx
+ );
+
+kgi_mutex_lock()
+----------------
+
+Lock the mutex. If the mutex is not free, the thread is blocked::
+
+ void kgi_mutex_lock(
+
+	 /* Comment: pointer to the mutex to lock */
+	 kgi_mutex_t *mtx
+ );
+
+kgi_mutex_unlock()
+------------------
+
+Unlock the mutex previously locked::
+
+ void kgi_mutex_unlock(
+
+	 /* Comment: pointer to the mutex to unlock */
+	 kgi_mutex_t *mtx
+ );
+
+kgi_mutex_wait()
+----------------
+
+Wait on event e.g unlock the mutex and add the thread to the list of waiting
+threads on this event. When the thread is made runnable again, it owns the
+mutex.
+
+Important: the mutex must be already locked by the current running thread
+when calling kgi_mutex_wait().
+
+Callers are responsible for managing the relationship between event ids and
+their signification. the event parameter can't exceed nb_events passed when
+the mutex was initialized::
+
+ void kgi_mutex_wait(
+
+	 /* Comment: pointer to the mutex hold */
+	 kgi_mutex_t *mtx,
+
+	 /* Comment: the event to wait on */
+	 kgi_u_t event
+ );
+
+kgi_mutex_signal()
+------------------
+
+Wakeup threads waiting on an event to occur with mutex ownership. If
+unblock_all is TRUE then unblock all waiters otherwise only one. Of course,
+only one thread will actually be made runnable because it must own the mutex
+when exiting kgi_mutex_wait()::
+
+ void kgi_mutex_signal(
+
+	 /* Comment: pointer to the mutex processes are blocked on */
+	 kgi_mutex_t *mtx,
+
+	 /* Comment: event to signal */
+	 kgi_u_t event,
+
+	 /* Comment: 1 = unblock all processes waiting on the mutex,
+	    0 = unblock only the next one */
+	 int unblock_all
+ );
+
+

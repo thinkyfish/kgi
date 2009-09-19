@@ -1,0 +1,62 @@
+=========
+Changelog
+=========
+
+.. include:: home.menu
+
+Purpose
+=======
+
+This changelog aims at listing important changes of the site. You are
+encouraged to visit the page regulary to check for updates. Major changes
+may also be logged on the `news page <news.html>`_.
+
+Changes
+=======
+
+March, 2008
+-----------
+
+Add site rebuilding documentation in Development page.
+
+February, 2006
+--------------
+
+* Added `The Wonderful Linux 2.6 <wlinux26.ps>`_ in the `documentation section <documentation.html#other-stuff>`_
+* Removed the Linux 2.5 Kernel Console Info
+* Added the `IRC logs <development.html>`_
+* Added the `FreeBSD kernel debugging <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_ article in the `documentation section <documentation.html#other-stuff>`_
+* Updated Brian's Graphics proposal to V1.3 in `documentation <documentation.html>`_
+* Added kgi4BSD snapshot instructions in the `download page <download.html>`_
+
+January 24th, 2006
+------------------
+
+* Added "Graphics Designs" `articles <documentation.html#graphics-designs>`_
+
+May 6th, 2005
+-------------
+
+* Added `"Graphics Designs" materials <documentation.html#graphics-designs>`_
+
+* Added `Debian GNU/Linux Sarge packages <download.html>`_
+
+April 4th, 2005
+---------------
+
+* Added `The proposal from Brian S. Julin for Open Source Graphic Systems <OpenSource Graphics Proposal v1.1.pdf>`_
+
+March 25th, 2005
+----------------
+
+* Added `the mutex API <mutex_api.html>`_
+
+* Added `the KGI API <kgi_api.html>`_
+
+* Added `development notes about FreeBSD port <fbsd_notes.html>`_
+
+* Added `the development page <development.html>`_
+
+* Added `the download page <download.html>`_
+
+* Added `the screenshots page <screenshots.html>`_

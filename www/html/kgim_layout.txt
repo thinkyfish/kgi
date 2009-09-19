@@ -1,0 +1,206 @@
+===========
+KGIM layout
+===========
+
+.. navigation::
+   :submenu: KGIM : kgim.html,
+             Chipset : kgim_layout.html#chipset,
+             Clock : kgim_layout.html#clock,
+             Ramdac : kgim_layout.html#ramdac,
+             Monitor : kgim_layout.html#monitor,
+             Board : kgim_layout.html#board
+
+kgidrv is the tree in which graphic drivers are developed and distributed.
+In the following tree layout, only ATI, Matrox and other relevant files
+have been kept.
+
+Chipset
+-------
+
+That is::
+
+  [...]
+  |-- chipset
+  |   |-- ATI
+  |   |   |-- MACH64-bind.c
+  |   |   |-- MACH64-bind.h
+  |   |   |-- MACH64-meta.c
+  |   |   |-- MACH64-meta.h
+  |   |   |-- MACH64.h
+  |   |   |-- R128-bind.c
+  |   |   |-- R128-bind.h
+  |   |   |-- R128-meta.c
+  |   |   |-- R128-meta.h
+  |   |   |-- R128-microcode.h
+  |   |   |-- R128.h
+  |   |   |-- RADEON-bind.c
+  |   |   |-- RADEON-bind.h
+  |   |   |-- RADEON-meta.c
+  |   |   |-- RADEON-meta.h
+  |   |   |-- RADEON-microcode.h
+  |   |   `-- RADEON.h
+  |   |-- IBM
+  |   |   |-- MDA.h
+  |   |   |-- VGA-bind.c
+  |   |   |-- VGA-bind.h
+  |   |   |-- VGA-meta.c
+  |   |   |-- VGA-meta.h
+  |   |   |-- VGA-text-meta.c
+  |   |   |-- VGA-text-meta.h
+  |   |   `-- VGA.h
+  |   `-- Matrox
+  |       |-- Gx00-bind.c
+  |       |-- Gx00-bind.h
+  |       |-- Gx00-meta.c
+  |       |-- Gx00-meta.h
+  |       |-- Gx00-ucode.c
+  |       |-- Gx00.h
+  |       `-- Gx50-pll.inc
+  [...]
+
+Clock
+-----
+
+That is::
+
+  [...]
+  |-- clock
+  |   |-- ATI
+  |   |   |-- MACH64-bind.c
+  |   |   |-- MACH64-bind.h
+  |   |   |-- MACH64-meta.c
+  |   |   |-- MACH64-meta.h
+  |   |   |-- R128-bind.c
+  |   |   |-- R128-bind.h
+  |   |   |-- R128-meta.c
+  |   |   |-- R128-meta.h
+  |   |   |-- R128.h
+  |   |   |-- RADEON-bind.c
+  |   |   |-- RADEON-bind.h
+  |   |   |-- RADEON-meta.c
+  |   |   `-- RADEON-meta.h
+  |   |-- IBM
+  |   |   |-- MDA.spec
+  |   |   `-- VGA.spec
+  |   |-- Matrox
+  |   |   |-- Gx00-bind.c
+  |   |   |-- Gx00-bind.h
+  |   |   |-- Gx00-meta.c
+  |   |   |-- Gx00-meta.h
+  |   |   |-- Gx50-bind.c
+  |   |   |-- Gx50-bind.h
+  |   |   |-- Gx50-meta.c
+  |   |   `-- Gx50-meta.h
+  |   |-- fixed-bind.c
+  |   |-- fixed-meta.c
+  |   |-- fixed-meta.h
+  |   |-- pll-meta.c
+  |   `-- pll-meta.h
+  [...]
+
+Ramdac
+------
+
+That is::
+
+  [...]
+  |-- ramdac
+  |   |-- ATI
+  |   |   |-- MACH64-bind.c
+  |   |   |-- MACH64-bind.h
+  |   |   |-- MACH64-meta.c
+  |   |   |-- MACH64-meta.h
+  |   |   |-- MACH64.h
+  |   |   |-- R128-bind.c
+  |   |   |-- R128-bind.h
+  |   |   |-- R128-meta.c
+  |   |   |-- R128-meta.h
+  |   |   |-- R128.h
+  |   |   |-- RADEON-bind.c
+  |   |   |-- RADEON-bind.h
+  |   |   |-- RADEON-meta.c
+  |   |   |-- RADEON-meta.h
+  |   |   `-- RADEON.h
+  |   |-- IBM
+  |   |   |-- VGA-bind.c
+  |   |   |-- VGA-bind.h
+  |   |   |-- VGA-meta.c
+  |   |   |-- VGA-meta.h
+  |   |   `-- VGA.h
+  |   `-- Matrox
+  |       |-- Gx00-bind.c
+  |       |-- Gx00-bind.h
+  |       |-- Gx00-meta.c
+  |       `-- Gx00-meta.h
+  [...]
+
+Monitor
+-------
+
+That is::
+
+  [...]
+  |-- monitor
+  |   |-- Standard
+  |   |   |-- MDA.spec
+  |   |   |-- SVGA.spec
+  |   |   |-- VANDA.spec
+  |   |   `-- VGA.spec
+  |   |-- VESA
+  |   |   |-- DDC-bind.c
+  |   |   |-- DDC-bind.h
+  |   |   |-- DDC-meta.c
+  |   |   |-- DDC-meta.h
+  |   |   `-- DDC.h
+  |   |-- crt
+  |   |   |-- DDC.c
+  |   |   |-- DDC.h
+  |   |   |-- I2C.c
+  |   |   |-- I2C.h
+  |   |   |-- VESA-timings.c
+  |   |   |-- VESA.t
+  |   |   |-- VGA-timings.c
+  |   |   |-- VGA.t
+  |   |   |-- crt-bind.c
+  |   |   |-- crt-bind.h
+  |   |   |-- crt-meta.c
+  |   |   |-- crt-meta.h
+  |   |   |-- edid.h
+  |   |   |-- fixed.c
+  |   |   |-- gtf.c
+  |   |   |-- vesa2c.awk
+  |   |   `-- vga2c.awk
+  |   `-- monosync
+  |       |-- MDA.t
+  |       |-- SVGA-timings.c
+  |       |-- SVGA.t
+  |       |-- VGA-timings.c
+  |       |-- VGA.t
+  |       |-- monosync-bind.c
+  |       |-- monosync-bind.h
+  |       |-- monosync-meta.c
+  |       |-- monosync-meta.h
+  |       `-- t2c.awk
+  [...]
+
+Board
+-----
+
+That is::
+
+  [...]
+  |-- board
+  |   |-- ATI
+  |   |   |-- Radeon.spec
+  |   |   |-- Rage.spec
+  |   |   `-- Rage128.spec
+  |   `-- Matrox
+  |       |-- 1x64sg.spec
+  |       |-- G200_AGP.spec
+  |       |-- G200_AGP_OEM.spec
+  |       |-- G200_PCI.spec
+  |       |-- G200_PCI_OEM.spec
+  |       |-- G400.spec
+  |       |-- G450.spec
+  |       `-- G550.spec
+  [...]

@@ -1,0 +1,25 @@
+=====
+Links
+=====
+
+.. navigation::
+   :submenu: Libraries : links.html#libraries,
+             GUIs : links.html#gui
+
+You will find links here that are related to The Kernel Graphics Project.
+
+Related Projects
+================
+
+Libraries
+---------
+
+- `GGI <http://www.ggi-project.org>`_ - The user land component of KGI. GGI
+   also provide a rich set of features for a reliable, stable & fast graphics
+   system which has support for a mutlitute of platforms & systems.
+
+GUI
+---
+
+- `XGGI <http://www.ggi-project.org/xggi/>`_ - X11 "server" built using GGI.
+ 

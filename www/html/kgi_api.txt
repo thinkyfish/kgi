@@ -1,0 +1,181 @@
+=======
+KGI API
+=======
+
+.. navigation::
+   :submenu: KGI APIs : apis.html
+
+Types
+=====
+
+Data of a KGI display are::
+
+      KGI display revision
+
+        kgi_u_t         revision;
+
+      Vendor and Model strings
+
+        kgi_ascii_t     vendor[KGI_MAX_VENDOR_STRING];
+        kgi_ascii_t     model[KGI_MAX_VENDOR_STRING];
+
+      Flags about special capabilities
+
+        kgi_u32_t       flags;
+
+      Size of the private mode data
+
+        kgi_u_t         mode_size;
+
+      Current mode
+
+        kgi_mode_t      *mode;
+
+      The display id
+
+        kgi_u_t id;
+
+      non-console device attached
+
+        kgi_u_t graphic;
+
+      Previous display in linked list
+
+        struct kgi_display_s *prev;
+
+      Device currently focused to the display
+
+        struct kgi_device_s             *focus;
+
+The methods of a KGI display are::
+
+        kgi_display_refcount_fn         *IncRefcount;
+
+        kgi_display_refcount_fn         *DecRefcount;
+
+        kgi_display_check_mode_fn       *CheckMode;
+
+        kgi_display_set_mode_fn         *SetMode;
+
+        kgi_display_set_mode_fn         *UnsetMode;
+
+        kgi_display_command_fn          *Command;
+
+Functions
+=========
+
+kgi_register_display()
+----------------------
+
+A display must register itself to offer its services to the KgiDevice::
+
+ kgi_s_t kgi_register_display(
+
+	 /* Comment: the preinitialized display to register */
+	 kgi_display_t *dpy,
+
+	 /* Comment: the suggested id for the display */
+	 kgi_u_t id
+ );
+
+A registration typically occur when loading a display module. The display
+must be initialized before registration: at least one KgiImage must be
+defined and the display resources must be described.
+
+For example, for the FreeBSD native VESA display::
+
+        dpy->revision = KGI_DISPLAY_REVISION;
+        snprintf(dpy->vendor, KGI_MAX_VENDOR_STRING, "KGI FreeBSD");
+        snprintf(dpy->model, KGI_MAX_VENDOR_STRING, "dpysw");
+
+No specific flag and the display mode specific area is sizeof(vidsw_mode_t)
+long::
+
+        dpy->flags = 0;
+        dpy->mode_size = sizeof(vidsw_mode_t);
+
+with (dpm is mandatory here IIRC)::
+
+ typedef struct vidsw_mode_s {
+
+        kgi_dot_port_mode_t dpm;
+
+        video_info_t mode_info;
+        video_info_t oldmode_info;
+
+ } vidsw_mode_t;
+
+The display methods are then initialized with yet not device focused::
+
+        mode = &sc->mode;
+
+        dpy->mode = mode;
+        dpy->id = -1;
+        dpy->graphic = 0;
+        dpy->IncRefcount = dpysw_inc_refcount;
+        dpy->DecRefcount = dpysw_dec_refcount;
+
+        dpy->CheckMode = dpysw_check_mode;
+        dpy->SetMode = dpysw_set_mode;
+        dpy->UnsetMode = dpysw_unset_mode;
+        dpy->Command = dpysw_display_command;
+
+        dpy->focus = NULL;
+
+        mode->revision          = KGI_MODE_REVISION;
+        mode->dev_mode          = NULL;
+        mode->images            = 1;
+        mode->img[0].out        = NULL;
+        mode->img[0].flags      = KGI_IF_TEXT16;
+        mode->img[0].virt.x     = adp->va_info.vi_width;
+        mode->img[0].virt.y     = adp->va_info.vi_height;
+        mode->img[0].size.x     = adp->va_info.vi_width;
+        mode->img[0].size.y     = adp->va_info.vi_height;
+        mode->img[0].frames     = 1;
+        mode->img[0].tluts      = 0;
+        mode->img[0].aluts      = 0;
+        mode->img[0].ilutm      = 0;
+        mode->img[0].alutm      = 0;
+        mode->img[0].fam        = 0;
+        mode->img[0].cam        = 0;
+
+The framebuffer resource is described that way::
+
+        fb->meta                = dpy;
+        fb->type                = KGI_RT_MMIO_FRAME_BUFFER;
+        fb->prot                = KGI_PF_APP_RWS | KGI_PF_LIB_RWS | KGI_PF_DRV_RWS;
+        fb->name                = "Frame buffer";
+        fb->access              = 8 + 16 + 32 + 64;
+        fb->align               = 8 + 16;
+        fb->win.size            = (kgi_size_t)adp->va_window_size;
+        fb->win.virt            = (kgi_virt_addr_t)adp->va_window;
+        fb->win.bus             = (kgi_bus_addr_t)0;
+        fb->win.phys            = (kgi_phys_addr_t)adp->va_mem_base;
+        fb->size                = (kgi_size_t)adp->va_mem_size;
+        fb->offset              = 0;
+        fb->SetOffset           = dpysw_set_offset;
+
+kgi_unregister_display()
+------------------------
+
+Unregister the display passed as parameter::
+
+ void    kgi_unregister_display(
+
+	 /* Comment: the display to unregister */
+	 kgi_display_t *dpy
+ );
+
+kgi_display_registered()
+------------------------
+
+kgi_display_registered shall be used to know if a display id is already
+bound to a registered display::
+
+ kgi_s_t kgi_display_registered(
+
+	 /* Comment: the display id */
+	 kgi_u_t id
+ );
+
+Returns KGI_EOK if found, KGI_ENODEV otherwise. 

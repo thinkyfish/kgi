@@ -1,0 +1,23 @@
+==============
+KGI Interfaces
+==============
+
+.. navigation::
+   :submenu: KGI APIs : apis.html,
+             KGI : kgi.html,
+             KII : kii.html,
+             KGIM : kgim.html,
+             kgidrv : kgidrv.html
+
+.. image:: resources/images/KGI_big_picture.jpg
+  :width: 500
+  :height: 380
+  :alt: KGI-0.9 big picture
+
+`KGI (Kernel Graphic Interface) <kgi.html>`_
+
+`KII (Kernel Input Interface) <kii.html>`_
+
+`KGIM (Kernel Graphic Interface Module) <kgim.html>`_
+
+`kgidrv (KGIM driver framework) <kgidrv.html>`_

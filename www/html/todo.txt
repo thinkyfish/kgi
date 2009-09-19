@@ -1,0 +1,77 @@
+================
+Still to be done
+================
+
+.. include:: home.menu
+
+Linux Kernel 2.6 port
+---------------------
+
+KGI is only available for max Linux 2.4.27. Work is in progress on 2.6, plus separation with KII.
+
+Memory allocation API
+---------------------
+
+In order to match the services of something like AGP, KGI has to design
+and implement its memory management API.
+
+KGIM multihead management
+-------------------------
+
+Currently multihead is managed at KGI level with displays. How to handle
+multiple heads at KGIM level, e.g in graphic drivers?
+
+The overlay resource
+--------------------
+
+How to design overlay management? As a resource? Providing what API?
+
+Monitor hotplug
+---------------
+
+Unpluging / hotpluging monitors. Currently, monitor driver is statically
+linked to the board drivers, preventing hotplug management.
+
+Threading inside KGI
+--------------------
+
+What about a command execution model that would take full advantage of
+kernel threading?
+
+Bus management
+--------------
+
+Currently, nothing abstracts the bus management of the target OS to the
+graphic drivers. HW allocation to KGI resources is handled statically. For
+example, when you load a module, you specify the KGI display id it should
+work with thus preventing from using multiple boards of the same kind
+(same PCI id for example). This is not much a limitiation on AGP systems
+since only one graphic board is often managed. But with later PCI
+specifications (PCIe?) it will be more easy to find configs with 2 or 3
+graphic boards...
+
+
+Implement PCIExpress specification
+----------------------------------
+
+Once the bus abstraction layer will be ready, let's try it with PCIExpress!
+
+API backward compatibility
+--------------------------
+
+Propose a strategy to manage backward compatibility of KGIM API.
+
+Improve kgi4BSD console...
+--------------------------
+
+...especially keymap support.
+
+Add graphic console to kgi4Linux
+--------------------------------
+
+Port the kgi4BSD one?!
+
+Document APIs
+-------------
+
+Ah! Documentation, always more.

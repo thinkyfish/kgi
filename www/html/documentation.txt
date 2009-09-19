@@ -1,0 +1,123 @@
+=============
+Documentation
+=============
+
+.. navigation::
+   :submenu: General : documentation.html#general-kgi-documentation,
+             Graphics designs : documentation.html#graphics-designs,
+             KGI Internals : documentation.html#kgi-internals,
+             Miscellanious : documentation.html#miscellanious,
+			 VM designs : documentation.html#vm-designs
+
+This documentation is intended for those interested in learning the KGI
+concept, design and API.
+
+General KGI documentation
+=========================
+
+Articles
+--------
+
+Steffen Seeger 	1999	`KGI white paper <resources/html/white_paper.html>`_
+
+Steffen Seeger 	1999	`KGI display driver overview <resources/html/display_overview.html>`_
+
+Steffen Seeger 	1999	`KGI acceleration handling <resources/html/accel_handling.html>`_
+
+Old stuff
+---------
+
+`Once upon a time... there was GGI <http://www.ggi.ps.pl/docs/>`_
+
+KGI installation HOWTO
+----------------------
+
+`A short guide through KGI installation on Linux <resources/html/linux_install-howto.html>`_
+
+Graphics designs
+================
+
+`Rudolf Cornelissen thesis: Writing Video Card Drivers In BeOS <http://haikunews.org/projects/rc>`_
+
+`FreeVGA: Architecture Independent Video Graphics Initialization for LinuxBIOS <http://wiki.linuxbios.org/data/vgabios/>`_
+
+`The State of Linux Graphic <http://www.freedesktop.org/~jonsmirl/graphics.html>`_
+
+`The (Re)Architecture of the X Window System <http://keithp.com/~keithp/talks/xarch_ols2004/xarch-ols2004-html/>`_
+
+`Linas Vepstas 	2000: High-Performance Graphics Hardware Design <resources/html/high_perf.html>`_
+
+`Brian S. Julin  2004: Proposal for Open Source Graphic Systems V1.3 <resources/print/OSGPv1.3.pdf>`_
+
+KGI internals
+=============
+
+The structs and procedures
+--------------------------
+
+Document describing the most important KGI structures and procedures.
+A "must read" for people interested in the KGI code.
+
+`The structs and procedures (pdf) <resources/print/kgi-doc.pdf>`_
+
+Same kind of documentation but more practical and includes KII.
+
+`The interfaces of KGI (html) <interfaces.html>`_
+
+`The APIs of KGI (html) <apis.html>`_
+
+`FreeBSD port notes <fbsd_notes.html>`_
+
+Miscellanious
+=============
+
+`Greg Lehey 2005: Debugging Kernel Problems <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_
+
+`Joseph Pranevich: The Wonderful World of Linux 2.6 <resources/print/wlinux26.ps>`_
+
+`NetBSD bus abstraction layer <http://netbsd.gw.com/cgi-bin/man-cgi/man?bus_space+9+NetBSD-current>`_
+
+`NetBSD DMA interface <http://netbsd.gw.com/cgi-bin/man-cgi/man?bus_dma+9+NetBSD-current>`_
+
+
+VM designs
+==========
+
+Various documentation about KGI potential targets virtual memory system.
+
+BSD VM
+------
+
+`Design elements of the FreeBSD VM system`__
+
+__ http://www.freebsd.org/doc/en_US.ISO8859-1/articles/vm-design/index.html
+
+Since Version 3.0, OpenBSD uses NetBSD's UVM. The implementation differs though.
+
+`OpenBSD's UVM manual`__
+
+__ http://www.openbsd.org/cgi-bin/man.cgi?query=uvm&sektion=9
+
+NetBSD `UVM site`__ and the `paper`__ (270 pages, gzipped postscript)
+
+__ http://www.netbsd.org/Documentation/kernel/uvm.html
+__ http://www.ccrc.wustl.edu/pub/chuck/psgz/
+
+Also note the `UBC technology`__, a design for unifying the filesystem and
+virtual memory caches of file data, thereby providing increased system
+performance. In addition to the implementation of UBC, several changes
+were made to the existing UVM design to fix problems which were glossed
+over in the original design. Thus UVM differs slightly as described in the
+paper.
+
+__ http://www.usenix.org/publications/library/proceedings/usenix2000/freenix/silvers.html
+
+
+Linux VM
+--------
+
+Brief explanation about the Virtual Memory system used in linux-2.4.
+
+`Short overview covering the 2.4 VM (txt,html,pdf)`__
+
+__ http://www.csn.ul.ie/~mel/projects/vm/guide

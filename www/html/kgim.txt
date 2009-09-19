@@ -1,0 +1,157 @@
+====
+KGIM
+====
+
+.. navigation::
+   :submenu: KGI Interfaces : interfaces.html,
+             General : kgim.html#general,
+             References : kgim.html#references
+
+General
+=======
+
+KGIM (**Kernel Graphic Interface Module**) is a kernel driver framework
+enabling the implementation of modular graphic drivers. HW of such drivers
+is supposed to be of the same kind, composed of: a **clock** and a
+**ramdac** for building the output signal, a **chipset** for controlling
+the host bus and a **monitor** to display the processed data/signal.
+The whole is linked by the **board** definition.
+
+The purpose of KGIM is not to abstract the HW like the Display API does. But
+KGIM offers a convenient way to build graphic drivers from pieces of software
+already developed for HW components commonly integrated in graphic boards.
+
+KGI Graphic Drivers: the paradigm
+=================================
+
+Under KGIM, graphic drivers are broken down into several submodules,
+each supposingly responsible for the management of an independent HW
+subcomponent of graphic boards (clock, ramdac, chipset). Additionaly the
+monitors have their own driver according to their technology (monosync,
+multisync, crt) and their charateristics.
+
+.. image:: resources/images/modular_hw.jpg
+  :width: 500
+  :height: 300
+  :alt: Modular HW design
+
+See the `KGIM source code layout <kgim_layout.html>`_ for implementation details.
+
+The Board
+---------
+
+The board is the link between all the driver components. Currently this binding
+is static. It means that you must provide the description for your board
+at the link of the OS module. The board description is given in a spec file
+with the following syntax::
+
+  Board(Matrox, G450, Standard_SVGA)
+  #if Data
+  Begin
+	SubsystemID(0x102B, 0x0525)
+	Vendor("Matrox Graphics Inc")
+	Model("G450")
+	Driver(chipset,	Matrox/Gx00, mgag_chipset)
+	Driver(ramdac,	Matrox/Gx00, mgag_ramdac)
+	Driver(clock,	Matrox/Gx50, Gx50_clock)
+	Driver(monitor, crt/crt, crt_monitor)
+  End
+  #endif
+
+In the original KGI-0.9, the monitor line was not there and the monitor
+type was wired in the module code.
+
+The Monitor
+-----------
+
+Monitors are defined by their characteristics in a .spec file::
+
+  Monitor(Iiyama, S702GT, Iiyama_S702GT)
+  #if Data
+  Begin
+	Contributor("foo bar<foobar@hotmail.com>")
+	Vendor("Iiyama")
+	Model("S702GT")
+	Flags(KGIM_MF_POWERSAVE)
+	MaxRes(1600, 1200)
+	Size(310, 232)
+	Type(KGIM_MT_ANALOG | KGIM_MT_RGB | KGIM_MT_CRT)
+	Sync(KGIM_ST_SYNC_NORMAL | KGIM_ST_SYNC_COMPOSITE |
+		KGIM_ST_SYNC_ON_GREEN | KGIM_ST_SYNC_VESA_DPMS | 
+		KGIM_ST_SYNC_MULTISYNC | KGIM_ST_SYNC_0700_0300)
+	Bandwidth(0, 160000000)
+	hFreq(0, 27000, 96000)
+	vFreq(0, 50, 160)
+  End
+  #endif
+
+Also, the monitor technology has to be known and specified in the board .spec (see
+above). Depending on the technology, the parameters given in the monitor .spec
+are used differently. Currently, only monosync and crt monitors are supported
+by the `kgidrv driver suite <kgidrv.html>`_.
+
+Improvement proposal for KGIM
+=============================
+
+The downside of the above is the static allocation of monitors to graphic ports.
+Additionaly, allocation of graphic modules to KGI displays is wired
+too e.g one must provide the display id when loading the module. Obviously,
+this is not a good thing for loading a driver for multiple boards of the
+same kind...
+
+On Linux, graphic driver <-> KGI display is done by module loading parameters
+(too much OS specific to my taste). On FreeBSD, no solution has been found
+yet.
+
+HW devices vs display assignement
+---------------------------------
+
+BeOS proposes for each kernel driver an entry in /dev with the PCI id
+*and* the HW slot the card is inserted in. This is the role of the
+publish_devices() routine: The driver is supposed to generate and publish a
+"unique" name for the card it is bound to. Usually the driver uses the
+manufacturer ID, card ID, bus number, slot number, and in some cases a
+function number, to generate it's "unique" name. Also of relevance is the
+physical slot the video card is seated in. Therefore creating unique names
+for two exact cards is not an issue, since they are seated in two different
+card slots `[1] <kgim.html#references>`_.
+
+I think we could use this too and propose in /dev such a device to take
+control of the driver after module load time. Typically, the KGI display
+registration would not take place at module load but rather through this new
+/dev API. Since KGI allows overload of display backends, this would enable
+a totally dynamic allocation of the HW to KGI resources (displays and thus
+focuses). This would serve as the find_device() call in the BeOS scheme, except
+that "driver hooks" are not given to the user but to KGI which is accessed by
+the user.
+
+Monitor assignement
+-------------------
+
+Monitors are not connected to displays or whatever highlevel objects but
+really to boards and even heads. Brian's "sink" term in
+`[2] <kgim.html#references>`_ has this
+meaning exactly to show the basic principle. The same way board driver
+instances should be configurable regarding KGI displays by mean of a
+/dev interface, they should be configurable for monitor handling.
+And, when no other automatic mean is available (or safe) to detect
+the connected monitor, it should be possible to attach a monitor manually.
+Note that currently, the monitor is even specified in the board specification
+(.spec file) e.g before compiling and linking the module! Until a monitor is
+either detected automatically or manually attached, a default
+safe mode should be taken.
+
+So, a driver module would be made of instances to be attached to KGI resources
+and/or monitors at any time.
+
+Unavailable monitor drivers should not prevent from loading the boards.
+Then, monitor drivers should all publish the same set of routines and KGIM should
+give board drivers inquiry routines and wrappers to access the monitor(s)
+once they are loaded.
+
+References
+==========
+
+[1] "Writing Video Card Drivers In BeOS" by Rudolf Cornelissen (June 06th, 2003)
+
+[2] "Proposal for Open Source Graphic Systems" by Brian S. Julin (2004)

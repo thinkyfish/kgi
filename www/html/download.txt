@@ -1,0 +1,68 @@
+========
+Download
+========
+
+.. navigation::
+   :submenu: CVS : download.html#cvs,
+             Debian GNU Linux : download.html#debian-gnu-linux,
+			 Patches : download.html#patches
+
+
+CVS
+===
+
+*You can checkout the entire KGI project from CVS using the following::
+ 
+ cvs -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi login 
+ cvs -z3 -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi co -P . 
+
+When you're prompted for a password, use a blank password by pressing ENTER on your keyboard.
+
+
+If you're only interested in the FreeBSD module then use following::
+
+ cvs -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi login 
+ cvs -z3 -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi co -P freebsd 
+ 
+ 
+Alternatively, you can also checkout the old `kgi-wip <http://sourceforge.net/projects/kgi-wip>`_ project which was a fork of the original KGI project::
+
+ cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip login 
+ cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip co kgi-0.9
+ 
+The kgi-wip branch is for Linux systems only.
+
+You can also browse the entire repository at `http://kgi.cvs.sourceforge.net/kgi/ <http://kgi.cvs.sourceforge.net/kgi/>`_
+
+Shut up and hack :-)
+
+Debian GNU Linux
+================
+
+Packages for the Debian GNU/Linux Sarge distribution are available:
+
+* `patchset for kernel 2.4.27 <http://nsouch.free.fr/kernel-patch-2.4-kgi_0.9-1_i386.deb>`_
+* `driver module set for kernel 2.4.27 <http://nsouch.free.fr/kgidrv-modules-2.4.27_0.2-1_i386.deb>`_
+
+
+Patches
+=======
+
+FreeBSD
+-------
+
+You can fetch some old patches for kgi4BSD from `nsouch's download area`__ in the
+`kgi4BSD`__ directory. These patches are based on a 6.x system.
+
+__ http://nsouch.free.fr
+__ http://nsouch.free.fr/kgi4BSD
+
+The yyyymmdd-kgi6_P1.patch stands for the 1rst patch to apply against FreeBSD
+as of day yyyymmdd. Then apply successively the kgi6@xxxx_[P1..Pn].patch
+patches. For this, cd to your FreeBSD src and use the -p2 option. Patches where
+made with GNU patch.
+
+Read any comment provided in the changelogs of `Perfoce repo`__ .
+
+__ http://perforce.freebsd.org/changeList.cgi?FSPC=//depot/user/nsouch/kgi6/src/sys/...
+

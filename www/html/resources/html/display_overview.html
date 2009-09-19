@@ -1,0 +1,475 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+	<title lang="en">KGI Display Drivers</title>
+	<meta name="Description" content="A short introduction to the display hardware driver design.">
+	<meta name="Keywords" content="KGI Project; display drivers">
+	<meta name="Author" content="Steffen Seeger">
+</head>
+	<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000" background="">
+<h1><hr noshade>KGI Display Hardware Driver Overview<hr noshade></h1>
+
+<a name="abstract"></a><h2><u>Abstract</u></h2>
+<p>
+As a part of the GGI (General Graphics Interface) Project, a Kernel Graphics
+Interface (KGI) is being developed to provide the neccessary hardware 
+abstraction to allow efficient sharing and virtualization of graphics
+hardware in multi-user/multi-processing environments.
+</p><p>
+This article is intended to give a detailed overview of the KGI 
+portability layer, display hardware abstraction and a basic overview
+of the modular display driver.
+</p>
+
+<a name="overview"></a><h2><u>General Overview</u></h2>
+<p>
+The main design goals for KGI (Kernel Graphics Interface) display drivers 
+can be summarized as:
+<ul>
+<li>	<b>Portability.</b> KGI display drivers should easily be reused in
+	different environments - such as in-kernel drivers or drivers that
+	are part of a user-space application - without any modifications 
+	to the driver sources. Also, the display drivers and display 
+	hardware model should not prescibe a certain programming interface.
+	</li>
+<li>	<b>Flexibility.</b> The KGI display driver model should be flexible
+	enough to be used for any type of display hardware, as well as
+	easily extendible to new developments.</li>
+<li>	<b>Performance.</b> The display driver design should allow for 
+	efficient use of acceleration features, especially in multi-user
+	multi-process(or) environments. This includes means to share
+	and virtualize graphics hardware.</li>
+</ul>
+<p>
+In order to meet these goals, KGI-0.9 is divided into the following key
+components:
+<ul>
+<li>	a <b>portability layer</b> that defines basic types and physical
+	I/O services used by the drivers to access the hardware.</li>
+
+<li>	an <b>abstract display hardware model</b> that allows a hardware
+	independent description of operation modes.</li>
+
+<li>	a <b>modular display hardware driver design</b> consting of a 
+	'low-level' part that may be run in kernel space and a 'high-level'
+	part translating a given application programming interface
+	request into hardware-specific low-level requests. These are
+	handled either directly by the hardware or passed to the
+	low-level driver for execution.</li>
+
+<li>	a <b>KGI environment</b> that provides the neccessary environment and
+	operating system services to share and virtualize the application
+	views of the hardware.</li>
+</ul>
+<p>
+Each of the key components except the environment services mentioned 
+will be explained in more detail in the following sections.
+
+<a name="portability-layer"></a><h2><u>Portability layer</u></h2>
+
+The KGI portability layer defines some basic data types, some host specific
+macros and definitions to handle endianess and physical I/O services
+in a platform-independent manner.
+
+<ul>
+<li><h4>Integral (integer) types</h4>
+	All signed integral types are defined to use 2's complement 
+	representation, the most significant bit being the sign bit.
+	<center><table width="100%" cols=2>
+	<tr><td><tt>kgi_s8_t</tt></td>		<td>8bit signed</td></tr>
+	<tr><td><tt>kgi_u8_t</tt></td>		<td>8bit unsigned<td></tr>
+	<tr><td><tt>kgi_s16_t</tt></td>		<td>16bit signed<td></tr>
+	<tr><td><tt>kgi_u16_t</tt></td>		<td>16bit unsigned</td></tr>
+	<tr><td><tt>kgi_s32_t</tt></td>		<td>32bit signed</td></tr>
+	<tr><td><tt>kgi_u32_t</tt></td>		<td>32bit unsigned</td></tr>
+	<tr><td><tt>kgi_u_t</tt></td>		<td>system native unsigned integral, but at least 32bit wide</td></tr>
+	<tr><td><tt>kgi_s_t</tt></td>		<td>system native signed integral, but at least 32bit wide</td></tr>
+
+	<tr><td><tt>kgi_ascii_t</tt></td>	<td>8bit character code with 8bit ISO-latin1 encoding</td></tr>
+	<tr><td><tt>kgi_unicode_t</tt></td>	<td>16bit character code with 16bit UNICODE encoding</td></tr>
+	<tr><td><tt>kgi_isochar_t</tt></td>	<td>32bit character code with 32bit ISO 10646 encoding</td></tr>
+
+	<tr><td><tt>kgi_virt_addr_t</tt></td>	<td>virtual address type (byte-offset arithmetic)</td></tr>
+	<tr><td><tt>kgi_phys_addr_t</tt></td>	<td>physical address type (byte-offset arithmetic)</td></tr>
+	<tr><td><tt>kgi_bus_addr_t</tt></td>	<td>bus address type (byte offset arithmetic)</td></tr>
+
+	<tr><td><tt>kgi_size_t</tt></td>	<td>type to encode address range sizes.</td></tr>
+
+	<tr><td><tt>void</tt></td>		<td>indicates no associated type information</td></tr>
+	<tr><td><tt>void *</tt></td>		<td>same as kgi_virt_addr, but no arithmetic defined</td></tr>
+
+	<tr><td><tt>kgi_private_t</tt></td>	<td>data type to hold any of the above types.</td></tr>
+	</table></center>
+	The low-level KGI display hardware drivers have to run in different
+	environments, e.g. as in-kernel drivers or as library extentions.
+	The use of instructions that modify floating point registers is 
+	therefore not allowed for low-level drivers and the corresponding
+	are not defined in KGI. However, high-level drivers that translate
+	a given API (e.g. OpenGL) to hardware specific commands are defined
+	to run as part of a application and may utilize the full
+	register/instruction set available.</p></li>
+
+<li><h4>Endianness</h4>
+	KGI assumes all data types to be stored in driver accessible virtual
+	memory to be either in host-native or explicitly in big or little
+	endian encoding. The KGI system layer defines a set of macros
+	to convert between host-native endian (HE) and big endian (BE) or litle 
+	endian (LE) encoded data. The macros are named 
+	<tt>sys<i>encoding</i><i>type</i>(arg)</tt>, where 
+	<tt><i>encoding</i></tt> is either LE or BE, 
+	and <tt><i>type</i></tt> is one of the following: 
+	<tt>isochar</tt>, <tt>unicode</tt>, <tt>s16</tt>, <tt>u16</tt>, 
+	<tt>s32</tt> or <tt>u32</tt>.
+	If the argument is in HE encoding, the result will be in BE or LE
+	encoding and vice versa. Note that these are macros and therefore
+	the argument passed should either be a constant expression or a
+	direct variable. Expressions that contain function calls or
+	assignment operations must not be used as arguments for these macros.
+	</p></li>
+
+<li><h4>Physical I/O</h4>
+	KGI low-level drivers are the primary instance that coordinates
+	graphics hardware access. Some resources of the graphics hardware
+	(texture buffers, frame buffer I/O memory, DMA buffers, FIFO registers
+	etc.) may be exported to applications, but this is not done without
+	approval by the low-level driver. The low-level driver therefore
+	has to register _all_ resources (interrupts, I/O memory regions, etc.)
+	required to operate the card with the Operating System environment.
+	<p>
+	KGI uses the concept of I/O regions to handle resources required by
+	drivers. Basically, an I/O region is an address space and a set
+	of operations defined on this address space.
+	For a given I/O type <tt><i>io</i></tt>, the associated metalanguage
+	is defined as follows:
+	<ul>
+	<li><tt><i>io</i>_paddr_t</tt><br>
+		physical address - needed to establish mapping to
+		virtual addresses</li>
+
+	<li><tt><i>io</i>_iaddr_t</tt><br>
+		i/o address type - addresses the device will respond to
+		when applied on the address select lines</li>
+
+	<li><tt><i>io</i>_baddr_t</tt><br>
+		bus address type - the address other devices have
+		to access on their bus to access this device</li>
+
+	<li><tt><i>io</i>_vaddr_t</tt><br>
+		virtual addresses - only these may be used with the
+		subsequent programmed I/O functions (kind of a handle)</li>
+
+	<li><tt>struct <io>_region_s <i>io</i>_region_t</tt><br>
+		a structure that is used to communicate information
+		about a given region between the driver and the
+		environment. The following fields are defined:
+		<center><table width="100%">
+		<tr><td><tt>device</tt></td>
+			<td>a handle that uniquely identifies the location 
+			in the device tree</td><tr>
+		<tr><td><tt>base_virt</tt></td>
+			<td>virtual address that maps to the device's
+			base address</td><tr>
+		<tr><td><tt>base_io</tt></td>
+			<td>io base address of the region the device
+			responds to</td><tr>
+		<tr><td><tt>base_bus</tt></td>
+			<td>bus address to be used to access this 
+			address</td><tr>
+		<tr><td><tt>base_phys</tt></td>
+			<td>physical address to be used to establish
+			a virtual mapping</td><tr>
+		<tr><td><tt>size</tt></td>
+			<td>size (in bytes) of the region</td><tr>
+		<tr><td><tt>decode</tt></td>
+			<td>bitmask of address select lines the decoder
+			evaluates</td><tr>
+		<tr><td><tt>name</tt></td>
+			<td>a string that identifies the region</td><tr>
+		</table></center>
+
+	<li><tt>int <i>io</i>_check_region(<i>io</i>_region_t *)</tt><br>
+		This environment function queries if the given region is
+		'free', e.g. not served by another driver. Not all environments
+		provide sufficient support for this to be implemented. If
+		this function cannot be implemented properly, it should
+		always indicate a region is 'free'. The device, base_io, size,
+		decode and name fields of the region passed have to be properly
+		initialized.</li>
+
+	<li><tt><i>io</i>_vaddr <i>io</i>_claim_region(<i>io</i>_region_t *)</tt><br>
+		This environment function registers the region - if possible -
+		with a central resource management facility and establishes 
+		a virtual mapping of this region. Before claiming a region,
+		the driver has to check whether a region is free.
+		The region passed need to have the same fields valid
+		as for <i>io</i>_check_region(). After completion, all fields
+		are initialized with valid values.</li>
+
+	<li><tt><i>io</i>_vaddr_t <i>io</i>_free_region(<i>io</i>_region_t *)</tt><br>
+		This environment function destroys a virtual mapping
+		established by <i>io</i>_claim_region() and unregisters with
+		a central resource management facility. This invalidates
+		the base_<type> fields of the region passed, except for
+		the base_io field. Note that the driver must not assume
+		a valid virtual/bus mapping after freeing a region.</li>
+
+	<li><tt>kgi_u<i>size</i> <i>io</i>_in<i>size</i>(const <i>io</i>_vaddr_t vaddr)</tt><br>
+		Returns the result of a read operation of size 
+		<tt><i>size</tt></i> bits at the device address mapped to 
+		vaddr (<tt>base_virt + offset</tt> corresponds to 
+		<tt>base_io + offset</tt> for a given region).
+		vaddr has to be naturally aligned on a <i>size</i> bit 
+		boundary.</li>
+
+	<li><tt>void <i>io</i>_out<i>size</i>(const kgi_u<i>size</i>_t val, const <i>io</i>_vaddr_t addr)</tt><br>
+		Performs a write operation of <tt><i>size</i></tt> bits 
+		width at the device address mapped to vaddr. The same 
+		alignment restrictions as for <tt><i>io</i>_in<i>size</i>()</tt>
+		apply.</li>
+
+	<li><tt>void <i>io</i>_ins<i>size</i>(const <i>io</i>_vaddr_t vaddr, void *buf, kgi_size_t count)</tt></li>
+	<li><tt>void <i>io</i>_outs<i>size</i>(const <i>io</i>_vaddr_t vaddr, const void *buf, kgi_size_t count)</tt><br>
+		Performs <tt>count</tt> read/write operations of 
+		<tt><i>size</i></tt> bit size at the device address 
+		mapped to vaddr reading/writing the data from the 
+		device to buf/from buf to the device.
+		<tt>vaddr</tt> has to be properly aligned and buf must be 
+		valid.</li>
+
+	<li><tt>void <i>io</i>_put<i>size</i>(const <i>io</i>_vaddr_t vaddr, void *buf, kgi_size_t count)</tt></li>
+	<li><tt>void <i>io</i>_get<size>(void *buf, const <i>io</i>_vaddr_t, src, unsigned long count)</tt><br>
+		Performs <tt>count</tt> write/read operations of size 
+		<tt><i>size</i></tt>bit size at the device address mapped to 
+		vaddr. The difference to <tt><i>io</i>_ins/outs<size>()</tt>
+		is that <tt>vaddr</tt> is incremented according
+		to <tt><i>size</i></tt> after each write.</li>
+	</ul>
+	</p><p>
+	Note that for a particular bus/io space binding any of the I/O 
+	operations that are not supported may be missing. Currently the
+	following bindings are definied:
+	<center><table width="80%" cols=2>
+	<tr><td><tt>pcicfg</tt></td>	<td>PCI32 Configuration Registers</td></tr>
+	<tr><td><tt>io</tt></td>	<td>ISA I/O-Ports</td></tr>
+	<tr><td><tt>mem</tt></td>	<td>Memory Mapped I/O</td></tr>
+	</table></center></p>
+</li></ul>
+<p>
+So basically the KGI portability layer defines platform independent data types
+and means how to establish a communication channel between the hardware
+and the driver.
+<p>
+Detailed data type definitions can be found in 
+<a href="http://kgi.sourceforge.net/source/kgi-0.9/kgi/include/kgi/io.h"><tt>file:kgi-0.9/kgi/include/kgi/io.h</tt></a>
+</p>
+
+<a name="display-hardware"></a><h2><u>Display Hardware Model</u></h2>
+<p>KGI employs a operation mode description independent of the underlying
+hardware and desired application programming interface. This is used to
+specify the operation mode of a given hardware without assumptions
+specific to a given API. The concept behind this description is to describe
+the data flow from a device-internal frame buffer representation to
+the final visible image.
+
+<ul>
+<li><b>Attributes</b><br>
+	The KGI display hardware model assumes graphics hardware to be used
+	to control a visible rectangular picture in certain attributes. The 
+	smallest units for which attributes can be controlled independently
+	of each other are picture elements (pixels). However, a change of a
+	pixel's attribute (e.g. the character displayed in this pixel) may 
+	result in a change of smaller units of the visible image called dots.
+
+	Currently the following attributes are defined:
+	<center><table width="80%" cols=2>
+	<tr><td><tt>private</tt></td>
+		<td>driver private data</td></tr>
+	<tr><td><tt>application</tt></td>
+		<td>store what you want here, the hardware doesn't 
+		care</td></tr>
+	<tr><td><tt>stencil</tt></td>
+		<td>stencil mask/window ID values</td></tr>
+	<tr><td><tt>z</tt></td>
+		<td>z-buffer value</td></tr>
+	<tr><td><tt>colorindex</tt></td>
+		<td>color (the final color is determined by a table 
+		lookup)</td></tr>
+	<tr><td><tt>color1</tt></td>
+		<td>direct control of color channel 1</td></tr>
+	<tr><td><tt>color2</tt></td>
+		<td>direct control of color channel 2</td></tr>
+	<tr><td><tt>color3</tt></td>
+		<td>direct control of color channel 3</td></tr>
+	<tr><td><tt>alpha</tt></td>
+		<td>alpha value</td></tr>
+	<tr><td><tt>foreground</tt></td>
+		<td>foreground color index for text modes</td></tr>
+	<tr><td><tt>texture index</tt></td>
+		<td>pixel texture (character shape) index for text 
+		modes</td></tr>
+	<tr><td><tt>blink</tt></td>
+		<td>blink bit/frequency</td></tr>
+	</table></center>
+	<p>
+	The particular meaning of <tt>color1</tt>, <tt>color2</tt>, 
+	and <tt>color3</tt> depends on the viewing device and is specified 
+	by the color-space (YUV, RGB, ...) associated with it.
+	<p>
+	Some display hardware allows to control the attributes of 
+	two pictures (with identical resoulution) independently, so 
+	that stereo viewing is possible. To allow for smooth animation,
+	several versions (frames) of a picture may be stored in the 
+	device to allow fast changes between the versions.
+	<p>
+	KGI therefore further divides per-pixel attributes into attributes 
+	stored per frame and attributes stored common to all frames. 
+	If a display hardware is stereo-capable, all per-frame (e.g. 
+	color, alpha values) attributes can be controlled independently 
+	for the left and right image.
+	Common-to-all-frames attributes (e.g. z-values, stencil values)
+	are global to all frames, for both the left and right image 
+	(if applicable).
+	<p>
+	In order to represent precision requirements in the per-attribute 
+	control, a bitmask and a zero-terminated array of <tt>kgi_u8_t</tt>
+	values specifying the number of bits required per attribute is used.
+	This allows for a compact, sufficient and extensible representation 
+	of all frame buffer formats.
+	For example, a typical 3D application would specify
+	<tt>KGI_AM_ALPHA|KGI_AM_COLOR_INDEX</tt>
+	and <tt>{ 8, 8, 0 }</tt> for the per-frame attributes
+	and <tt>KGI_AM_STENCIL | KGI_AM_Z</tt>
+	and <tt>{ 8, 24, 0 }</tt> for the common-to-all-frames
+	attributes.<p></li>
+
+<li><b>Image Modes, Dot Ports, Dot Streams and Dot Stream Converters</b><br>
+	<p>
+	The final, visible picture may be the result of (digital or analog)
+	signal processing, e.g. blending, overlaying or chroma-keying of several
+	independent images.
+	<p>
+	Given a display hardware internal 2D buffer of a particular size (the
+	virtual image), only a rectangular subregion of that virtual image
+	(the visible image) may be used for the overlay.
+	<p>
+	KGI-0.9 uses an abstract representation of the signal sources and
+	signal processing devices to describe the hardware operation mode.
+	<p>
+	<ul>
+	<li><b>Image Modes</b><br>
+		describe which attributes are stored per frame and common 
+		to all frames, at what precision attributes are stored and
+		what size the virtual and visible image are (in pixels), 
+		as well as some global properties, e.g. if the 
+		virtual/visible image can be resized, if scaling/interpolation
+		or table-lookup operations can be applied to per-pixel 
+		attribute values before being converted into dots
+		and sent to a dot-port.</li>
+
+	<li><b>Dot Ports</b><br>
+		describe what final screen size (in dots), color space, 
+		data format etc. the dot-data transfered from a 
+		image-read-out-unig to another signal processing device has.
+		The signal processing device is assumed to process the data 
+		at a certain maximum rate, the dot clock.
+		E.g. a video DAC may change it's RGB outputs once per dot 
+		clock cycle.
+		However, data may have to be transfered at a higher or lower 
+		rate wich is determined by the load clock ratio, defining 
+		the dot-data transfered per transfer cycle.</li>
+
+	<li><b>Dot Stream Converters</b><br>
+		represent signal processing devices that read image data 
+		on one or more dot ports, optionally perform some 
+		operations (color space conversion, interpolation, 
+		dot-rate conversion, overlaying, etc.)
+		and send the result to another dot-port.</li>
+	</ul>
+	<p>
+	This abstraction allows very complex hardware setups to be described
+	in a kind of signal-flow-tree, with a dot-port as root representing the
+	viewing device, dot-stream-converters as nodes, dot-ports as links and
+	image modes as leafs.</p></li>
+
+<li><b>Resources</b><br>
+	<p>The abstraction described in the last section allows to describe the
+	(static) operation mode and frame/common buffer requirements.
+	However, it does not specify means to _alter_ (dynamic) properties
+	of the operation mode (e.g. the look-up-tables) or the frame/common
+	buffer contents.
+	<p>
+	This is done through resources, some of which are global and must be 
+	shared between processes (e.g. the frame/common buffers, look-up 
+	tables) and some of which can be virtualized (e.g. texture buffers,
+	2D or 3D graphics processor, etc.)
+	<p>
+	Basically resources are data structures used to communicate relevant
+	data to an external mapper (a special device file driver), that 
+	utilizes the neccessary protection/virtualization mechanisms of 
+	the environment.
+	Depending on the environment some resources (e.g. accelerators - 
+	see below) may not be available to the high-level driver(s).
+	Currently the following resources are defined:
+	<p>
+	<center><table width=80% cols=2>
+	<tr valign=TOP><td><b>Commands</b></td>
+		<td>This resource is used to perform specific requests, e.g.
+		setting a look-up-table entry etc.</td></tr>
+	<tr valign=TOP><td><b>MMIO regions (memory mapped I/O regions)</b></td>
+		<td>This resource type is used to allow processes to get
+		a virtual mapping of device-local memory, such as frame or 
+		local buffers, graphics processor control registers, 
+		etc.</td></tr>
+	<tr valign=TOP><td><b>Accelerators (DMA buffers)/Streams</b></td>
+		<td>This resource type is used to establish access to a
+		circular list of process-local DMA buffers (only one 
+		at a time being writeable to the application).
+		The buffers are allocated by the external mapper and
+		are phyiscally continous.</td></tr>
+
+	<tr valign=TOP><td><b>Shared (virtual) Memory (AGP texture memory)</b></td>
+		<td>This resource type is used to establish access to
+		a memory object shared between the low-level driver,
+		hardware and the application. This is not yet specified
+		in detail.</td></tr>
+	</table></center>
+	<p>Exact definitions of the various types can be found in 
+	<a href="http://kgi.sourceforge.net/source/kgi-0.9/kgi/include/kgi/kgi.h"><tt>file:kgi/include/kgi/kgi.h</tt></a>
+	</p></li>
+</ul>
+
+<h2><u><a name="modular-driver"></a>Modular Display Driver Implementation</u></h2>
+	<p>The most common graphics card architecture on the PC-market 
+	utilizes the following principal design:
+	<center><img src="hardware.jpeg" alt="Hardware Diagram [11kB JPEG]" width=354 height=164></center>
+	KGI therefore defines a modular driver architecture that allows 
+	to write and distribute separate drivers for each subsystem 
+	(except memory).
+	A fully operational driver is then obtained by linking the 
+	sub-system drivers together.
+	<p>Each driver provides some (specified) driver-global information,
+	such as maximum resolution, vendor and model, AC limits etc.
+	<p>A meta-language is defined for each subsystem that allows driver 
+	initialization, deinitialization, resource export and operation 
+	mode negotiation/checking. This way drivers can be passed a partially
+	filled-in operation mode description and auto-negotiate the proper
+	operation mode.
+	<p>This modular display driver internal interface is defined in 
+	<a href="http://kgi.sourceforge.net/source/kgi-0.9/drv/display/kgi/module.h"><tt>kgi-0.9/drv/display/kgi/module.h</tt></a>,
+	but is adopted to allow an easier
+	mapping to the UDI driver model and not yet finalized.
+
+<a name="summary"></a><h2><u>Summary</u></h2>
+
+	<p>This article was intended to give a more detailed view of the 
+	KGI display hardware abstraction model.
+	It mainly covered (static) operation mode specification, as well 
+	as application/driver/hardware interaction.
+
+
+	<p>
+	<hr noshade>
+	<table cols=3 width="100%">
+	</table>
+</body>
+</html>

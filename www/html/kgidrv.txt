@@ -1,0 +1,164 @@
+======
+kgidrv
+======
+
+.. navigation::
+   :submenu: KGI Interfaces : interfaces.html,
+             Introduction : kgidrv.html#introduction,
+             Description : kgidrv.html#description,
+             Credits : kgidrv.html#credits
+
+Introduction
+============
+
+kgidrv is a compilation framework for KGI graphic drivers compliant with the
+KGIM API. The advantages of using kgidrv are:
+
+* kgidrv generates Linux and FreeBSD KGIM driver objects (.ko files)
+
+* the configuration (./configure) of kgidrv is identical for all platforms
+
+* kgidrv is maintained under tla
+
+Keep it simple::
+
+  nsouch@breizh$ ./configure
+  nsouch@breizh$ make
+
+and you obtain::
+
+  ./monitor/Standard/SVGA.ko
+  ./board/ATI/Radeon.ko
+  ./system/Linux/kgim-0.9.ko
+
+kgim.ko enables the link of KGIM drivers to KGI. SVGA.ko is the module driver for
+the monitor. Radeon.ko is the board driver module for the boards defined in the
+Radeon.spec file.
+
+Description
+===========
+
+Compilation rules
+-----------------
+
+Compilation rules are very basic. For each platform, rules are defined
+commonly in rules.mak and in <platform>.mak (say Linux.mak or FreeBSD.mak)
+for specific definitions of each.
+
+Typically, for Linux::
+
+  KERNEL_PATH?=/lib/modules/$(shell uname -r)/build
+  
+  CFLAGS=-Wall -fomit-frame-pointer -O2 -D__KERNEL__ -D__MODULE__ -ffreestanding \
+      -include ${KERNEL_PATH}/include/kgi/config.h -I${KERNEL_PATH}/include -Iinclude -I. \
+      -fno-strict-aliasing
+
+  LDFLAGS=-melf_i386 -r --strip-debug -O2 
+
+  SYSTEM=Linux
+
+  OBJS+=system/$(SYSTEM)/kgim-0.9.ko
+
+  AWK?=awk
+
+  %.ko: %.o
+	  $(LD) $(LDFLAGS) -o $@ $^
+
+  %.ko: %-board.o
+	  $(LD) $(LDFLAGS) -o $@ $^
+  
+  %.ko: %-monitor.o
+	  $(LD) $(LDFLAGS) -o $@ $^
+
+And for FreeBSD::
+
+  KERNEL_PATH?=/usr/src/sys
+
+  SYSTEM=FreeBSD
+  ARCH=i386
+
+  OBJS+=machine @ device_if.h bus_if.h pci_if.h
+  OBJS+=system/$(SYSTEM)/kgim-0.9.ko
+
+  CLEANFILES=
+
+  CFLAGS=	${COPTS} -D_KERNEL -DKLD_MODULE
+
+  CFLAGS+= -finline-limit=15000 -fno-common -g -mno-align-long-strings \
+	 -mpreferred-stack-boundary=2 -ffreestanding -std=c99 -Wstrict-prototypes \
+	 -Wmissing-prototypes -O -pipe -mcpu=pentiumpro
+
+  CFLAGS+= -I. -I${KERNEL_PATH} -Iinclude -I${KERNEL_PATH}/dev
+
+  CFLAGS+= ${DEBUG_FLAGS}
+
+  LDFLAGS+= -r -d -warn-common
+
+  AWK?=awk
+
+  machine:
+	ln -s ${KERNEL_PATH}/${ARCH}/include machine
+
+  @:
+	ln -s ${KERNEL_PATH} @
+
+  device_if.h: @/kern/device_if.m
+	${AWK} -f @/tools/makeobjops.awk $^ -h
+  bus_if.h: @/kern/bus_if.m
+	${AWK} -f @/tools/makeobjops.awk $^ -h
+  pci_if.h: @/dev/pci/pci_if.m
+	${AWK} -f @/tools/makeobjops.awk $^ -h
+
+  %.ko: %.o
+	$(LD) -Bshareable -d -warn-common -o $@ $^
+
+  %.ko: %-board.o
+	$(LD) -Bshareable -d -warn-common -o $@ $^
+
+  %.ko: %-monitor.o
+	$(LD) -Bshareable -d -warn-common -o $@ $^
+
+
+Configuration
+-------------
+
+The modules to compile and their content if configured by the ./configure script.
+This script includes config.local, a set of shell functions responsible for the
+generation of the Makefile given the content of ./configure.
+
+Typically to compile a Radeon board under kgidrv, you need the following ./configure
+file::
+
+  #!/bin/sh
+  . config.local
+
+  init
+
+  clock bind ATI RADEON
+  clock spec IBM VGA
+
+  ramdac ATI RADEON
+  ramdac IBM VGA
+
+  chipset ATI RADEON
+  chipset IBM VGA "chipset/IBM/VGA-text-meta.o"
+
+  board ATI Radeon
+
+  monitor spec Standard crt SVGA
+  monitor bind crt "monitor/crt/VESA-timings.o monitor/crt/VGA-timings.o
+     monitor/crt/fixed.o monitor/crt/gtf.o monitor/crt/DDC.o monitor/crt/I2C.o"
+
+  fini
+
+The IBM stuff is necessary for compatibility reasons: some code of these
+submodules are systematically used by other drivers. You may add as many
+drivers you need in ./configure to compile even all the drivers in one pass
+if you want.
+
+Credits
+=======
+
+The kgidrv compilation framework was initially developed by Patrick Mauritz
+and ported to FreeBSD by Nicholas Souchu. Nicholas also packaged kgidrv for
+Debian GNU/Linux.

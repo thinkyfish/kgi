@@ -1,0 +1,120 @@
+============
+News archive
+============
+
+2009
+====
+
+2009-08-31 : New CVS branch created for FreeBSD
+-----------------------------------------------
+
+FreeBSD development is currently being carried out in `http://kgi.cvs.sourceforge.net/viewvc/kgi/freebsd/ <http://kgi.cvs.sourceforge.net/viewvc/kgi/freebsd/>`_
+
+2008
+====
+
+2008-02-26 : FreeBSD8 code available
+------------------------------------
+
+KGI alpha patch for FreeBSD-8 available
+[No longer available. See news items from 2009-08 and on.]
+
+2006
+====
+
+2006-02-25 : Brian's Graphics Proposal updated
+----------------------------------------------
+
+`V1.3 of Brian S. Julin's Open Source Graphic Systems <resources/print/OSGPv1.3.pdf>`_
+
+2006-02-19 : IRC meeting logs
+-----------------------------
+
+You may get the logs of the last KGI IRC meetings `kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_ and `kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
+
+Note that `#kgi IRC channel <http://woo.li/logs/kgi/>`_ is now logged
+
+2006-02-05 : kgi4BSD ported to R6 with dual-head
+------------------------------------------------
+
+See `screenshots <screenshots.html>`_ and `download page <download.html>`_
+for details
+
+2005
+====
+
+2005-04-09 : Article about OpenSource Graphics
+----------------------------------------------
+
+`The proposal from Brian S. Julin for Open Source Graphic Systems <resources/print/OSGPv1.3.pdf>`_
+
+2005-02-27 : Enjoy the new site!
+--------------------------------
+
+2005-02-01 : Debian packages
+----------------------------
+
+Debian package is available for the KGI-0.9 patch (against 2.4.27). See
+README.Debian in the package. Also kgidrv was packaged for Debian in
+version 0.2. Reminder, kgidrv is the new driver framework commonly used by
+kgi4Linux and kgi4BSD. Binary modules are distributed for kernel 2.4.27.
+
+`kernel-patch-2.4-kgi_0.9-1_i386.deb <http://nsouch.free.fr/kernel-patch-2.4-kgi_0.9-1_i386.deb>`_
+
+`kgidrv-modules-2.4.27_0.2-1_i386.deb <http://nsouch.free.fr/kgidrv-modules-2.4.27_0.2-1_i386.deb>`_
+
+older
+=====
+
+2004-02-28 : Linux 2.4.25
+-------------------------
+
+Support for current linux-2.4.25 has been added to cvs.
+
+2003-10-07 : kgi4BSD
+--------------------
+
+Nicholas Souchu is making great progress towards ports of GGI and KGI to
+FreeBSD. You can find more information on the `kgi4BSD`__ site.
+
+__ http://www.freebsd.org/~nsouch/kgi4BSD
+
+2003-03-26 : Website access
+---------------------------
+
+Thanks to a little trick, we managed to get www.kgi-project.org and
+kgi.sourceforge.net redirecting to this page. Welcome to the people who
+visited the old pages !
+
+2003-03-20 : Monitor driver progress
+------------------------------------
+
+The first DDC2 success reports are in. The monitor driver now seeks the
+highest refresh rate available. For now, only the Radeon driver has working
+DDC2, somehow the Matrox driver just doesn't want to work.
+
+2003-01-17 : IRC meeting coming soon !
+--------------------------------------
+
+A new IRC meeting has been scheduled for Saturday February 1st, 2300 hours
+Amsterdam / 1700 hours Calgary time. Topics of discussion:
+
+* Bugs / shortcomings in the KGI core. KGI-0.9 is rather usable now. What is there left to fix before users can see how nice KGI is ?
+
+  - Console ALT-F5 is linked to graphics ALTGR-F6
+
+  - Accellerator deadlocks when switching console
+
+  - When a console is closed, display the one that was mapped before. (If it still exists)
+
+  - When a driver takes over a console, it should redraw. 
+
+* Driver issues that affect other drivers too. Missing resources ?
+
+* This new homepage. Contributions please !
+
+* Snapshots / releases. Should we release some beta stuff already ?
+
+* AGP support. How to do it, where to start ?
+
+* SMP support. The Big Bug is gone, now we should have lockdown mechanisms. 

@@ -1,0 +1,196 @@
+==================
+FreeBSD port notes
+==================
+
+.. navigation::
+   :submenu: Newbus : fbsd_notes.html#newbus-and-kgi-drivers,
+             VESA : fbsd_notes.html#integration-of-kgi-inside-freebsd,
+             FreeBSD VM : fbsd_notes.html#kgi-vm-management-under-freebsd,
+             Credits : fbsd_notes.html#credits
+
+.. image:: resources/images/flou-daemon.png
+  :width: 336
+  :height: 82
+
+Purpose
+=======
+
+This document is intended to present the FreeBSD KGI design. It has been
+written while developing the FreeBSD KGI port in order to give some hints
+about the architecture. It's certainly not complete but should provide enough
+knowledge for a kernel developer to understand what's going in general.
+
+FreeBSD vs Linux : KGI answer
+-----------------------------
+
+Linux and FreeBSD kernels are different by *many* ways, but KGI has been
+especially designed to hide this complexity and provide driver developers a
+uniform API independent of the platform.
+
+One caveat is that KGI interfaces were initially written to hide *Linux*
+particular way of thinking. Consequently, abstraction is just in line with
+Linux's way of life. For example, even if some KGI functions provide OS
+independent PCI scanning capacities, they make the assumption that the
+device driver is responsible for such operations. In FreeBSD the PCI core
+implementation is responsible for parsing the PCI bus and drivers, throw a
+unique probe() and attach() scheme. Drivers are only supposed to validate
+if they correspond to the PCI device when they're triggered by the PCI core.
+
+Newbus and KGI drivers
+----------------------
+
+The newbus architecture provides a generic framework for programming device
+drivers indepently of the underlying hardware layout. It offers a bus
+abstraction to link device drivers in a object oriented manner where device
+drivers are parent/child of each others. This scheme offers powerful features
+like resource inheritance (mmio, irqs) really useful for a graphical board
+implementation. But, one of KGI goal is to provide an interface *independent*
+of the platform (architecture and especially OS). Then, there's no way to
+take advantage of FreeBSD powerful features if we want (and we must) keep
+this compatibility.
+
+KGI drivers are really modular. The code for the clock, ramdac and chipset
+is seperated in 3 link objects that may be linked later according to the
+board hardware layout. Each of these objects is separated in two C files
+-bind.c and -meta.c which are respectively implement the OS dependent and
+OS independent parts of the drivers (clock, ramdac, chipset are considered
+as drivers). So, one could think: cool, just rewrite -bind.c for FreeBSD
+and you win!
+
+That's not so cool/easy. -bind.c contains a lot of code which is by
+definition also mostly independent of the Un*x implementation you consider.
+So, there's no reason not to take advantage of it. Later maybe one could
+imagine some improvment in this area and a rewrite -bind.c to take advantage
+of advanced OS kernel features.
+
+So, how's going with FreeBSD? Is a board device driver a parent of clock,
+ramdac and chipset drivers? Certainly. IMHO, the board manages the resources
+of the graphic card and distributes them to each components. The chipset
+has a particular role since it interfaces the board to the bus (AGP, PCI...)
+so it manages most PCI resources. The chipset is also the unique way for
+identifying the board on the bus. Additionnal bios and registers can then
+be used to distinguish boards from one to another.
+
+In FreeBSD implementation, the board entity is a full FreeBSD device driver,
+respecting the newbus interfaces, connected to the PCI core and responsible
+for dispatching the resources to the KGI underlying clock, ramdac and chipset
+drivers (as they exist in the Linux implementation). The board driver
+probe/attach routines detect the chipset, prepare the kgi display
+information and call the kgim functions to powerup the KGI drivers.
+
+When the board module is loaded into the FreeBSD kernel, the probe routine
+has already acknowledged the chipset existance. Consequently, during the
+attach call, when the KGI chipset driver is powered up, the pci_find()
+routine is a nop instruction. Later, resource reservation like irq_claim
+and check_region are converted into FreeBSD bus_resource() calls.
+
+Integration of KGI inside FreeBSD
+---------------------------------
+
+FreeBSD has already its own infrastructure to connect the console and VGL
+code to the underlying graphic hardware. This infrastructure is based on a
+simple API named vidsw (video switch).
+
+Currently, FreeBSD is organized like this::
+
+ --------
+ VGA
+ -------- <- vidsw
+ VESA
+ -------- <- vidsw
+ syscons
+ --------
+ VGL
+ --------
+
+Before arguing on KGI features and advantages, which has been done for many
+years now, we have to provide something working, compatible and scalable with
+the rest of the systems. Currently, KGI has the disadvantage of being managed
+outside the development stream of Linux.
+
+On the other hand FreeBSD is a project with a lot of good existing code.
+FreeBSD/KGI integration must take advantage of this. It's the purpose of
+the following integration diagram::
+
+ --------
+ VGA
+ -------- <- vidsw
+ VESA
+ -------- <- vidsw
+
+ dpy-vidsw *new*
+
+ --------
+ KGI (exising KGI)
+ --------
+
+ kgia *new*
+
+ -------- <- vidsw
+ syscons
+ --------
+ VGL
+ --------
+
+Along the integration of KGI specific features (VM mappings, new drivers)
+this architecture will remain 100% compatible and permit the console to
+share KGI resources with graphic applications.
+
+dpy-vidsw is a KGI display driver capable of converting FreeBSD adapter
+interface to a KGI display. The purpose of this is approximatively the same
+as dpy-i386 which is for KGI/Linux the console display for the very
+beginning of the OS startup.
+
+kgia is on the opposite a FreeBSD graphic adapter for interfacing with KGI
+resources. Of course, using both of them simultaneously has no advantage
+over a direct syscons to VGA mapping as currently by FreeBSD. Except this:
+accessing the VGA resources (framebuffer, fonts...) from userland through
+/dev/graphic API/interface.
+
+KGI VM Management under FreeBSD
+-------------------------------
+
+Not a simple issue... Once again Linux implementation makes a major assumption
+on the VM implementation of the OS. To summurize, the VM system is supposed
+to propagate process vm_map_entries directly to the underlying mmap driver.
+This is completly impossible in FreeBSD (except by impacting the whole VM
+design). The VM system is broken in various layers:
+
+vm_map_space -> vm_map_entry -> object -> vm_page -> ... -> tlb_of_pte.
+
+objects are source of vm_pages for the mapped devices: each vnode of the
+system (virtual inode) has an object providing pages on page faults.
+/dev/graphxx are vnodes and are supposed to be mapped by the device_pager.
+
+In order to keep most of graphic.c identical in Linux and FreeBSD systems,
+KGI VM is partly implemented in a dedicated kgi_pager. The vm_area_struct
+defined under Linux has been redifined to interface the KGI pager and
+graph_mmap routines. In order to have as much as possible per process
+information maintained at the pager layer, an object is allocated for
+every new KGI map. In this way, pager objects are deallocated each time
+KGI map are released, allowing to call underlying graph_xxxx functions
+appropriatly.
+
+Another caveat of the BSD design is that there is no way to provide the
+driver with per-process file data. Thus in FreeBSD implementation, the
+graph_file_t layer is simply indexed by the minor number and only one
+process can open a graphic dev file. Device management and especially
+attachment is handle by a new mapper command.... 
+
+Credits
+=======
+
+The FreeBSD port was written by Nicholas Souchu...
+
+... I would like to thank more especially Nathalie my wife for the precious
+time I've been given for that project. And my daughter Nina for her long
+siesta!
+
+Otherwise, in no particular order, JP for the initial site and the kgi4BSD
+logo, Pedro for motivating me along the years and for is advocacy of KGI in
+the various BSD* lists, Rodolphe for is personnal support even... and for is
+good work on the Gx00 driver. Hey, we got my G450 running finally!
+
+I would like to thank all the KGI guys who brought the project were it is
+today. Steffen was very patient and took each time I needed is keyboard to
+answer my questions. 

@@ -1,0 +1,97 @@
+##
+##  GGI package map
+##  ---------------
+##
+##  This file describes the packages found in the GGI CVS
+##  repository. It is used by the doc infrastructure to
+##  automate all publishing tasks.
+##
+##  All packages belong to a family, usually matching a toplevel
+##  module in the CVS repository (but not necessarily).  A family
+##  is specified by a '- <family name>' line.  All packages following
+##  this line (till the next family) are considered part of this family
+##
+##  A package is defined as:
+##
+##  <pkgname>  <cvs module> <shortname> <long name>
+##
+##  <cvs module> is the CVS module path, relative to the ROOT.
+##  If it starts with a '@', it means this package shares a module
+##  with another one (whose pkgname follows). It is a "virtual" package,
+##  having its own documentation but not released separatly.
+##  
+##  Once a package as been defined, different branches or versions
+##  can be specified. The pattern is:
+##
+##  <pkgname> <cvs module>:<cvs tag> <version name>
+##
+##  A package definition will implicitly add a 'current' branch.
+##
+##
+
+- Core libraries
+# --------------
+
+libgg       ggi-core/libgg		LibGG       GGI helpers
+libgg	    @libgii:branch_0_8	0.8.x
+libgg	    @libgii:branch-0-9	0.9.x
+libgg	    @libgii:branch-1-0  1.0.x
+
+libgii	    ggi-core/libgii		LibGII      General Input Interface
+libgii	    ggi-core/libgii:branch_0_8	0.8.x
+libgii	    ggi-core/libgii:branch-0-9	0.9.x
+libgii	    ggi-core/libgii:branch-1-0  1.0.x
+
+libggi      ggi-core/libggi		LibGGI      General Graphics Interface
+libggi	    ggi-core/libggi:branch_2_0	2.0.x
+libggi	    ggi-core/libggi:branch-2-1	2.1.x
+libggi	    ggi-core/libggi:branch-2-2  2.2.x
+
+libgalloc   ggi-core/libgalloc		LibGAlloc   Graphics Allocator
+
+
+- Lowlevel extensions
+# -------------------
+
+libggimisc  lowlevel/libggimisc	LibGGIMisc  Miscellaneous Graphics Features
+libggimisc  lowlevel/libggimisc:branch-2-1	2.1.x
+libggimisc  lowlevel/libggimisc:branch-2-2	2.2.x
+
+libggibuf   lowlevel/libggibuf	LibGGIBuf   Auxiliary Buffers
+
+libggiblt   lowlevel/libggiblt	LibGGIBlt   Blitting Extension
+
+libggiovl   lowlevel/libggiovl	LibGGIOvl   Overlay Extension
+
+
+- Highlevel extensions
+# --------------------
+
+libggixmi   highlevel/libxmi	LibGGIXMI   GGI XMI Port
+
+
+- Miscellaneous extensions
+# ------------------------
+
+libggiwmh   misc/libggiwmh	LibGGIWMH   Window Manager Hints
+libggiwmh   misc/libggiwmh:branch-0-2	0.2.x
+libggiwmh   misc/libggiwmh:branch-0-3	0.3.x
+
+libggigcp   misc/libggigcp	LibGGIGCP   Color Management Extension
+libggigcp   misc/libggigcp:branch-0-9	0.9.x
+libggigcp   misc/libggigcp:branch-1-0   1.0.x
+
+
+- Non-extensions libraries
+# ------------------------
+
+libgiigic   ggi-libs/libgiigic	LibGIIGIC   Input Configuration
+libgiigic   ggi-libs/libgiigic:branch-1-0	1.0.x
+libgiigic   ggi-libs/libgiigic:branch-1-1	1.1.x
+
+
+- Wrappers and bindings
+# ---------------------
+
+piggy       wrappers/piggy	Piggy       The Python Wrapper
+clggi       wrappers/lisp       CL-GGI      The Common Lisp Wrapper

@@ -1,0 +1,44 @@
+===========
+Screenshots
+===========
+
+.. navigation::
+   :submenu: FreeBSD : screenshots.html#freebsd
+
+.. contents::
+   :depth: 1
+   
+FreeBSD
+=======
+
+FreeBSD-8 alpha 1280x1024x8 mode
+--------------------------------
+
+.. image:: resources/images/screenshots/KGI-FreeBSD8.png
+   :width: 800
+   :height: 600
+   :alt: FreeBSD 1280x1024x8
+
+FreeBSD dual-head
+-----------------
+
+.. image:: resources/images/screenshots/dual-head.jpg
+  :width: 800
+  :height: 600
+  :alt: FreeBSD dual-head
+
+FreeBSD console in 1024x768x8 mode
+----------------------------------
+
+.. image:: resources/images/screenshots/vmkgi-1024x768x8.jpg
+  :width: 600
+  :height: 666
+  :alt: FreeBSD console 1024x768x8
+
+FreeBSD console in 320x200x8 mode
+---------------------------------
+
+.. image:: resources/images/screenshots/vmkgi-320x200x8.jpg
+  :width: 644
+  :height: 405
+  :alt: FreeBSD console 320x200x8

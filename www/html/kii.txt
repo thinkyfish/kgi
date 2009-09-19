@@ -1,0 +1,168 @@
+===
+KII
+===
+
+.. navigation::
+   :submenu: KGI Interfaces : interfaces.html,
+             Focuses : kii.html#focuses,
+             Inputs : kii.html#inputs
+
+KII stands for **Kernel Input Interface**. It is known as the kernel side of
+GII the General Input Interface (part of the GGI project). KII is part of KGI.
+
+It provides registration routines to connect input drivers to focuses.
+
+Focuses
+-------
+
+When you hit a key on your keyboard, you want it to go to the console you are
+working on and application(s) running on that console should get the event
+delivered. Other applications running on other consoles should not get the
+event (for obvious security reasons). When you want to switch to another
+physical (dual-head) or virtual (also known as VTs) console, you press a key
+combination to switch and then want now your chars to be sent to the right
+console. In other words, you need the system manages the focus for you in a
+convenient, deterministic and safe manner.
+
+The focus is the central place in KGI (more accuratly, in KII) where inputs
+are connected/multiplexed to displays.
+
+These connections are at the same time dynamic and static. Static because the
+relationship between display and input instances is predefined. Dynamic
+because you can register any input (ps/2, usb mouse or keyboards) or
+display to the focus (by replacing an already allocated display).
+
+So what is this predifined relationship? Let's have a look at the following::
+
+  device 0 on focus 0, display 0, console 0
+  device 1 on focus 0, display 0, console 1
+  device 2 on focus 0, display 1, console 2
+  device 3 on focus 0, display 1, console 3
+  device 4 on focus 0, display 1, console 4
+  device 5 on focus 0, display 1, console 5
+  device 6 on focus 0, display 1, console 6
+  device 7 on focus 0, display 1, console 7
+  device 8 on focus 0, display 1, console 8
+  device 9 on focus 0, display 1, console 9
+  device 10 on focus 0, display 1, console 10
+  device 11 on focus 0, display 1, console 11
+  device 12 on focus 1, display 2, console 0
+  device 13 on focus 1, display 2, console 1
+  device 14 on focus 1, display 2, console 2
+  device 15 on focus 1, display 2, console 3
+  device 16 on focus 1, display 2, console 4
+  device 17 on focus 1, display 2, console 5
+  device 18 on focus 1, display 2, console 6
+  device 19 on focus 1, display 2, console 7
+  device 20 on focus 1, display 2, console 8
+  device 21 on focus 1, display 2, console 9
+  device 22 on focus 1, display 2, console 10
+  device 23 on focus 1, display 2, console 11
+
+Above, you see the case of 2 keyboards (represented by 2 focuses) with
+3 screens. Each focus can reach 12 consoles (typically what you get with
+a PC keyboard with F1..F12). Focus 1 is totally linked to display 2 (this is a
+1 keyboard + 1 screen wired config) and focus 0 can either control consoles 0
+and 1 through display 0 and others through display 1.
+
+With focus 0, when you hit ALT+F1 you edit commands on display 0,
+ALT-F3 : you edit on display 1, ALT-F2 you change VT on display 0 and
+ALT-F4 to ALT-F12 : you switch to VTs on display 1.
+
+On focus 1, when you hit ALT-F1 to ALT-F12 you scan the VTs of the second
+screen.
+
+Inputs
+------
+
+An input is basically anything capable of filling KII with events. Inputs
+are typically drivers that convert HW events (mouse move, buttons,
+key-press...) into KII events.
+
+Inputs must register themselves to KII before anything else. Once done, they may
+be polled by the KII engine or send itself events to KII. Like displays, inputs
+are connected to focuses on registration to enable deterministic multiplexing
+of inputs/displays.
+
+The FreeBSD case
+----------------
+
+In the FreeBSD implementation, KII is on top of FreeBSD kbd
+infrastructure. The main benefit is to get immediatly FreeBSD keyboards
+supported by KII and KGI. But in the long term FreeBSD current kbd
+abstraction should be discarded and true KII drivers should be written.
+
+Practically, kbd (atkbd or usbkbd) is a KII input connected to focus 0.
+Moused events are redirect to focus 0 by mean of another KII input (made
+by ioctls) and finally a KII client is given to provide the /dev/sysmouse
+interface to user apps. Hmm, little graphic::
+
+  /dev/consolectl -----------+
+                             |
+        ttyv1 <--------+     v
+                       |- focus 0 <------ kbd
+        ttyv2 <--------+     |
+                             |
+  /dev/sysmouse <------------+
+
+
+kii_register_input() is typically called when a new input driver is loaded::
+
+  kii_error_t kii_register_input(
+
+    /* Comment: the focus to register to */
+    kii_u_t focus,
+
+    /* Comment: preinitialized data about the input to register */
+    kii_input_t *dev
+  );
+
+The return code is null (KII_EOK) on succes. Otherwise, the appropriate return code is given back.
+
+A typical registration of an input is like this::
+
+        snprintf(sc->kii_input.vendor, KII_MAX_VENDOR_STRING, "KII FreeBSD keyboard");
+        snprintf(sc->kii_input.model, KII_MAX_VENDOR_STRING, kbd->kb_name);
+        sc->kii_input.events = KII_EM_KEY | KII_EM_RAW_DATA;
+        sc->kii_input.report = KII_EM_KEY | KII_EM_RAW_DATA;
+        sc->kii_input.priv.priv_ptr = sc;
+        sc->kii_input.Poll = kbdriver_poll;
+        sc->kii_input.Parse = kbdriver_parser;
+
+        kii_error = kii_register_input((~0), &sc->kii_input);
+
+In the above example, KII_INVALID_FOCUS is passed as focus id to let KII auto
+register the input according to its capabilities e.g sc->kii_input.events.
+sc->kii_input.priv.priv_ptr is initialized with the software data pointer of
+the kbd device.
+
+kbdriver_parser() takes scancodes from the RAW output of a kbd and fills the
+event structure passed in. Event is only reported to KII if the event type
+corresponds (e.g bit set) in sc->kii_input.report.
+
+Here is another example of registration::
+
+        snprintf(mouse->input.vendor, KII_MAX_VENDOR_STRING, "FreeBSD");
+        snprintf(mouse->input.model, KII_MAX_VENDOR_STRING,  "Syscons Emulation Mouse");
+        
+        mouse->input.focus = KII_INVALID_FOCUS;
+        mouse->input.id = KII_INVALID_DEVICE;
+        mouse->input.events = KII_EM_POINTER & ~KII_EM_PTR_ABSOLUTE;
+        mouse->input.report = KII_EM_PTR_RELATIVE | KII_EM_PTR_BUTTON;
+        mouse->input.priv.priv_ptr = mouse;
+        
+        /* XXX Force registration to focus 0 */
+        if (!(error = kii_register_input(0, &mouse->input))) {
+                make_dev(&scectl_cdevsw, SC_CONSOLECTL,
+                         UID_ROOT, GID_WHEEL, 0600, "consolectl");
+        } else {
+                KRN_ERROR("Could not register sce_mouse");
+        }
+
+The above registration comes from the scemul syscons emulation KII device in
+FreeBSD. It emulates the /dev/consolectl interface to which the general
+purpose mouse daemon sends data on mouse events. This data is processed
+internally and sent back to userland by /dev/sysmouse or /dev/event.
+
+In this example, no Parser or Poll methods are set. Instead, scemul responds
+to the mouse daemon inputs by sending directly the event to KII. 

@@ -1,0 +1,40 @@
+##
+##  GGI Release map
+##
+##  This files tells which package version goes into which release.
+##  It is mainly used to create HTML documentation with per-release
+##  cross-refs.
+##
+##  A new release is specified by a '- <bundle name> <version>' line.
+##  It is followed by a list of '<pkgname> <pkg version>', that must
+##  match entries in the "packages" file.
+##
+
+- GGI 2.0
+# -------
+
+libgg     0.8.x
+libgii    0.8.x
+libggi    2.0.x
+
+- GGI 2.1
+#--------
+
+libgg          0.9.x
+libgii         0.9.x
+libggi         2.1.x
+libggimisc     2.1.x
+libggigcp      0.9.x
+libggiwmh      0.2.x
+libgiigic      1.0.x
+
+- GGI 2.2
+#--------
+
+libgg          1.0.x
+libgii         1.0.x
+libggi         2.2.x
+libggimisc     2.2.x
+libggigcp      1.0.x
+libggiwmh      0.3.x
+libgiigic      1.1.x

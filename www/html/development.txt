@@ -1,0 +1,55 @@
+===========
+Development
+===========
+
+.. navigation::
+   :submenu: KGI porting guide : development.html#kgi-porting-guide,
+             Site maintenance: development.html#site-updating,
+             Plans : development.html#plans,
+			 IRC developer logs: development.html#irc-developer-logs
+
+KGI porting guide
+=================
+
+To be written
+[You may want to view the developmer mailing list achieves for a start]
+
+Site maintenance
+================
+
+ The kgi-project.org site is generated with the `ggi-project.org 
+ <http://www.ggi-project.org>`_ web site infrastructure.
+
+ To obtain the infrastructure use CVS and checkout the 
+ `www <http://kgi.cvs.sourceforge.net/kgi/www>`_ module.
+
+ Copy the `.ggisettings` file from the checkout in 
+ `html/infrastructure/ggisettings` to your $HOME directory. 
+ 
+ You will need configure the paths correctly in `.ggisettings`.
+
+ cd to `html/infrastructure` and `make site`.
+ 
+ Your system will need `Python <http://www.python.org/>`_ and `docutils 
+ <http://docutils.sourceforge.net/>`_ successfully complete `make site`.
+
+Plans
+=====
+
+`Follow the todo list <todo.html>`_ as far as time permits.
+
+IRC developer logs
+==================
+
+Recent
+------
+
+`kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_
+`kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
+
+Older
+-----
+
+`kgi-irc-20020824 <resources/irc-logs/kgi-irc-20020824.html>`_
+`kgi-irc-20030201 <resources/irc-logs/kgi-irc-20030201.html>`_
+`kgi-irc-20030201-2 <resources/irc-logs/kgi-irc-20030201.log>`_

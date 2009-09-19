@@ -1,0 +1,60 @@
+=======
+Contact
+=======
+
+.. contents::
+   :depth: 1
+
+.. navigation::
+   :submenu: General : contact.html#general,
+             IRC : contact.html#irc,
+             Mailing lists : contact.html#mailing-lists,
+             Alternatively : contact.html#alternatively
+
+General
+=======
+
+New ideas, development strategies and user support happens via `IRC`_ (Internet relay chat). However,
+there are also `mailing lists`_ available they're provided to reach a broader audience.
+
+IRC
+===
+
+Check the **#kgi** channel on the `FreeNode Network
+<http://www.freenode.net/>`_. This channel is intended to be for KGI
+support, development and related topics. Chatting is allowed, but
+please keep things friendly.
+
+`The channel is logged <http://woo.li/logs/kgi/>`_.
+
+Currently, **#kgi** is redirected to **#ggi**
+
+Mailing lists
+=============
+
+We currently have one mailing list for KGI, hosted at `sourceforge.net <sourceforge.net>`_
+where it is intended that users & developers can ask questions, relate
+success-stories and exchange ideas and or recipes.
+
+`Subscribe kgi-develop <http://lists.sourceforge.net/lists/listinfo/kgi-develop>`__
+(`SSL-protected <https://lists.sourceforge.net/lists/listinfo/kgi-develop>`__)
+
+Recent archives of the mailing lists can be found at the subscription links 
+above.
+
+In order to avoid problems with spam on the mailing lists, we do not allow
+posts from non-subscribers; if you do not wish to subscribe, send your messages
+to a KGI developer. Unfortunately, spammers have started abusing the From
+field of emails, making people think our mailing lists are insecure.
+Please check the archives referred to above for proof that our lists are safe.
+If such messages do not go via our lists, there is very little we can do
+about them; sue them and/or filter their garbage out.
+
+Alternatively
+=============
+
+Alternatively you can contact the `GGI (General Graphic Interface)`__
+project and ask for what you need.
+
+__ http://www.ggi-project.org/contact.html
+

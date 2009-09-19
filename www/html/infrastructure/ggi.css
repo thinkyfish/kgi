@@ -1,0 +1,215 @@
+body { margin: 0; font-family: sans-serif; font-size: 11pt;  }
+
+h1 {
+	text-align: right;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	font-weight: bold;
+	color: #0E3654;
+}
+
+h2 {
+	color: #2A2F55;
+        font-weight: normal;
+        border-bottom: 1px dashed #353B6C;
+}
+
+h3 {
+	color: #091938;
+	font-weight: normal;
+        padding: 0 0 0 10px;
+        border-left: 10px solid #0E3654;
+}
+
+p { text-align: justify; line-height: 1.4em; }
+li { text-align: justify; line-height: 1.4em; }
+
+a[href] {
+	font-weight: normal;
+	color: black;
+	text-decoration: none;
+        border-bottom: 1px solid #aaaaaa;
+}
+
+a span {
+         padding-left: .2em; padding-right: .2em; 
+         color: #aaaaaa;
+}
+a:hover span {
+         color: black;
+}
+
+a[href]:hover {
+        border-bottom: 1px solid #4D537B;
+}
+
+pre {
+	font-family: monospace;
+      	color: #332211;
+      	background-color: #fff9f0;
+      	padding: .5em;
+      	padding-left: 1em;
+      	border: 1px solid #ddbb99;
+}
+
+pre {
+	font-family: monospace;
+      	color: black;
+      	background-color: #f7f7f7;
+      	padding: .5em;
+      	padding-left: 1em;
+      	border: 2px solid #dddddd;
+}
+
+ul p {
+	margin-top: .4em;
+	margin-bottom: .4em;
+}
+
+
+.menu-global, div.menu-local {
+	margin-top: 1em;
+}
+
+.menu-global a, .menu-local a {
+	display:       block;
+	padding:       1px;
+	padding-left:  .3em;
+	margin-top:    .2em;
+	border-left:   .7em solid #4D537B;
+        border-bottom: none;
+	text-align:    left;
+}
+
+.menu-global a:hover, .menu-local a:hover {
+	background: #4D537B;
+	text-decoration: none;
+	color: #AAAAAA;
+        border-bottom: none;
+}
+
+a.menu-disabled  {
+	border-left:   .7em solid #aaaaaa;
+	color: #aaaaaa;
+}
+
+a.menu-disabled:hover {
+	background: #1C445D;
+	text-decoration: None;
+	color: #aaaaaa;
+}
+
+
+table.table {
+	border: 1px solid #bbbbbb;
+	border-collapse:  collapse;
+}
+
+table.manpages {
+	width: 100%;
+}
+
+table.table tr td {
+	border: 1px solid #bbbbbb;
+        padding: 2px 1em 2px 1em;
+}
+
+table.table tr th {
+	border: 1px solid #bbbbbb;
+        padding: 2px 1em 2px 1em;
+}
+
+div.section-2 {
+   margin: 0 0 0 2em;
+}
+div.section-3 {
+   margin: 0 0 0 20px;
+}
+
+div.docinfo                   { font-size: small; }
+div.docinfo table             { padding: 0; margin: 0; width: 100% }
+div.docinfo table tr td       { padding: 0; margin: 0; }
+div.docinfo table tr td.field { color: #999999; text-align: right; width: 85%; }
+div.docinfo table tr td.entry { text-align: left;  width: 15%; }
+
+div.blockquote { border: 1px solid #dddddd;
+		 margin-left: 1em;
+		 margin-right: 1em;
+		 padding-left: 1em;
+		 padding-right: 1em;
+}
+
+span.literal   { font-family: monospace; color: #444444; }
+
+span.value     { font-family: monospace; color: #222288; }
+span.function  { font-family: monospace; color: #bb3333; }
+span.variable  { font-family: monospace; color: #006600; }
+
+.manpage       { font-family: monospace; }
+
+span.default   { font-family: monospace; color: #222288; }
+
+
+div.admonition-title { font-weight: bold; color: black; }
+
+div.admonition-important { border: 3px solid #ff8888; padding: .3em; margin: 1em;}
+div.admonition-note      { border: 2px solid #8888ff; padding: .3em; margin: 1em;}
+div.admonition-tip       { border: 2px solid #77aa77; padding: .3em; margin: 1em;}
+
+
+html, body { height: 100%;  }
+
+#page {
+        padding: 0px 0px; 
+        position: relative;
+        margin: 0;
+        background: #1C445D;
+        min-height: 100%;
+        height: auto !important;
+        height: 100%;
+}
+
+#content {
+	margin-right: 10em;
+        padding: 1em 2em 2em 2em;
+        background: white;
+        border-right: 2px solid #4D537B;
+}
+
+#header { 
+        position: absolute;
+	top:    0px;
+	right:  0px;
+	width:  10em;
+        padding-bottom: 5px;
+        
+}
+
+#footer {
+	position: absolute;
+	bottom: 0px;
+	right:  0px;
+	width:  15em;
+
+        font-size: xx-small;
+	color:  #aa5522;
+}
+
+#footer .links {
+         text-align: center;
+ }
+#footer img {
+             border: none;
+}
+#footer a {
+           border: none;
+           text-decoration: none;
+}
+
+/* IE will not know what to do with it. */
+html > body > div > #header {
+  position: fixed;
+}
+html > body > div > #footer {
+  position: fixed;
+}

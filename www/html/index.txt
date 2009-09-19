@@ -1,0 +1,41 @@
+===============
+The KGI Project
+===============
+
+.. navigation::
+   :submenu: Introduction : index.html#introduction,
+              Latest news : index.html#latest-news,
+			  News archive: news.html
+
+Introduction
+============
+
+* KGI (**Kernel Graphics Interface**), is a project that aims for a portable 
+  framework providing a means for fully accelerated, secure, stable & portable 
+  GPU drivers.
+
+* The basic driver functionality (including mode setting) is preformed in kernel
+  space, this allows for a powerful console system (see next point below). 
+
+* KGI provides a flexible console system, which allows the user to map any input 
+  to any virtual console on any display. Multiple display support has been 
+  designed and implemented at the core of the KGI system since its beginnings
+
+* Together with `GGI <http://www.ggi-project.org>`_  
+  (**General Graphics Interface**) the two projects provide a full featured 
+  accelerated system to the console without the need for additional drivers.
+  KGI handles the minimum required for safe acceleration and mode switching,
+  while GGI operates from user space without loosing stability or security.
+
+* With the stable system of KGI & GGI users can make use of 
+  `XGGI <http://www.ggi-project.org/xggi/>`_ for a X11 environment. This setup
+  moves X11 away from kernel space and leaves the hardware access to KGI
+ 
+* However, if the user chooses so, there is no need for a heavy X11 based
+  environment. Applications can run in full screen graphics mode directly on
+  the console.
+
+Latest news
+===========
+
+.. include:: tmp/latestNews

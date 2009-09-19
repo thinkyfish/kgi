@@ -1,0 +1,12 @@
+========
+KGI APIs
+========
+
+.. navigation::
+   :submenu: KGI Interfaces : interfaces.html,
+             MuteX : mutex_api.html,
+             KGI : kgi_api.html
+
+`MuteX application programming interface <mutex_api.html>`_
+
+`KGI application programming interface <kgi_api.html>`_

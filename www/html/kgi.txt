@@ -1,0 +1,99 @@
+===
+KGI
+===
+
+.. navigation::
+   :submenu: KGI Interfaces : interfaces.html,
+             Displays : kgi.html#displays,
+             Devices : kgi.html#devices
+
+KGI stands for the **Kernel Graphic Interface**. As a reference, read the
+original author documentation: `The structs and procedures (pdf) <kgi-doc.pdf>`_
+
+As a general picture, neither applications or kernel code access directly
+the HW. Instead, they register themselves to KGI which share the underlying
+HW using methods common to all kind of display HW.
+
+Displays
+--------
+
+You are encouraged to read the `KGI Display Hardware Driver Overview`__
+for more details about displays. The description here after is a much more
+practical approach.
+
+__ display_overview.html
+
+Displays are (simply speaking) graphic backends. Contrary to the above
+overview, I'm not sure we can speak of drivers. They provide the KGI core with
+methods to negociate, set or unset graphical modes. Additionally, displays
+propose resources (framebuffer, HW pointers, palettes...) which are used by
+devices (see later) to control the display content outputs.
+
+Different kind of displays are known currently:
+
+* The null display, first allocated at the very beginning of KGI initialization
+
+* The Linux console i386 display with text mode support
+
+* The FreeBSD VESA display
+
+* KGIM graphic drivers
+
+As you see through these examples, they are not all drivers. The FreeBSD VESA
+display for example is just a wrapper between the KGI display API and FreeBSD
+VESA modesetting interface. KGIM is not a driver either, but an `infrastructure
+to develop modular graphic drivers <kgim.html>`_.
+
+The display API is an abstraction interface enabling the control of any kind
+of graphic HW by other parts of the kernel or applications.
+
+Note that displays are not dynamic objects. Instead, the expected number of
+null displays must be allocated at KGI initialization and are later replaced
+by other displays. Displays must register themselves to replace others.
+
+It is by registering that the display provide KGI with mode setting methods,
+description of its resources and the size of its private mode data structure.
+
+Displays are statically `bound to focuses <kii.html>`_.
+
+Devices
+-------
+
+KGI connects APIs of different kind. One of them is known as device API.
+
+A KGI device is not what we are used to think of e.g a peripheral or anything
+related to HW. Instead, a KGI device is a piece of code and data
+using / sharing resources with other KGI devices. Everything that uses the
+HW resources of a display (mode setting, framebuffer, HW pointers,
+palettes...) must register itself as a KGI device. A KGI device is somehow 
+clients of displays.
+
+Maybe this layer of KGI was wrongly called devices because /dev/graphic and
+/dev/event which are the general KGI and KII user entrypoints are from Unix
+point of view called devices...
+
+Different KGI devices are known currently:
+
+* /dev/graphic, the kernel/user limit for the support for userland ioctl's
+
+* KGC Render, the rendering engines of KGC (FreeBSD Kernel Graphic Console)
+
+* FreeBSD boot console
+
+The visible effect of mapping a device to a display is the change of
+mode on that display. Before mapping a device, a mode must have been
+negociated with its display. When the device is mapped, the display is
+requested by KGI to set the mode previously negociated. When the device is
+unmapped, the display is asked to unset the mode before another device is
+mapped and so on.
+
+Device mapping / unmapping is performed typically when:
+
+* console events occur (special key hit for example) on the focus the device's display is attached to
+
+* an application sets a mode, it is supposed to take control of the screen: the device, allocated when opening the /dev/graphic Unix device, is then mapped with the mode just negociated
+
+* the console enters DDB (the debugger), the currently mapped KGI device (graphic app or whatelse) is unmapped and the console's KGI device is mapped
+
+The device methods (hooks) enable the device for example to redraw the screen
+when mapped or to block anything being performed on the display when unmapped. 

@@ -1,0 +1,131 @@
+body { 	font-family: Arial, Helvetica, sans-serif;
+	background-color: #654;
+	color: #ffa;
+	margin-left: 10%;
+	margin-right: 10%;
+}
+
+h1 {	color: #ffd;
+	text-align:   right;
+	border: 0px solid black;
+}
+
+h2 {	color: #ffd;
+	border-bottom: 1px solid #ffd;
+}
+
+h3 {	color: #ffd;
+}
+
+
+
+a 	{ font-weight: bold; color: #cfc; text-decoration: none; }
+a:hover { color: #efe; }
+
+strong { color: #ffd; }
+
+p { text-align: justify; }
+
+pre {
+	font-family: monospace;
+	color: #ffd;
+	background-color: #765;
+	padding: .5em;
+	padding-left: 1em;
+	border: 1px solid black;
+}
+
+span.literal {
+	font-family: monospace; color: #ffd; font-weight: bold;
+}
+
+
+
+
+
+
+
+
+div.separator {
+     margin-bottom: 4px;
+     height: 4px;
+     background-color: #ffce5b;
+     border: 1px solid black;
+     font-size: 3;
+}
+
+div.blockquote {
+     border: 1px solid #876;
+     margin-left:   1em;
+     margin-right:  1em;
+     padding-left:  1em;
+     padding-right: 1em;
+}
+
+div.menu {
+	text-align: right;
+	font-weight: bold;
+	border-right: 0px black solid;
+}
+
+div.main {
+}
+
+div.tail {
+	margin-top: .5em;
+	text-align: right;
+	font-weight: bold;
+	border-top: 1px solid #ffd;
+}
+
+div.timestamp { font-size: x-small; }
+
+
+
+
+
+
+
+div.important {
+	background-color: #ff8888;
+	padding: 0;
+	padding-left: 1em;
+	margin-left: 1cm;
+	border: 1px;
+	border-color: #884444;
+	border-style: solid;
+	margin-bottom: .5em;
+	border-color: black;
+}
+
+div.note {
+	background-color: #ccffcc;
+	padding: 0;
+	padding-left: 1em;
+	margin-left: 1cm;
+	border: 1px;
+	border-color: #448844;
+	border-style: solid;
+	margin-bottom: .5em;
+	border-color: black;
+}
+
+div.tip {
+	background-color: #ccffcc;
+	padding: 0;
+	padding-left: 1em;
+	margin-left: 1cm;
+	border: 1px;
+	border-color: #448844;
+	border-style: solid;
+	margin-bottom: .5em;
+	border-color: black;
+}
+
+p.admonition-title { font-weight: bold; margin-top: .5em; }
+
+span.system    { font-family: monospace; font-weight: bold; }
+span.man       { font-family: monospace; font-weight: bold; }
+span.parameter { font-family: monospace; font-weight: bold; font-style: italic; }
+
+img { border: 0; margin: 2px; }
