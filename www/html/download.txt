@@ -11,28 +11,29 @@ Download
 CVS
 ===
 
-*You can checkout the entire KGI project from CVS using the following::
- 
+You can checkout the entire KGI project from CVS following the steps below.
+When you're prompted for a password, press ENTER to continue leaving the 
+password prompt empty::
+
  cvs -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi login 
  cvs -z3 -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi co -P . 
-
-When you're prompted for a password, use a blank password by pressing ENTER on your keyboard.
-
 
 If you're only interested in the FreeBSD module then use following::
 
  cvs -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi login 
  cvs -z3 -d:pserver:anonymous@kgi.cvs.sourceforge.net:/cvsroot/kgi co -P freebsd 
- 
- 
-Alternatively, you can also checkout the old `kgi-wip <http://sourceforge.net/projects/kgi-wip>`_ project which was a fork of the original KGI project::
+  
+Alternatively, you can also checkout the old 
+`kgi-wip <http://sourceforge.net/projects/kgi-wip>`_ project which was a fork of
+the original KGI project::
 
  cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip login 
  cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip co kgi-0.9
  
 The kgi-wip branch is for Linux systems only.
 
-You can also browse the entire repository at `http://kgi.cvs.sourceforge.net/kgi/ <http://kgi.cvs.sourceforge.net/kgi/>`_
+You can also browse the entire repository at 
+`http://kgi.cvs.sourceforge.net/kgi/ <http://kgi.cvs.sourceforge.net/kgi/>`_
 
 Shut up and hack :-)
 
@@ -53,6 +54,9 @@ FreeBSD
 
 You can fetch some old patches for kgi4BSD from `nsouch's download area`__ in the
 `kgi4BSD`__ directory. These patches are based on a 6.x system.
+
+The patches found here have formed the basis for the new works found in the
+`FreeBSD <http://kgi.cvs.sourceforge.net/kgi/freebsd>`_ repo.
 
 __ http://nsouch.free.fr
 __ http://nsouch.free.fr/kgi4BSD

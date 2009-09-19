@@ -5,6 +5,14 @@ News archive
 2009
 ====
 
+2009-09-20 : Updated website
+----------------------------
+
+The web site has been updated to sync with GGI. 
+
+A new `www <http://kgi.cvs.sourceforge.net/viewvc/kgi/www>`_ module in CVS has
+been created to keep track of the build infrastructure used to maintain this site.
+
 2009-08-31 : New CVS branch created for FreeBSD
 -----------------------------------------------
 
@@ -17,7 +25,7 @@ FreeBSD development is currently being carried out in `http://kgi.cvs.sourceforg
 ------------------------------------
 
 KGI alpha patch for FreeBSD-8 available
-[No longer available. See news items from 2009-08 and on.]
+[No longer available. See news items from 2009-08-31]
 
 2006
 ====

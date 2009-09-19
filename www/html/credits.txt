@@ -12,11 +12,11 @@ Individuals
 Much like the rest of site, the following is ripped strate from the GGI project's web site
 
 The following persons shall be eternally remembered as contributors to
-The GGI^H^H^HKGI project. May their name (given in no special order (actually its mostly alphabetical)) stay
+The GGI^H^H^HKGI project. May their name (given in no special order [actually its mostly alphabetical]) stay
 carved forever on this humble digital stele. If yours is missing and
 you think it's unfair, please contact somebody.
 
-- Steffen Seeger : KGI Project Leader & Developer (The guy who started it all)
+- Steffen Seeger : KGI Project Leader & Developer
 - Nicholas Souchu : KGI Developer (largely responsible for the FreeBSD port)
 
 Contributors:
@@ -25,9 +25,9 @@ Contributors:
 - Brian S. Julin
 - Emmanuel Marty
 - Filip Spacek
+- Johan Karlberg
 - Jon Taylor
 - Jos Hulzink
-- Johan Karlberg
 - Rodolphe Ortalo
 
 Others
@@ -40,7 +40,7 @@ In addition the following people...
 - Paul Sargent
 - Steve Cheng
 
-...companies & institutions deserve due thanks also.
+...companies & institutions deserve mentioning also.
 
 - 3Dlabs Incorporated
 - AEON Technologies

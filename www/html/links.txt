@@ -14,12 +14,10 @@ Related Projects
 Libraries
 ---------
 
-- `GGI <http://www.ggi-project.org>`_ - The user land component of KGI. GGI
-   also provide a rich set of features for a reliable, stable & fast graphics
-   system which has support for a mutlitute of platforms & systems.
+* `GGI <http://www.ggi-project.org>`_ - The user land component of KGI. GGI also provides a rich set of features for a reliable, stable & fast graphics system which has support for a multitude of platforms & systems.
 
 GUI
 ---
 
-- `XGGI <http://www.ggi-project.org/xggi/>`_ - X11 "server" built using GGI.
+* `XGGI <http://www.ggi-project.org/xggi/>`_ - X11 "server" built using GGI.
  

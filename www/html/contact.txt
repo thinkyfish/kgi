@@ -14,47 +14,53 @@ Contact
 General
 =======
 
-New ideas, development strategies and user support happens via `IRC`_ (Internet relay chat). However,
-there are also `mailing lists`_ available they're provided to reach a broader audience.
+New ideas, development strategies and user support happens via 
+`IRC`_ (Internet relay chat). However, there are also `mailing lists`_ available.
+They are provided to reach a broader audience in the event someone cannot be
+raised on IRC.
 
 IRC
 ===
 
-Check the **#kgi** channel on the `FreeNode Network
-<http://www.freenode.net/>`_. This channel is intended to be for KGI
-support, development and related topics. Chatting is allowed, but
-please keep things friendly.
+Check out the **#KGI** channel on the `FreeNode Network
+<http://www.freenode.net/>`_. This channel is intended to be for KGI support,
+development and related topics. Chatting is allowed, but please keep things
+friendly.
 
-`The channel is logged <http://woo.li/logs/kgi/>`_.
+The channel is logged and the logs can be found at `http://woo.li/logs/kgi/ 
+<http://woo.li/logs/kgi/>`_.
 
-Currently, **#kgi** is redirected to **#ggi**
+Currently, **#KGI** is redirected to it's sibling project **#GGI**
 
 Mailing lists
 =============
 
-We currently have one mailing list for KGI, hosted at `sourceforge.net <sourceforge.net>`_
-where it is intended that users & developers can ask questions, relate
-success-stories and exchange ideas and or recipes.
+We currently have one mailing list for KGI, hosted at 
+`sourceforge.net <sourceforge.net>`_ where it is intended that users & 
+developers can ask questions, relate success-stories and exchange ideas and or
+recipes.
 
 `Subscribe kgi-develop <http://lists.sourceforge.net/lists/listinfo/kgi-develop>`__
 (`SSL-protected <https://lists.sourceforge.net/lists/listinfo/kgi-develop>`__)
 
-Recent archives of the mailing lists can be found at the subscription links 
+Archives of the mailing lists can be found at the subscription links 
 above.
 
 In order to avoid problems with spam on the mailing lists, we do not allow
 posts from non-subscribers; if you do not wish to subscribe, send your messages
-to a KGI developer. Unfortunately, spammers have started abusing the From
-field of emails, making people think our mailing lists are insecure.
+to a KGI developer (recommend using IRC). Unfortunately, spammers have started 
+abusing the `From` field of emails, making people think our mailing lists are 
+insecure.
+
 Please check the archives referred to above for proof that our lists are safe.
 If such messages do not go via our lists, there is very little we can do
-about them; sue them and/or filter their garbage out.
+about the spammers; sue them and/or filter their garbage out.
 
 Alternatively
 =============
 
 Alternatively you can contact the `GGI (General Graphic Interface)`__
-project and ask for what you need.
+project and ask for what you need there.
 
 __ http://www.ggi-project.org/contact.html
 

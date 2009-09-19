@@ -4,52 +4,86 @@ Development
 
 .. navigation::
    :submenu: KGI porting guide : development.html#kgi-porting-guide,
-             Site maintenance: development.html#site-updating,
-             Plans : development.html#plans,
-			 IRC developer logs: development.html#irc-developer-logs
+			 IRC developer logs : development.html#irc-developer-logs,
+			 Site maintenance : development.html#site-updating,
+			 Status : development.html#status,
+             Plans : development.html#plans
+
 
 KGI porting guide
 =================
 
 To be written
-[You may want to view the developmer mailing list achieves for a start]
-
-Site maintenance
-================
-
- The kgi-project.org site is generated with the `ggi-project.org 
- <http://www.ggi-project.org>`_ web site infrastructure.
-
- To obtain the infrastructure use CVS and checkout the 
- `www <http://kgi.cvs.sourceforge.net/kgi/www>`_ module.
-
- Copy the `.ggisettings` file from the checkout in 
- `html/infrastructure/ggisettings` to your $HOME directory. 
- 
- You will need configure the paths correctly in `.ggisettings`.
-
- cd to `html/infrastructure` and `make site`.
- 
- Your system will need `Python <http://www.python.org/>`_ and `docutils 
- <http://docutils.sourceforge.net/>`_ successfully complete `make site`.
-
-Plans
-=====
-
-`Follow the todo list <todo.html>`_ as far as time permits.
+[You may want to view the developer mailing list achieves for a start]
 
 IRC developer logs
 ==================
 
-Recent
-------
+2006
+----
 
-`kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_
-`kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
+- `kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
+- `kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_
 
-Older
+2003
 -----
 
-`kgi-irc-20020824 <resources/irc-logs/kgi-irc-20020824.html>`_
-`kgi-irc-20030201 <resources/irc-logs/kgi-irc-20030201.html>`_
-`kgi-irc-20030201-2 <resources/irc-logs/kgi-irc-20030201.log>`_
+- `kgi-irc-20030201 <resources/irc-logs/kgi-irc-20030201.html>`_
+- `kgi-irc-20030201-2 <resources/irc-logs/kgi-irc-20030201.log>`_
+
+2002
+----
+
+- `kgi-irc-20020824 <resources/irc-logs/kgi-irc-20020824.html>`_
+
+Site maintenance
+================
+
+ The kgi-project.org site is generated with the `ggi-project.org  
+ <http://www.ggi-project.org>`_ project's web site infrastructure build
+ system.
+
+ To obtain the infrastructure use CVS and checkout the 
+ `www <http://kgi.cvs.sourceforge.net/kgi/www>`_ module.
+
+ Copy the `ggisettings` file from the checkout in 
+ `html/infrastructure/ggisettings` to your $HOME directory & rename it to
+ `.ggisettings`
+ 
+ You will need configure the paths correctly in `.ggisettings` to reflect
+ where CVS stored the www module checkout.
+
+ cd to `html/infrastructure` & `make site`.
+ 
+ Your system will need `Python <http://www.python.org/>`_ and `docutils 
+ <http://docutils.sourceforge.net/>`_ installed to successfully complete 
+ `make site`.
+
+Status
+======
+
+FreeBSD
+-------
+Currently the `freebsd <http://kgi.cvs.sourceforge.net/kgi/freebsd>`_ module 
+is the only actively developed code at this time.
+
+Mode setting is working. The input & graphics console system is mostly working &
+is taking advantage of VESA/VGA. This means that there is only a i386 port for
+the time being. 
+
+There is still some issues with input interface interacting with FreeBSD.
+
+No GPU drivers have been ported or re-written as yet.
+
+This effort is based on the original works of nsouch's P4 repo.
+
+Shut up and hack :-)
+
+Linux
+-----
+The Linux branch has stagnated. It was last built against a 2.4 kernel.
+
+Plans
+=====
+
+`Follow the to do list <todo.html>`_ as far as time permits.

@@ -6,7 +6,8 @@ Documentation
    :submenu: General : documentation.html#general-kgi-documentation,
              Graphics designs : documentation.html#graphics-designs,
              KGI Internals : documentation.html#kgi-internals,
-             Miscellanious : documentation.html#miscellanious,
+             Miscellaneous : documentation.html#miscellaneous,
+			 Tutorials : documentation.html#tutorials,
 			 VM designs : documentation.html#vm-designs
 
 This documentation is intended for those interested in learning the KGI
@@ -18,21 +19,17 @@ General KGI documentation
 Articles
 --------
 
-Steffen Seeger 	1999	`KGI white paper <resources/html/white_paper.html>`_
+Steffen Seeger 1999	`KGI white paper <resources/html/white_paper.html>`_
 
-Steffen Seeger 	1999	`KGI display driver overview <resources/html/display_overview.html>`_
+Steffen Seeger 1999	`KGI display driver overview <resources/html/display_overview.html>`_
 
-Steffen Seeger 	1999	`KGI acceleration handling <resources/html/accel_handling.html>`_
+Steffen Seeger 1999	`KGI acceleration handling <resources/html/accel_handling.html>`_
 
 Old stuff
 ---------
 
 `Once upon a time... there was GGI <http://www.ggi.ps.pl/docs/>`_
 
-KGI installation HOWTO
-----------------------
-
-`A short guide through KGI installation on Linux <resources/html/linux_install-howto.html>`_
 
 Graphics designs
 ================
@@ -58,7 +55,7 @@ The structs and procedures
 Document describing the most important KGI structures and procedures.
 A "must read" for people interested in the KGI code.
 
-`The structs and procedures (pdf) <resources/print/kgi-doc.pdf>`_
+`The structures and procedures (PDF) <resources/print/kgi-doc.pdf>`_
 
 Same kind of documentation but more practical and includes KII.
 
@@ -68,7 +65,7 @@ Same kind of documentation but more practical and includes KII.
 
 `FreeBSD port notes <fbsd_notes.html>`_
 
-Miscellanious
+Miscellaneous
 =============
 
 `Greg Lehey 2005: Debugging Kernel Problems <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_
@@ -78,6 +75,21 @@ Miscellanious
 `NetBSD bus abstraction layer <http://netbsd.gw.com/cgi-bin/man-cgi/man?bus_space+9+NetBSD-current>`_
 
 `NetBSD DMA interface <http://netbsd.gw.com/cgi-bin/man-cgi/man?bus_dma+9+NetBSD-current>`_
+
+Tutorials
+=========
+
+FreeBSD
+-------
+
+- Installation guide [to be done]
+- Setting up GGI, XGGI & more [to be done]
+
+Linux
+-----
+
+- A short guide through KGI `installation 
+  <resources/html/linux_install-howto.html>`_ on Linux
 
 
 VM designs
@@ -103,7 +115,7 @@ NetBSD `UVM site`__ and the `paper`__ (270 pages, gzipped postscript)
 __ http://www.netbsd.org/Documentation/kernel/uvm.html
 __ http://www.ccrc.wustl.edu/pub/chuck/psgz/
 
-Also note the `UBC technology`__, a design for unifying the filesystem and
+Also note the `UBC technology`__, a design for unifying the file system and
 virtual memory caches of file data, thereby providing increased system
 performance. In addition to the implementation of UBC, several changes
 were made to the existing UVM design to fix problems which were glossed
