@@ -26,8 +26,8 @@ Alternatively, you can also check out the old GNU/Linux
 `kgi-wip <http://sourceforge.net/projects/kgi-wip>`_ project, which was a fork 
 of the original KGI project::
 
- cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip login 
- cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/kgi-wip co kgi-0.9
+ cvs -d:pserver:anonymous@kgi-wip.cvs.sourceforge.net:/cvsroot/kgi-wip login 
+ cvs -z3 -d:pserver:anonymous@kgi-wip.cvs.sourceforge.net:/cvsroot/kgi-wip co kgi-0.9
 
 You can also browse the entire repository at 
 `http://kgi.cvs.sourceforge.net/kgi/ <http://kgi.cvs.sourceforge.net/kgi/>`_
