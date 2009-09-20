@@ -3,18 +3,11 @@ Development
 ===========
 
 .. navigation::
-   :submenu: KGI porting guide : development.html#kgi-porting-guide,
-			 IRC developer logs : development.html#irc-developer-logs,
-			 Site maintenance : development.html#site-updating,
-			 Status : development.html#status,
-             Plans : development.html#plans
-
-
-KGI porting guide
-=================
-
-To be written
-[You may want to view the developer mailing list achieves for a start]
+   :submenu: IRC developer logs : development.html#irc-developer-logs,
+			 KGI porting guide : development.html#kgi-porting-guide,
+			 Plans : development.html#plans,
+			 Site maintenance : development.html#site-maintenance,
+			 Status : development.html#status
 
 IRC developer logs
 ==================
@@ -36,12 +29,22 @@ IRC developer logs
 
 - `kgi-irc-20020824 <resources/irc-logs/kgi-irc-20020824.html>`_
 
+KGI porting guide
+=================
+
+To be written
+[You may want to view the developer mailing list archives for a start]
+
+Plans
+=====
+
+`Follow the to do list <todo.html>`_ as far as time permits.
+
 Site maintenance
 ================
 
  The kgi-project.org site is generated with the `ggi-project.org  
- <http://www.ggi-project.org>`_ project's web site infrastructure build
- system.
+ <http://www.ggi-project.org>`_ project's web site infrastructure build/system.
 
  To obtain the infrastructure use CVS and checkout the 
  `www <http://kgi.cvs.sourceforge.net/kgi/www>`_ module.
@@ -53,8 +56,11 @@ Site maintenance
  You will need configure the paths correctly in `.ggisettings` to reflect
  where CVS stored the www module checkout.
 
- cd to `html/infrastructure` & `make site`.
+ The content for the web site is stored in various `*.txt` files located in 
+ `html/`
  
+ `cd` to `html/infrastructure` & `make site`.
+  
  Your system will need `Python <http://www.python.org/>`_ and `docutils 
  <http://docutils.sourceforge.net/>`_ installed to successfully complete 
  `make site`.
@@ -69,21 +75,32 @@ is the only actively developed code at this time.
 
 Mode setting is working. The input & graphics console system is mostly working &
 is taking advantage of VESA/VGA. This means that there is only a i386 port for
-the time being. 
+the time being, however, with the recent VESA emulation work from OpenBSD ported
+to FreeBSD-AMD64, it may be possible to port the current i386 FreeBSD port of
+KGI to the AMD64 platform.
 
-There is still some issues with input interface interacting with FreeBSD.
+There is still some issues with the input interface & terminal layer interacting 
+with FreeBSD.
 
-No GPU drivers have been ported or re-written as yet.
+No GPU drivers have been ported, re-written or updated yet.
 
-This effort is based on the original works of nsouch's P4 repo.
+This effort is based on the original works from nsouch's P4 repo.
 
 Shut up and hack :-)
+
+the Hurd
+--------
+
+The core KGI system was in the process of being ported to GNU Hurd. [It would be
+neat to get some information on how this went]
 
 Linux
 -----
 The Linux branch has stagnated. It was last built against a 2.4 kernel.
 
-Plans
-=====
+Other systems
+-------------
 
-`Follow the to do list <todo.html>`_ as far as time permits.
+Over the years there has been interest in KGI from other projects, 
+`NetBSD <http://netbsd.org/>`_ & other BSD systems for example, though it is
+unclear on where the progress has stalled (if any was made) at this point.

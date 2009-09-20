@@ -9,12 +9,13 @@ Credits & Thanks
 Individuals
 ===========
 
-Much like the rest of site, the following is ripped strate from the GGI project's web site
+Much like the rest of site, the following is ripped strate from the GGI 
+project's web site.
 
-The following persons shall be eternally remembered as contributors to
-The GGI^H^H^HKGI project. May their name (given in no special order [actually its mostly alphabetical]) stay
-carved forever on this humble digital stele. If yours is missing and
-you think it's unfair, please contact somebody.
+The following persons shall be eternally remembered as contributors to The 
+GGI^H^H^HKGI project. May their name (given in no special order [its mostly 
+alphabetical anyways]) stay carved forever on this humble digital stele. If 
+your name is missing and you think it's unfair, please contact somebody.
 
 - Steffen Seeger : KGI Project Leader & Developer
 - Nicholas Souchu : KGI Developer (largely responsible for the FreeBSD port)
@@ -40,13 +41,13 @@ In addition the following people...
 - Paul Sargent
 - Steve Cheng
 
-...companies & institutions deserve mentioning also.
+...companies & institutions that deserve mentioning also.
 
 - 3Dlabs Incorporated
 - AEON Technologies
 - The Freiburger Linux Users Group
 - University of Technology Chemnitz for providing hosting in the very early project stage
-- VA Research for initially(?) hosting the KGI project
+- VA Research for once hosting the KGI project
 
 
 

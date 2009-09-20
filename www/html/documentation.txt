@@ -34,23 +34,23 @@ Old stuff
 Graphics designs
 ================
 
-`Rudolf Cornelissen thesis: Writing Video Card Drivers In BeOS <http://haikunews.org/projects/rc>`_
+`Brian S. Julin  2004: Proposal for Open Source Graphic Systems V1.3 <resources/print/OSGPv1.3.pdf>`_
 
 `FreeVGA: Architecture Independent Video Graphics Initialization for LinuxBIOS <http://wiki.linuxbios.org/data/vgabios/>`_
 
-`The State of Linux Graphic <http://www.freedesktop.org/~jonsmirl/graphics.html>`_
+`Linas Vepstas 	2000: High-Performance Graphics Hardware Design <resources/html/high_perf.html>`_
 
 `The (Re)Architecture of the X Window System <http://keithp.com/~keithp/talks/xarch_ols2004/xarch-ols2004-html/>`_
 
-`Linas Vepstas 	2000: High-Performance Graphics Hardware Design <resources/html/high_perf.html>`_
+`The State of Linux Graphic <http://www.freedesktop.org/~jonsmirl/graphics.html>`_
 
-`Brian S. Julin  2004: Proposal for Open Source Graphic Systems V1.3 <resources/print/OSGPv1.3.pdf>`_
+`Rudolf Cornelissen thesis: Writing Video Card Drivers In BeOS <http://haikunews.org/projects/rc>`_
 
 KGI internals
 =============
 
-The structs and procedures
---------------------------
+The structures and procedures
+-----------------------------
 
 Document describing the most important KGI structures and procedures.
 A "must read" for people interested in the KGI code.
@@ -67,6 +67,8 @@ Same kind of documentation but more practical and includes KII.
 
 Miscellaneous
 =============
+
+`Debugining FreeBSD kernels over Firewire <http://wiki.freebsd.org/DebugWithDcons>`_
 
 `Greg Lehey 2005: Debugging Kernel Problems <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_
 
@@ -104,12 +106,6 @@ BSD VM
 
 __ http://www.freebsd.org/doc/en_US.ISO8859-1/articles/vm-design/index.html
 
-Since Version 3.0, OpenBSD uses NetBSD's UVM. The implementation differs though.
-
-`OpenBSD's UVM manual`__
-
-__ http://www.openbsd.org/cgi-bin/man.cgi?query=uvm&sektion=9
-
 NetBSD `UVM site`__ and the `paper`__ (270 pages, gzipped postscript)
 
 __ http://www.netbsd.org/Documentation/kernel/uvm.html
@@ -123,6 +119,12 @@ over in the original design. Thus UVM differs slightly as described in the
 paper.
 
 __ http://www.usenix.org/publications/library/proceedings/usenix2000/freenix/silvers.html
+
+Since Version 3.0, OpenBSD uses NetBSD's UVM. The implementation differs though.
+
+`OpenBSD's UVM manual`__
+
+__ http://www.openbsd.org/cgi-bin/man.cgi?query=uvm&sektion=9
 
 
 Linux VM

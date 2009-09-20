@@ -52,9 +52,11 @@ to a KGI developer (recommend using IRC). Unfortunately, spammers have started
 abusing the `From` field of emails, making people think our mailing lists are 
 insecure.
 
-Please check the archives referred to above for proof that our lists are safe.
-If such messages do not go via our lists, there is very little we can do
-about the spammers; sue them and/or filter their garbage out.
+Please check the 
+`archives <http://sourceforge.net/mailarchive/forum.php?forum_name=kgi-develop>`_ 
+for proof that our lists are safe. If such messages do not go via our lists, 
+there is very little we can do about the spammers; sue them and/or filter their
+garbage out.
 
 Alternatively
 =============
