@@ -5,12 +5,12 @@ News archive
 2009
 ====
 
-2009-09-20 : Updated website
+2009-09-22 : Updated website
 ----------------------------
 
 The web site infrastructure has been synchronized with GGI's. Also, 
-there has been some re-structuring and modifications made to the colouring &
-layout.
+there has been some re-structuring and modifications made to the colouring,
+layout & such.
 
 A new `www <http://kgi.cvs.sourceforge.net/viewvc/kgi/www>`_ module in CVS has
 been created to keep track of the build infrastructure used to maintain this site.
