@@ -1,0 +1,7 @@
+
+.. navigation::
+   :submenu: News : news.html,
+             Screenshots : screenshots.html,
+             Changelog : changelog.html,
+             Todo : todo.html,
+             Licensing : licensing.html

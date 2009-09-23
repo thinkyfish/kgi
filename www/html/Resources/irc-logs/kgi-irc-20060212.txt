@@ -1,0 +1,843 @@
+[21:24] <bughunter> nsouch: hi
+[21:24] <nsouch> bughunter: hi
+[21:43] rohara (n=xyxyxyxy@ip70-171-72-167.no.no.cox.net) joined #GGI.
+[21:44] <bughunter> hi
+[21:45] <rohara> hello
+[21:50] <nsouch> rohara: hi
+[21:51] <rohara> nsouch: hi
+[21:52] <Foske> hi there
+[21:52] <Foske> welcome 
+[21:54] <rohara> hello all :)
+[21:54] <Foske> geez...
+[21:54] Action: Foske feels like falling asleep already
+[21:56] csantero (n=csantero@ool-45796221.dyn.optonline.net) joined #GGI.
+[21:56] <Foske> welcome here, csantero 
+[21:56] <csantero> thanks!
+[21:57] <bughunter> csantero: Are you a xorg developer?
+[21:57] <csantero> no
+[21:57] <csantero> i heard about this meeting on the mailing list
+[21:57] <csantero> thought id watch
+[21:58] <bughunter> ok
+[22:00] <nsouch> antrik: I've just read your posts on the ML
+[22:00] <nsouch> I like the "like XGGI" idea about the tree
+[22:01] <antrik> I don't ;-)
+[22:01] <antrik> I'm not even sure it actually is possible
+[22:02] <antrik> the conditions are quite different if you think about it
+[22:05] <bughunter> can we start now?
+[22:05] <nsouch> here we are, yes
+[22:05] <antrik> I guess so...
+[22:05] <antrik> (we could wait a few minutes more for latecomers, but I guess that's pointless...)
+[22:05] <Foske> uhm
+[22:06] <Foske> guess I'm here
+[22:06] <nsouch> is skids there finally?
+[22:06] <nsouch> skids: there?
+[22:06] <skids> Yeah, I'm here, in body at least.
+[22:06] <Foske> if 2100 UTC is 2300 Amsterdam we're one hour early
+[22:07] <nsouch> skids: in body, what's missing then?
+[22:07] <antrik> we are definitely 21:00 UTC now
+[22:07] <Foske> ow
+[22:07] <bughunter> .oO(skids' enthusiasm?)
+[22:08] <nsouch> where do we start?
+[22:08] <skids> Yeah, I'm finding it very hard to get enthusiastic about anything lately.
+[22:08] Action: Foske hands skids a box of optimizm
+[22:08] <skids> (so nothing personal)
+[22:08] <nsouch> skids: could tell us over and over ? :)
+[22:08] <antrik> any additions or objections to the agenda I suggested in the last mail?
+[22:09] <skids> http://abrij.org/~bri/haiku/pess.html
+[22:09] <antrik> (sorry for having sent it that late :-( )
+[22:09] <bughunter> what are the topics?
+[22:09] <Foske> topic 1 
+[22:09] <antrik> lemme find it in the archive...
+[22:09] <nsouch> antrik: we should add futur of graphics
+[22:10] <bughunter> "lemme find it in the archive" - so much to irc meeting preparation...
+[22:10] <nsouch> - Keep #kgi?
+[22:10] <nsouch> - Change name for the project?
+[22:10] <nsouch> - What overall direction should we take? (That's a tough one; maybe it
+[22:10] <nsouch>   doesn't make sense to discuss it not in relation with specific
+[22:10] <nsouch>   issues.)
+[22:10] <nsouch> - How to deal with x.org? What about libggi, EXA?
+[22:10] <nsouch> - OS integration:
+[22:10] <nsouch>    - KII
+[22:10] <nsouch>    - KGC
+[22:10] <nsouch>    - display/device handling
+[22:10] <nsouch>    - using fbdev drivers
+[22:10] <nsouch>    - providing fbdev API
+[22:10] <nsouch>    - DRM
+[22:11] <nsouch> - Code organization (shared tree? reference implementation?)
+[22:11] <nsouch> - Binary compatible drivers?
+[22:11] <Foske> whee
+[22:11] <antrik> nsouch: I thought it fits in with "overall direction", but we can add it as an extra point if you prefer...
+[22:12] Action: Foske thinks topic one is more a result of the general discussion
+[22:12] <antrik> Foske: I mean actually keeping the #kgi channel
+[22:12] <nsouch> concerning #kgi channel, I proposed to rip it in the past
+[22:13] <Foske> antrik: if kgi falls apart and/or changes name...
+[22:13] <nsouch> this may polute #ggi though
+[22:13] <antrik> I suggested at various occasions that having an extra channel for KGI alone is counter-productive
+[22:13] <nsouch> depends on how you consider kgi regarding ggi
+[22:13] <Foske> antrik: it is not if kgi would be active enough 
+[22:13] <nsouch> is kgi the ggi driver backend or a more general thing?
+[22:14] <bughunter> nsouch: IIRC, you wanted to reorganize KGI to use GGI resources - http://kgi-wip.sourceforge.net/ is a result of using GGI's documentation infrastructure
+[22:14] <nsouch> indeed, I even wanted to merge the sites IIRC
+[22:14] <Foske> I think it's important to present it as a whole to get people enthausastic about acceleration and such
+[22:15] <nsouch> I consider kgi cannot live without ggi too
+[22:15] <nsouch> and kgi can be a boost to ggi once kgi is accepted
+[22:15] <Foske> at least not the modesetting/acceleration interface
+[22:15] <nsouch> you mean?
+[22:16] <Foske> nsouch: we need both sides of the acceleration implementation to show something to people
+[22:16] <antrik> well, this is probably a more generic question, "how should the relation between KGI and GGI be?"
+[22:17] <Foske> the kernel interface and the user side
+[22:17] <antrik> the problem is that this might depend on what input we get during the next weeks...
+[22:17] <antrik> at least I'm all for considering them two parts of the same project
+[22:18] <Foske> that's why I think we need to focus most on getting attention first
+[22:18] <nsouch> antrik: yes, I think ggi and xorg are competitive solution
+[22:18] <antrik> nsouch: competitive? not sure what you mean
+[22:19] Action: nsouch is googling
+[22:19] <antrik> uh... I just realized that the kgi-devel list is hosted at the original kgi.sf.net project...
+[22:19] <nsouch> in competition, similar by some aspects which make them redundant somehow
+[22:20] <Foske> antrik: yeah it's a little messy
+[22:20] <nsouch> antrik: I've asked for overtake on kgi to SF
+[22:20] <antrik> nsouch: you really think so? my opinion is that those parts that overlap are just those that do not really belong into the X server in the first place...
+[22:20] <bughunter> kgi-wip has been created because of the absence of steffen seeger
+[22:21] <bughunter> so that development can continue
+[22:21] <Foske> would be good to drop kgi for a number of reasons
+[22:21] <Foske> but then.. what way to go
+[22:21] <nsouch> antrik: we are all convinved about that, not the xorg community I think
+[22:21] <bughunter> someone can request a take over of the original kgi.sf.net project on SF to get project admin status
+[22:21] <nsouch> bughunter: I did
+[22:21] <bughunter> then it's possible to have it under controll again
+[22:22] <bughunter> nsouch: no response yet?
+[22:22] <Foske> I still think KGI should drop KII completely and focus on console + graphics drivers
+[22:22] <nsouch> 2/3 weeks needed
+[22:22] <antrik> http://sourceforge.net/mailarchive/message.php?msg_id=14777188
+[22:22] <antrik> that's the URL of the mail where I posted my proposed agenda
+[22:23] <nsouch> Foske: if kgi becomes closer to ggi, I'm not sur it still makes sense to drop kii
+[22:23] <antrik> nsouch: the question is, should we give up GGI because of that? I don't think so. I expect objections to some aspects of libggi, but it would be very unfortunate if it turned out the X folks are fundamentally against libggi
+[22:24] <Foske> nsouch: in my opinion we should: I don't want to bother with input layer problems when debugging a graphics driver
+[22:24] <bughunter> IMO, what makes KII unique is to provide multiple focuses
+[22:24] <Foske> true
+[22:24] <Foske> bughunter: but we shouldn't hack lowlevel drivers for that
+[22:25] <nsouch> Foske: fbcon does not provide you the same features
+[22:25] <nsouch> Foske: do you want to keep kgi displays?
+[22:25] <Foske> nsouch: you want KII without the drivers.. only the wrapper around them
+[22:25] <Foske> I think....
+[22:26] <nsouch> or just want to rename kgim in kgi?
+[22:26] <bughunter> antrik: I don't hope that will be the case just because there's a file called sdl.c ...
+[22:26] <Foske> so you can still have the consoles and focuses, which are cool
+[22:26] <antrik> bughunter: not sure what you mean
+[22:27] <nsouch> Foske: then the mess is the Linux implementation
+[22:27] <bughunter> antrik: Something like that already happened with qemu - blindvt's ggi port was rejected because the author thought having sdl and one other thing is enough...
+[22:27] <nsouch> kgi4BSD as not atkbd/ps2 driver
+[22:28] <nsouch> bughunter: port to what?
+[22:28] <antrik> sdl is completely meaningless in this regard... it doesn't provide KGI support :-)
+[22:28] <Foske> nsouch: maybe true... but do we really need the low level drivers ?
+[22:28] <bughunter> nsouch: blindvt ported qemu to ggi
+[22:28] <nsouch> Foske: no definitly not
+[22:28] <antrik> personally, I consider the existance of SDL in the xorg tree a sign that they aren't entirely against such an approach...
+[22:29] <Foske> nsouch: ok... then I'd say.. if we can make KII a wrapper around the input layers, I can live with it, althoug I still think we should focus on replacing the existing console systems first
+[22:29] <nsouch> antrik: xorg is a dark hole?
+[22:29] <rohara> would it make sense to consider what devices kgi should support and where they are  going? for example future video cards and gl/egl?
+[22:29] <antrik> I think we are now discussing too many issues at the same time :-(
+[22:29] <nsouch> s/dark/black/
+[22:30] <rohara> antrik:  perhaps a moderator is necessary?
+[22:30] <Foske> antrik: you got a point... 
+[22:31] <antrik> so which one do we focus on now? the KII issue?
+[22:31] <nsouch> antrik: all these items are fundamental and the conclusion may come from all of them
+[22:31] Action: bughunter votes for skids as moderator ;-)
+[22:31] <Foske> but I got the feeling we still keep running away from the main qwuestion: to get KGI back on track no matter it's name we need more interest. how ?
+[22:31] <antrik> nsouch: I agree that they aren't independant; but we should at least try not to make it a total chaos :-)
+[22:31] <nsouch> :)
+[22:32] Action: Foske is happy to see so many people here
+[22:32] <rohara> the moderator should choose the topic at hand
+[22:32] <nsouch> so antrik is the best choice
+[22:33] <nsouch> the name is important and related to Kii split
+[22:33] <antrik> Foske: well, I guess we first need an idea what *we* want KGI to be, before we can consider how to sell it better...
+[22:33] <Foske> ok
+[22:33] <Foske> so
+[22:33] <bughunter> is there a need for a new logo, too?
+[22:33] <rohara> heh
+[22:33] <Foske> my idea for KGI: 
+[22:33] <nsouch> hehe, there is a logo?
+[22:34] <Foske> split it in two:
+[22:34] <Foske> one: replace the console of every supported OS with kgim drivers
+[22:34] <bughunter> nsouch: well.. on http://kgi-wip.sourceforge.net/ there's a logo :)
+[22:34] <Foske> two: an add on with the console system with multifocus and imput layer
+[22:34] <bughunter> nsouch: right in the menu
+[22:35] <Foske> n
+[22:35] <nsouch> bughunter: ok, no need to change, if you're speaking about this one :)
+[22:35] <antrik> Foske: are input layer and console system inseperable?
+[22:35] <nsouch> Foske: ok, how to you name the whole
+[22:35] <nsouch> ?
+[22:36] <Foske> antrik: no, that's why I put all major enhancements to the console together with the input layer in project 2
+[22:36] <bughunter> Foske: better find first a directory structure where to place kgi drivers, os independent and os and os/arch dependent code
+[22:37] <antrik> Foske: I mean, aren't graphics stuff, input layer, and console really three subprojects?
+[22:37] <bughunter> Foske: and where to put testdrivers
+[22:37] <antrik> bughunter: I think repository organization is rather a thing we should discuss once we know what we want to achieve
+[22:37] <nsouch> antrik: no, console must have control over inputs
+[22:37] <skids> Input IMO is definitely a totally separate project.
+[22:38] <nsouch> maybe input drivers should even not be part of KII
+[22:38] <Foske> bughunter: we don't even know WHAT to archive, who cares HOW ?
+[22:38] <antrik> nsouch: well, obviously the console depends on both the input layer and the graphics layer. but not the other way round I'd think?
+[22:38] <nsouch> http://kgi-wip.sourceforge.net/interfaces.html
+[22:38] <nsouch> the kgi-0.9 picture
+[22:39] <skids> The console system could be completely independent of any input layer.
+[22:39] <antrik> I think we are using confusing terminology
+[22:39] <Foske> skids: if you can get raw keypresses out of it yes
+[22:39] <antrik> as far as I can see there are really two issues here:
+[22:40] <nsouch> skids: this is a question of limit between HW management and scancode decoding
+[22:40] <antrik> the actual input driver stuff
+[22:40] <antrik> and the KII interface that sits on top of that
+[22:40] <antrik> right?
+[22:40] <nsouch> KII is just registration routines actually
+[22:40] <nsouch> between /dev/event and focuses
+[22:40] <Foske> nsouch: for the outer world it's not
+[22:40] <nsouch> plus between input drivers and focuses
+[22:41] <Foske> when you look at the code you immediately find keyboard drivers and such
+[22:41] <nsouch> skids: so you mean we should separate them explicitly?
+[22:41] <nsouch> Foske: which is not KII actually
+[22:41] <nsouch> Foske: just grep the kii_xxx functions definitions
+[22:42] <antrik> my understanding was that we can have KII on top of any native input driver the kernel provides
+[22:42] <Foske> nsouch: I know... but we have been very not so good at making that clear 
+[22:42] <nsouch> antrik: this is exactly kgi4BSD
+[22:42] <Foske> antrik: that's how it should be
+[22:42] <skids> Yes.  I mean the individual OS should be the arbiter of switching input focii, and "drive" the console system.
+[22:42] <skids> If an OS wants multiple-users-same-box, then it codes that, if it doesn't, it doesn't.
+[22:43] <skids> ("users" here being individual monitors/keyboards/etc used by separate people.)
+[22:43] <nsouch> in kgi4BSD, the underlying kbd infrastructure is configured to porvide raw scancodes and the linux i386 kbd driver is used as a generic parser
+[22:43] <antrik> so, one thing we at least seem to agree is that KII should be clearly seperated from input drivers?
+[22:44] <nsouch> yes, and be part of the console stuff
+[22:44] <Foske> yeah
+[22:44] <Foske> kn 
+[22:44] <antrik> OK
+[22:44] <skids> Yeah, I can agree with that -- which is why I coded the linux-input stuff to put the HW drivers to bed.
+[22:44] <nsouch> actually on the picture http://kgi-wip.sourceforge.net/interfaces.html the console stuff is KGI+focuses+KII
+[22:45] <nsouch> plus scroller and ansi emulation for rendering and tty management
+[22:45] <antrik> the next question is: can and should we make KII optional, so that we can say: you can use KGI without using KII?
+[22:45] <nsouch> KGI+focuses+KII should be os independent
+[22:46] <Foske> antrik: that's what I work on at the moment
+[22:46] <nsouch> but input HW drivers and console rendering not
+[22:46] <Foske> the problem is: you need to access the kgi interface from userspace anyway
+[22:46] <antrik> nsouch: agreed, but can it be optional?
+[22:46] <Foske> for you have to switch mode
+[22:46] <Foske> fl dan maar een ander keertje
+[22:46] <Foske> oops
+[22:46] <nsouch> antrik: yes
+[22:47] <nsouch> Foske: ah? not aaps or eeps?
+[22:47] <Foske> sorry :-)
+[22:47] <nsouch> :)
+[22:48] <Foske> antrik: so it can be optionaly, but sice you need a way to communicate, you might end up implementing half of it anyway
+[22:48] <nsouch> so the name?
+[22:48] <skids> Foske: or you could use the OSes interface like fbdev, and if that cripples the available modes, then that's the OS's fault, not KGI.  The question there is whether we want to KGI to be just a better DRI, or a better fbdev + DRI (sorry for being linux-centric)
+[22:48] <antrik> the focuses depend on both KGI and KII I guess?
+[22:48] <nsouch> antrik: yes
+[22:48] <Foske> antrik: a focus basically is a combination of some inputs and outputs
+[22:48] Wonka (i=produzie@madwifi/support/wonka) joined #GGI.
+[22:49] <antrik> skids: my understanding is that we want KGI to be a better interface handling all graphics hardware access, i.e. fbdev+DRM+some
+[22:49] <Wonka> g'day
+[22:49] <nsouch> Wonka: welcome
+[22:49] <Wonka> just interested...
+[22:49] <bughunter> hmm... a latecomer...
+[22:50] <Foske> antrik: my reason to vote for enabling "optional" consoles is that it might improve the acceptability of the graphics driver system
+[22:50] <Wonka> by the way, does anyone know where debian's xggi has gone?
+[22:50] <skids> antrik: I'd agree, personally, with that.
+[22:50] <antrik> Foske: exactly
+[22:50] <antrik> do we *all* agree on that? (DRM+fbdev+some)
+[22:50] <nsouch> no
+[22:50] <Foske> and for me, improving the acceptability and amount of developpers is key
+[22:51] <nsouch> what's the name of this whole?
+[22:51] <antrik> (with KII/focuses/console as optional components)
+[22:51] <nsouch> antrik: I told you KGI is currently part of the futur console stuff
+[22:51] <skids> We just have to realize it's a good chunk of work, and not just with GPUs, with mainboards/OSes.
+[22:51] <Foske> GraCoSy (graphical Console System) :-)
+[22:51] <skids> How about "GPOS"?
+[22:52] <Foske> POS= Piece of Shit... bad choice 
+[22:52] <skids> (or "GPUOS"?)
+[22:52] <antrik> nsouch: sorry, I don't quite get what you mean :-(
+[22:52] <rohara> the gpu os?
+[22:53] <nsouch> gpu thing is perfect for skids' vision of the coprocessing
+[22:53] <nsouch> antrik: actually kgi_xxx function are not related to graphic drivers
+[22:53] <nsouch> it is a general purpose api
+[22:54] <rohara> what does or will kgi (or whatever) give me as a user?
+[22:54] <nsouch> not specialized to HW...
+[22:54] <nsouch> antrik: KGI API is the same for VESA and HW accelerated drivers... :)
+[22:55] <nsouch> and I consider VESA as software, not HW
+[22:55] <antrik> nsouch: well, my understanding of KGI is having the graphics hardware access in a kernel component
+[22:55] <Foske> well. maybe the name doesn't matter too much for now
+[22:55] <antrik> VESA is just a very specific graphics driver (with most of it residing in the BIOS) IMHO
+[22:55] <Foske> what matters is: we definitely should drop the input drivers
+[22:55] <nsouch> antrik: because currently KGI is a piece of design, the KGI API and the project name
+[22:56] <Foske> and we need a new name
+[22:56] <nsouch> Foske: a name for KGIM (what you all think is KGI) and for the project
+[22:56] <bughunter> KGI needs a bus and dma abstraction like OpenBSD and NetBSD have - this should be doable since linux 2.6 uses a tree structure for devices like *BSD does for many years and FreeBSD took over NetBSD's bus_dma interface
+[22:57] <bughunter> then writing OS independent KGI drivers should be possible
+[22:57] <antrik> I don't think we need a new name. we should just use the name(s) in a more specific meaning
+[22:57] <bughunter> the bus / dma _implementation_ is os dependent code
+[22:57] <Foske> antrik: we do.. this name really has a bad taste in many peoples mouth
+[22:57] <nsouch> gpu something sounds good for KGIM
+[22:57] <antrik> nsouch: no, KGIM is just part of what we would like KGI to be
+[22:57] <nsouch> then we need a name for the project
+[22:58] <skids> (As an aside: the core problem is efficient, fast buffer management in a multitasking OS environment.  All the rest of the stuff -- modes, etc -- is well trodden turf.)
+[22:59] schlesix (n=thomas@xdsl-81-173-175-105.netcologne.de) left irc: Remote closed the connection
+[22:59] <nsouch> antrik: no :) KGIM will become more general because it will live without the console stuff (which includes KGI API, remember...)
+[22:59] <Foske> true
+[23:00] <antrik> IMHO, the mandatory parts should be named KGI, and the combination of KGI with the optional components (input/focuses/console) should get a new name
+[23:00] <antrik> (or remain nameless...)
+[23:00] <nsouch> KGI name for the project is a bad thing
+[23:00] <Foske> it misses the Console 
+[23:01] <antrik> for which project, exactly? :-)
+[23:01] Action: antrik is confused
+[23:01] <nsouch> KGI is kernel graphic interface, but not at /dev level !
+[23:01] <bughunter> how about KGII (Kernel Graphics and Input Interface) ?
+[23:01] <antrik> bughunter: too confusing
+[23:01] <antrik> how about ngconsole or something?
+[23:02] <nsouch> kernel interface means interface in the kernel for others stubs
+[23:02] <skids> I tend to agree on renaming.  KGI has taken a lot of PR hits, and then there's the question of whether whether the path decided on is in line with Seeger's original concept or a total tangent.
+[23:02] <antrik> nsouch: well, to me the name suggests kernel<->userspace interface
+[23:02] MooZ (i=MooZ@FR-CHA-C4-01-02-087231004236.chello.fr) joined #GGI.
+[23:03] <bughunter> yet another latecomer...
+[23:03] <bughunter> MooZ: hi
+[23:03] <nsouch> antrik: the code does not suggest it, grep the kgi_xxx functions as a proof
+[23:03] <MooZ> hello
+[23:03] <Foske> Hmm Picasso: Portable Interface for Console And ....
+[23:03] <antrik> nsouch: I'm aware of that
+[23:03] <antrik> nsouch: but we are discussing name changes here, right? :-)
+[23:03] <nsouch> /dev/graphic is just a KGI device :)
+[23:04] <antrik> well, /dev/graphic is what I associate with the name "KGI"...
+[23:04] <antrik> not from knowledge, but from what the name suggests I mean
+[23:04] <nsouch> which is not actually, at least how seeger designed it
+[23:05] <nsouch> KGI is OS independent for the OS itself
+[23:05] <nsouch> /dev/graphic can't be OS independent
+[23:05] <nsouch> at least it's not currently
+[23:05] <bughunter> KGI should provide a packet oriented interface to userspace
+[23:05] <MooZ> Wonka, no idea and it might be the old one from 2002
+[23:05] <nsouch> KGI/KII is the routing code in the kernel for the kernel currently
+[23:06] <bughunter> so that userspace drivers can send commands with packets
+[23:06] <Foske> nsouch: you will never be OS independant on the edge between kernel and userpsace
+[23:06] <bughunter> that way, /dev/graphic can be os independent
+[23:06] <nsouch> no can't be according to Foske
+[23:07] <skids> bughunter: I think a packet model for graphics is what hurts most graphics systems -- we should be using a persitant object model.
+[23:07] <Foske> well... the protocol you send over it can
+[23:07] <nsouch> Foske: yes, but not the means
+[23:07] <antrik> Foske: not even that really
+[23:07] <Foske> but there will always remain an OS specific command to get the connection there
+[23:07] <nsouch> all agree about renaming the project, keeping KGI as part of the console stuff?
+[23:07] <Foske> and the question remains whether it will be efficient
+[23:08] <antrik> most device access protocols nowadays misuse ioctls in a way that *can't* be implemented on a microkernel system
+[23:08] <bughunter> skids: is that your experience you made when writing a kgi radeon accel driver for libggibuf's display-kgi ?
+[23:08] <Foske> nsouch: I still vote for dropping KGI alltogether
+[23:08] <nsouch> Foske: no need, you'll drop the console anyway. I personally need it for FreeBSD
+[23:09] <skids> bughunter: Did I get that far?  I forget :-)
+[23:09] <nsouch> and because I like seeger design :P
+[23:09] <Foske> nsouch: _sigh_ no i don;t
+[23:09] <Foske> nsouch: you didn't read what I wrote, did you
+[23:09] <antrik> nsouch: nobody is talking about *dropping* the console. we are talking about making it an optional component
+[23:09] <Foske> nsouch: and yes, the idea of seeger was good, but the name is spoiled
+[23:10] <nsouch> Foske: I'm just emphazing things badly :)
+[23:10] <Foske> nsouch: and wrong
+[23:10] <nsouch> Foske: who will maintain it in the Linux camp?
+[23:11] <nsouch> I mean the console stuff...
+[23:11] <skids> RE: the "console" there is part of it that's inextricable -- it will have to be split from the "console" and taken along with the graphics drivers: inter-application graphics context switching.
+[23:11] <Foske> nsouch: finally someone asking the main question: how to get more active developpers
+[23:11] <antrik> skids: that's the "focus" part AIUI
+[23:12] <nsouch> Foske: to maintain console code? :))
+[23:12] <MooZ> the best should be to have a really nice techdemo :/
+[23:12] <skids> antrik: "fucos" is a poisoned word: it includes input devices.
+[23:12] <antrik> nsouch: maybe nobody. which isn't a problem IMHO. the point of an *optional* component is that it needn't exist on all systems :-)
+[23:12] <MooZ> or pretend we are all 20 years old girls
+[23:12] <Foske> MooZ: sorry, I'm 21 already 
+[23:12] <antrik> skids: is it possible to separate those?...
+[23:12] Action: skids ponders his freudian slip
+[23:12] <nsouch> antrik: code not maintained is dropped...
+[23:13] <Foske> willing to maintain or help maintaining if I'm not the only active developper
+[23:13] <antrik> nsouch: as long as you maintain the console on BSD, I do not see why it would be dropped?
+[23:14] <nsouch> because, if no one maintains it on Linux will never be/remain os indep
+[23:14] <nsouch> and the Linux one will be dropped
+[23:14] <skids> antrik: sure.  Think about it in the context of a windowed environment that has been secured.  EVen if the user doesn't move the mouse, a running graphics process needs to switch context in the GPU -- remap buffer space, restore pipeline state, etc.
+[23:14] <antrik> nsouch: so what's the problem? if Linux isn't interested in the console, we do not need to have it for Linux
+[23:15] <Foske> antrik: and thus we loose our claim of portability
+[23:15] <nsouch> personally, I'm the only man using seeger's code, so please don't rename it !!!
+[23:15] <Foske> nsouch: wtf ?
+[23:15] <antrik> skids: ah, OK. I was thinking of something else
+[23:15] <nsouch> Foske: wtf means what?
+[23:15] <MooZ> (still about promotion) having a livecd with kgi and all may help ppl to test it no?
+[23:16] <MooZ> and we may need more applications using ggi (then ppl may look on kgi but the percentage may be small)
+[23:16] <Foske> nsouch: please don't rename it for I got my own little project ? now that will help KGI forwards
+[23:16] <antrik> Foske: what does "portability" mean in the context of a console system? I don't think anything depends on how the console system is implemented
+[23:16] <antrik> MooZ: let's save PR suggestions for later...
+[23:17] <nsouch> Foske: don't you need developers?
+[23:17] <MooZ> yeah
+[23:18] <Foske> nsouch: true, but we simply might have to do major changes to get things back on track
+[23:18] <skids> antrik: they are mostly the same thing.  If you draw a list of similarities between what needs to be done in a locked-down windowed environment to what needs to be done for fullscreen VC switches, the difference is just a matter of how much state needs to be saved/restored, with two exceptions.  One is pausing backgrounded processes if they cannot be shunted to running in off-screen memory, which should be part of it, and the other is -- in
+[23:18] <skids> put -- which shouldn't
+[23:19] <nsouch> I'm just asking for keeping KGI name for the code it is currently, considering that KGI is a bad name for the project
+[23:19] <skids> (and the former really isn't an exception if you consider window minimization)
+[23:19] <nsouch> does it prevent for anything?
+[23:20] <Foske> guess not for now
+[23:20] <antrik> nsouch: well, keeping the name "KGI" for something nobody would intuitively connect with that name, and creating other names for parts of it, will only create even more confusion what it's all about I fear :-(
+[23:20] <skids> nsouch: you mean simply preserving the kgi-wip cvs and calling the old code "KGI"?  I've got no problem with that.
+[23:20] <Foske> except indeed a lot of confusion
+[23:22] <nsouch> I mean keeping the code named KGI in http://kgi-wip.sourceforge.net/interfaces.html picture as it is
+[23:22] <nsouch> and rename the whole project e.g kgi-project to something else
+[23:22] <antrik> anyways, could we please put naming questions aside for now and first discuss what we want to name?...
+[23:22] <antrik> nsouch: I understand what you mean
+[23:23] <skids> I'm for that we're getting nowhere on the naming this.
+[23:23] <antrik> nsouch: I just think the name is confusing :-(
+[23:23] <skids> s/this/thing/
+[23:23] <nsouch> antrik: did you accept the moderation task BTW?
+[23:24] <antrik> nsouch: BTW, the name for the whole project is GGI ;-)
+[23:24] <Foske> well.. does this go anywhere ?
+[23:24] <antrik> nsouch: well, I'm not sure I'm a good moderator, but I'm willing to do my best
+[23:24] <skids> Here's an important question: how important is security/stability to the people who want to put work in?
+[23:24] <antrik> OK, so let's leave naming rest for now
+[23:24] <nsouch> skids: not important
+[23:25] <nsouch> at least it isn't, but should be important
+[23:25] <Foske> skids: if we can't offer extreme stability we'll never make it
+[23:25] <skids> nsouch: Well, I meant for people to answer for themselves :-)
+[23:25] <nsouch> soyt: what do you think about it? Security?
+[23:25] <antrik> security/stability is what I refer to by "robust multiplexing", which is my major argument for having this kernel component...
+[23:25] <antrik> so it is *essential* IMHO
+[23:26] <nsouch> but security means overhead :('
+[23:26] <antrik> nsouch: not much if it's properly designed I hope...
+[23:26] <Foske> yup
+[23:26] <Foske> no security no need for KGI
+[23:27] <antrik> nsouch: people who do not care about robust multiplexing, they are happy with directfb or whatever
+[23:27] <Foske> we already got enough crap out there :-)
+[23:27] <antrik> right
+[23:27] <nsouch> skids made some prototyping with proof reading
+[23:27] <antrik> of course, I don't mean security in a paranoid sense, preventing covert channels and stuff; but in a sense that one application can't fuck up the graphics state or another applications screen
+[23:29] <Foske> antrik: well.. I think you have to be able to trust the user side of the interface in the sence that if you have to check for valid acceleration commands from the user space, your performance id dead
+[23:29] <skids> I think the simple solution to that is: give the security/stability code an "off switch"
+[23:30] <nsouch> skids: and if "on" means unusable?
+[23:30] <nsouch> because of the performance?
+[23:30] <Foske> pff forget that
+[23:30] <antrik> does it really get that bad?
+[23:30] <nsouch> skids: did you get quantitative results with proofreading prototype?
+[23:30] <Foske> antrik: depends on your implementation
+[23:30] <skids> nsouch: Some people only run apps that can suffer a performance hit without visible user impact.
+[23:31] <Foske> if the kernel is designed never to trust the user level, it becomes even worse than "that bad"
+[23:32] <skids> nsouch: the prototype wasn't quite complete, so not meaningful ones.  If I had to just guess off the cuff, security code would slow stuff down by a factor of 3.
+[23:32] <antrik> skids: I must confess that I do not fully agree with your take on the multiplexing thing
+[23:32] <nsouch> I guess even worse as the GPU are faster...
+[23:33] <antrik> skids: in your document, you are proposing an exokernel aproach (killing all abstraction)
+[23:33] <skids> nsouch: That's why we should be looking at the prospect of proofreading inside the GPU as GPUs get more advanced.
+[23:33] <antrik> skids: IMHO, abstraction is not always bad, if you choose appropriate ones
+[23:34] <antrik> skids: and avoiding abstraction can actually even *generate* overhead
+[23:34] <skids> antrik: which particular document?
+[23:34] <nsouch> skids: or pipeline the commands in a dedicated CPU (bi-cpu at least config) for proofreading before feeding the GPU
+[23:34] <antrik> skids: "proposal for open source graphics systems" or something like that
+[23:34] <skids> nsouch: yes, precisely, as we get stuff like cellbe as the main system processor.
+[23:35] <nsouch> http://kgi-wip.sourceforge.net/OpenSourceGraphicsProposalv1.1.pdf I guess
+[23:35] <nsouch> what is cellbe?
+[23:35] <Foske> nsouch: or trust the user space lib
+[23:35] <antrik> Foske: trusting the userspace lib doesn't help us
+[23:36] <Foske> antrik: for ?
+[23:36] <skids> cellbe "Cell Broadband Engine" is the CPU coming out in the Sony PS3 and in new IBM servers.
+[23:36] <antrik> Foske: to avoid the "proofreading" overhead, without completely giving up any robust multiplexing, we need to introduce abstraction somewhere
+[23:37] <antrik> Foske: I do not see much win in having this abstracton in the lib instead of the kernel
+[23:37] <antrik> (it only gets less robust)
+[23:37] <Foske> and bigger
+[23:37] <skids> antrik: the main rationale behind the approach is ease of portage of existing software -- noone's going to code specifically for a new system.
+[23:38] <antrik> skids: what kind of software do you mean? X server is providing full abstraction, OpenGL is providing full abstraction, probably all other graphics systems I know are doing it
+[23:38] <nsouch> antrik: why do you say no abstraction in the paper, because it matches the HW layout?
+[23:39] <skids> antrik: a middle-ground would be to pick a particularly popular vendor and "abstract" by translating commands for that one vendor to other hw.
+[23:40] <antrik> skids: the only programs that ever actually care to cater to the specific graphics hardware used are some games
+[23:40] <nsouch> skids: isn't it OpenGL actually, since now OpenGL is implemented partly by HW?
+[23:40] <skids> antrik: yes, and the X server.
+[23:41] <antrik> nsouch: by "no abstraction" I mean the idea that applications supply the actual commands running on the GPU, and the driver only "proofreads" them; instead of applications invoking abstract operations and the driver transforming them to hardware operations
+[23:41] <Foske> maybe we need help rom specialists here before we can decide
+[23:41] <Foske> I got the feeling nobody here has enough accelleration knowledge to make a wise decision
+[23:42] <antrik> skids: yes, but moving the abstraction from the X server into the driver shouldn't be a problem
+[23:43] <nsouch> antrik: but we won't move opengl in the kernel
+[23:43] <antrik> (note that the X server *also* has internal abstraction APIs -- XAA and EXA)
+[23:43] <antrik> nsouch: of course not
+[23:43] <nsouch> seeger has ported XAA to KGI IIRC
+[23:43] <Foske> moving gl (or in more general the entire acceleration) into the kernel was one of the arguments why everybody dropped KGI back then
+[23:44] <nsouch> Foske: sure
+[23:44] <nsouch> so the paper approach seems right no?
+[23:44] <Foske> it simply is not an option
+[23:45] <antrik> nsouch: but we can probably find primitives that are near enough to the hardware to avoid overhead and keep the kernel code small, while at the same time providing enough abstraction to make sure that userspace can't do anything dangerous
+[23:45] <Foske> antrik: the linux DRI can do it...
+[23:46] <skids> antrik: why not just have the abstraction performed by a userspace lib?  Like, say libgl?
+[23:46] <antrik> skids: because that's not robust
+[23:46] <nsouch> antrik: proofreading or converting takes the same overhead I believe
+[23:46] <skids> antrik: why not?
+[23:47] <antrik> it realies on the complex userspace driver, and the application using it, not to fuck up
+[23:47] <skids> antrik: but only if you allow fuckups at that stage to damage things.
+[23:47] <Foske> sorry guys, I got the feeling this is a discussion with no end
+[23:48] <antrik> skids: that's exactly what I mean. do just that little transformation in the kernel that is absolutely necessary to prevent damage
+[23:48] <nsouch> yes, so who code the proposal?
+[23:48] <Foske> we simply lack expertise to decide
+[23:48] <antrik> indeed
+[23:48] <Foske> why not ask help first
+[23:48] <antrik> this is not an issue we can resolve ourself
+[23:49] <Foske> IMHO it's useless to code first and then ask
+[23:49] <skids> antrik: which is what my paper proposes -- userspace converts to native, good native code passes to pipeline, bad native code is nulled, without any regard for the application's individual results -- if it sent bad code, it's hosed anyway.
+[23:50] Nineworlds (n=chatzill@82-32-40-229.cable.ubr06.azte.blueyonder.co.uk) joined #GGI.
+[23:50] <nsouch> Nineworlds: hi
+[23:50] <antrik> skids: the problem is that if you pass native into the kernel, "proofreading" it is expensive. if you pass something that is close to native, but not quite identical, you might be able to get it more efficient I believe
+[23:51] <antrik> (both in regards of code size and execution overhead)
+[23:51] <antrik> but I'm not an expert really, so I may be wrong
+[23:51] <nsouch> antrik: proofreading native of converting generic must be the same in perfo
+[23:51] <antrik> again, I don't think this is an issue we can resolve alone
+[23:51] <nsouch> s/of/or/
+[23:52] <nsouch> bughunter asked about bus abstraction
+[23:52] <Foske> antrik: which is why I think the most important topic should be: activity ion the xorg mailing list
+[23:52] <Foske> first get more people
+[23:53] <antrik> nsouch: not necessarily. because you have to convert to native at some point anyways. if you draw the border smartly, you might be able to ensure correctnes *during* some stage of conversion, without much overhead
+[23:53] <antrik> Foske: right
+[23:53] <Foske> this is going into details we can't solve
+[23:53] <antrik> (not only the mailing list.. there is also an IRC channel, and I'm going to FOSDEM :-) )
+[23:54] <Foske> I think we need more people active there, including myself
+[23:54] <antrik> OK, so getting back on track: we do agree that our goal should be robust multiplexing, right?
+[23:54] <nsouch> yes, bus abstraction is mandatory for driver portability and even binaries ;)
+[23:54] <skids> antrik: All I'm suggesting is that pure native be acceptible/executable on the pipeline, not that additional stuff forbidden.  Note the part about extending the native command set -- I think I touched on that in there.
+[23:55] Foske (n=Jos@84.35.49.40) left irc: Remote closed the connection
+[23:55] <antrik> skids: don't remember, it is a while since I read that... could we plese postpone this conversation to some later date?
+[23:56] <nsouch> antrik: not related to your last sentence, but to bughunter's, sorry. The ;) was for binaries
+[23:56] <antrik> nsouch: :-)
+[23:57] <antrik> hm... what happened to Foske? :-(
+[23:57] <nsouch> he has quit :)
+[23:57] <skids> antrik: As so far as I understand what you mean by that, I agree.  I haven't been keeping up enough to know everything you imply by the term, though.
+[23:57] <antrik> nsouch: I don't think he did it voluntarily :-)
+[23:58] <antrik> skids: what term?
+[23:58] <antrik> ah, you mean "robust"?
+[23:59] <nsouch> antrik: moving microcode execution in the kernel has already been a roasted idea
+[23:59] <antrik> nsouch: ?
+[00:00] --- Mon Feb 13 2006
+[00:00] <nsouch> gl in the kernel is a bad idea. Except if I did not understood, it looks like send non native code to the kernel pipeline
+[00:01] <nsouch> s/like send/like sending/
+[00:01] <skids> antrik: "robust multiplexing" as a phrase actually.  (A phrase I do like.)
+[00:01] <antrik> skids: OK
+[00:02] <skids> OK, so if we are putting this on pause, what are we talking about now?
+[00:02] <nsouch> OS VM?
+[00:02] <antrik> well, there is another goal I think we should consider:
+[00:03] <antrik> a clean generic interface :-)
+[00:03] <nsouch> a pipe is a clean thing
+[00:03] <nsouch> consider a pipe be our interface )
+[00:03] <antrik> (generic in the sense that it covers all use cases of graphics hardware access, so there is no need to introduce some ad-hoc interfaces)
+[00:04] <skids> IMO our greatest obstacle is getting various kernel's development teams to swallow the need for better buffer management/mmap.  We already have Linus knocking 0-copy, so I guess that's a term we should avoid.  On the technical side, are GPU-nternal TLB flushes being sped up by vendors?  We badly need a PCI-Express expert.
+[00:05] <nsouch> if we want security, TLB flushes are mandatory anyway
+[00:06] <nsouch> For freebsd for exemple, a whole revamp of the VM should be necessary to take GPU needs into account
+[00:07] <antrik> skids: I think our greatest obstacle is to get kernel's development teams to even seriously consider our approach... technical details can be worked out once we get that far
+[00:07] <antrik> nsouch: security in what sense?
+[00:08] <nsouch> antrik: manual flushes of TLBs in case of GPU context switch : for robust multiplexing
+[00:09] <antrik> anyways, this seems another point where we shouldn't delve into too much details right now; before we can even consider those, we need to set out overall directions I'd say
+[00:09] <nsouch> so what can we deal without help?
+[00:10] <nsouch> tree organization
+[00:10] <antrik> nsouch: well, I don't know anything about GPU TLB; but for main processors, there are tricks to avoid complete TLB flushes on address space switch
+[00:10] <antrik> yes, that's one thing we hopefully can deal with
+[00:11] <nsouch> I'm 100% for a central place
+[00:11] <nsouch> but not for complete OS code management in that place
+[00:12] <antrik> OK. just remember that also means we need to agree on a common source code management system :-)
+[00:12] <antrik> hm... not sure what you mean here
+[00:12] <nsouch> no problem for me. Choose one.
+[00:12] <nsouch> I'll still maintain Perforce for convenience of the main stream merges
+[00:13] <nsouch> svn is ok if SF can
+[00:14] <antrik> nsouch: of course. if we have a central repository and an easy way to extract patches against the respective upstream kernels, it should be no problem to propagate those to different trees, even if these trees use different systems
+[00:14] <nsouch> I tend to like the fbdev/linus approach for small contributions
+[00:14] <skids> Overall Direction:  Fast+Efficient/Secure+Stable = Tunable  F+E/S+S=T
+[00:15] <antrik> hm... what's the fbdev/linus approach?...
+[00:15] <nsouch> patches management by one man
+[00:16] <antrik> skids: I'd say we go for robustness first, and if it turns out we can't be perfectly robust without sacrificing too much performance, we can introduce tuneability. how about that?
+[00:17] <skids> antrik: Agreed -- with the caveat that as we write the robustness, we keep in mind how we'd go about tuning it or turning it off, rather than paint ourselves into a corner.
+[00:17] <antrik> OK
+[00:17] Action: nsouch thinks people wants results, not directions
+[00:18] <nsouch> These directions have been the same for years...
+[00:18] <nsouch> there is a proposal, why not go for it simply?
+[00:18] <antrik> nsouch: well, it seems there are a lot of things not quite clear... I think it's important we have a common vision
+[00:19] <nsouch> antrik: not against you, but it is important you get the vision :)
+[00:20] <nsouch> the vision KGI developers have had for years...
+[00:20] <nsouch> so when you ask for help from the Xorg I have some doubts
+[00:21] <nsouch> since KGI have the ideas already
+[00:21] <antrik> it's useless having the ideas if they aren't accepted by the "outside"
+[00:21] <nsouch> The kgi-project pages are not so stupid ?
+[00:21] <antrik> the pages aren't terribly good at presenting a convincing vision
+[00:22] <nsouch> people capable/willing of helping should understand what KGI wants, no?
+[00:22] <nsouch> but KGI want to convince of something complexe requiring years of work
+[00:23] <nsouch> ppl wants hack and more hack not year-projects
+[00:23] <antrik> we can't assume that we know best and have to make others share our ideas
+[00:24] <antrik> we have some ideas, but if it turns out these are not acceptable for X.org and/or kernel folks, there is no point in persuing them. we need to be open for other ideas
+[00:25] <antrik> anyways, let's get back to more specific stuff
+[00:25] <nsouch> yes, the tree
+[00:26] <antrik> right
+[00:27] <antrik> I still don't quite understand what you mean by "but not for complete OS code management in that place"
+[00:27] <nsouch> as said, it's ok for me, anyway it will be overwork for me to maintain a central place, but it's necessary
+[00:27] <antrik> you mean you are against putting complete kernel sources into the tree?
+[00:27] <nsouch> yes
+[00:27] <nsouch> the thing ok for me is svn or cvs
+[00:27] <antrik> well, I tried to come up with alternative approaches, but realized more and more problems with those :-(
+[00:28] <antrik> right
+[00:28] <nsouch> then why not distribute patches?
+[00:28] <nsouch> ppl are getting used to this approach
+[00:29] <nsouch> concerning the common code, I have doubts on the feasability
+[00:29] <antrik> it also depends on what the hosting platform provides... there has been a suggestion we should try to move to freedesktop.org, in which case the provided revision control options would be different than on SF...
+[00:30] <nsouch> I never heard of such suggestion...
+[00:30] <antrik> I think you weren't around when I made it...
+[00:31] <nsouch> what ppl think about it? I mean Foske?
+[00:31] <antrik> Foske liked it
+[00:31] <nsouch> and others?
+[00:31] <antrik> not sure... there was at most one more person, but don't remember
+[00:32] <nsouch> so what are the short term actions?
+[00:33] buju (n=antoine@peanut.dreadbsd.org) left irc: "zz"
+[00:33] <nsouch> what are your activity plans for the coming year?
+[00:33] <nsouch> others?
+[00:33] <antrik> for me, the most important one is to set up a repository (at least a temporary one), so I at least can start hacking, and if we can get people interested, they know where to look for the code
+[00:34] <nsouch> ok, so the next priority task will be get ppl interested I guess
+[00:34] <nsouch> Are you still working on the Hurd port?
+[00:35] <antrik> yes. this is already under way, with my posting to the x.org ML, though there was very little echo so far :-(
+[00:35] <nsouch> antrik: we have to spin ourselves before, no enough activity on KGI to attract
+[00:36] <MooZ> (for me it's mainly on ggi : add gamma to x vidmode heler and code a mpd client using ggi)
+[00:36] <antrik> parallel to any discussions on future design, I want to work on the Hurd port at last, from the existing codebase
+[00:36] <MooZ> i guess you need some proof of concept even if it's awfully non optimal before doing massive pr
+[00:36] <nsouch> MooZ: what is a mpd client?
+[00:36] <MooZ> nsouch, music player daemon client
+[00:37] <nsouch> MooZ: what's the relation with graphics? will ggi to sound?
+[00:37] <nsouch> like sdl?
+[00:37] <MooZ> nsouch: i'll use ggi to display the interface, that's all
+[00:38] <nsouch> daemon like esd?
+[00:39] rohara (n=xyxyxyxy@ip70-171-72-167.no.no.cox.net) left irc: Read error: 104 (Connection reset by peer)
+[00:39] <MooZ> nsouch:  http://www.musicpd.org/
+[00:40] <nsouch> cool
+[00:40] <antrik> one general question is how much we should emphasize the GGI part when talking to xorg
+[00:40] <nsouch> antrik: my opinion: the less you can
+[00:40] <antrik> should we consider it essential? just a side aspect?
+[00:40] rohara (n=xyxyxyxy@ip70-171-72-167.no.no.cox.net) joined #GGI.
+[00:41] <MooZ> i agree with nsouch
+[00:41] <nsouch> no need to make bad pr for GGI due to bad pr of KGI
+[00:41] <antrik> hehe
+[00:41] <MooZ> and we don't know how they'll react
+[00:42] <MooZ> like "oh my god! the ggi dudes! they are back"
+[00:42] <nsouch> :)
+[00:42] <nsouch> yes something like that I guess
+[00:42] blindvt (n=bf@80.123.61.116) left irc: Read error: 110 (Connection timed out)
+[00:42] <MooZ> "bring the boiling oil" erm...
+[00:42] <antrik> well, personally, I consider the fact that the user space part of the driver is in a generic library one quite important aspect, though not a must
+[00:43] <rohara> well ther estill is ggi stuff in mesa ...
+[00:43] <MooZ> but is it up to date?
+[00:43] <antrik> well, I already *did* mention GGI, so it's too late for hiding ;-)
+[00:43] <nsouch> antrik: one thing at a time though
+[00:43] blindvt (n=bf@M866P027.adsl.highway.telekom.at) joined #GGI.
+[00:43] <nsouch> antrik: url?
+[00:44] <antrik> lemme find it
+[00:44] <nsouch> antrik: you want to know my opinion for the approach to Xorg (though I'm not really for it)
+[00:44] <antrik> http://lists.freedesktop.org/archives/xorg/2006-January/012053.html
+[00:44] <antrik> that's the start of the thread
+[00:44] <antrik> I mentioned GGI in a couple of my replies
+[00:45] <rohara> i think XGGI deserves a mention on the xorg mailing list, i.e. that is one way to get some interested
+[00:46] <antrik> nsouch: why aren't you for it? I think we all agree that we need more developers. but we won't get them unless we can show that this is actually a project having some support, not just an island with people doing their own thing
+[00:46] <antrik> rohara: I mentioned XGGI as well
+[00:47] <rohara> antrik: opps must have missed
+[00:47] <nsouch> antrik: because I believe we need the current developers to develop, not more developers
+[00:48] <nsouch> I think you and Foske should take KGI ideas, go to freedesktop, open you project,
+[00:48] <nsouch> integrate KGI ideas to Xorg, then come back with the changes
+[00:49] <skids> Sorry folks but if I wait any longer to shovel the driveway I'm going to have one stuck housemate when he comes home and tries the "brute force" approach to parking.
+[00:50] <antrik> too bad bughunter is gone now... bit hard to discuss GGIs role without him participating :-)
+[00:50] <nsouch> definitly
+[00:51] <antrik> maybe we should abort this meeting and set a new date for a continuation...
+[00:51] <antrik> or would you prefer to skim the issues we haven't discussed yet?
+[00:52] <MooZ> why don't use the ml?
+[00:52] <nsouch> no, I see were we are. We need a roadmap now
+[00:52] <antrik> MooZ: some things are hard to discuss on mailing lists... particularily for me, as it always takes me very long to write mails :-(
+[00:53] <nsouch> yes, the ML to conclude
+[00:53] <rohara> nsouch:  i see where you are too, but ive no clue where you are going
+[00:53] <nsouch> rohara: to bed yet :)
+[00:53] <MooZ> antrik, ok 
+[00:53] <rohara> heh
+[00:54] <antrik> well, which ML? we didn't get a final resultion on the question of keeping #kgi nor the mailing list...
+[00:54] <MooZ> ggi-dev no?
+[00:54] <nsouch> hehe, why not simply restart the meeting :)
+[00:54] <MooZ> yeah
+[00:54] <MooZ> or make this "topic of the week"
+[00:54] <antrik> LOL
+[00:54] <nsouch> rohara: I'm going to continue seeger's work mostly
+[00:55] <nsouch> rohara: and take skids proposal
+[00:55] <rohara> nsouch:  was that linked to earlier?
+[00:55] <nsouch> rohara: keep antrik's central repo up to date
+[00:56] <nsouch> rohara: and disagree with Foske :)
+[00:56] <antrik> LOL
+[00:56] <rohara> hehe
+[00:56] <antrik> nsouch: I'm not quite sure what you are disagreeing about, except for naming issues...
+[00:57] <nsouch> indeed, nothing more, we are not management the same technical issues anyway
+[00:57] <antrik> it's obvious you have a different focus, but I haven't seen actually much disagreement on specific issues...
+[00:58] <nsouch> antrik: it's more about how KGI should be oriented than on specific issues, yes
+[00:58] <antrik> Foske (and me) consider the graphics access the primary goal, and the console/input/whatever a side issue; while you put more emphasis on the console stuff
+[00:59] <nsouch> and we all share the same project which already exist (live) by many aspects (technical, pr...)
+[01:00] <nsouch> I just don't want my work to be garbage because some decide to change a name/target
+[01:01] <antrik> the problem I see is that the console stuff is probably not a strong selling point to most -- on the contrary, it's probably considered bloat. thus while I'm perfectly OK with keeping it, I think we shouldn't emphasize it too much when communicating outside...
+[01:01] <nsouch> when I took the port, I took seeger's design and the port is far from finished
+[01:01] <nsouch> this is why I want to keep his design
+[01:01] WooShell (n=Markus@woo.li) left irc: "Oh theou mou! Echo ten labrida en te mou kephale!"
+[01:02] <antrik> nobody suggested changing his design I think; the whole discussion was about making parts of it optional, and not emphasizing them too much
+[01:03] <antrik> (well, and naming issues ;-) )
+[01:03] <nsouch> but KGI is his design, yes naming... :)
+[01:03] <rohara> would this be the white paper etc., on http://kgi-wip.sourceforge.net/documentation.html?
+[01:04] <antrik> he just choose a really bad name in the first place :-P
+[01:04] <MooZ> i'm off to bed
+[01:05] <nsouch> antrik: so why do you all need this name?
+[01:05] MooZ (i=MooZ@FR-CHA-C4-01-02-087231004236.chello.fr) left irc: "Leaving"
+[01:05] <nsouch> why not just take one other for your purpose?
+[01:06] <nsouch> and show to the earth KGI is NOT WHAT THEY THOUGHT !!!
+[01:06] <nsouch> I see here a good pr approach ;)
+[01:07] <antrik> well, for one, it's only me who suggests reusing KGI for a subpart, while Foske wants to abandon the name completely
+[01:07] <antrik> my main issue is that the name for what it originally describes is very confusing :-(
+[01:08] <nsouch> yes, it's too general, this is certainly why ppl don't like it
+[01:08] <nsouch> fbdev tells more to ppl
+[01:09] <antrik> not sure it's too general; my point is that it's misleading... who would expect a console system under this name?
+[01:10] <nsouch> shall we stop here?
+[01:11] <antrik> hm...
+[01:11] <antrik> I think we skimmed almost all things I listed, though came to a conclusion on very few :-(
+[01:11] <rohara> "Actually, Kernel User Interface describes better what most of the KGI sample implementation for Linux does, but originally KGI was intended to handle display hardware only."
+[01:11] <rohara> KUI
+[01:11] <antrik> however, with most people not here anymore, we obviously can't come to any conclusion :-)
+[01:12] <antrik> hehe... I like that sentence... all parts of it :-P
+[01:12] <nsouch> rohara: no KGI was intented to manage display in the author's mind. Which is graphics but also input and console
+[01:13] <rohara> that quote was from Steffen Seeger
+[01:13] <nsouch> yes, before seeger rewrote KGI he meant
+[01:14] <rohara> so the docs are wrong?
+[01:15] <antrik> nsouch: well, but you claim that the name KGI was always referring to his all-including design and thus should be kept for that, which this sentance basically proves untrue... :-)
+[01:15] <nsouch> I claimed it's seeger's choice, but seeger rewrote KGI
+[01:15] <nsouch> before seeger, kgi was almost part of GGI
+[01:16] <rohara> as an outsider, it would seem to me that there should be a KGI and a KUI, but again I'm just an outsider
+[01:16] <antrik> BTW, if seeger rewrote KGI, who wrote it originally?...
+[01:17] <nsouch> GGI people
+[01:19] <antrik> well, to me it looks much like KGI was originally exactly what it is for me, while it is actually seeger who kidnapped it...
+[01:19] <nsouch> rohara: in kgi4BSD, the KUI is named KGU just to keep G ;)
+[01:19] <rohara> heh
+[01:19] <nsouch> antrik: yes somehow
+[01:19] <nsouch> he decided it would be the in-kernel graphic interface
+[01:20] <antrik> what gave him the right to do so? :-P
+[01:21] <nsouch> He took the right I guess :)
+[01:21] <rohara> so then a  question i would have  is this white paper correct, does KGI etc. follow it, should it follow it, and if not then what?
+[01:21] <nsouch> rohara: the paper is correct, KGI follow it, the paper is incomplete
+[01:22] <rohara> so  logical step would be to complete it? correct?
+[01:22] <nsouch> I believe KGI should follow it, skids proposes another alternative
+[01:23] <nsouch> rohara: this is what I meant about finishing the FreeBSD port since FreeBSD is my plateform and I'm willing to finish seeger's work
+[01:24] <rohara> so what is the consensus on choosing one of the proposals?
+[01:24] <Nineworlds> Is skids' proposal on the site?
+[01:24] <nsouch> skids vision is following HW evolution, but seeger general design is robust enough to evolve
+[01:24] <rohara> http://kgi-wip.sourceforge.net/OpenSourceGraphicsProposalv1.1.pdf i thnk
+[01:25] <Nineworlds> Thanks
+[01:25] <rohara> well either the choices must be reconciled or one must be choosen over the other. at least that is what i woulc think
+[01:25] <rohara> would*
+[01:26] <nsouch> this is why I put skids' proposal on the site, to gather concepts under the same project
+[01:27] <rohara> well that seems to be confusing
+[01:27] <nsouch> all ? or just the proposal ?
+[01:28] <rohara> well as someone from the outside who may wish to help develop which direction do I choose?
+[01:29] <nsouch> you ask the right question
+[01:29] <antrik> rohara: again, they are not really contradictory. they are different aspects
+[01:30] <nsouch> rohara: did you look at the paradigm page?
+[01:30] <skids> Well, it is a bit confusing that they are in the same section -- the second two papers (the first of which the auther IIRC has nothing whatsoever to do with KGI) should probably be in their own section, because as is it is implied that they are "documentation" for KGI.
+[01:30] <rohara> nsouch: nope, not yet
+[01:30] <rohara> skids: exactly
+[01:31] <rohara> nsouch: where is the paradigm page?
+[01:31] <nsouch> skids: exact
+[01:31] <skids> BTW, I do like these webpages overall very much.
+[01:31] <nsouch> http://kgi-wip.sourceforge.net/kgim.html
+[01:32] <rohara> nsouch: thanks
+[01:33] <nsouch> it show KGIM is based on the previous HW paradigm
+[01:33] <nsouch> skids proposal goes forward in the direction of recent/futur HW
+[01:33] <rohara> so could skids proposal be swapped in place?
+[01:34] <nsouch> plus it adds unexplored concepts about OS/memory resource management
+[01:34] <nsouch> rohara: e.g moved in another paragraphe?
+[01:34] <rohara> nsouch: no i mean used instead of the old paradigm
+[01:35] <rohara> but keep other stuff
+[01:35] <nsouch> that's my hope, yes
+[01:35] <rohara> ok, well that seems like some sort of goal to me
+[01:35] <nsouch> though I'm not completly sure until I seriously give it a look
+[01:36] <nsouch> I mean with code lowlevel design
+[01:36] <nsouch> I'm at least convinced at the current level of description/design
+[01:37] <rohara> well that would seem that it would be possible, so perhaps there should be some documentation on how this would work
+[01:37] <rohara> and then where someone can help
+[01:38] <nsouch> you mean code design?
+[01:39] <rohara> both how skids proposal would fit in with code design and overall logically with the rest of "kgi"
+[01:40] <rohara> it seems that there are ideas for "kgi" just no organization and glue
+[01:40] soyt (n=eric@ekyo.pck.nerim.net) left irc: Remote closed the connection
+[01:40] <rohara> and status of the progress being made
+[01:42] <rohara> i could be oversimplifying things, but that is just how it appears
+[01:43] <nsouch> I have to think seriously about it. it was not on top of my priority list
+[01:43] <nsouch> though it is obviously the way to go
+[01:44] <rohara> if skid's proposal and the whitepaper could be combined and then given a roadmap (broken into logical tasks) it could further developement. i would think
+[01:45] <rohara> the only problem would be if that isnt the way "kgi" should go or there is no consensus to do that
+[01:46] <nsouch> until recently, we were alone with skids :)
+[01:47] <rohara> well what is the other option?
+[01:47] <nsouch> the consensus was obvious to me
+[01:47] <nsouch> none AFAIK
+[01:48] <rohara> then there should be no reason to be stuck on a direction to go into
+[01:48] <nsouch> technically I meant, antrik and Foske are argueing for involving other developers
+[01:49] <nsouch> which is no solution yet, but could help some way
+[01:49] <rohara> more developers can help, but if there is a clear plan of action then i see no reason to wait
+[01:50] <rohara> and antrik and Foske cant just go into xorg and say hey we need help, but we have no clue what you should do
+[01:50] <nsouch> this is the reason I believe we need current developers to develop, not more developers
+[01:51] <nsouch> kgi needs very few people involved but active coders
+[01:51] <rohara> it appears to me that is correct, so then what to do about that? one option is what ive been stating
+[01:52] <nsouch> like all technically advanced projects... yes your suggestion is wise
+[01:52] <antrik> nsouch: we aren't going to the x.org list to find developers there
+[01:53] <nsouch> antrik: please correct me then
+[01:53] <rohara> antrik: that was just an example..at least for me
+[01:53] <antrik> nsouch: we are going there to get some consensus on how stuff should be done, to make KGI accepted
+[01:53] <rohara> antrik: i think then you must be more specific
+[01:54] <rohara> you must say we want to do X because Y. now is this wrong or what?
+[01:54] <skids> antrik: if you can get those folks to break from their current context and think about future directions, that was the general intent of my paper.
+[01:55] <antrik> BTW, I agree that not many developers are necessary for the core; but for the actual graphics drivers, we need outside coders; and for the exact design of the driver interface we need quite a lot of input as well, though not necessarily code
+[01:56] <nsouch> antrik: you have all the inputs you need from KGI and GGI staff
+[01:56] <rohara> i would also suggest just the drm mailing list 
+[01:56] <antrik> skids: well, I'm mostly thinking in the current context myself... the problem I personally see is not that much the fact that existing driver architectures are not suitable for future hardware, but they aren't suitable for today
+[01:57] <skids> You know something we failed to touch on: the subject of implementing from leading edge hardware back, rather than being weighed by complexities in older hardware.
+[01:57] <nsouch> antrik: and the PCI discussion on the Xorg ML prooves ppl still think in the current context
+[01:58] <rohara> skids: yeah we should go from the leading edge
+[01:58] <rohara> or at least kgi developers ;)
+[01:58] <antrik> I can't afford going from the leading edge
+[01:58] <antrik> considering the lack of specs for recent hardware, I don't think this is even possible
+[01:58] <skids> antrik: though I personally harbor future-looking inclinations, the paper there tried to be neutral, and most of what's in it applies to all levels of tech.
+[01:59] <nsouch> antrik: financialy?
+[01:59] <rohara> if kgi is not usable on new hardware then is kgi even usable?
+[01:59] <antrik> nsouch: mostly
+[02:00] <nsouch> rohara: with difficulties. It also need the most recent OSes
+[02:00] <nsouch> rohara: which takes us a lot of maintenance time
+[02:00] <skids> antrik: financing is a solvable problem, though don't consider that a personal offer as mine aren't in good order presently :-)  The point about specs is very relevant.
+[02:01] <rohara> specs are relevant and so are users
+[02:01] <rohara> i have a 9500pro not exactly recent but i would like kgi to work on it
+[02:02] <nsouch> rohara: users want mostly performance
+[02:02] <rohara> so how can i get that?
+[02:02] <skids> I just want to go on record that if MS "embraces and extends" stuff similar to my proposal before OS does that would piss me off.
+[02:04] <rohara> so we are stuck?
+[02:04] <nsouch> ah, and I forgot, get rid of X
+[02:04] <antrik> skids: well the exokernel was designed >10 years ago... :-P
+[02:04] <antrik> nsouch: ?
+[02:05] <nsouch> ppl want perfo and without X
+[02:05] <rohara> nsouch: with Xgl users might not want to get rid of X anymore
+[02:05] <skids> antrik: Please try not to focus entirely on the one section of the document you disagree with, is all I ask.
+[02:06] <antrik> nsouch: now that explains a few things... wasn't aware you are of that opinion
+[02:06] <nsouch> rohara: I'm not sure. Why 3D would change the current 2D situation?
+[02:07] <antrik> nsouch: my impression is that those who are talking about "getting rid of X" are mostly people who do not really know much about the matters
+[02:07] <rohara> well because Xgl isn't just about 3d
+[02:07] <antrik> nsouch: I don't really think "getting rid of X" is much of a selling point
+[02:08] <antrik> skids: hehe :-)
+[02:08] <rohara> there is nothing to go to after getting rid of X now
+[02:08] <nsouch> antrik: embedded HW manufacturers know what they are talking about
+[02:09] <nsouch> antrik's idea to keep KGI running on old HW is not bad either
+[02:09] <antrik> nsouch: embedded hardware manufacturers use directfb and are happy... most of the problems KGI solves aren't relevant in the embedded world IMHO
+[02:09] <skids> "Getting rid of X" should probably be downplayed as a "talking point."  There are much better ways to phrase it without even mentioning X by name.
+[02:11] <rohara> well this is important. who are the users of kgi?
+[02:11] <nsouch> rohara: we are stuck until we start coding the proposal or at least design it as a evolution of the current implementation
+[02:11] <nsouch> rohara: yet another good question
+[02:11] <rohara> im full of them ;)
+[02:11] <nsouch> rohara: consider kgi a research project
+[02:12] <nsouch> rohara: that let you imaging who the users are :)
+[02:12] <rohara> the problem is that the questions are all too familiar for me
+[02:13] <nsouch> yes, too many OSS project suffer the same illness
+[02:14] <rohara> yep. they don't know who there users are and where they want to go and how they want to get there
+[02:14] <rohara> they die and sometimes rightfully so
+[02:14] <rohara> not that im advocating kgi dying ;)
+[02:15] <antrik> the answer is simple: anyone doing graphics on free unix-like OSes ;-)
+[02:15] <nsouch> rohara: ah, yes we did not told you about our world domination plan...
+[02:16] <rohara> oh? :)
+[02:17] <nsouch> rohara: yes, an simple way to identify users
+[02:18] <nsouch> going off bed, nice meeting for me, lot of things to think about...
+[02:18] <antrik> good night :-)
+[02:18] <rohara> night
+[02:18] <rohara> i also suggest regular meetings ;) 
+[02:20] nsouch (n=nsouch@62-240-249-21.adsl.freesurf.fr) left irc: "leaving"
+[02:20] <Nineworlds> will a log of this be posted somewhere? didn't catch the start
+[02:21] <rohara> Nineworlds: see topic
+[02:21] <antrik> http://woo.li/logs/
+[02:22] <Nineworlds> ah. thx
