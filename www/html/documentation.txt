@@ -68,7 +68,7 @@ Same kind of documentation but more practical and includes KII.
 Miscellaneous
 =============
 
-`Debugining FreeBSD kernels over Firewire <http://wiki.freebsd.org/DebugWithDcons>`_
+`Debugging FreeBSD kernels over Firewire <http://wiki.freebsd.org/DebugWithDcons>`_
 
 `Greg Lehey 2005: Debugging Kernel Problems <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_
 
