@@ -3,3 +3,5 @@ ssh.sourceforge.net:/home/groups/k/kg/kgi-wip/htdocs/
 ssh -t {USER},{PROJECT}@shell.sourceforge.net create &&
 
 sourceforge.net/home/groups/k/kg/kgi/
+
+sftp://{USER}%2C{PROJECT}@web.sourceforge.net
