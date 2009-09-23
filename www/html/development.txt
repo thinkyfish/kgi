@@ -15,19 +15,19 @@ IRC developer logs
 2006
 ----
 
-- `kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
-- `kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_
+- `kgi-irc-20060219 <Resources/irc-logs/kgi-irc-20060219.txt>`_
+- `kgi-irc-20060212 <Resources/irc-logs/kgi-irc-20060212.txt>`_
 
 2003
 -----
 
-- `kgi-irc-20030201 <resources/irc-logs/kgi-irc-20030201.html>`_
-- `kgi-irc-20030201-2 <resources/irc-logs/kgi-irc-20030201.log>`_
+- `kgi-irc-20030201 <Resources/irc-logs/kgi-irc-20030201.html>`_
+- `kgi-irc-20030201-2 <Resources/irc-logs/kgi-irc-20030201.log>`_
 
 2002
 ----
 
-- `kgi-irc-20020824 <resources/irc-logs/kgi-irc-20020824.html>`_
+- `kgi-irc-20020824 <Resources/irc-logs/kgi-irc-20020824.html>`_
 
 KGI porting guide
 =================

@@ -19,11 +19,11 @@ General KGI documentation
 Articles
 --------
 
-Steffen Seeger 1999	`KGI white paper <resources/html/white_paper.html>`_
+Steffen Seeger 1999	`KGI white paper <Resources/html/white_paper.html>`_
 
-Steffen Seeger 1999	`KGI display driver overview <resources/html/display_overview.html>`_
+Steffen Seeger 1999	`KGI display driver overview <Resources/html/display_overview.html>`_
 
-Steffen Seeger 1999	`KGI acceleration handling <resources/html/accel_handling.html>`_
+Steffen Seeger 1999	`KGI acceleration handling <Resources/html/accel_handling.html>`_
 
 Old stuff
 ---------
@@ -34,11 +34,11 @@ Old stuff
 Graphics designs
 ================
 
-`Brian S. Julin  2004: Proposal for Open Source Graphic Systems V1.3 <resources/print/OSGPv1.3.pdf>`_
+`Brian S. Julin  2004: Proposal for Open Source Graphic Systems V1.3 <Resources/print/OSGPv1.3.pdf>`_
 
 `FreeVGA: Architecture Independent Video Graphics Initialization for LinuxBIOS <http://wiki.linuxbios.org/data/vgabios/>`_
 
-`Linas Vepstas 	2000: High-Performance Graphics Hardware Design <resources/html/high_perf.html>`_
+`Linas Vepstas 	2000: High-Performance Graphics Hardware Design <Resources/html/high_perf.html>`_
 
 `The (Re)Architecture of the X Window System <http://keithp.com/~keithp/talks/xarch_ols2004/xarch-ols2004-html/>`_
 
@@ -55,7 +55,7 @@ The structures and procedures
 Document describing the most important KGI structures and procedures.
 A "must read" for people interested in the KGI code.
 
-`The structures and procedures (PDF) <resources/print/kgi-doc.pdf>`_
+`The structures and procedures (PDF) <Resources/print/kgi-doc.pdf>`_
 
 Same kind of documentation but more practical and includes KII.
 
@@ -72,7 +72,7 @@ Miscellaneous
 
 `Greg Lehey 2005: Debugging Kernel Problems <http://www.lemis.com/grog/Papers/Debug-tutorial/tutorial.pdf>`_
 
-`Joseph Pranevich: The Wonderful World of Linux 2.6 <resources/print/wlinux26.ps>`_
+`Joseph Pranevich: The Wonderful World of Linux 2.6 <Resources/print/wlinux26.ps>`_
 
 `NetBSD bus abstraction layer <http://netbsd.gw.com/cgi-bin/man-cgi/man?bus_space+9+NetBSD-current>`_
 
@@ -91,7 +91,7 @@ Linux
 -----
 
 - A short guide through KGI `installation 
-  <resources/html/linux_install-howto.html>`_ on Linux
+  <Resources/html/linux_install-howto.html>`_ on Linux
 
 
 VM designs

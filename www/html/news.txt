@@ -36,12 +36,12 @@ KGI alpha patch for FreeBSD-8 available
 2006-02-25 : Brian's Graphics Proposal updated
 ----------------------------------------------
 
-`V1.3 of Brian S. Julin's Open Source Graphic Systems <resources/print/OSGPv1.3.pdf>`_
+`V1.3 of Brian S. Julin's Open Source Graphic Systems <Resources/print/OSGPv1.3.pdf>`_
 
 2006-02-19 : IRC meeting logs
 -----------------------------
 
-You may get the logs of the last KGI IRC meetings `kgi-irc-20060212 <resources/irc-logs/kgi-irc-20060212.txt>`_ and `kgi-irc-20060219 <resources/irc-logs/kgi-irc-20060219.txt>`_
+You may get the logs of the last KGI IRC meetings `kgi-irc-20060212 <Resources/irc-logs/kgi-irc-20060212.txt>`_ and `kgi-irc-20060219 <Resources/irc-logs/kgi-irc-20060219.txt>`_
 
 Note that `#kgi IRC channel <http://woo.li/logs/kgi/>`_ is now logged
 
@@ -57,7 +57,7 @@ for details
 2005-04-09 : Article about OpenSource Graphics
 ----------------------------------------------
 
-`The proposal from Brian S. Julin for Open Source Graphic Systems <resources/print/OSGPv1.3.pdf>`_
+`The proposal from Brian S. Julin for Open Source Graphic Systems <Resources/print/OSGPv1.3.pdf>`_
 
 2005-02-27 : Enjoy the new site!
 --------------------------------

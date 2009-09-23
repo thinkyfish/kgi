@@ -30,7 +30,7 @@ subcomponent of graphic boards (clock, ramdac, chipset). Additionaly the
 monitors have their own driver according to their technology (monosync,
 multisync, crt) and their charateristics.
 
-.. image:: resources/images/modular_hw.jpg
+.. image:: Resources/images/modular_hw.jpg
   :width: 500
   :height: 300
   :alt: Modular HW design

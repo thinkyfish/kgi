@@ -9,7 +9,7 @@ KGI Interfaces
              KGIM : kgim.html,
              kgidrv : kgidrv.html
 
-.. image:: resources/images/KGI_big_picture.jpg
+.. image:: Resources/images/KGI_big_picture.jpg
   :width: 500
   :height: 380
   :alt: KGI-0.9 big picture

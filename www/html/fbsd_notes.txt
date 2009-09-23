@@ -8,7 +8,7 @@ FreeBSD port notes
              FreeBSD VM : fbsd_notes.html#kgi-vm-management-under-freebsd,
              Credits : fbsd_notes.html#credits
 
-.. image:: resources/images/flou-daemon.png
+.. image:: Resources/images/flou-daemon.png
   :width: 336
   :height: 82
 

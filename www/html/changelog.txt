@@ -14,6 +14,14 @@ may also be logged on the `news page <news.html>`_.
 Changes
 =======
 
+September, 2009
+---------------
+
+Loads of re-structuring to the FSH of the web site.
+Modified layout.
+Some links may still be borked.
+
+
 March, 2008
 -----------
 
@@ -42,7 +50,7 @@ May 6th, 2005
 * Added `Debian GNU/Linux Sarge packages <download.html>`_
 
 April 4th, 2005
----------------
+---------------resources
 
 * Added `The proposal from Brian S. Julin for Open Source Graphic Systems <OpenSource Graphics Proposal v1.1.pdf>`_
 
