@@ -20,8 +20,13 @@ __FBSDID("$FreeBSD$");
 
 #include "opt_kgi.h"
 
-/* XXX FIXME */
+/* 
+ * XXX FIXME 
+ * I think this FIXME may be referring to the use of compile time terminal
+ * emulator selection?
+ */
 #define KGC_TERM_XTERM
+
 #ifndef KGI_DBG_LEVEL
 #define	KGI_DBG_LEVEL	4
 #endif
@@ -74,7 +79,7 @@ sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
 
 /* Prototypes */
 static void assign_parser(kgi_console_t *cons, int do_reset);
-static void handle_kii_event(kii_device_t *dev, kii_event_t *e);
+static void sce_handle_kii_event(kii_device_t *dev, kii_event_t *e);
 static int sce_close_vt(int unit);
 static int sce_ttytounit(struct tty *tp);
 static int sce_init_vt(struct tty *tp);
@@ -82,10 +87,12 @@ static struct tty* sce_create_tty(int unit);
 
 /* TTY */
 static tsw_ioctl_t		sce_tswioctl;
+static tsw_open_t		sce_tswopen;
 static tsw_outwakeup_t	sce_tswoutwakeup;
 
 static struct ttydevsw scevt_ttydevsw = {
 	.tsw_ioctl		= sce_tswioctl,
+	.tsw_open		= sce_tswopen,
 	.tsw_outwakeup	= sce_tswoutwakeup
 };
 
@@ -111,7 +118,7 @@ assign_parser(kgi_console_t *cons, int do_reset)
 
 	cons->kii.MapDevice		= kgc_map_kii;
 	cons->kii.UnmapDevice	= kgc_unmap_kii;
-	cons->kii.HandleEvent	= &handle_kii_event;
+	cons->kii.HandleEvent	= &sce_handle_kii_event;
 	cons->kii.event_mask	= KII_EM_POINTER;
 #ifdef KGC_TERM_XTERM
 	cons->DoWrite = &xterm_do_write;
@@ -126,7 +133,7 @@ assign_parser(kgi_console_t *cons, int do_reset)
 }
 
 static void 
-handle_kii_event(kii_device_t *dev, kii_event_t *e)
+sce_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 {
 
 	/* Forward to sysmouse pointer events */
@@ -352,8 +359,39 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 	return (ENOIOCTL);
 }
 
+/* 
+ * TTY open routine. 
+ */
+static int
+sce_tswopen(struct tty *tp)
+{
+	int unit;
+	kgi_ucoord_t sz, rz;
+	kgi_console_t *cons;
+
+	/* 
+	 * Set the window dimensions of the TTY if they're not already set.
+	 */
+	unit = sce_ttytounit(tp);
+	cons = (kgi_console_t *)sce_consoles[unit];
+	if (cons == NULL)
+		return (ENXIO);
+
+	if (tp->t_winsize.ws_col == 0 || tp->t_winsize.ws_row == 0) {
+		SCROLLER_GET(cons->scroller, &sz, 0, 0, 0, 0, 0, 0);
+		RENDER_GET(cons->render, &rz, 0, 0);
+
+		tp->t_winsize.ws_col = sz.x;
+		tp->t_winsize.ws_xpixel = rz.x;	
+		tp->t_winsize.ws_row = sz.y;
+		tp->t_winsize.ws_ypixel = rz.y;
+	}
+
+	return (0);
+}
+
 /*
- * Receive data from the TTY system and pass it on to the KGC system.
+ * Receive data from the TTY system and pass it to the KGC terminal layer.
  */
 static void 
 sce_tswoutwakeup(struct tty *tp)
@@ -373,7 +411,7 @@ sce_tswoutwakeup(struct tty *tp)
 	KRN_DEBUG(8, "Receiving data from TTY %d", unit);
 
 	for (;;) {
-		/* Fill buffer. */
+		/* Fill the buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
 		KRN_DEBUG(8, "%d bytes in buffer.", len);
 		if (len == 0)
@@ -399,6 +437,7 @@ scevt_mod_event(module_t mod, int type, void *data)
 	int err, unit;
 	struct cdev *dev;
 	struct tty *tp;
+	static int scevt_init = SCEVT_COLD;
 
 	switch (type) {
 	case MOD_LOAD:
@@ -406,23 +445,27 @@ scevt_mod_event(module_t mod, int type, void *data)
 		 * XXX 
 		 * MAXCONS used here should be auto at kbd plug?
 		 */
-		for (unit = 0; unit < MAXCONS; unit++) {
-			tp = sce_create_tty(unit);
-			sce_init_vt(tp);
-		}
-		dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
+		if (scevt_init == SCEVT_COLD ) {
+			for (unit = 0; unit < MAXCONS; unit++) {
+				tp = sce_create_tty(unit);
+				sce_init_vt(tp);
+			}
+			dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
+			scevt_init = SCEVT_WARM;
 #ifndef SC_NO_SYSMOUSE
-		sce_mouse_init();
-		sce_sysmouse_init();
+			sce_mouse_init();
+			sce_sysmouse_init();
 #endif
+		}		
 		return (0);
 	case MOD_UNLOAD:
-		for (unit = 0; unit < MAXCONS; unit++) {
-			err = sce_close_vt(unit);
-			if (err != KGI_EOK) {
-				KRN_ERROR("Failed to remove console %d", unit);
-				continue; /* There may be others that still can be removed? */
-			}				
+		if (scevt_init == SCEVT_WARM) {
+			for (unit = 0; unit < MAXCONS; unit++) {
+				err = sce_close_vt(unit);
+				if (err != KGI_EOK)
+					KRN_ERROR("Failed to remove console %d", unit);
+			}
+			scevt_init = SCEVT_COLD;
 		}
 		return (ENXIO);
 	default:

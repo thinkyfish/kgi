@@ -56,6 +56,17 @@ __FBSDID("$FreeBSD$");
 #include "scroller_if.h"
 #include "render_if.h"
 
+/* Define here for early init without allocation. */
+static sce_console scecons;
+static kgi_u16_t sce_buf[CONFIG_KGII_CONSOLEBUFSIZE];
+
+/* Prototypes */
+static void console_printk(char *b, unsigned count);
+static void do_reset(kgi_console_t *cons);
+static int event2char(kii_device_t *dev, kii_event_t *ev);
+static void sce_handle_kii_event(kii_device_t *dev, kii_event_t *ev);
+
+/* Console */
 static cn_probe_t	sce_cnprobe;
 static cn_init_t	sce_cninit;
 static cn_term_t	sce_cnterm;
@@ -63,18 +74,14 @@ static cn_getc_t	sce_cngetc;
 static cn_checkc_t	sce_cncheckc;
 static cn_putc_t	sce_cnputc;
 
-
 /*
  * Define manually until we activate the CONSOLE_DRIVER macro.
- * Use of CONSOLE_DRIVER(sce) currently causes a panic.
+ * Use of CONSOLE_DRIVER(sce) currently causes a panic at RENDER_INIT
+ * in sce_cninit.
  */
 static struct consdev sce_consdev = {
 	sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc,
 	sce_cncheckc, sce_cnputc, 0};
-
-/* Define here for early init without allocation. */
-static sce_console scecons;
-static kgi_u16_t sce_buf[CONFIG_KGII_CONSOLEBUFSIZE];
 
 /*
  * This is a printk() implementation based on the scroll->* functions. 
@@ -205,7 +212,7 @@ event2char(kii_device_t *dev, kii_event_t *ev)
 }
 
 static void 
-handle_kii_event(kii_device_t *dev, kii_event_t *ev)
+sce_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 {
 	int discard;
 
@@ -259,7 +266,7 @@ sce_cninit(struct consdev *cp)
 
 	cons->kii.flags |= KII_DF_CONSOLE;
 	cons->kii.priv.priv_ptr = cons;
-	cons->kii.HandleEvent	= &handle_kii_event;
+	cons->kii.HandleEvent	= &sce_handle_kii_event;
 
 	cons->meta_console = (void *)cp;
 
@@ -295,22 +302,24 @@ sce_cnterm(struct consdev *cp)
 }
 
 /*
- * Console put char
+ * Console get char
  */
-static void
-sce_cnputc(struct consdev *cd, int c)
+static int
+sce_cngetc(struct consdev *cp)
 {
-	char cc;
+	int c;
 
- 	cc = (char)c;
-	console_printk(&cc, 1);
+	while ((c = sce_cncheckc(cp)) == -1)
+		;
+
+	return (c);
 }
 
 /*
  * Console check for char
  */
 static int
-sce_cncheckc(struct consdev *cd)
+sce_cncheckc(struct consdev *cp)
 {
 	kii_event_t event;
 	int s, c;
@@ -326,24 +335,22 @@ sce_cncheckc(struct consdev *cd)
 }
 
 /*
- * Console get char
+ * Console put char
  */
-static int
-sce_cngetc(struct consdev *cd)
+static void
+sce_cnputc(struct consdev *cp, int c)
 {
-	int c;
+	char cc;
 
-	while ((c = sce_cncheckc(cd)) == -1)
-		;
-
-	return (c);
+ 	cc = (char)c;
+	console_printk(&cc, 1);
 }
 
 /* 
  * Early initialization of sce. Configure the video drivers.
  */
 static void
-sce_cn_vid_init(void)
+scecn_vid_init(void)
 {	
 	/*
 	 * Access the video adapter driver through the back door!
@@ -354,19 +361,17 @@ sce_cn_vid_init(void)
 	 */
 	vid_configure(VIO_PROBE_ONLY);
 }
-SYSINIT(sce, SI_SUB_KGI, SI_ORDER_MIDDLE, sce_cn_vid_init, NULL);
+SYSINIT(sce, SI_SUB_KGI, SI_ORDER_MIDDLE, scecn_vid_init, NULL);
 
 static int
-sce_cn_mod_event(module_t mod, int type, void *data)
+scecn_mod_event(module_t mod, int type, void *data)
 {
 
 	switch (type) {
 	case MOD_LOAD:
-		memset(sce_consoles, 0, sizeof(sce_consoles));
-		
+		memset(sce_consoles, 0, sizeof(sce_consoles));		
 		sce_cnprobe(&sce_consdev);
 		sce_cninit(&sce_consdev);
-
 		cnadd(&sce_consdev);
 		break;
 	case MOD_UNLOAD:
@@ -380,7 +385,7 @@ sce_cn_mod_event(module_t mod, int type, void *data)
 
 static moduledata_t scecn_mod = {
 	"scecn",
-	sce_cn_mod_event,
+	scecn_mod_event,
 	NULL,
 };
 
