@@ -219,7 +219,7 @@ sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
 	mouse->input.report = KII_EM_PTR_RELATIVE | KII_EM_PTR_BUTTON;
 	mouse->input.priv.priv_ptr = mouse;
 	
-	if (kii_register_input(dev2unit(dev), &mouse->input))
+	if (kii_register_input(dev2unit(dev), &mouse->input, 0))
 		KRN_ERROR("Could not register sce_mouse %d", dev2unit(dev));
 
 	mouse->opened = 1;
