@@ -75,7 +75,7 @@ kii_next_input_id(kii_focus_t *f)
  * 	KII_EINVAL parameters invalid
  */
 kii_s_t
-kii_register_input(kii_u_t focus, kii_input_t *dev)
+kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 {
 	kii_focus_t *f;
 	kii_input_t *prev;
@@ -116,7 +116,7 @@ kii_register_input(kii_u_t focus, kii_input_t *dev)
 	}
 
 	f = kiifocus[focus];
-	if (!f) {
+	if (!f || reset) {
  		kii_s_t i;
 
 		KRN_DEBUG(2, "Allocating focus %i...", focus);

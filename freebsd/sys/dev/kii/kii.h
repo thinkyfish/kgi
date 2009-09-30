@@ -441,7 +441,7 @@ extern void kii_handle_input(kii_event_t *event);
 extern void kii_action(kii_focus_t *f, kii_event_t *event);
 extern void kii_put_event(kii_focus_t *f, kii_event_t *event);
 
-extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev);
+extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev, int reset);
 extern void kii_unregister_input(kii_input_t *dev);
 
 extern kii_error_t kii_register_device(kii_device_t *dev, kii_u_t index);

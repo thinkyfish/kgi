@@ -178,13 +178,14 @@ static kii_u8_t e0_keys[128] = {
 static void 
 kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 {
-	kbdriver_softc *sc = input->priv.priv_ptr;
+	kbdriver_softc *sc;
 	kii_u8_t release;
 	kii_u_t keycode;
 
 	event->any.focus = input->focus;
 	event->any.device = input->id;
-	event->any.time = 0;			/* XXX no jiffies. */
+	event->any.time = 0;	/* XXX no jiffies. */
+	sc = input->priv.priv_ptr; 
 
 	/* 
 	 * Perform raw treatment at end to enable switches before delivery of key.
@@ -353,15 +354,20 @@ kbdriver_event(keyboard_t *kbd, int evt, void *arg)
 	return (0);
 }
 
-/* Get a scancode if any. */
+/* 
+ * Get a scancode if any.
+ */
 static int
 kbdriver_poll(kii_input_t *input)
 {
-	kbdriver_softc *sc = input->priv.priv_ptr;
-	keyboard_t *kbd = sc->kbd;
+	kbdriver_softc *sc;
+	keyboard_t *kbd;
 	int c;
 
+	sc = input->priv.priv_ptr;
+ 	kbd = sc->kbd;
 	c = (*kbdsw[(kbd)->kb_index]->read)((kbd), 0);
+
 	return (c);
 }
 
@@ -377,22 +383,24 @@ kip_kbd_register(keyboard_t *kbd, int index)
 	if (!sc->kbd) {
 		sc->kbd = kbd;
 		/*
-		 * Try to get exclusive access to this kbd
+		 * Try to get exclusive access to this kbd.
 		 */
-		KRN_DEBUG(1, "Attempting to allocate keyboard %s", kbd->kb_name);
+		KRN_DEBUG(1, "Attempting to allocate keyboard %s%d", 
+				kbd->kb_name, kbd->kb_unit);
 
 		KBD_UNBUSY(kbd);
 		KBD_VALID(kbd);
 		KBD_DEACTIVATE(kbd);
 		ka = kbd_allocate(kbd->kb_name, kbd->kb_unit, (void *)&sc->kbd,
 				 kbdriver_event, sc);
-		KRN_DEBUG(2, "kbd_allocate() returned '%d'", ka);
+
+		KRN_DEBUG(3, "kbd_allocate() returned '%d'", ka);
 		
-		/* Check if allocation succeeded */
+		/* Check if allocation succeeded. */
 		if (ka >= 0) {
 			/*
 			 * Put the keyboard in raw mode so that we'll
-			 * receive directly the scancodes from lower
+			 * directly receive the scancodes from the lower
 			 * layers.
 			 */
 			kbd_mode = K_RAW;
@@ -410,18 +418,29 @@ kip_kbd_register(keyboard_t *kbd, int index)
 			sc->kii_input.Poll = kbdriver_poll;
 			sc->kii_input.Parse = kbdriver_parser;
 
-			/* Register to the focus with same id as the kbd */
-			KRN_DEBUG(2, "Registering KII %d focus: %d; id: %d.", 
-				kbdriver_nr, sc->kii_input.focus, sc->kii_input.id);
-			kii_error = kii_register_input(kbdriver_nr, &sc->kii_input);
-
-			KRN_DEBUG(1, "%s: keyboard %d registered on focus %d with error %d",
-				   __FUNCTION__, index, kbdriver_nr, kii_error);
+			/* 
+			 * Register the keyboard to a focus. If the kbd unit doesn't match
+			 * the current focus, then we assume that kbd is a slave of kbdmux
+			 * and reassign the focus found from kbd unit with the current kbd.
+			 */
+			if (kbd->kb_unit != kbdriver_nr) {
+				kii_error = kii_register_input(kbd->kb_unit, &sc->kii_input, 1);
+				KRN_DEBUG(1, "KII device %d, keyboard %s%d \
+						registered on focus %d with error %d",
+				    	index, kbd->kb_name, kbd->kb_unit, kbd->kb_unit, 
+						kii_error);
+			} else {
+				kii_error = kii_register_input(kbdriver_nr, &sc->kii_input, 0);
+				KRN_DEBUG(1, "KII device %d, keyboard %s%d \
+						registered on focus %d with error %d",
+				    	index, kbd->kb_name, kbd->kb_unit, kbdriver_nr, 
+						kii_error);
+			}
 
 			kbdriver_nr++;
 
 		} else {
-			/* Free the kbdriver_data entry */
+			/* Free the kbdriver_data entry. */
 			sc->kbd = NULL;
 		}		
 	}
@@ -451,7 +470,7 @@ kbdriver_modevent(module_t mod, int type, void *unused)
 
 	switch (type) {
 	case MOD_LOAD:
-		/* Grab any kbd already registered */
+		/* Grab any kbd already registered. */
 		kbdriver_init();
 		break;
 	case MOD_UNLOAD:
