@@ -19,16 +19,14 @@ Changes
 September, 2009
 ---------------
 
-* Update FreeBSD status.
-
+* Updated screenshots.
+* Updated FreeBSD status.
 * Fixed some errors on this page. Added link to the 
   `changelog <changelog.html>`_ in the Site maintenance section of the  
   `Development <development.html>`_ page
-
 * Loads of re-structuring to the FSH of the web site.
   Modified layout.
   Some links may still be borked.
-
 
 March, 2008
 -----------

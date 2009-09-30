@@ -8,8 +8,42 @@ Screenshots
 .. contents::
    :depth: 1
    
+The images on this page may be larger then they appear here.
+   
 FreeBSD
 =======
+
+VirtualBox FreeBSD-8.0-RC1 guest, boot loader. Host FreeBSD-8.0-RC1
+-------------------------------------------------------------------
+
+.. image:: Resources/images/screenshots/FreeBSD8-20090930-03.png
+   :width: 728
+   :height: 469
+   :alt: FreeBSD8-20090930-03.png
+
+VirtualBox FreeBSD-8.0-RC1 guest 800x600x8 mode. Host FreeBSD-8.0-RC1
+---------------------------------------------------------------------
+
+.. image:: Resources/images/screenshots/FreeBSD8-20090930-02.png
+   :width: 800
+   :height: 600
+   :alt: FreeBSD8-20090930-02.png
+
+VirtualBox FreeBSD-8.0-RC1 guest 800x600x8 mode. Host FreeBSD-8.0-RC1
+---------------------------------------------------------------------
+
+.. image:: Resources/images/screenshots/FreeBSD8-20090930-01.png
+   :width: 800
+   :height: 600
+   :alt: FreeBSD8-20090930-01.png
+
+VirtualBox FreeBSD-8.0-RC1 guest 800x600x8 mode. Host FreeBSD-8.0-RC1
+---------------------------------------------------------------------
+
+.. image:: Resources/images/screenshots/FreeBSD8-20090930-00.png
+   :width: 800
+   :height: 600
+   :alt: FreeBSD8-20090930-00.png
 
 FreeBSD-8 alpha 1280x1024x8 mode
 --------------------------------
