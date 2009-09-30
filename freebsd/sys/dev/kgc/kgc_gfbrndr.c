@@ -513,16 +513,31 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 
 /*
  * Some common display resolutions. 
- * XXX Use this list for a fall back method?
  */
 const kgi_u16_t modes[][2] =
 {
+
+#ifdef KGC_RENDER_1280x1024
+	{ 1280, 1024 }, 
+#endif
+#ifdef KGC_RENDER_1024x768
 	{ 1024, 768 },
+#endif
+#ifdef KGC_RENDER_800x600
 	{ 800, 600 },
+#endif
+#ifdef KGC_RENDER_640x480
 	{ 640, 480 },
+#endif
+#ifdef KGC_RENDER_640x400
 	{ 640, 400 },
+#endif
+#ifdef KGC_RENDER_320x240
 	{ 320, 240 },
+#endif
+#ifdef KGC_RENDER_320x200
 	{ 320, 200 },
+#endif
 	{ 0, 0 }
 };
 

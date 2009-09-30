@@ -540,10 +540,14 @@ KGI_DBG_LEVEL		opt_kgi.h
 KGC_DEFAULT_FONT	opt_kgi.h
 KGI_IGNORE_VGAPCI       opt_kgi.h
 KGC_RENDER_BACKGROUND	opt_kgi.h
-KGC_RENDER_1024x768	opt_kgi.h
-KGC_RENDER_800x600	opt_kgi.h
+KGC_RENDER_1280x1024	opt_kgi.h
+KGC_RENDER_1024x768	opt_kgi.h 
+KGC_RENDER_800x600	opt_kgi.h 
+KGC_RENDER_640x480	opt_kgi.h 
+KGC_RENDER_640x400	opt_kgi.h 
+KGC_RENDER_320x240	opt_kgi.h 
+KGC_RENDER_320x200	opt_kgi.h 
 KGC_RENDER_16BITS	opt_kgi.h
-KGC_RENDER_32BITS	opt_kgi.h
 
 # Fb options
 FB_DEBUG		opt_fb.h

@@ -3,7 +3,7 @@ ident	KGI
 
 # KGI (Kernel Graphic Interface)
 options	KGI_COMPAT		# Enables KGI compatibility.
-options	KGI_DBG_LEVEL=9		# KGI debug output level.
+options	KGI_DBG_LEVEL=0		# KGI debug output level.
 
 # Restrict building of dev/pci/vga_pci.c to avoid probing.
 options	KGI_IGNORE_VGAPCI	
@@ -12,14 +12,19 @@ options	KGI_IGNORE_VGAPCI
 #options KGI_NOSPLASH
 
 # Graphics console setup:
-# Define one of the following modes for a higher resolution;
-#options	KGC_RENDER_800x600
-#options	KGC_RENDER_1024x768
+# Define one of the following modes for the console display resolution:
+#options	KGC_RENDER_1280x1024
+#options	KGC_RENDER_1024x768 
+options		KGC_RENDER_800x600 
+#options	KGC_RENDER_640x480 
+#options	KGC_RENDER_640x400 
+#options	KGC_RENDER_320x240 
+#options	KGC_RENDER_320x200 
 
 # Define a colour mode (bpp);
 options	KGC_RENDER_16BITS	# Use 16bit mode.
 
-# Enable console background - currently 8bit only;
+# Enable console background - currently 8bit only:
 #options	KGC_RENDER_BACKGROUND
 
 # The default font to be used by the KGI console. See dev/kgc/kgc_gfbdflt.c
