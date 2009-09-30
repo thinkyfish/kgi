@@ -65,6 +65,8 @@ Site maintenance
  <http://docutils.sourceforge.net/>`_ installed to successfully complete 
  `make site`.
 
+The `change log <changelog.html>`_ tracks the development of the web site. Please keep it updated.
+
 Status
 ======
 

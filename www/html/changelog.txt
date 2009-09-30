@@ -2,7 +2,9 @@
 Changelog
 =========
 
-.. include:: home.menu
+.. navigation::
+   :submenu: Purpose : changelog.html#purpose,
+             Changes : changelog.html#changes
 
 Purpose
 =======
@@ -16,6 +18,10 @@ Changes
 
 September, 2009
 ---------------
+
+Fixed some errors on this page. Added link to the 
+`changelog <changelog.html>`_ in the Site maintenance section of the  
+`Development <development.html>`_ page
 
 Loads of re-structuring to the FSH of the web site.
 Modified layout.
@@ -50,7 +56,7 @@ May 6th, 2005
 * Added `Debian GNU/Linux Sarge packages <download.html>`_
 
 April 4th, 2005
----------------resources
+---------------
 
 * Added `The proposal from Brian S. Julin for Open Source Graphic Systems <OpenSource Graphics Proposal v1.1.pdf>`_
 
