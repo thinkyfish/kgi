@@ -11,7 +11,7 @@ Purpose
 
 This changelog aims at listing important changes of the site. You are
 encouraged to visit the page regulary to check for updates. Major changes
-may also be logged on the `news page <news.html>`_.
+may will also be logged on the `news page <news.html>`_.
 
 Changes
 =======
@@ -19,13 +19,15 @@ Changes
 September, 2009
 ---------------
 
-Fixed some errors on this page. Added link to the 
-`changelog <changelog.html>`_ in the Site maintenance section of the  
-`Development <development.html>`_ page
+* Update FreeBSD status.
 
-Loads of re-structuring to the FSH of the web site.
-Modified layout.
-Some links may still be borked.
+* Fixed some errors on this page. Added link to the 
+  `changelog <changelog.html>`_ in the Site maintenance section of the  
+  `Development <development.html>`_ page
+
+* Loads of re-structuring to the FSH of the web site.
+  Modified layout.
+  Some links may still be borked.
 
 
 March, 2008

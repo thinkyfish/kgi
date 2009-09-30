@@ -75,14 +75,12 @@ FreeBSD
 Currently the `freebsd <http://kgi.cvs.sourceforge.net/kgi/freebsd>`_ module 
 is the only actively developed code at this time.
 
-Mode setting is working. The input & graphics console system is mostly working &
-is taking advantage of VESA/VGA. This means that there is only a i386 port for
-the time being, however, with the recent VESA emulation work from OpenBSD ported
-to FreeBSD-AMD64, it may be possible to port the current i386 FreeBSD port of
-KGI to the AMD64 platform.
+The i386 port is working at an alpha status. Currently KGI makes use of 
+FreeBSD's VESA mode setting and graphics capablities. Booting into multi user
+mode is functioning, and the systems appears to be stable.
 
-There is still some issues with the input interface & terminal layer interacting 
-with FreeBSD.
+With the recent work of OpenBSD's VESA AMD64 emulation ported to FreeBSD, it may
+be possible to port the i386 code to AMD64.
 
 No GPU drivers have been ported, re-written or updated yet.
 
