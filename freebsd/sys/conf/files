@@ -1124,10 +1124,6 @@ dev/kgc/kgc_scroller.c		optional kgc kgi
 dev/kgc/kgc_textscroller.c	optional kgc kgi
 dev/kgc/render_if.m		optional kgc kgi
 dev/kgc/scroller_if.m		optional kgc kgi
-dev/sce/sce_bootconsole.c	optional sce kgc kgi
-dev/sce/sce_vtconsole.c	optional sce kgc kgi
-dev/sce/sce_sysmouse.c	optional sce kgc kgi
-dev/sce/sce_scmouse.c	optional sce kgc kgi
 dev/kgi/kgi_core.c		optional kgi
 dev/kgi/kgi_daemon.c		optional kgi
 dev/kgi/kgi_dpynull.c		optional kgi
@@ -1424,6 +1420,10 @@ dev/scc/scc_dev_z8530.c		optional scc
 dev/scd/scd.c			optional scd isa
 dev/scd/scd_isa.c		optional scd isa
 dev/sdhci/sdhci.c		optional sdhci pci
+dev/sce/sce_bootconsole.c	optional sce kgc kgi
+dev/sce/sce_vtconsole.c	optional sce kgc kgi
+dev/sce/sce_sysmouse.c	optional sce kgc kgi
+dev/sce/sce_scmouse.c	optional sce kgc kgi
 dev/sf/if_sf.c			optional sf pci
 dev/si/si.c			optional si
 dev/si/si2_z280.c		optional si

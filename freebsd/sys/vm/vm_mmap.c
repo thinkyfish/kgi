@@ -64,6 +64,7 @@ __FBSDID("$FreeBSD$");
 #include <sys/mount.h>
 #include <sys/conf.h>
 #include <sys/stat.h>
+#include <sys/sysent.h>
 #include <sys/vmmeter.h>
 #include <sys/sysctl.h>
 
@@ -229,7 +230,8 @@ mmap(td, uap)
 
 	fp = NULL;
 	/* make sure mapping fits into numeric range etc */
-	if (uap->len == 0 ||
+	if ((uap->len == 0 && !SV_CURPROC_FLAG(SV_AOUT) &&
+	     curproc->p_osrel >= 800104) ||
 	    ((flags & MAP_ANON) && uap->fd != -1))
 		return (EINVAL);
 
@@ -1194,7 +1196,7 @@ vm_mmap_vnode(struct thread *td, vm_size_t objsize,
 		    vp->v_rdev, foffp, objp);
 		if (error == 0)
 			goto mark_atime;
-		goto done;	
+		goto done;
 	} else {
 		error = EINVAL;
 		goto done;
