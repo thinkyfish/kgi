@@ -192,8 +192,12 @@ void
 kii_handle_input(kii_event_t *event)
 {
 	kii_focus_t *f;
-	kii_u_t mask = 1 << event->any.type;
-	char *sym_string = NULL;
+	kii_u_t mask;
+	char *sym_string;
+
+	mask = 1 << event->any.type;	
+	sym_string = NULL;
+		
 	KRN_ASSERT(KII_VALID_FOCUS_ID(event->any.focus));
 
 	f = kiifocus[event->any.focus];
@@ -236,13 +240,13 @@ kii_handle_input(kii_event_t *event)
 			break;
 		default:
 			switch (K_TYPE(event->key.sym)) {
-			case K_TYPE_FUNCTION:
-			case K_TYPE_SPECIAL:
-			case K_TYPE_NUMPAD:
-			case K_TYPE_CONSOLE:
-			case K_TYPE_CURSOR:
-			case K_TYPE_SHIFT:
-			case K_TYPE_META:
+			case K_TYPE_FUNCTION:	/* Fall thru. */
+			case K_TYPE_SPECIAL:	/* Fall thru. */
+			case K_TYPE_NUMPAD: 	/* Fall thru. */
+			case K_TYPE_CONSOLE:	/* Fall thru. */
+			case K_TYPE_CURSOR: 	/* Fall thru. */		
+			case K_TYPE_SHIFT: 		/* Fall thru. */
+			case K_TYPE_META: 		/* Fall thru. */
 				break;
 			default:
 				composed.key = event->key;
