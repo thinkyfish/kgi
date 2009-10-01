@@ -20,9 +20,6 @@
  * 
  * Manuals are $25 each or $50 for all three, plus $7 shipping 
  * within the United States, $35 abroad.
- *
- * $FreeBSD$
- *
  */
 
 #ifndef _kgi_pci_pci_h
