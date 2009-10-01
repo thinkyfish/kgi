@@ -52,7 +52,7 @@ FreeBSD
 -------
 
 - Patch for 
-  `FreeBSD8 8.0-RC1 <Resources/patches/FreeBSD8-20091001.patch>`_
+  `FreeBSD 8.0-RC1 <Resources/patches/FreeBSD8-20091001.patch>`_
 
 - You can fetch some old patches for kgi4BSD from `nsouch's download area`__ in
   the `kgi4BSD`__ directory. These patches are based on a 6.x system.
