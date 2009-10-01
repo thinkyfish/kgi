@@ -7,6 +7,9 @@ Download
 			 Packages and patches : download.html#packages-and-patches
 
 
+CVS is the recommended method for keeping up-to-date with KGI, however, patches
+& binary packages will be made available for download from time to time.
+
 CVS
 ===
 
@@ -47,6 +50,9 @@ Debian GNU/Linux Sarge
 
 FreeBSD
 -------
+
+- Patch for 
+  `FreeBSD8 8.0-RC1 <Resources/patches/FreeBSD8-20091001.patch>`_
 
 - You can fetch some old patches for kgi4BSD from `nsouch's download area`__ in
   the `kgi4BSD`__ directory. These patches are based on a 6.x system.

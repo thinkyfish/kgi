@@ -16,6 +16,11 @@ may will also be logged on the `news page <news.html>`_.
 Changes
 =======
 
+October, 2009
+-------------
+
+* Added patch for FreeBSD8-RC1 - update the news and download pages to reflect.
+
 September, 2009
 ---------------
 

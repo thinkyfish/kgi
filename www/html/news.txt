@@ -5,6 +5,13 @@ News archive
 2009
 ====
 
+2009-10-01 : New FreeBSD download
+---------------------------------
+
+A patch is available for 
+`download <Resources/patches/FreeBSD8-20091001.patch>`_
+made against FreeBSD 8.0-RC1
+
 2009-09-22 : Updated website
 ----------------------------
 
