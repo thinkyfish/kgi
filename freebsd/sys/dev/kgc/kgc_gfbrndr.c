@@ -94,9 +94,9 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 	   * If we don't display bits right-to-left (little-bitian?),
 	   * then perform a bit-swap on p...
 	   */
-	if(bit_ltor) {
+	if (bit_ltor) {
 		num_shifts = 8 * size;
-		for(i = 0, _p = 0; i < num_shifts; i++, p >>= 1) {
+		for (i = 0, _p = 0; i < num_shifts; i++, p >>= 1) {
 			_p <<= 1;
 			_p |= (p & 0x00000001);
 		}
@@ -105,7 +105,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 
 	val = 0;
 
-	switch(bpp) {
+	switch (bpp) {
 #if 0
 	/* Accelerate the simplest cases... */
 	case 1:
@@ -124,115 +124,115 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 		break;
 #endif
 	case 8:
-		if(size > 0) {
+		if (size > 0) {
 			a &= 0x000000ff;
 			val = a | (a << 8) | (a << 16) | (a << 24);
 			mask[0] = 0;
-			if(_p & 0x00000001) mask[0] |= (0xff);
-			if(_p & 0x00000002) mask[0] |= (0xff << 8);
-			if(_p & 0x00000004) mask[0] |= (0xff << 16);
-			if(_p & 0x00000008) mask[0] |= (0xff << 24);
+			if (_p & 0x00000001) mask[0] |= (0xff);
+			if (_p & 0x00000002) mask[0] |= (0xff << 8);
+			if (_p & 0x00000004) mask[0] |= (0xff << 16);
+			if (_p & 0x00000008) mask[0] |= (0xff << 24);
 			mask[1] = 0;
-			if(_p & 0x00000010) mask[1] |= (0xff);
-			if(_p & 0x00000020) mask[1] |= (0xff << 8);
-			if(_p & 0x00000040) mask[1] |= (0xff << 16);
-			if(_p & 0x00000080) mask[1] |= (0xff << 24);
+			if (_p & 0x00000010) mask[1] |= (0xff);
+			if (_p & 0x00000020) mask[1] |= (0xff << 8);
+			if (_p & 0x00000040) mask[1] |= (0xff << 16);
+			if (_p & 0x00000080) mask[1] |= (0xff << 24);
 		}
-		if(size > 1) {
+		if (size > 1) {
 			mask[2] = 0;
-			if(_p & 0x00000100) mask[2] |= (0xff);
-			if(_p & 0x00000200) mask[2] |= (0xff << 8);
-			if(_p & 0x00000400) mask[2] |= (0xff << 16);
-			if(_p & 0x00000800) mask[2] |= (0xff << 24);
+			if (_p & 0x00000100) mask[2] |= (0xff);
+			if (_p & 0x00000200) mask[2] |= (0xff << 8);
+			if (_p & 0x00000400) mask[2] |= (0xff << 16);
+			if (_p & 0x00000800) mask[2] |= (0xff << 24);
 			mask[3] = 0;
-			if(_p & 0x00001000) mask[3] |= (0xff);
-			if(_p & 0x00002000) mask[3] |= (0xff << 8);
-			if(_p & 0x00004000) mask[3] |= (0xff << 16);
-			if(_p & 0x00008000) mask[3] |= (0xff << 24);
+			if (_p & 0x00001000) mask[3] |= (0xff);
+			if (_p & 0x00002000) mask[3] |= (0xff << 8);
+			if (_p & 0x00004000) mask[3] |= (0xff << 16);
+			if (_p & 0x00008000) mask[3] |= (0xff << 24);
 		}	
-		if(size > 2) {
+		if (size > 2) {
 			mask[4] = 0;
-			if(_p & 0x00010000) mask[4] |= (0xff);
-			if(_p & 0x00020000) mask[4] |= (0xff << 8);
-			if(_p & 0x00040000) mask[4] |= (0xff << 16);
-			if(_p & 0x00080000) mask[4] |= (0xff << 24);
+			if (_p & 0x00010000) mask[4] |= (0xff);
+			if (_p & 0x00020000) mask[4] |= (0xff << 8);
+			if (_p & 0x00040000) mask[4] |= (0xff << 16);
+			if (_p & 0x00080000) mask[4] |= (0xff << 24);
 			mask[5] = 0;
-			if(_p & 0x00100000) mask[5] |= (0xff);
-			if(_p & 0x00200000) mask[5] |= (0xff << 8);
-			if(_p & 0x00400000) mask[5] |= (0xff << 16);
-			if(_p & 0x00800000) mask[5] |= (0xff << 24);
+			if (_p & 0x00100000) mask[5] |= (0xff);
+			if (_p & 0x00200000) mask[5] |= (0xff << 8);
+			if (_p & 0x00400000) mask[5] |= (0xff << 16);
+			if (_p & 0x00800000) mask[5] |= (0xff << 24);
 		}
-		if(size > 3) {
+		if (size > 3) {
 			mask[6] = 0;
-			if(_p & 0x01000000) mask[6] |= (0xff);
-			if(_p & 0x02000000) mask[6] |= (0xff << 8);
-			if(_p & 0x04000000) mask[6] |= (0xff << 16);
-			if(_p & 0x08000000) mask[6] |= (0xff << 24);
+			if (_p & 0x01000000) mask[6] |= (0xff);
+			if (_p & 0x02000000) mask[6] |= (0xff << 8);
+			if (_p & 0x04000000) mask[6] |= (0xff << 16);
+			if (_p & 0x08000000) mask[6] |= (0xff << 24);
 			mask[7] = 0;
-			if(_p & 0x10000000) mask[7] |= (0xff);
-			if(_p & 0x20000000) mask[7] |= (0xff << 8);
-			if(_p & 0x40000000) mask[7] |= (0xff << 16);
-			if(_p & 0x80000000) mask[7] |= (0xff << 24);
+			if (_p & 0x10000000) mask[7] |= (0xff);
+			if (_p & 0x20000000) mask[7] |= (0xff << 8);
+			if (_p & 0x40000000) mask[7] |= (0xff << 16);
+			if (_p & 0x80000000) mask[7] |= (0xff << 24);
 		}
 		break;
 	case 16:
-		if(size > 0) {
+		if (size > 0) {
 			a &= 0x0000ffff;
 			val = 0xffffffff;
 			mask[0] = 0;
-			if(_p & 0x00000001) mask[0] |= (0xffff);
-			if(_p & 0x00000002) mask[0] |= (0xffff << 16);
+			if (_p & 0x00000001) mask[0] |= (0xffff);
+			if (_p & 0x00000002) mask[0] |= (0xffff << 16);
 			mask[1] = 0;
-			if(_p & 0x00000004) mask[1] |= (0xffff);
-			if(_p & 0x00000008) mask[1] |= (0xffff << 16);
+			if (_p & 0x00000004) mask[1] |= (0xffff);
+			if (_p & 0x00000008) mask[1] |= (0xffff << 16);
 			mask[2] = 0;
-			if(_p & 0x00000010) mask[2] |= (0xffff);
-			if(_p & 0x00000020) mask[2] |= (0xffff << 16);
+			if (_p & 0x00000010) mask[2] |= (0xffff);
+			if (_p & 0x00000020) mask[2] |= (0xffff << 16);
 			mask[3] = 0;
-			if(_p & 0x00000040) mask[3] |= (0xffff);
-			if(_p & 0x00000080) mask[3] |= (0xffff << 16);
+			if (_p & 0x00000040) mask[3] |= (0xffff);
+			if (_p & 0x00000080) mask[3] |= (0xffff << 16);
 		}
-		if(size > 1) {
+		if (size > 1) {
 			mask[4] = 0;
-			if(_p & 0x00000100) mask[4] |= (0xffff);
-			if(_p & 0x00000200) mask[4] |= (0xffff << 16);
+			if (_p & 0x00000100) mask[4] |= (0xffff);
+			if (_p & 0x00000200) mask[4] |= (0xffff << 16);
 			mask[5] = 0;
-			if(_p & 0x00000400) mask[5] |= (0xffff);
-			if(_p & 0x00000800) mask[5] |= (0xffff << 16);
+			if (_p & 0x00000400) mask[5] |= (0xffff);
+			if (_p & 0x00000800) mask[5] |= (0xffff << 16);
 			mask[6] = 0;
-			if(_p & 0x00001000) mask[6] |= (0xffff);
-			if(_p & 0x00002000) mask[6] |= (0xffff << 16);
+			if (_p & 0x00001000) mask[6] |= (0xffff);
+			if (_p & 0x00002000) mask[6] |= (0xffff << 16);
 			mask[7] = 0;
-			if(_p & 0x00004000) mask[7] |= (0xffff);
-			if(_p & 0x00008000) mask[7] |= (0xffff << 16);
+			if (_p & 0x00004000) mask[7] |= (0xffff);
+			if (_p & 0x00008000) mask[7] |= (0xffff << 16);
 		}
-		if(size > 2) {
+		if (size > 2) {
 			mask[8] = 0;
-			if(_p & 0x00010000) mask[8] |= (0xffff);
-			if(_p & 0x00020000) mask[8] |= (0xffff << 16);
+			if (_p & 0x00010000) mask[8] |= (0xffff);
+			if (_p & 0x00020000) mask[8] |= (0xffff << 16);
 			mask[9] = 0;
-			if(_p & 0x00040000) mask[9] |= (0xffff);
-			if(_p & 0x00080000) mask[9] |= (0xffff << 16);
+			if (_p & 0x00040000) mask[9] |= (0xffff);
+			if (_p & 0x00080000) mask[9] |= (0xffff << 16);
 			mask[10] = 0;
-			if(_p & 0x00100000) mask[10] |= (0xffff);
-			if(_p & 0x00200000) mask[10] |= (0xffff << 16);
+			if (_p & 0x00100000) mask[10] |= (0xffff);
+			if (_p & 0x00200000) mask[10] |= (0xffff << 16);
 			mask[11] = 0;
-			if(_p & 0x00400000) mask[11] |= (0xffff);
-			if(_p & 0x00800000) mask[11] |= (0xffff << 16);
+			if (_p & 0x00400000) mask[11] |= (0xffff);
+			if (_p & 0x00800000) mask[11] |= (0xffff << 16);
 		}
-		if(size > 3) {
+		if (size > 3) {
 			mask[12] = 0;
-			if(_p & 0x01000000) mask[12] |= (0xffff);
-			if(_p & 0x02000000) mask[12] |= (0xffff << 16);
+			if (_p & 0x01000000) mask[12] |= (0xffff);
+			if (_p & 0x02000000) mask[12] |= (0xffff << 16);
 			mask[13] = 0;
-			if(_p & 0x04000000) mask[13] |= (0xffff);
-			if(_p & 0x08000000) mask[13] |= (0xffff << 16);
+			if (_p & 0x04000000) mask[13] |= (0xffff);
+			if (_p & 0x08000000) mask[13] |= (0xffff << 16);
 			mask[14] = 0;
-			if(_p & 0x10000000) mask[14] |= (0xffff);
-			if(_p & 0x20000000) mask[14] |= (0xffff << 16);
+			if (_p & 0x10000000) mask[14] |= (0xffff);
+			if (_p & 0x20000000) mask[14] |= (0xffff << 16);
 			mask[15] = 0;
-			if(_p & 0x40000000) mask[15] |= (0xffff);
-			if(_p & 0x80000000) mask[15] |= (0xffff << 16);
+			if (_p & 0x40000000) mask[15] |= (0xffff);
+			if (_p & 0x80000000) mask[15] |= (0xffff << 16);
 		}
 		break;
 	default:
@@ -245,23 +245,22 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 	 * then perform a byte-swap on p (we don't have to swap if
 	 * bpp == 1 and val[0] == 0)...
 	 */
-	if((byte_ltor) && (j > 1) && (mask[j] != 0)) {
-		for(i = 0; i < (j - i); i++) {
+	if ((byte_ltor) && (j > 1) && (mask[j] != 0)) {
+		for (i = 0; i < (j - i); i++) {
 			_p = mask[j - i];
 			mask[j - i] = mask[i];
 			mask[i] = _p;
 		}
-		for(i = 0; i < j; i++) {
+		for (i = 0; i < j; i++) {
 			_p = mask[i];
-			for(k = 0, mask[i] = 0; k < sizeof(kgi_u32_t);
-			    k++, _p >>= 8) {
+			for (k = 0, mask[i] = 0; k < sizeof(kgi_u32_t); k++, _p >>= 8) {
 				mask[i] <<= 8;
 				mask[i] |= (_p & 0xff);
 			}
 		}
 	}
 
-	for(i = 0; i < j; i++) {
+	for (i = 0; i < j; i++) {
 		/* Write the pixel-row... */
 		*((kgi_u32_t *)(fb) + off + i) = (val & mask[i]) | ((bgnd) ?
 			(*((kgi_u32_t *)(bgnd) + off + i) & ~mask[i]) : 0);
@@ -276,12 +275,15 @@ static int
 gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 	      kgi_u_t offset, kgi_u_t count)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
 	kgi_u32_t poff;
 	kgi_u_t row, col, n;
 	kgi_u8_t *pixel;
-	kgi_u16_t *text = tb->buf + start;
+	kgi_u16_t *text;
 	int i;
+
+	render = kgc_render_meta(r);
+	text = tb->buf + start;
 
 	/* Iterate on the string */
 	for (n = 0; n < count; n++) {
@@ -295,7 +297,7 @@ gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 		col = (offset + n) % render->width;
 		
 		/* Iterate over all the pixel rows for this character... */
-		for(i = 0; i < render->font->height; i++) {
+		for (i = 0; i < render->font->height; i++) {
 			/* Get the address of the character's pixel-row... */
 			poff = (((((row * render->font->height) + i) *
 				  render->mode.img[0].size.x) +
@@ -315,7 +317,9 @@ static void
 gfbrndr_get(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 			     kgi_u_t *flags)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
+
+	render = kgc_render_meta(r);
 
 	/* No hardscroll, virt == real */
 	if (size && virt) {
@@ -339,8 +343,9 @@ gfbrndr_get(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 static void 
 gfbrndr_set(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
 
+	render = kgc_render_meta(r);
 	render->width = virt->x;
 	render->height = virt->y;
 }
@@ -348,6 +353,7 @@ gfbrndr_set(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 static kgi_u_t
 gfbrndr_ctop(render_t r, kgi_isochar_t sym)
 {
+
 	/* Use direct mapping between the char and the glyph */
 	return ((kgi_u_t)sym);
 }
@@ -356,7 +362,9 @@ gfbrndr_ctop(render_t r, kgi_isochar_t sym)
 static void 
 gfbrndr_bgnd_draw(render_t r)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
+
+	render = kgc_render_meta(r);
 
 	/* If focused draw/redraw the background */
 	if (render->kgi.flags & KGI_DF_FOCUSED) {		
@@ -384,8 +392,11 @@ gfbrndr_bgnd_draw(render_t r)
 static int 
 gfbrndr_callback(render_t r, int action, void *arg)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
-	kgi_u_t size = 0;
+	gfbrndr_meta *render;
+	kgi_u_t size;
+
+	render = kgc_render_meta(r);
+	size = 0;
 
 	switch (action) {
 	case BACKGND_INIT:
@@ -428,16 +439,18 @@ gfbrndr_callback(render_t r, int action, void *arg)
 static void 
 gfbrndr_unmap(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
+	kgirndr_meta *render;
 
+	render = kgc_render_meta(r);
 	render->flags &= ~KGI_RF_NEEDS_UPDATE;
 }
 
 static void 
 gfbrndr_map(render_t r)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
 
+	render = kgc_render_meta(r);
 	/* Draw/redraw the background */
 #ifdef KGC_RENDER_BACKGROUND
 	gfbrndr_bgnd_draw(r);
@@ -450,11 +463,12 @@ gfbrndr_map(render_t r)
 static void 
 gfbrndr_hide_gadgets(render_t r)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
-
+	gfbrndr_meta *render;
 	kgi_u32_t poff;
 	kgi_u8_t *addr, *saved;
 	int i, j, k;
+
+	render = kgc_render_meta(r);
 
 	if (!(r->cons->flags & KGI_CF_CURSOR_SHOWN) ||
 	    !(render->kgi.flags & KGI_DF_FOCUSED))
@@ -462,7 +476,7 @@ gfbrndr_hide_gadgets(render_t r)
 
 	/* Restore the 2 lines overwritten by the cursor */
 	saved = &render->pointed[0];
-	for(i = render->font->height-2; i < render->font->height; i++) {
+	for (i = render->font->height-2; i < render->font->height; i++) {
 		/* Get the address of the character's pixel-row... */
 		poff = (((((render->cursor.y * render->font->height) + i) *
 			  render->mode.img[0].size.x) +
@@ -470,9 +484,9 @@ gfbrndr_hide_gadgets(render_t r)
 			(render->depth / 8));
 
 		/* Iterate over the columns of this row */
-		for (j=0; j < render->font->width; j+=render->depth / 8) {
+		for (j = 0; j < render->font->width; j += render->depth / 8) {
 			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j; 
-			for (k=0; k < render->depth / 8; k++) {
+			for (k = 0; k < render->depth / 8; k++) {
 				addr[k] = *saved++;
 			}
 		}
@@ -484,10 +498,12 @@ gfbrndr_hide_gadgets(render_t r)
 static void 
 gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
 	kgi_u32_t poff;
 	kgi_u8_t *addr, *save;
 	int i, j, k;
+
+	render = kgc_render_meta(r);
 
 	if (!CONSOLE_MODE(r->cons, KGI_CM_SHOW_CURSOR) ||
 	    (r->cons->flags & KGI_CF_CURSOR_SHOWN) ||
@@ -509,9 +525,9 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 			(render->depth / 8));
 
 		/* Iterate over the columns of this row */
-		for (j=0; j < render->font->width; j+=render->depth / 8) {
+		for (j = 0; j < render->font->width; j+=render->depth / 8) {
 			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j; 
-			for (k=0; k < render->depth / 8; k++) {
+			for (k = 0; k < render->depth / 8; k++) {
 				*save++ = addr[k];
 				addr[k] = 7;
 			}
@@ -554,8 +570,11 @@ const kgi_u16_t modes[][2] =
 static void 
 gfbrndr_handle_event(kgi_device_t *device, kgi_event_t *event)
 {
-	kgi_console_t *cons = (kgi_console_t *)device->priv.priv_ptr;
-	render_t r = cons->render;
+	kgi_console_t *cons;
+	render_t r;
+
+	cons = (kgi_console_t *)device->priv.priv_ptr;
+	r = cons->render;
 
 	switch (event->notice.command) {
 	case KGI_EVENT_NOTICE_NEW_DISPLAY:
@@ -572,8 +591,11 @@ gfbrndr_handle_event(kgi_device_t *device, kgi_event_t *event)
 static kgi_s_t
 gfbrndr_init(render_t r, kgi_u_t devid)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
-	kgi_s_t error = KGI_ENODEV, i;
+	gfbrndr_meta *render;
+	kgi_s_t i, error;
+
+	render = kgc_render_meta(r);
+	error = KGI_ENODEV;
 
 	bzero(render, sizeof(*render));
 
@@ -639,8 +661,9 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 static void 
 gfbrndr_done(render_t r)
 {
-	gfbrndr_meta *render = kgc_render_meta(r);
+	gfbrndr_meta *render;
 
+	render = kgc_render_meta(r);
 	/* Terminate the background management */
 #ifdef KGC_RENDER_BACKGROUND
 	backgnd_term(r->devid);
@@ -666,7 +689,6 @@ static render_method_t gfbrndr_methods[] = {
 	RENDERMETHOD(render_show_gadgets,	gfbrndr_show_gadgets),
 	RENDERMETHOD(render_hide_gadgets,	gfbrndr_hide_gadgets),
 	RENDERMETHOD(render_undo_gadgets,	gfbrndr_hide_gadgets),
-
 	/* Methods using KGI generic interface */
 	RENDERMETHOD(render_ptoa,		kgirndr_ptoa_color),
 	RENDERMETHOD(render_atop,		kgirndr_atop_color),
