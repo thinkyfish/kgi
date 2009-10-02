@@ -87,6 +87,10 @@ static kgi_u8_t colormap[16] = {
 	KGI_CC_LIGHTCYAN,	KGI_CC_WHITE
 };
 
+static const char *cur = "BDCA";
+static const char *pad = "0123456789+-*/\015,.?";
+static const char *app = "pqrstuvwxylSRQMnn?";
+
 #define	DEFAULT_FG	(DEFAULT_COLORS[CI_FG])
 #define	DEFAULT_BG	(DEFAULT_COLORS[CI_BG])
 
@@ -365,7 +369,6 @@ xterm_save_cur(kgi_console_t *cons)
 		xterm->s_colors[i] = xterm->colors[i];
 }
 
-
 static void 
 xterm_restore_cur(kgi_console_t *cons)
 {
@@ -387,7 +390,6 @@ xterm_restore_cur(kgi_console_t *cons)
 	SCROLLER_UPDATE_ATTR(cons->scroller);
 	cons->flags &= ~KGI_CF_NEED_WRAP;
 }
-
 
 static void 
 xterm_set_term(kgi_console_t *cons)
@@ -553,7 +555,6 @@ csi_m(kgi_console_t *cons)
 	SCROLLER_UPDATE_ATTR(cons->scroller);
 }
 
-
 void 
 xterm_do_reset(kgi_console_t *cons, int do_reset)
 {
@@ -666,10 +667,6 @@ xterm_function_key(kgi_console_t *cons, kgi_u_t key)
 			xterm_put_char(cons, *(s++));
 	}
 }
-
-static const char *cur = "BDCA";
-static const char *pad = "0123456789+-*/\015,.?";
-static const char *app = "pqrstuvwxylSRQMnn?";
 
 static void 
 xterm_numpad_key(kgi_console_t *cons, kgi_u8_t val, kii_u_t shift)
@@ -1058,7 +1055,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			continue;
 		}
 
-		switch(xterm->state) {
+		switch (xterm->state) {
 		case ESesc:
 			TRACE(printf("%c", (char) c));
 			xterm->state = ESnormal;

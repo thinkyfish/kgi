@@ -106,12 +106,16 @@ dumb_do_reset(kgi_console_t *cons, kgi_u_t do_reset)
 void 
 dumb_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 {
-	kgi_console_t *cons = (kgi_console_t *) dev->priv.priv_ptr;
-	struct tty *tp = (struct tty *)cons->kii.tty;
-	scroller_t scroll = (scroller_t)cons->scroller;
+	kgi_console_t *cons;
+	struct tty *tp;
+	scroller_t scroll;
 	
+	cons = (kgi_console_t *) dev->priv.priv_ptr;
+	tp = (struct tty *)cons->kii.tty;
+	scroll = (scroller_t)cons->scroller;
+
 	if (((1 << e->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT)) ||
-		(e->key.sym == K_VOID) || !tp) 
+		(e->key.sym == K_VOID) || tp == NULL) 
 		return;
 	
 	switch (e->key.sym & K_TYPE_MASK) {
@@ -156,10 +160,11 @@ dumb_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 int 
 dumb_do_write(kgi_console_t *cons, char *buf, int count)
 {
-	kgi_u_t cnt = 0;
+	kgi_u_t cnt;
 	kgi_ascii_t c;
 	scroller_t scroll;
 
+	cnt = 0;
 	scroll = (scroller_t)cons->scroller;
 
 	SCROLLER_MARK(scroll);
@@ -168,7 +173,7 @@ dumb_do_write(kgi_console_t *cons, char *buf, int count)
 		c = *buf;
 		buf++; cnt++; count--;
 
-		if ((c == ASCII_LF) || (c == ASCII_CR) || 
+		if ((c == ASCII_LF) || (c == ASCII_CR) ||
 		    (cons->flags & KGI_CF_NEED_WRAP)) {
 			if (c != ASCII_CR) {
 				SCROLLER_MODIFIED_MARK(scroll);

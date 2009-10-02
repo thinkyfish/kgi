@@ -50,7 +50,7 @@ __FBSDID("$FreeBSD$");
 #include "render_if.h"
 
 /*
- * color mode attribute to pixel value mapping. We care of the foreground
+ * Color mode attribute to pixel value mapping. We care of the foreground
  * and background colors. The rest is just best effort.
  */
 kgi_u_t 
@@ -165,9 +165,11 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 kgi_error_t 
 kgirndr_init(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
+	kgirndr_meta *render;
 	kgi_resource_t *resource;
 	kgi_u_t	index;
+
+	render = kgc_render_meta(r);
 
 	/* Parse global resources */
 	for (index = 0; index < __KGI_MAX_NR_IMAGE_RESOURCES; index ++) {
@@ -190,8 +192,11 @@ kgirndr_init(render_t r)
 void 
 kgirndr_hide_gadgets(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
-	kgi_console_t *cons = kgc_render_cons(r);
+	kgirndr_meta *render;
+	kgi_console_t *cons;
+
+	render = kgc_render_meta(r);
+	cons = kgc_render_cons(r);
 
 	if (cons->flags & KGI_CF_POINTER_SHOWN) {
 		KRN_ASSERT(render->ptr);
@@ -208,8 +213,11 @@ kgirndr_hide_gadgets(render_t r)
 void 
 kgirndr_undo_gadgets(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
-	kgi_console_t *cons = kgc_render_cons(r);
+	kgirndr_meta *render;
+	kgi_console_t *cons;
+
+	render = kgc_render_meta(r);
+	cons = kgc_render_cons(r);
 
 	if ((cons->flags & KGI_CF_POINTER_SHOWN) && render->ptr->Undo) {
 		render->ptr->Undo(render->ptr);
@@ -224,8 +232,11 @@ kgirndr_undo_gadgets(render_t r)
 void 
 kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
-	kgi_console_t *cons = kgc_render_cons(r);
+	kgirndr_meta *render;
+	kgi_console_t *cons;
+	
+	render = kgc_render_meta(r);
+	cons = kgc_render_cons(r);
 
 	kgirndr_undo_gadgets(r);
 

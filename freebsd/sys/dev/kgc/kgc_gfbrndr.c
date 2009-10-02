@@ -24,6 +24,9 @@
  * KGC (BSD) General FB renderer
  */
 
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD$");
+
 #include <dev/kgi/maintainers.h>
 #define	MAINTAINER	Nicholas_Souchu
 

@@ -60,27 +60,33 @@ typedef struct {
 static kgi_u_t 
 isorndr_ctop(render_t r, kgi_isochar_t sym)
 {
-	isorndr_meta *isorndr = kgc_render_meta(r);
-	kgi_console_font_t *font = isorndr->font;
-	kgi_u_t row  = KGI_ISOCHAR_ROW(sym);
-	kgi_u_t cell = KGI_ISOCHAR_CELL(sym);
+	isorndr_meta *isorndr;
+	kgi_console_font_t *font;
+	kgi_u_t row;
+	kgi_u_t cell;
 	kgi_console_font_cellinfo_t *cellinfo;
-	kgi_u_t l = 0, h, m;
+	kgi_u_t l, h, m;
+
+	isorndr = kgc_render_meta(r);
+	font = isorndr->font;
+	row  = KGI_ISOCHAR_ROW(sym);
+	cell = KGI_ISOCHAR_CELL(sym);
+	l = 0;
 
 	KRN_ASSERT(font);
 	cellinfo = font->info->cellinfo[row];
 
-	if (row == 0xF0)		/* display directly */
+	if (row == 0xF0) /* Display directly. */
 		return (cell);
 
-	if ((sym & 0xFFFF0000) || !cellinfo) 
+	if ((sym & 0xFFFF0000) || cellinfo == NULL) 
 		return (font->info->default_pos);
 
 	if (test_bit(row, font->info->map_direct)) 
 		return (((kgi_u8_t *) cellinfo) [cell]);
 
 	if (sym > cellinfo->sym)
-		return (font->info->default_pos); /* symbol not in list?	*/
+		return (font->info->default_pos); /* Symbol not in list? */
 
 	h = cellinfo->pos;
 	cellinfo++;
@@ -91,7 +97,7 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 	if (cellinfo->sym == sym)
 		return (cellinfo->pos);
 
-	do {	/* search matching cell */
+	do { /* Search matching cell. */
 		if (cellinfo[h].sym == sym) 
 			return (cellinfo[h].pos);
 
@@ -104,14 +110,17 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 		}
 	} while (l < h); 
 
-	return (font->info->default_pos); /* no position defined */
+	return (font->info->default_pos); /* No position defined. */
 }
 
 static kgi_isochar_t 
 isorndr_ptoc(render_t r, kgi_u_t pos)
 {
-	isorndr_meta *isorndr = kgc_render_meta(r);
-	kgi_console_font_t *font = isorndr->font;
+	isorndr_meta *isorndr;
+	kgi_console_font_t *font;
+
+	isorndr = kgc_render_meta(r);
+	font = isorndr->font;
 
 	return (font->info->inversemap[(pos < font->info->positions) ? pos : 0]);
 }
@@ -120,7 +129,9 @@ static void
 isorndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 			  kgi_u_t offset, kgi_u_t count)
 {
-	isorndr_meta *render = kgc_render_meta(r);
+	isorndr_meta *render;
+
+	render = kgc_render_meta(r);
 
 	if (render->text16) {
 		(render->text16->PutText16)(render->text16, offset, tb->buf + start,
@@ -131,7 +142,9 @@ isorndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 static void 
 isorndr_get_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 {
-	isorndr_meta *render = kgc_render_meta(r);
+	isorndr_meta *render;
+
+	render = kgc_render_meta(r);
 
 	size->x = render->text16->size.x;
 	size->y = render->text16->size.y;
@@ -143,9 +156,11 @@ static void
 isorndr_set_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 			      kgi_u8_t depth)
 {
-	isorndr_meta *render = kgc_render_meta(r);
+	isorndr_meta *render;
 
-	/* only virtual sizes may be modified */
+	render = kgc_render_meta(r);
+
+	/* Only virtual sizes may be modified. */
 	render->text16->size.x = virt->x;
 	render->text16->size.y = virt->y;
 }
@@ -156,8 +171,11 @@ isorndr_set_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 static kgi_console_font_t *
 isorndr_default_font(render_t r)
 {
-	isorndr_meta *render = kgc_render_meta(r);
-	kgi_u_t i = 0;
+	isorndr_meta *render;
+	kgi_u_t i;
+
+	render = kgc_render_meta(r);
+	i = 0;
 
 	KRN_DEBUG(3, "searching font for height %i", render->text16->font.y);
 	for (i = 0; default_font[i] && 
@@ -170,8 +188,9 @@ isorndr_default_font(render_t r)
 static kgi_s_t
 isorndr_init(render_t r)
 {
-	isorndr_meta *render = kgc_render_meta(r);
+	isorndr_meta *render;
 
+	render = kgc_render_meta(r);
 	/* Common initialization, especially concerning resources */
 	kgirndr_init(r);
 	
@@ -188,7 +207,6 @@ static render_method_t isorndr_methods[] = {
 	RENDERMETHOD(render_ctop,		isorndr_ctop),
 	RENDERMETHOD(render_get_sizes,		isorndr_get_sizes),
 	RENDERMETHOD(render_set_sizes,		isorndr_set_sizes),
-
 	/* Methods using KGI generic interface */
 	RENDERMETHOD(render_map,		kgirndr_map),
 	RENDERMETHOD(render_ptoa,		kgirndr_ptoa_color),

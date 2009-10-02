@@ -80,15 +80,18 @@ typedef struct {
 static void 
 textscroller_mark(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);	
 	scroll->mark = scroll->wpos;
 }
 
 static void 
 textscroller_modified(scroller_t s, kgi_u_t from, kgi_u_t to)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	KRN_ASSERT(from <= to);
 
@@ -102,7 +105,9 @@ textscroller_modified(scroller_t s, kgi_u_t from, kgi_u_t to)
 static void 
 textscroller_modified_mark(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	if (scroll->mark != scroll->wpos)
 		textscroller_modified(s, scroll->mark, scroll->wpos);
@@ -111,7 +116,9 @@ textscroller_modified_mark(scroller_t s)
 static void 
 textscroller_modified_wrap(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_modified(s, scroll->mark, scroll->wpos+1);
 }
@@ -119,8 +126,11 @@ textscroller_modified_wrap(scroller_t s)
 static void 
 textscroller_update_attr(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	scroll->erase = scroll->attr = RENDER_ATOP(cons->render, scroll->attrfl);
 	scroll->erase |= RENDER_CTOP(cons->render, 0x20);
@@ -129,8 +139,11 @@ textscroller_update_attr(scroller_t s)
 static void
 textscroller_cr(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	RENDER_UNDO_GADGETS(cons->render);
 
@@ -146,8 +159,11 @@ textscroller_cr(scroller_t s)
 static void 
 textscroller_write(scroller_t s, kgi_isochar_t c)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	scroll->tb.buf[scroll->pos] = scroll->attr | RENDER_CTOP(cons->render, c);
 
@@ -170,15 +186,18 @@ textscroller_write(scroller_t s, kgi_isochar_t c)
 static void 
 textscroller_sync(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
 	kgi_s_t orig;
 	kgi_u_t render_flags;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	KRN_ASSERT(cons);
 
 	RENDER_GET(cons->render, 0, 0, &render_flags);
-	if (! (render_flags & KGI_RF_NEEDS_UPDATE))
+	if (!(render_flags & KGI_RF_NEEDS_UPDATE))
 		return;
 
 	orig = scroll->origin - scroll->offset;
@@ -272,9 +291,12 @@ textscroller_sync(scroller_t s)
 static kgi_s_t 
 textscroller_init(scroller_t s, kgi_u16_t *buffer)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
 	kgi_ucoord_t render_size, render_virt;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	/* The buffer address may be passed in case of static allocation */
 	if (buffer) {
@@ -362,8 +384,11 @@ static kgi_s_t textscroller_resize(scroller_t s, kgi_u_t new_sizex,
 static void 
 textscroller_bs(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	RENDER_UNDO_GADGETS(cons->render);
 
@@ -380,7 +405,9 @@ textscroller_bs(scroller_t s)
 static void 
 textscroller_hts(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	scroll->tab_stop[scroll->x >> 5] |= (1 << (scroll->x & 31));
 }
@@ -388,7 +415,9 @@ textscroller_hts(scroller_t s)
 static void 
 textscroller_tbc(scroller_t s, kgi_u_t tab)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	if (!tab) {		
 		scroll->tab_stop[scroll->x >> 5] &= ~(1 << (scroll->x & 31));		
@@ -406,8 +435,11 @@ textscroller_tbc(scroller_t s, kgi_u_t tab)
 static void 
 textscroller_ht(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	RENDER_UNDO_GADGETS(cons->render);
 
@@ -443,12 +475,15 @@ textscroller_mksound(scroller_t s, kgi_u_t pitch, kgi_u_t duration)
 static void 
 textscroller_down(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
 	kgi_u_t src, dst, end;	/* first/last pixel to move	*/
 	kgi_u_t cnt;		/* size of area to clean	*/
 	kgi_u_t h1, h2;		/* subexpression		*/
 	kgi_u_t tb_total;		/* text buffer size		*/
-	kgc_textbuf_t *tb = &scroll->tb;
+	kgc_textbuf_t *tb;
+
+	scroll = kgc_scroller_meta(s);
+	tb = &scroll->tb;
 
 	if ((scroll->tb.size.y < b) || (b <= t) || !n) 
 		return;
@@ -517,7 +552,9 @@ textscroller_down(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 static void 
 textscroller_scroll_top(scroller_t s, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_down(s, scroll->y, scroll->bottom, n);
 }
@@ -528,9 +565,12 @@ textscroller_scroll_top(scroller_t s, kgi_u_t n)
 static void 
 textscroller_erase_line(scroller_t s, kgi_u_t arg)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
 	kgi_u_t src, cnt;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	switch (arg) {
 	case 0:	/* from cursor to end of line	*/
@@ -562,10 +602,15 @@ textscroller_erase_line(scroller_t s, kgi_u_t arg)
 static void 
 textscroller_insert_chars(scroller_t s, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
-	kgi_u_t src = scroll->wpos;
-	kgi_u_t cnt = scroll->tb.virt.x - scroll->x;
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+	kgi_u_t src;
+	kgi_u_t cnt;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	src = scroll->wpos;
+	cnt = scroll->tb.virt.x - scroll->x;
 
 	KRN_ASSERT((cnt > 0) && (n > 0));
 
@@ -588,10 +633,15 @@ textscroller_insert_chars(scroller_t s, kgi_u_t n)
 static void 
 textscroller_delete_chars(scroller_t s, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
-	kgi_u_t cnt = scroll->tb.virt.x - scroll->x;
-	kgi_u_t src = scroll->wpos;
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+	kgi_u_t cnt;
+	kgi_u_t src;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	cnt = scroll->tb.virt.x - scroll->x;
+	src = scroll->wpos;
 
 	textscroller_modified(s, src, src + cnt);
 
@@ -613,8 +663,12 @@ textscroller_delete_chars(scroller_t s, kgi_u_t n)
 static void 
 textscroller_erase_chars(scroller_t s, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+
 	KRN_ASSERT(n > 0);
 	if (n > (scroll->tb.size.x - scroll->x)) {
 		n = scroll->tb.virt.x - scroll->x;
@@ -633,8 +687,11 @@ textscroller_erase_chars(scroller_t s, kgi_u_t n)
 static void 
 textscroller_reverse_lf(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	RENDER_UNDO_GADGETS(cons->render);
 
@@ -661,7 +718,9 @@ textscroller_reverse_lf(scroller_t s)
 static void 
 textscroller_done(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	if ((scroll->tb.buf) && (scroll->tb.flags & TBF_ALLOCATED)) {
 		kgi_kfree(scroll->tb.buf);
@@ -673,10 +732,15 @@ textscroller_done(scroller_t s)
 static void 
 textscroller_erase_display(scroller_t s, kgi_u_t arg)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
-	kgi_u_t src, cnt = scroll->tb.frame;	/* area to erase	*/
-	kgi_u_t tb_total = scroll->tb.virt.x*scroll->tb.virt.y;
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+	kgi_u_t src, cnt;
+	kgi_u_t tb_total;
+
+ 	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	cnt = scroll->tb.frame;	/* area to erase	*/
+	tb_total = scroll->tb.virt.x*scroll->tb.virt.y;
 
 	switch (arg) {
 	case 0:	/* from cursor to end of screen	*/
@@ -716,10 +780,13 @@ textscroller_erase_display(scroller_t s, kgi_u_t arg)
 static void 
 textscroller_gotoxy(scroller_t s, kgi_s_t new_x, kgi_s_t new_y)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
 	kgi_s_t max_y, min_y;
 	kgi_s_t max_x;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 #define	min_x	0
 
 	RENDER_UNDO_GADGETS(cons->render);
@@ -750,7 +817,9 @@ textscroller_gotoxy(scroller_t s, kgi_s_t new_x, kgi_s_t new_y)
 static void 
 textscroller_gotox(scroller_t s, kgi_s_t x)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_gotoxy(s, x, scroll->y);
 }
@@ -758,7 +827,9 @@ textscroller_gotox(scroller_t s, kgi_s_t x)
 static void 
 textscroller_gotoy(scroller_t s, kgi_s_t y)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_gotoxy(s, scroll->x, y);
 }
@@ -766,7 +837,9 @@ textscroller_gotoy(scroller_t s, kgi_s_t y)
 static void 
 textscroller_move(scroller_t s, kgi_s_t col, kgi_s_t lin)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_gotoxy(s, scroll->x + col, scroll->y + lin);
 }
@@ -779,7 +852,7 @@ textscroller_need_sync(scroller_t s)
 }
 
 /*
- * increase the scroll-back offset by <lines> lines. <lines> defaults to
+ * Increase the scroll-back offset by <lines> lines. <lines> defaults to
  * half the number of lines of the visible screen if less or equal zero. 
  * As we may be called from a IRQ service, we do not sync the display
  * because this may take some long time. We just mark the CONSOLE_BH and
@@ -788,9 +861,13 @@ textscroller_need_sync(scroller_t s)
 static void 
 textscroller_backward(scroller_t s, int lines)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
-	kgi_u_t max = scroll->tb.virt.y - scroll->tb.size.y;
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+	kgi_u_t max;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	max = scroll->tb.virt.y - scroll->tb.size.y;
 
 	if (lines <= 0) 
 		lines = scroll->tb.size.y/2;
@@ -807,7 +884,7 @@ textscroller_backward(scroller_t s, int lines)
 }
 
 /*
- * decrease the scroll-back offset by <lines> lines. <lines> defaults to
+ * Decrease the scroll-back offset by <lines> lines. <lines> defaults to
  * half the number of lines of the visible screen if less or equal zero.
  * As we may be called from an IRQ service, we do not sync the display
  * because this may take some long time. We just mark the CONSOLE_BH
@@ -816,8 +893,12 @@ textscroller_backward(scroller_t s, int lines)
 static void 
 textscroller_forward(scroller_t s, int lines)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+
 	if (lines <= 0) 
 		lines = scroll->tb.size.y/2;
 
@@ -842,14 +923,18 @@ textscroller_forward(scroller_t s, int lines)
 static void 
 textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
 	kgi_u_t src, end;	/* first and last pixel to move	*/
 	kgi_u_t clean, cnt;	/* first pixel/# pixels to clean*/ 
-	kgi_u_t dst;		/* pixel to move to		*/
-	kgi_u_t h1, h2;		/* temporary variables		*/
+	kgi_u_t dst;		/* pixel to move to	 */
+	kgi_u_t h1, h2;		/* temporary variables */
 	kgi_u_t tb_total;
-	kgc_textbuf_t *tb = &scroll->tb;
+	kgc_textbuf_t *tb;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	tb = &scroll->tb;
 
 	if ((scroll->tb.size.y < b) || (b <= t) || !n) 
 		return;
@@ -959,7 +1044,9 @@ textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 static void 
 textscroller_scroll_bottom(scroller_t s, kgi_u_t n)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	textscroller_up(s, scroll->y, scroll->bottom, n);
 }
@@ -972,8 +1059,11 @@ textscroller_scroll_bottom(scroller_t s, kgi_u_t n)
 static void 
 textscroller_lf(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	if ((scroll->y + 1) == scroll->bottom) {
 		textscroller_up(s, scroll->top, scroll->bottom, 1);
@@ -995,8 +1085,11 @@ textscroller_lf(scroller_t s)
 static void 
 textscroller_reset(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
 
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
 	CONSOLE_SET_MODE(cons, KGI_CM_AUTO_WRAP);
@@ -1017,7 +1110,9 @@ textscroller_get(scroller_t s, kgi_ucoord_t *size, kgi_u_t *top,
 		kgi_u_t *bottom, kgi_u_t *x, kgi_u_t *y, kgi_u_t *attrfl,
 		kgi_u_t *erase)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	if (size) {
 		size->x = scroll->tb.size.x;
@@ -1044,7 +1139,9 @@ textscroller_get(scroller_t s, kgi_ucoord_t *size, kgi_u_t *top,
 static void 
 textscroller_set(scroller_t s, kgi_u_t attrfl, kgi_u_t erase)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	scroll->attrfl = attrfl;
 	scroll->erase = erase;
@@ -1056,7 +1153,7 @@ textscroller_margins(scroller_t s, kgi_u_t top, kgi_u_t bottom)
 	textscroller_meta *scroll = kgc_scroller_meta(s);
 
 	if (!top) 	
-		top ++;
+		top++;
 
 	if (!bottom) 		
 		bottom = scroll->tb.size.y;
@@ -1072,7 +1169,9 @@ textscroller_margins(scroller_t s, kgi_u_t top, kgi_u_t bottom)
 static void 
 textscroller_save(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	scroll->s_x = scroll->x;
 	scroll->s_y = scroll->y;
@@ -1082,7 +1181,9 @@ textscroller_save(scroller_t s)
 static void 
 textscroller_restore(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
+	textscroller_meta *scroll;
+
+	scroll = kgc_scroller_meta(s);
 
 	scroll->x = scroll->s_x;
 	scroll->y = scroll->s_y;
@@ -1094,7 +1195,9 @@ textscroller_restore(scroller_t s)
 static void 
 textscroller_unmap(scroller_t s)
 {
-	kgi_console_t *cons = kgc_scroller_cons(s);
+	kgi_console_t *cons;
+
+	cons = kgc_scroller_cons(s);
 
 	cons->flags |=  KGI_CF_SPLITLINE;
 	cons->flags &= ~KGI_CF_NO_HARDSCROLL;
@@ -1103,9 +1206,13 @@ textscroller_unmap(scroller_t s)
 static void 
 textscroller_map(scroller_t s)
 {
-	textscroller_meta *scroll = kgc_scroller_meta(s);
-	kgi_console_t *cons = kgc_scroller_cons(s);
-	kgi_u_t render_flags = 0;
+	textscroller_meta *scroll;
+	kgi_console_t *cons;
+	kgi_u_t render_flags;
+
+	scroll = kgc_scroller_meta(s);
+	cons = kgc_scroller_cons(s);
+	render_flags = 0;
 
 	RENDER_GET(cons->render, 0, 0, &render_flags);
 	if (render_flags & KGI_RF_NO_HARDSCROLL) {
