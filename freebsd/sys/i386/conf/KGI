@@ -1,6 +1,9 @@
 include	GENERIC
 ident	KGI
 
+# See sys/dev/kgi/i386-compiler.h for the reason behind using -fgnu89-inline
+makeoptions CWARNFLAGS+= -fgnu89-inline
+
 # KGI (Kernel Graphic Interface)
 options	KGI_COMPAT		# Enables KGI compatibility.
 options	KGI_DBG_LEVEL=0		# KGI debug output level.

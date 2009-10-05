@@ -350,16 +350,16 @@ sce_create_tty(int unit)
 static int
 sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
-//	int error;
+	int error;
 
 	/* kbdcontrol routines. */
 	
 	/* vidcontrol routines. */
 
-	/* Sysmouse ioctl routines. */
-// 	error = sce_sysmouse_ioctl(tp, cmd, data, td);
-// 		if (error != ENOIOCTL)
-// 	return error;
+	/* mouse ioctl routines. */
+ 	error = sce_sysmouse_ioctl(tp, cmd, data, td);
+ 	if (error != ENOIOCTL)
+ 		return error;
 
 	switch (cmd) {
 		/* Translate from KII to KBD format. */
