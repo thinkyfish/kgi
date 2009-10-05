@@ -22,7 +22,7 @@ options		KGC_RENDER_800x600
 #options	KGC_RENDER_320x200 
 
 # Define a colour mode (bpp);
-options	KGC_RENDER_16BITS	# Use 16bit mode.
+#options	KGC_RENDER_16BITS	# Use 16bit mode.
 
 # Enable console background - currently 8bit only:
 #options	KGC_RENDER_BACKGROUND
