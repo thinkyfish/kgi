@@ -350,6 +350,16 @@ sce_create_tty(int unit)
 static int
 sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
+//	int error;
+
+	/* kbdcontrol routines. */
+	
+	/* vidcontrol routines. */
+
+	/* Sysmouse ioctl routines. */
+// 	error = sce_sysmouse_ioctl(tp, cmd, data, td);
+// 		if (error != ENOIOCTL)
+// 	return error;
 
 	switch (cmd) {
 		/* Translate from KII to KBD format. */
@@ -466,7 +476,7 @@ scevt_mod_event(module_t mod, int type, void *data)
 #ifndef SC_NO_SYSMOUSE
 			sce_mouse_init();
 			sce_sysmouse_init();
-#endif
+#endif	
 		}		
 		return (0);
 	case MOD_UNLOAD:

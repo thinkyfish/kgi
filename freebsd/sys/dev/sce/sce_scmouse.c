@@ -64,13 +64,20 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/sce/sce_syscons.h>
 
-struct sce_mouse {
+struct sce_mice {
 	kii_u_t		last;
 	kii_input_t	input;
 	kii_u_t		opened;
 };
 
-static int sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td);
+static struct sce_mice sce_mouse[KII_MAX_NR_FOCUSES];
+
+/* Prototypes. */
+static int mouse_event(struct sce_mice *mouse, mouse_info_t *info);
+
+/* Mouse devsw. */
+static int sce_ctlclose(struct cdev *dev, int flag, int mode, 
+		struct thread *td);
 static int sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 		struct thread *td);
 static int sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td);
@@ -84,10 +91,8 @@ static struct cdevsw scectl_cdevsw = {
 	.d_name 	= "scectl"
 };
 
-static struct sce_mouse sce_mouses[KII_MAX_NR_FOCUSES];
-
 static int
-mouse_event(struct sce_mouse *mouse, mouse_info_t *info)
+mouse_event(struct sce_mice *mouse, mouse_info_t *info)
 {
 	kii_event_t event;
 
@@ -154,7 +159,7 @@ sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td)
 	KRN_DEBUG(2, "sce_ctlclose: dev:%s, vty:,%d\n", 
 			devtoname(dev), dev2unit(dev));
 
-	sce_mouses[dev2unit(dev)].opened = 0;
+	sce_mouse[dev2unit(dev)].opened = 0;
 
 	return (0);
 }
@@ -163,11 +168,11 @@ static int
 sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 			 struct thread *td)
 {
-	struct sce_mouse *mouse;
+	struct sce_mice *mouse;
 	mouse_info_t *info;
 	int error;
 
-	mouse = &sce_mouses[dev2unit(dev)];	
+	mouse = &sce_mouse[dev2unit(dev)];	
 	error = 0;
 
 	switch (cmd) {
@@ -210,12 +215,12 @@ sce_ctlioctl(struct cdev *dev, u_long cmd, caddr_t data, int flag,
 static int
 sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
 {
-	struct sce_mouse *mouse;
+	struct sce_mice *mouse;
 
 	KRN_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
 			devtoname(dev), dev2unit(dev));
 
-	mouse = &sce_mouses[dev2unit(dev)];
+	mouse = &sce_mouse[dev2unit(dev)];
 
 	if (mouse->opened)
 		return (EBUSY);
@@ -242,7 +247,7 @@ sce_mouse_init()
 {
 	int focus;
 
-	bzero(sce_mouses, sizeof(sce_mouses));
+	bzero(sce_mouse, sizeof(sce_mouse));
 	make_dev(&scectl_cdevsw, 0, UID_ROOT, GID_WHEEL, 0600, "consolectl");
 	for (focus = 1; focus < KII_MAX_NR_FOCUSES; focus++) {
 		make_dev(&scectl_cdevsw, focus, UID_ROOT, GID_WHEEL, 0600,

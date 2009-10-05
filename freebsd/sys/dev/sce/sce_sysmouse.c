@@ -25,7 +25,8 @@
  */
 
 /*
- * From FreeBSD: sys/dev/syscons/sysmouse.c -r196539M
+ * Last synconrized with FreeBSD -r196539M:
+ * head/sys/dev/syscons/sysmouse.c 
  */
 
 #include <sys/cdefs.h>
@@ -60,21 +61,21 @@ typedef struct {
 	struct tty *tty;
 	int level;	/* sysmouse protocol level. */
 	mousestatus_t status;
-}sce_sysmouse;
+} sce_sysmouse;
 
-static tsw_close_t		sce_smclose;
-static tsw_ioctl_t		sce_smioctl;
-static tsw_param_t		sce_smparam;
+static sce_sysmouse sysmouse;
+
+/* Sysmouse ttysw. */
+static tsw_close_t sce_smclose;
+static tsw_ioctl_t sce_smioctl;
+static tsw_param_t sce_smparam;
 
 static struct ttydevsw scesm_ttydevsw = {
 	.tsw_flags		= TF_NOPREFIX,
 	.tsw_close		= sce_smclose,
 	.tsw_ioctl		= sce_smioctl,
-	.tsw_param		= sce_smparam,
-
+	.tsw_param		= sce_smparam
 };
-
-static sce_sysmouse sysmouse;
 
 static void
 sce_smclose(struct tty *tp)
@@ -274,5 +275,12 @@ sce_sysmouse_init(void)
 	return (0);
 }
 SYSINIT(sce_sysmouse, SI_SUB_DRIVERS, SI_ORDER_MIDDLE, sce_sysmouse_init, NULL);
+
+int 
+sce_sysmouse_ioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
+{
+
+	return (sce_smioctl(tp, cmd, data, td));
+}
 
 #endif /* !SC_NO_SYSMOUSE */
