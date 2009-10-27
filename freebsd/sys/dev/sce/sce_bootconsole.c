@@ -44,7 +44,6 @@ __FBSDID("$FreeBSD$");
 #include <sys/linker.h>
 #include <sys/module.h>
 #include <sys/bus.h>
-
 #include <dev/fb/fbreg.h>
 
 #define KGI_SYS_NEED_MALLOC
@@ -81,7 +80,6 @@ static cn_probe_t	sce_cnprobe;
 static cn_init_t	sce_cninit;
 static cn_term_t	sce_cnterm;
 static cn_getc_t	sce_cngetc;
-static cn_checkc_t	sce_cncheckc;
 static cn_putc_t	sce_cnputc;
 
 /*
@@ -90,8 +88,7 @@ static cn_putc_t	sce_cnputc;
  * in sce_cninit.
  */
 static struct consdev sce_consdev = {
-	sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc,
-	sce_cncheckc, sce_cnputc, 0};
+	sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc, NULL, sce_cnputc};
 
 /*
  * This is a printk() implementation based on the scroll->* functions. 
@@ -235,22 +232,24 @@ sce_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 static void
 sce_cnprobe(struct consdev *cp)
 {
-	int i, unit;
-
-	/*
-	 * sce is the internal console of the system.
-	 */
-	unit = 0;
-	cp->cn_pri = CN_INTERNAL;
-
-	/* See if this driver is disabled in probe hint. */ 
-	if ((resource_int_value("sce", unit, "disabled", &i)) == 0 && i)
-		cp->cn_pri = CN_DEAD;
-
-	if (cp->cn_pri == CN_DEAD)
-		return;
+// 	int i, unit;
+// 
+// 	/*
+// 	 * sce is the internal console of the system.
+// 	 */
+// 	unit = 0;
+// 	cp->cn_pri = CN_INTERNAL;
+// 
+// 	/* See if this driver is disabled in probe hint. */ 
+// 	if ((resource_int_value("sce", unit, "disabled", &i)) == 0 && i)
+// 		cp->cn_pri = CN_DEAD;
+// 
+// 	if (cp->cn_pri == CN_DEAD)
+// 		return;
 	
 	strcpy(cp->cn_name, "ttyv0");
+	cp->cn_pri = CN_INTERNAL;
+
 }
 
 /*
@@ -317,30 +316,17 @@ sce_cnterm(struct consdev *cp)
 static int
 sce_cngetc(struct consdev *cp)
 {
-	int c;
-
-	while ((c = sce_cncheckc(cp)) == -1)
-		;
-
-	return (c);
-}
-
-/*
- * Console check for char
- */
-static int
-sce_cncheckc(struct consdev *cp)
-{
-	kii_event_t event;
-	int s, c;
+	int c, s;
+	kii_event_t e;
 
 	s = spltty();
-
-	kii_poll_device(0, &event);
-	c = event2char(&scecons.type.any.kii, &event);
-
+	for (;;) {
+		kii_poll_device(0, &e);
+		c = event2char(&scecons.type.any.kii, &e);
+		if (c != -1)
+			break;
+	}
 	splx(s);
-
 	return (c);
 }
 

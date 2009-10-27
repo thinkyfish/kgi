@@ -205,6 +205,8 @@ sce_sysmouse_event(kii_event_t *ev)
 	int i, x, y, z;
 
 	sysm = &sysmouse;
+	
+	tty_lock(sysm->tty);
 
 	switch (ev->pbutton.type) {
 	case KII_EV_PTR_RELATIVE:
@@ -227,11 +229,8 @@ sce_sysmouse_event(kii_event_t *ev)
 	sysm->status.dz += z;
 	sysm->status.flags |= ((x || y || z) ? MOUSE_POSCHANGED : 0)
 			      | (ev->pbutton.button);
-	if (sysm->status.flags == 0)
-		return;
-
-	if ((sysm->tty == NULL) || !tty_opened(sysm->tty))
-		return;
+	if (sysm->status.flags == 0 || sysm->tty == NULL || !tty_opened(sysm->tty))
+		goto done;
 
 	/* The first five bytes are compatible with MouseSystems' */
 	buf[0] = MOUSE_MSC_SYNC
@@ -243,7 +242,6 @@ sce_sysmouse_event(kii_event_t *ev)
 	buf[2] = y >> 1;
 	buf[4] = y - buf[2];
 
-	tty_lock(sysm->tty);
 	for (i = 0; i < MOUSE_MSC_PACKETSIZE; ++i)
 		ttydisc_rint(sysm->tty, (char)buf[i], 0);
 	
@@ -259,6 +257,8 @@ sce_sysmouse_event(kii_event_t *ev)
 	}	
 
 	ttydisc_rint_done(sysm->tty);
+
+done:
 	tty_unlock(sysm->tty);
 
 	return;
