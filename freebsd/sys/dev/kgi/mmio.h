@@ -50,7 +50,6 @@ typedef enum {
 
 typedef struct {
 	__GRAPH_RESOURCE_MAPPING
-
 	graph_mmio_maptype_t	type;	/* mapping type			*/
 	unsigned long 		offset;	/* offset for paged mappings	*/
 	unsigned int		prot;	/* page protection flags	*/

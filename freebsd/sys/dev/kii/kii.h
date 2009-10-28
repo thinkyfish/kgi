@@ -34,7 +34,7 @@
 KGI_SYS_DECLARE_INTEGRAL_TYPES(kii)
 
 typedef struct { 
-	kii_s_t x,y;
+	kii_s_t x, y;
 } kii_scoord_t;
 
 typedef struct {
@@ -217,9 +217,8 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
-	kii_u32_t	code;		/* Command/request code.		*/
-	kii_u8_t	data[1];	/* Command related data.		*/
+	kii_u32_t	code;	 /* Command/request code.	*/
+	kii_u8_t	data[1]; /* Command related data.	*/
 } kii_cmd_event_t;
 
 /*
@@ -229,7 +228,6 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
 	kii_u8_t	data[255 - sizeof(kii_any_event_t)];
 } kii_raw_event_t;
 
@@ -239,7 +237,6 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
 	__KII_MODIFIER_DATA;
 	kii_u32_t	sym;		/* Action(effective, keycode)	*/
 	kii_u32_t	code;		/* Key pressed.			*/
@@ -251,11 +248,9 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
-	__KII_MODIFIER_DATA;	/* Current state of modifiers.*/
-	kii_s32_t	x, y;		/* Absolute/relative position.*/
+	__KII_MODIFIER_DATA;		/* Current state of modifiers. */
+	kii_s32_t	x, y;		/* Absolute/relative position. */
 	kii_s32_t	wheel;		/* Absolute/relative wheel.	*/
-
 	kii_u32_t	dummy[2];	/* Reserved (future extensions)	*/ 
 } kii_pmove_event_t;
 
@@ -268,8 +263,7 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
-	__KII_MODIFIER_DATA;	/* Current state of modifiers.	*/
+	__KII_MODIFIER_DATA;		/* Current state of modifiers.	*/
 	kii_u32_t	state;		/* New button state.		*/
 	kii_u32_t	button;		/* Button(s) that caused event.	*/
 } kii_pbutton_event_t;
@@ -283,7 +277,6 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-
 	kii_u32_t	first;		/* First valuator reported.	*/
 	kii_u32_t	changed;	/* Valuators that are reported.	*/
 	kii_u32_t	value[32];	/* Absolute/relative values.	*/
@@ -291,13 +284,12 @@ typedef struct {
 
 typedef union {
 	kii_u8_t		size;		/* Size of this event.	*/
-
 	kii_any_event_t		any;		/* Access COMMON_DATA.	*/
 	kii_cmd_event_t		cmd;		/* Command/broadcast.	*/
 	kii_raw_event_t		raw;		/* Raw data event.	*/
 	kii_val_event_t		val;		/* Valuator change.	*/
 	kii_key_event_t		key;		/* Key press/release.	*/
-	kii_pmove_event_t	pmove;		/* Pointer move.		*/
+	kii_pmove_event_t	pmove;		/* Pointer move.	*/
 	kii_pbutton_event_t	pbutton;	/* Pointer buttons.	*/
 } kii_event_t;
 
@@ -326,8 +318,8 @@ struct kii_input_s {
 	kii_event_mask_t	events;	/* Event types generated.	*/
 	kii_event_mask_t	report;	/* Events to report.		*/
 
-	kii_ascii_t	vendor[KII_MAX_VENDOR_STRING];	/* Who built this device.	*/
-	kii_ascii_t	model[KII_MAX_MODEL_STRING];	/* What model.			*/
+	kii_ascii_t vendor[KII_MAX_VENDOR_STRING]; /* Who built this device. */
+	kii_ascii_t model[KII_MAX_MODEL_STRING];   /* What model. */		
 
 	int	(*Command)(kii_input_t *, kii_u_t cmd, void *);
 	int	(*Poll)(kii_input_t *);
@@ -350,14 +342,11 @@ typedef struct {
 typedef struct {
 	kii_u_t	 fn_buf_size;	/* Size of fn_key string buffer.	*/
 	kii_ascii_t *fn_buf;	/* fn_key string buffer.		*/
-
 	kii_u_t	fn_str_size;	/* Size of function key string buffer.	*/
 	kii_ascii_t **fn_str;	/* ptr to arr of ptrs to strings.	*/
-
 	kii_u_t	keymin, keymax;	/* Min/Max key values accepted.		*/
-	kii_u_t	keymap_size;	/* Size of keymap array.			*/
+	kii_u_t	keymap_size;	/* Size of keymap array.	 	*/	
 	kii_unicode_t **keymap;	/* The keymaps.				*/
-
 	kii_u_t	combine_size;
 	kii_dead_combination_t *combine;
 } kii_keymap_t;
@@ -400,7 +389,6 @@ struct kii_device_s {
 	kii_scoord_t	ptr;
 	kii_scoord_t	ptr_min;
 	kii_scoord_t	ptr_max;
-
 	kii_private_t	spawnpid;
 	kii_private_t	spawnsig;
 };
@@ -411,24 +399,18 @@ typedef struct {
 	kii_u_t		curr_console;	/* Current device.		*/
 	kii_u_t		last_console;	/* Last device focused on.	*/
 	kii_u_t		want_console;	/* Device to focus on.		*/
-
 	kii_input_t	*inputs;	/* Input devices.		*/
-
-	__KII_MODIFIER_DATA;		/* Modifier information.		*/
+	__KII_MODIFIER_DATA;		/* Modifier information.	*/	
 	kii_u_t		down_mod[16];	/* Modifier counters.		*/
-	kii_keymap_t	kmap;		/* Key map info.			*/
-
+	kii_keymap_t	kmap;		/* Key map info.		*/
 	kii_focus_flags_t flags;	/* Focus-global flags.		*/
-
-	kii_u_t		ptr_buttons;	/* Pointer button state.		*/
+	kii_u_t		ptr_buttons;	/* Pointer button state.	*/
 	kii_scoord_t	ptr;		/* Pointer hot spot position.	*/
 	kii_scoord_t	ptr_max;	/* Pointer hot spot window.	*/
 	kii_scoord_t	ptr_min;	/* Pointer hot spot window.	*/
-
 	kii_unicode_t	npadch;		/* keysym assembled on keypad.	*/
 	kii_unicode_t	dead;		/* Pending dead/compose keysym.	*/
 	void		*pt_regs;	/* Argument for show_regs.	*/
-
 	kii_u_t		next_input_id;
 	kii_u8_t	*console_map;
 	kii_u8_t	*graphic_map;
@@ -442,8 +424,6 @@ typedef enum {
 	KII_SYNC_PTR_BUTTONS  = 0x00000008
 } kii_sync_flags_t;
 
-
-
 extern kii_device_t *kiidevice[KII_MAX_NR_DEVICES];
 extern kii_focus_t  *kiifocus[KII_MAX_NR_FOCUSES];
 
@@ -455,7 +435,8 @@ extern void kii_handle_input(kii_event_t *event);
 extern void kii_action(kii_focus_t *f, kii_event_t *event);
 extern void kii_put_event(kii_focus_t *f, kii_event_t *event);
 
-extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev, int reset);
+extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev, 
+		int reset);
 extern void kii_unregister_input(kii_input_t *dev);
 
 extern kii_error_t kii_register_device(kii_device_t *dev, kii_u_t index);
@@ -480,21 +461,25 @@ extern const kii_ascii_t *kiidev_get_fnstring(kii_device_t *dev, kii_u_t key);
 extern kii_focus_t *kiidev_focus(kii_s_t dev_id);
 extern void kiidev_sync(kii_device_t *dev, kii_sync_flags_t what);
 extern void kiidev_set_pointer_window(kii_device_t *dev, 
-	kii_s_t minx, kii_s_t maxx, kii_s_t miny, kii_s_t maxy);
+		kii_s_t minx, kii_s_t maxx, kii_s_t miny, kii_s_t maxy);
 
-extern kii_unicode_t keymap_get_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key);
-extern kii_s_t keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key, kii_unicode_t sym);
-extern kii_s_t keymap_set_default(kii_u_t shift, kii_u_t key, kii_unicode_t sym);
+extern kii_unicode_t keymap_get_keysym(kii_keymap_t *k, kii_u_t shift, 
+		kii_u_t key);
+extern kii_s_t keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key, 
+		kii_unicode_t sym);
+extern kii_s_t keymap_set_default(kii_u_t shift, kii_u_t key, 
+		kii_unicode_t sym);
 extern const kii_ascii_t *keymap_get_fnstring(kii_keymap_t *k, kii_u_t key);
-extern kii_error_t keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, const kii_ascii_t *s);
+extern kii_error_t keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, 
+		const kii_ascii_t *s);
 
 extern kii_keymap_t default_kii_keymap;
 extern void keymap_reset(kii_keymap_t *k);
 extern kii_unicode_t keymap_toggled_case(kii_unicode_t sym);
 extern kii_unicode_t keymap_combine_dead(kii_keymap_t *k,
-					 kii_unicode_t diacr, kii_unicode_t base);
+		kii_unicode_t diacr, kii_unicode_t base);
 extern kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
-					 kii_unicode_t sym);
+		kii_unicode_t sym);
 
 #endif /* #ifdef _KERNEL */
 

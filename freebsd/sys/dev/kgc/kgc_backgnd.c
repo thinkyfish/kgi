@@ -56,7 +56,6 @@ __FBSDID("$FreeBSD$");
 /* decoder candidates */
 #define MAX_NR_DECODERS 4
 static backgnd_decoder_t *decoder_set[MAX_NR_DECODERS];
-
 static backgnd_decoder_t *backgnd_decoders[KGI_MAX_NR_DEVICES];
 static backgnd_callback_t backgnd_callbacks[KGI_MAX_NR_DEVICES];
 static void *backgnd_args[KGI_MAX_NR_DEVICES];
@@ -102,7 +101,7 @@ backgnd_test(backgnd_decoder_t *decoder, kgi_u_t devid)
 {
 	render_t r;
 
-	if (!(r = kgc_get_render(devid)))
+	if ((r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	decoder->data = NULL;
@@ -117,7 +116,7 @@ backgnd_test(backgnd_decoder_t *decoder, kgi_u_t devid)
 	if (*decoder->init && (*decoder->init)(r)) {
 		decoder->data = NULL;
 		decoder->data_size = 0;
-		return (ENODEV);	/* XXX */
+		return (ENODEV); /* XXX */
 	}
 	if (bootverbose)
 		printf("backgnd: image decoder found: %s\n", decoder->name);
@@ -129,12 +128,13 @@ backgnd_new(backgnd_decoder_t *decoder, kgi_u_t devid)
 {
 	render_t r;
 
-	if (!(r = kgc_get_render(devid)))
+	if ((r = kgc_get_render(devid)) == NULL)
 		return;
 
 	backgnd_decoders[devid] = decoder;
 	if (backgnd_callbacks[devid] != NULL)
-		(*backgnd_callbacks[devid])(r, BACKGND_INIT, backgnd_args[devid]);
+		(*backgnd_callbacks[devid])
+			(r, BACKGND_INIT, backgnd_args[devid]);
 }
 
 int
@@ -156,8 +156,8 @@ backgnd_register(backgnd_decoder_t *decoder)
 	 * Parse the devids to find any render that would
 	 * have not decoder.
 	 */
-	for (devid=0; KGI_VALID_DEVICE_ID(devid); devid++) {
-		if (backgnd_callbacks[devid] && !backgnd_decoders[devid]) {
+	for (devid = 0; KGI_VALID_DEVICE_ID(devid); devid++) {
+		if (backgnd_callbacks[devid] && backgnd_decoders[devid] == 0) {
 			if (backgnd_test(decoder, devid) == 0) {
 				backgnd_new(decoder, devid);
 			}
@@ -174,7 +174,7 @@ backgnd_unregister(backgnd_decoder_t *decoder)
 	kgi_u_t i, j;
 	render_t r;
 
-	if (!decoder)
+	if (decoder == NULL)
 		return (0);
 
 	for (j = 0; j < MAX_NR_DECODERS; j++) {
@@ -187,10 +187,11 @@ backgnd_unregister(backgnd_decoder_t *decoder)
 
 	for (i = 0; KGI_VALID_DEVICE_ID(i); i++) {
 		if (backgnd_decoders[i] == decoder) {
-			if (!(r = kgc_get_render(i)))
+			if ((r = kgc_get_render(i)) == NULL)
 				continue;
 			if ((error = backgnd_term(i)) != 0) {
-				KRN_ERROR("Can't terminate backgnd %d (%d)", i, error);
+				KRN_ERROR("Can't terminate backgnd %d (%d)",
+					 i, error);
 			}
 		}
 	}
@@ -231,7 +232,7 @@ backgnd_term(kgi_u_t devid)
 	int error = 0;
 	render_t r;
 
-	if (!KGI_VALID_DEVICE_ID(devid) || !(r = kgc_get_render(devid)))
+	if (!KGI_VALID_DEVICE_ID(devid) || (r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	if (backgnd_decoders[devid] != NULL) {
@@ -255,7 +256,7 @@ backgnd_draw(kgi_u_t devid, unsigned char *mem, kgi_u16_t *pal)
 {
 	render_t r;
 
-	if (!KGI_VALID_DEVICE_ID(devid) || !(r = kgc_get_render(devid)))
+	if (!KGI_VALID_DEVICE_ID(devid) || (r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	if (backgnd_decoders[devid] != NULL)

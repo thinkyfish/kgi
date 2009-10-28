@@ -93,9 +93,10 @@ kii_bottomhalf(void)
 	apply:	
 		if (KII_VALID_CONSOLE_ID(f->want_console))
 			dev = f->console_map[f->want_console];
-		else
-			dev = f->graphic_map[f->want_console - KII_MAX_NR_CONSOLES];
-		
+		else {
+			dev = f->graphic_map[f->want_console 
+				- KII_MAX_NR_CONSOLES];
+		}	
 		/*
 		 * Only check for kiidevice not wanting to introduce
 		 * on kgidevice. If the kgi device doesn't exist
@@ -126,7 +127,8 @@ kii_bottomhalf(void)
 		}
 
 		/* 
-		 * Don't bother about KGI device, allow usage of /dev/event alone.
+		 * Don't bother about KGI device, allow usage of /dev/event 
+		 * alone.
 		 */
 		kgi_unmap_device(dev);
 #ifdef dont_bother
@@ -136,7 +138,10 @@ kii_bottomhalf(void)
 		case KII_EAGAIN:
 			KRN_DEBUG(2, "Could not unmap kgi device %i", dev);
 
-			/* Map at least the input to let a chance to blind commands. */
+			/* 
+			 * Map at least the input to let a chance to blind 
+			 * commands.
+			 */
 			kii_map_device(f->curr_console);
 			continue;
 		case KII_EOK:
@@ -173,8 +178,8 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	if (event->any.type != KII_EV_KEY_PRESS) 
 		return;
 
-	KRN_DEBUG(6, "Doing special key sym=%.4x code=%d effect=%d", event->key.sym,
-		  event->key.code, event->key.effect);
+	KRN_DEBUG(6, "Doing special key sym=%.4x code=%d effect=%d",
+		  event->key.sym, event->key.code, event->key.effect);
 
 	switch(event->key.sym) {
 	case K_VOID:
@@ -196,7 +201,6 @@ do_special(kii_focus_t *f, kii_event_t *event)
 			kgi_unmap_device(curdev);
 		}
 		kgi_map_device(0);
-
 		shutdown_nice(0);
 
 		/* NOT REACHED */

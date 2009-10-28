@@ -51,9 +51,7 @@ struct graph_mapping_s {
  */
 struct graph_device_s {
 	kgi_device_t	kgi;
-
 	graph_mapping_t	*mappings[__KGI_MAX_NR_RESOURCES];
-
 	kgi_mutex_t	cmd_mtx;
 };
 
@@ -63,34 +61,27 @@ struct graph_device_s {
 typedef enum {
 	GRAPH_FF_CLIENT_IDENTIFIED	= 0x00000001,
 	GRAPH_FF_SESSION_LEADER		= 0x00000002
-
 } graph_file_flags_t;
 
 typedef struct {
-	
 	kgic_mapper_mmap_setup_request_t request;
-	
 	const kgi_resource_t *resource;
 	pid_t pid;
 	gid_t gid;
-
 } graph_mmap_setup_t;
 
 struct graph_file_s {
 	unsigned long refcnt;
 	graph_file_flags_t	flags;
-
 	graph_mmap_setup_t	mmap_setup;
-		
-	kgi_u_t		device_id;
-	kgi_u_t		previous;
-
-	graph_device_t	*device;
-	graph_mapping_t	*mappings;
+	kgi_u_t			device_id;
+	kgi_u_t			previous;
+	graph_device_t		*device;
+	graph_mapping_t		*mappings;
 };
 
 #define	GRAPH_MAX_NR_DEVICES	16
-#define	GRAPH_MAX_NR_IMAGES		16
+#define	GRAPH_MAX_NR_IMAGES	16
 
 /* Maximum number of opened graph files */
 #define GRAPH_MAX_NR_FILES	16
@@ -98,9 +89,9 @@ struct graph_file_s {
 extern graph_file_t *graph_files[GRAPH_MAX_NR_FILES];
 
 extern int graph_command(graph_file_t *file, unsigned int cmd, void *data,
-			 struct thread *td);
+		struct thread *td);
 extern int graph_resource_command(graph_file_t *file, unsigned int cmd,
-				  void *data);
+	 	void *data);
 
 extern void graph_unmap_map(graph_mapping_t *map);
 extern void graph_unmap_resource(graph_mapping_t *map);

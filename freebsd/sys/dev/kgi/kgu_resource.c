@@ -56,8 +56,8 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 
 	/* check that the resource id is ok */
 	if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE)?
-	    __KGI_MAX_NR_IMAGE_RESOURCES:
-	    __KGI_MAX_NR_RESOURCES) <= in->resource) {
+		__KGI_MAX_NR_IMAGE_RESOURCES:
+		__KGI_MAX_NR_RESOURCES) <= in->resource) {
 		KRN_ERROR("invalid resource ID");
 		return (KGI_EINVAL);
 	}
@@ -75,20 +75,19 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	    (void*)file->device->kgi.mode->resource[in->resource] :
 	    (void*)file->device->kgi.mode->img[in->image].resource[in->resource];
 
-	if (NULL == r) {
+	if (r == NULL) {
 		KRN_ERROR("no %s resource %d", 
-		    in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE?
-		    "mode" : "image", in->resource);
+			in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE ?
+			"mode" : "image", in->resource);
 		return (KGI_EINVAL);
 	}
 
 	switch(cmd) {
-	case KGIC_RESOURCE_CLUT_GET_INFO:
-	{
+	case KGIC_RESOURCE_CLUT_GET_INFO: {
 		kgic_clut_get_info_result_t *out = data;
 		
 		if ((r->common.type != KGI_RT_ILUT_CONTROL) &&
-		    (r->common.type != KGI_RT_ALUT_CONTROL))
+			(r->common.type != KGI_RT_ALUT_CONTROL))
 			return (KGI_EINVAL);
 		
 		out->tables = r->clut.tables;
@@ -96,12 +95,11 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 				
 		return (KGI_EOK);
 	}	
-	case KGIC_RESOURCE_CLUT_SELECT:
-	{
+	case KGIC_RESOURCE_CLUT_SELECT: {
 		kgic_clut_select_request_t *in = data;
 
 		if ((r->common.type != KGI_RT_ILUT_CONTROL) &&
-		    (r->common.type != KGI_RT_ALUT_CONTROL))
+			(r->common.type != KGI_RT_ALUT_CONTROL))
 			return KGI_EINVAL;
 
 		if (r->clut.Select) {
@@ -110,12 +108,11 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		}
 		return (KGI_EINVAL);
 	}
-	case KGIC_RESOURCE_CLUT_SET:
-	{
+	case KGIC_RESOURCE_CLUT_SET: {
 		kgic_clut_set_request_t *in = data;
 		
 		if ((r->common.type != KGI_RT_ILUT_CONTROL) &&
-		    (r->common.type != KGI_RT_ALUT_CONTROL))
+			(r->common.type != KGI_RT_ALUT_CONTROL))
 			return (KGI_EINVAL);
 		
 		if (r->clut.Set) {
@@ -131,7 +128,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 
 			/* count the number of attrs passed in for each entry */
 			for (attrs = 0, tam = in->am; tam; tam >>= 1)
-				attrs += (tam & 1) ? 1:0;
+				attrs += (tam & 1) ? 1 : 0;
 			
 			if (attrs == 0)
 				return (KGI_EOK);
@@ -142,8 +139,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		}
 		return (KGI_EINVAL);
 	}	
-	case KGIC_RESOURCE_TLUT_SELECT:
-	{
+	case KGIC_RESOURCE_TLUT_SELECT: {
 		kgic_tlut_select_request_t *in = data;
 
 		if (r->common.type != KGI_RT_TLUT_CONTROL)
@@ -155,15 +151,15 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		}
 		return (KGI_EINVAL);
 	}
-	case KGIC_RESOURCE_TLUT_SET:
-	{
+	case KGIC_RESOURCE_TLUT_SET: {
 		kgic_tlut_set_request_t *in = data;
 
 		if (r->common.type != KGI_RT_TLUT_CONTROL)
 			return (KGI_EINVAL);
 
 		if (r->tlut.Set) {
-			(r->tlut.Set)(&r->tlut, in->lut, in->idx, in->cnt, in->data);
+			(r->tlut.Set)(&r->tlut, in->lut, in->idx, in->cnt,
+				in->data);
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);

@@ -50,27 +50,27 @@ __FBSDID("$FreeBSD$");
 #include <dev/kgy/kgy.h>
 
 void dpysw_load_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size,
-		     kgi_u_t width, kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
+		kgi_u_t width, kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
 	int error;
 
 	error = (*vidsw[sc->adp->va_index]->load_font)
-		(sc->adp, (int) page, (int)size, (int)width, (u_char *)data,
-		 (int)ch, (int)count);
+		(sc->adp, (int)page, (int)size, (int)width, (u_char *)data,
+		(int)ch, (int)count);
 	
 	return;
 }
 
 void dpysw_save_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size, kgi_u_t width,
-			 kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
+		kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
 	int error;
 
 	error = (*vidsw[sc->adp->va_index]->save_font)
-		(sc->adp, (int) page, (int)size, (int)width, (u_char *)data,
-		 (int)ch, (int)count);
+		(sc->adp, (int)page, (int)size, (int)width, (u_char *)data,
+		(int)ch, (int)count);
 	
 	return;
 }
@@ -82,7 +82,7 @@ dpysw_show_font(kgi_text16_t *r, kgi_u_t page)
 	int error;
 
 	error = (*vidsw[sc->adp->va_index]->show_font)
-		(sc->adp, (int) page);
+		(sc->adp, (int)page);
 	
 	return;
 }

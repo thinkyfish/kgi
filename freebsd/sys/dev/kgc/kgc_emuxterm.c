@@ -158,7 +158,8 @@ xterm_do_set_mode(kgi_console_t *cons, kgi_s_t mode, kgi_s_t on)
 			SCROLLER_MODIFIED(cons->scroller, cons->org,
 				cons->org + cons->fsize);
 #endif
-			SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl, &erase); 
+			SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl,
+					&erase); 
 			attrfl ^= KGI_CA_REVERSE;
 			SCROLLER_SET(cons->scroller, attrfl, erase); 
 		}
@@ -327,8 +328,11 @@ xterm_backup_mode(kgi_console_t *cons, int save)
 				xterm->s_mode &= ~mask;
 				xterm->s_mode |= cons->mode & mask;
 			} else {
-				if ((cons->mode & mask) != (xterm->s_mode & mask))
-					xterm_do_set_mode(cons, mode, xterm->s_mode & mask);
+				if ((cons->mode & mask) !=
+					(xterm->s_mode & mask)) {
+					xterm_do_set_mode(cons, mode, 
+						xterm->s_mode & mask);
+				}
 			}
 		}
 	}
@@ -357,7 +361,7 @@ xterm_save_cur(kgi_console_t *cons)
 	/*
 	 * XXX
 	 * Warning save reverse_mode too!
-     */
+	 */
 	SCROLLER_SAVE(cons->scroller);
 
 	xterm->s_charset = xterm->charset;
@@ -403,14 +407,14 @@ xterm_set_term(kgi_console_t *cons)
 		if (xterm->npar >= 1) {
 			xterm->bell.pitch = ((xterm->par[1] < 20) ||
 				(xterm->par[1] > 32767)) ? 0 : xterm->par[1];
-		} else {	
+		} else 	
 			xterm->bell.pitch = 750;
-		}
 		break;
 	case 11:
-		if (xterm->npar >= 1)
-			xterm->bell.duration = (xterm->par[1] < 2000) ? xterm->par[1] : 0;
-		else
+		if (xterm->npar >= 1) {
+			xterm->bell.duration = 
+				(xterm->par[1] < 2000) ? xterm->par[1] : 0;
+		} else
 			xterm->bell.duration = 125;
 		break;
 	}
@@ -429,7 +433,8 @@ csi_m(kgi_console_t *cons)
 	for (i = 0; i <= xterm->npar; i++) {
 		switch (xterm->par[i]) {
 		case 0:
-			attrfl = KGI_CA_NORMAL | KGI_CA_COLOR(DEFAULT_FG, DEFAULT_BG);
+			attrfl = 
+			  KGI_CA_NORMAL | KGI_CA_COLOR(DEFAULT_FG, DEFAULT_BG);
 			break;
 		case 1:
 			attrfl &= ~KGI_CA_INTENSITY;
@@ -540,11 +545,15 @@ csi_m(kgi_console_t *cons)
 		default:
 			if ((xterm->par[i] >= 30) && (xterm->par[i] <= 37)) {
 				attrfl &= ~KGI_CA_FG_COLOR;
-				attrfl |= ((unsigned long) colormap[xterm->par[i]-30]) << 8; 
+				attrfl |= 
+				  ((unsigned long)colormap[xterm->par[i] - 30])
+				  << 8; 
 			} else {
-				if ((xterm->par[i] >= 40) && (xterm->par[i] <= 47)) {	
+				if ((xterm->par[i] >= 40) 
+					&& (xterm->par[i] <= 47)) {	
 					attrfl &= ~KGI_CA_BG_COLOR;
-					attrfl |= ((unsigned long) colormap[xterm->par[i]-40]);
+					attrfl |= 
+					((unsigned long)colormap[xterm->par[i] - 					 40]);
 				}
 			}
 			break;
@@ -591,7 +600,7 @@ xterm_do_reset(kgi_console_t *cons, int do_reset)
 
 	SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl, &erase); 
 
-	cons->mode	= 0;
+	cons->mode = 0;
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
 	CONSOLE_SET_MODE(cons, KGI_CM_AUTO_WRAP);
 	CONSOLE_SET_MODE(cons, KGI_CM_XT_META_ESC);
@@ -672,7 +681,8 @@ static void
 xterm_numpad_key(kgi_console_t *cons, kgi_u8_t val, kii_u_t shift)
 {
 
-	if (CONSOLE_MODE(cons, KGI_CM_XT_APPLIC_KEY) && !(shift & KII_MM_SHIFT)) {
+	if (CONSOLE_MODE(cons, KGI_CM_XT_APPLIC_KEY) && 
+		!(shift & KII_MM_SHIFT)) {
 		xterm_application_key(cons, app[val], 1);
 		return;
 	}
@@ -830,9 +840,8 @@ xterm_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 			if (CONSOLE_MODE(cons, KGI_CM_XT_META_ESC)) {
 				xterm_put_char(cons, ASCII_ESC);
 				xterm_put_char(cons, K_VALUE(sym));
-			} else {
+			} else 
 				xterm_put_char(cons, K_VALUE(sym) | 0x80);
-			}
 			break;
 		case K_TYPE_FUNCTION:
 			xterm_function_key(cons, K_VALUE(sym));
@@ -903,7 +912,7 @@ xterm_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 			break;
 		case K_TYPE_CURSOR:
 			xterm_application_key(cons, cur[K_VALUE(sym)],
-					CONSOLE_MODE(cons, KGI_CM_XT_CURSOR_KEY));
+				CONSOLE_MODE(cons, KGI_CM_XT_CURSOR_KEY));
 			break;
 		case K_TYPE_SHIFT: /* Fall thru. */
 		case K_TYPE_CONSOLE: /* Fall thru. */
@@ -939,12 +948,11 @@ int
 xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 {
 	kgi_console_xterm_t *xterm;
-	kgi_u_t n, erase, attrfl, top, bottom;
+	kgi_u_t n = 0, erase, attrfl, top, bottom;
 	kgi_isochar_t c;  /* 8-bit character to process. */
-	kgi_isochar_t tc; /* Translated character.		 */
+	kgi_isochar_t tc; /* Translated character.	 */
 	kgi_u_t printable;
 
-	n = 0;
  	xterm = (kgi_console_xterm_t *)cons;
 
 	SCROLLER_MARK(cons->scroller);
@@ -993,8 +1001,9 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 		case ASCII_BEL:
 			TRACE(printf("<BEL>"));
 			if (xterm->bell.pitch && xterm->bell.duration) {
-				SCROLLER_MKSOUND(cons->scroller, xterm->bell.pitch,
-						xterm->bell.duration);
+				SCROLLER_MKSOUND(cons->scroller, 
+					xterm->bell.pitch,
+					xterm->bell.duration);
 			}
 			continue;	
 		case ASCII_BS:
@@ -1169,7 +1178,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			SCROLLER_MARK(cons->scroller);
 			continue;			
 		case ESsquare:
-			for (xterm->npar = 0; xterm->npar < XTERM_MAX_NPAR; xterm->npar++) 
+			for (xterm->npar = 0; xterm->npar < XTERM_MAX_NPAR; 
+				xterm->npar++) 
 				xterm->par[xterm->npar] = 0;
 
 			xterm->npar = 0;
@@ -1245,18 +1255,20 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 			switch(c) {
 			case 'J':	/* ED - erase display	*/
 				TRACE(printf("= ED>\n"));
-				SCROLLER_ERASE_DISPLAY(cons->scroller, xterm->par[0]);
+				SCROLLER_ERASE_DISPLAY(cons->scroller, 
+					xterm->par[0]);
 				continue;
 			case 'K':	/* EL - erase in line */
 				TRACE(printf("= EL>\n"));
-				SCROLLER_ERASE_LINE(cons->scroller, xterm->par[0]);
+				SCROLLER_ERASE_LINE(cons->scroller, 
+					xterm->par[0]);
 				continue;
-
 			case 'P':
 				TRACE(printf("= ?_?>\n"));
 				if (xterm->par[0] <= 0) 
 					xterm->par[0] = 1;
-				SCROLLER_DELETE_CHARS(cons->scroller, xterm->par[0]);
+				SCROLLER_DELETE_CHARS(cons->scroller, 
+					xterm->par[0]);
 				continue;
 #if 0
 			case 'c':	/* ??? DA - device attributes */
@@ -1275,7 +1287,6 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				TRACE(printf("= SGR>\n"));
 				csi_m(cons);
 				continue;
-
 #if 0
 			case 'n':	/* DSR - device status report */
 				TRACE(printf("= DSR>\n"));
@@ -1294,9 +1305,10 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 #endif
 			case '@':	/* ICH - insert (blank) character(s) */
 				TRACE(printf("= ICH>\n"));
-				if (! xterm->par[0]) 
+				if (xterm->par[0] == 0) 
 					xterm->par[0]++;
-				SCROLLER_INSERT_CHARS(cons->scroller, xterm->par[0]);
+				SCROLLER_INSERT_CHARS(cons->scroller, 
+					xterm->par[0]);
 				continue;
 #		if 0
 			case 'q':	/* ??? DECLL - load LED */
@@ -1318,7 +1330,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 #		endif
 #		ifndef STRICT_XTERM
 			case 'X':
-				SCROLLER_ERASE_CHARS(cons->scroller, xterm->par[0]);
+				SCROLLER_ERASE_CHARS(cons->scroller, 
+					xterm->par[0]);
 				continue;
 			case ']':	/* setterm functions */
 				xterm_set_term(cons);
@@ -1339,7 +1352,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				if (!xterm->par[0]) 
 					xterm->par[0]++;
 
-				SCROLLER_MOVE(cons->scroller, 0, - xterm->par[0]);
+				SCROLLER_MOVE(cons->scroller, 0, 
+					- xterm->par[0]);
 				break;
 			case 'B':	/* CUD - cursor down	*/
 			case 'e':
@@ -1359,10 +1373,11 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				break;
 			case 'D':	/* CUB - cursor backward*/
 				TRACE(printf("= CUB>\n"));
-				if (!xterm->par[0]) 
+				if (xterm->par[0] == 0) 
 					xterm->par[0]++;
 
-				SCROLLER_MOVE(cons->scroller, - xterm->par[0], 0);
+				SCROLLER_MOVE(cons->scroller, 
+					- xterm->par[0], 0);
 				break;
 			case 'H':	/* CUP - set cursor position */
 			case 'f':	/* HVP - horiz. and vert. position */
@@ -1374,9 +1389,10 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 					xterm->par[1]--;
 
 				top = 0;
-				if (CONSOLE_MODE(cons, KGI_CM_ORIGIN)) 
-					SCROLLER_GET(cons->scroller, 0, &top, &bottom, 0, 0, 0, 0);
-
+				if (CONSOLE_MODE(cons, KGI_CM_ORIGIN)) {
+					SCROLLER_GET(cons->scroller, 0, &top, 
+						&bottom, 0, 0, 0, 0);
+				}
 				xterm->par[0] += top;
 				SCROLLER_GOTOXY(cons->scroller,
 						xterm->par[1], xterm->par[0]);
@@ -1386,14 +1402,16 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				if (xterm->par[0] <= 0)
 					xterm->par[0] = 1;
 
-				SCROLLER_SCROLL_TOP(cons->scroller, xterm->par[0]);
+				SCROLLER_SCROLL_TOP(cons->scroller, 
+					xterm->par[0]);
 				break;
 			case 'M':
 				TRACE(printf("= ?_?>\n"));
 				if (xterm->par[0] <= 0) 
 					xterm->par[0] = 1;
 
-				SCROLLER_SCROLL_BOTTOM(cons->scroller, xterm->par[0]);
+				SCROLLER_SCROLL_BOTTOM(cons->scroller, 
+					xterm->par[0]);
 				break;
 			case 'h':	/* SM - set mode */
 				TRACE(printf("= SM>\n"));
@@ -1421,7 +1439,7 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				xterm_restore_cur(cons);
 				break;
 			case 'E':
-				if (!xterm->par[0]) 
+				if (xterm->par[0] == 0) 
 					xterm->par[0]++;
 
 				SCROLLER_MOVE(cons->scroller, 0, xterm->par[0]);
@@ -1431,7 +1449,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				if (!xterm->par[0])
 					xterm->par[0]++;
 	
-				SCROLLER_MOVE(cons->scroller, 0, - xterm->par[0]);
+				SCROLLER_MOVE(cons->scroller, 0,
+					 - xterm->par[0]);
 				SCROLLER_GOTOX(cons->scroller, 0);
 				break;
 			case 'G':
@@ -1447,8 +1466,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 
 				top = 0;
 				if (CONSOLE_MODE(cons, KGI_CM_ORIGIN)) {
-					SCROLLER_GET(cons->scroller, 0, &top, &bottom,
-						     0, 0, 0, 0);
+					SCROLLER_GET(cons->scroller, 0, &top, 
+						&bottom, 0, 0, 0, 0);
 				}
 				xterm->par[0] += top;
 				SCROLLER_GOTOY(cons->scroller, xterm->par[0]);
@@ -1489,9 +1508,8 @@ xterm_do_write(kgi_console_t *cons, const char *buf, int count)
 				SCROLLER_ERASE_DISPLAY(cons->scroller, 2);
 				erase = (erase & 0xff00) | ' ';
 				SCROLLER_SET(cons->scroller, attrfl, erase);
-			} else {
+			} else 
 				TRACE(printf("= unkown ESC-#>\n"));
-			}
 			xterm->state = ESnormal;
 			continue;
 		case ESset:

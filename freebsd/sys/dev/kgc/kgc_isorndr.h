@@ -54,7 +54,7 @@ typedef struct {
 typedef struct {
 	kgi_u_t		positions;	/* number of positions defined	*/
 	kgi_u_t		default_pos;	/* position to use as default	*/
-	__kgi_phys_addr_t	map_direct[8];
+	__kgi_phys_addr_t map_direct[8];
 	void		*cellinfo[256];	/* map info isochar->fontpos	*/
 	kgi_isochar_t	inversemap[256];/* map info fontpos->isochar	*/
 } kgi_console_font_info_t;
@@ -63,7 +63,6 @@ typedef struct {
 	kgi_ucoord_t	size;		/* distance between char's	*/
 	kgi_ucoord_t	bitmap;		/* bitmap size			*/
 	kgi_u_t		base;		/* base line			*/
-
 	kgi_console_font_info_t *info;	/* font info			*/
 	kgi_u8_t	*data;		/* font data			*/
 } kgi_console_font_t;

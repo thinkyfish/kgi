@@ -73,27 +73,27 @@ extern dpysw_display_t dpysw_sc;
 extern void kgy_splash(video_adapter_t *adp);
 
 extern void dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img,
-			   kgi_u_t images, void *dev_mode);
+		kgi_u_t images, void *dev_mode);
 
 extern void dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img,
-			     kgi_u_t images, void *dev_mode);
+		kgi_u_t images, void *dev_mode);
 
 extern int dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
-			    kgi_image_mode_t *img, kgi_u_t images,
-			    void *dev_mode, const kgi_resource_t **r,
-			    kgi_u_t rsize);
+		kgi_image_mode_t *img, kgi_u_t images,
+		void *dev_mode, const kgi_resource_t **r,
+		kgi_u_t rsize);
 
 extern void dpysw_load_font(kgi_text16_t *text16, kgi_u_t page,
-			    kgi_u_t fontsize, kgi_u_t fontwidth, kgi_u8_t *data,
-			    kgi_u_t ch, kgi_s_t count);
+		kgi_u_t fontsize, kgi_u_t fontwidth, kgi_u8_t *data,
+		kgi_u_t ch, kgi_s_t count);
 
 extern void dpysw_save_font(kgi_text16_t *text16, kgi_u_t page,
-			    kgi_u_t fontsize, kgi_u_t fontwidth, kgi_u8_t *data,
-			    kgi_u_t ch, kgi_s_t count);
+		kgi_u_t fontsize, kgi_u_t fontwidth, kgi_u8_t *data,
+		kgi_u_t ch, kgi_s_t count);
 
 extern void dpysw_show_font(kgi_text16_t *text16, kgi_u_t page);
 
 extern void dpysw_put_text16(kgi_text16_t *text16, kgi_u_t offset,
-			     const kgi_u16_t *text, kgi_u_t count);
+		const kgi_u16_t *text, kgi_u_t count);
 
 #endif /* _kgi_kgy_h */

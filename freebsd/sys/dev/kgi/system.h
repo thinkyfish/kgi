@@ -87,7 +87,8 @@ extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from, __kgi_u32_t n)
 #define virt_to_phys vtophys
 #define virt_to_bus vtophys
 
-extern __kgi_virt_addr_t kgi_map_buffer(__kgi_phys_addr_t paddr, __kgi_size_t size);
+extern __kgi_virt_addr_t kgi_map_buffer(__kgi_phys_addr_t paddr,
+		 __kgi_size_t size);
 extern void kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size);
 
 #endif /* KGI_SYS_NEED_VM */
@@ -165,7 +166,8 @@ extern void kgi_mutex_done(kgi_mutex_t *mtx);
 #define kgi_mutex_assert(mtx,type) do { mtx_assert(&(mtx)->mutex, type); } while (0)
 
 extern void kgi_mutex_wait(kgi_mutex_t *mtx);
-extern void kgi_mutex_signal(kgi_mutex_t *mtx, int unblock_all /* TRUE or FALSE */);
+extern void kgi_mutex_signal(kgi_mutex_t *mtx, 
+		int unblock_all /* TRUE or FALSE */);
 
 #define KGI_MUTEX_OWNED		MA_OWNED
 #define KGI_MUTEX_NOTOWNED	MA_NOTOWNED

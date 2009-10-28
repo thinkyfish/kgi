@@ -102,8 +102,10 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 
 			prev = (kiifocus[focus])->inputs;
 			while (prev != NULL) {
-				if ((dev->events & prev->events & KII_EM_POINTER) ||
-					(dev->events & prev->events & KII_EM_KEY)) {
+				if ((dev->events & prev->events & 
+					KII_EM_POINTER) ||
+					(dev->events & prev->events & 
+					KII_EM_KEY)) {
 						prev = NULL;  
 						break; 
 				}
@@ -126,12 +128,12 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 	}
 
 	f = kiifocus[focus];
-	if (!f || reset) {
+	if (f == NULL || reset) {
  		kii_s_t i;
 
 		KRN_DEBUG(2, "Allocating focus %i...", focus);
 		f = kiifocus[focus] = kgi_kmalloc(sizeof(kii_focus_t));
-		if (!f) { 
+		if (f == NULL) { 
 			KRN_ERROR("Focus %i allocation failed.", focus);
 			return (KII_ENOMEM);
 		}
@@ -252,7 +254,7 @@ kii_unregister_input(kii_input_t *dev)
 		 * the focus hanging around. However, free the keymap
 		 * and reset it to the default one.
 		 */
-		if (!f->inputs) 
+		if (f->inputs == NULL) 
 			keymap_reset(&f->kmap);
 	}
 
@@ -330,8 +332,7 @@ kii_register_device(kii_device_t *dev, kii_u_t index)
 
 	KRN_ASSERT(dev);
 	if (!(dev && KII_VALID_CONSOLE_ID(index))) {
-		KRN_ERROR("Invalid arguments %p, %i", 
-			dev, index);
+		KRN_ERROR("Invalid arguments %p, %i", dev, index);
 		return (KII_EINVAL);
 	}
 	dev->id = (dev->flags & KII_DF_CONSOLE) 
@@ -394,7 +395,8 @@ kii_map_device(kii_u_t dev_id)
 	if (!(KII_VALID_DEVICE_ID(dev_id) && (dev = kiidevice[dev_id]) &&
 		KII_VALID_FOCUS_ID(focus_map[dev_id]) && 
 		(f = kiifocus[focus_map[dev_id]]))) {
-		KRN_ERROR("No target or focus for device %i, no map done.", dev_id);
+		KRN_ERROR("No target or focus for device %i, no map done.", 
+			dev_id);
 		return;
 	}
 	KRN_ASSERT(f->focus == NULL);
@@ -431,11 +433,12 @@ kii_unmap_device(kii_u_t dev_id)
 	if (!(KII_VALID_DEVICE_ID(dev_id) && kiidevice[dev_id] &&
 		KII_VALID_FOCUS_ID(focus_map[dev_id]) &&
 		(f = kiifocus[focus_map[dev_id]]))) {
-		KRN_ERROR("No target or focus for device %i, no unmap done.", dev_id);
+		KRN_ERROR("No target or focus for device %i, no unmap done.",
+			 dev_id);
 		return (KII_EINVAL);
 	}
 
-	if (!(dev = f->focus))
+	if ((dev = f->focus) == NULL)
 		return (KII_EOK);
 
 	KRN_DEBUG(3, "Unmapping device %i from focus %i", dev->id, f->id);
@@ -498,7 +501,7 @@ kii_poll_device(kii_u_t dev_id, kii_event_t *event)
 		(f = kiifocus[focus_map[dev_id]]))) {
 		return;
 	}
-	if (!(dev = f->focus)) 
+	if ((dev = f->focus) == NULL) 
 		return;
 
 	/* Poll the focus inputs. Stop at first that has data. */
@@ -635,7 +638,8 @@ kii_ascii_t *kiidev_get_fnstring(kii_device_t *dev, kii_u_t key)
 {
 	
 	KRN_ASSERT(dev && KII_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) && kiifocus[dev->focus_id]);
+	KRN_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) && 
+		kiifocus[dev->focus_id]);
 
 	return (keymap_get_fnstring(&(kiifocus[dev->focus_id]->kmap), key));
 }

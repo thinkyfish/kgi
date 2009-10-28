@@ -67,17 +67,16 @@ static int pcx_init(char *data, int sdepth);
 static int pcx_draw(render_t r, unsigned char *vidmem, kgi_u16_t *pal);
 
 static backgnd_decoder_t pcx_decoder = {
-    "backgnd_pcx", pcx_start, pcx_end, pcx_draw, BACKGND_IMAGE,
+	"backgnd_pcx", pcx_start, pcx_end, pcx_draw, BACKGND_IMAGE,
 };
 
 BACKGND_DECODER(backgnd_pcx, pcx_decoder);
 
-static struct
-{
-    int		  width, height, bpsl;
-    int		  bpp, zlen;
-    const u_char *zdata;
-    u_char	 *palette;
+static struct {
+	int width, height, bpsl;
+	int bpp, zlen;
+	const u_char *zdata;
+	u_char *palette;
 } pcx_info;
 
 extern const char daemon_pcx[];
@@ -85,63 +84,67 @@ extern const char daemon_pcx[];
 static int 
 pcx_start(render_t r)
 {
-    kgirndr_meta *render = kgc_render_meta(r);
-    kgi_image_mode_t *img = &render->mode.img[0];
-    int	depth;
+	kgirndr_meta *render;
+	kgi_image_mode_t *img = &render->mode.img[0];
+	int depth;
 
-    /* Use the nebula daemon by default */
-    if (pcx_decoder.data == NULL || pcx_decoder.data_size <= 0) {
-	    pcx_decoder.data = daemon_pcx;
-	    pcx_decoder.data_size = 40386;
-    }
+	render = kgc_render_meta(r);
 
-    if (pcx_init((u_char *)pcx_decoder.data, pcx_decoder.data_size))
-	return (ENODEV);
+	/* Use the nebula daemon by default */
+	if (pcx_decoder.data == NULL || pcx_decoder.data_size <= 0) {
+		pcx_decoder.data = daemon_pcx;
+		pcx_decoder.data_size = 40386;
+	}
 
-    if (bootverbose)
-	printf("backgnd_pcx: image good:\n"
-	       "  width = %d\n"
-	       "  height = %d\n"
-	       "  depth = %d\n",
-	       pcx_info.width, pcx_info.height,
-	       pcx_info.bpp);
+	if (pcx_init((u_char *)pcx_decoder.data, pcx_decoder.data_size))
+		return (ENODEV);
 
-    depth = kgi_attr_bits(img->bpfa);
+	if (bootverbose) {
+		printf("backgnd_pcx: image good:\n"
+			"  width = %d\n"
+			"  height = %d\n"
+			"  depth = %d\n",
+			pcx_info.width, pcx_info.height,
+			pcx_info.bpp);
+	}
+
+	depth = kgi_attr_bits(img->bpfa);
     
-    if (bootverbose)
-	    printf("backgnd_pcx: considering mode:\n"
-		   "  width = %d\n"
-		   "  height = %d\n"
-		   "  depth = %d\n",
-		   img->size.y, img->size.x, depth);
+	if (bootverbose)
+		printf("backgnd_pcx: considering mode:\n"
+			"  width = %d\n"
+			"  height = %d\n"
+			"  depth = %d\n",
+			img->size.y, img->size.x, depth);
 
-    if (img->size.x < pcx_info.width || img->size.y < pcx_info.height
-		|| depth != pcx_info.bpp)
-	    return (ENODEV);
+	if (img->size.x < pcx_info.width || img->size.y < pcx_info.height
+			|| depth != pcx_info.bpp)
+		return (ENODEV);
 
-    return (0);
+	return (0);
 }
 
 static int
 pcx_end(render_t r)
 {
-    /* nothing to do */
-    return (0);
+
+	/* nothing to do */
+	return (0);
 }
 
 struct pcxheader {
-    u_char manufactor;
-    u_char version;
-    u_char encoding;
-    u_char bpp;
-    u_short xmin, ymin, xmax, ymax;
-    u_short hres, vres;
-    u_char colormap[48];
-    u_char rsvd;
-    u_char nplanes;
-    u_short bpsl;
-    u_short palinfo;
-    u_short hsize, vsize;
+	u_char manufactor;
+	u_char version;
+	u_char encoding;
+	u_char bpp;
+	u_short xmin, ymin, xmax, ymax;
+	u_short hres, vres;
+	u_char colormap[48];
+	u_char rsvd;
+	u_char nplanes;
+	u_short bpsl;
+	u_short palinfo;
+	u_short hsize, vsize;
 };
 
 #define MAXSCANLINE 1024
@@ -149,89 +152,96 @@ struct pcxheader {
 static int
 pcx_init(char *data, int size)
 {
-    const struct pcxheader *hdr;
+	const struct pcxheader *hdr;
 
-    hdr = (const struct pcxheader *)data;
+	hdr = (const struct pcxheader *)data;
 
-    if (size < 128 + 1 + 1 + 768
-	|| hdr->manufactor != 10
-	|| hdr->version != 5
-	|| hdr->encoding != 1
-	|| hdr->nplanes != 1
-	|| hdr->bpp != 8
-	|| hdr->bpsl > MAXSCANLINE
-	|| data[size-769] != 12) {
-	printf("backgnd_pcx: invalid PCX image\n");
-	return (1);
-    }
-    pcx_info.width =  hdr->xmax - hdr->xmin + 1;
-    pcx_info.height =  hdr->ymax - hdr->ymin + 1;
-    pcx_info.bpsl = hdr->bpsl;
-    pcx_info.bpp = hdr->bpp;
-    pcx_info.zlen = size - (128 + 1 + 768);
-    pcx_info.zdata = data + 128;
-    pcx_info.palette = data + size - 768;
-    return (0);
+	if (size < 128 + 1 + 1 + 768
+		|| hdr->manufactor != 10
+		|| hdr->version != 5
+		|| hdr->encoding != 1
+		|| hdr->nplanes != 1
+		|| hdr->bpp != 8
+		|| hdr->bpsl > MAXSCANLINE
+		|| data[size-769] != 12) {
+		printf("backgnd_pcx: invalid PCX image\n");
+		return (1);
+	}
+
+	pcx_info.width =  hdr->xmax - hdr->xmin + 1;
+	pcx_info.height =  hdr->ymax - hdr->ymin + 1;
+	pcx_info.bpsl = hdr->bpsl;
+	pcx_info.bpp = hdr->bpp;
+	pcx_info.zlen = size - (128 + 1 + 768);
+	pcx_info.zdata = data + 128;
+	pcx_info.palette = data + size - 768;
+
+	return (0);
 }
 
 static int
 pcx_draw(render_t r, unsigned char *vidmem, kgi_u16_t *pal)
 {
-    kgirndr_meta *render = kgc_render_meta(r);
-    kgi_image_mode_t *img = &render->mode.img[0];
-    int swidth, sheight, sbpsl, sdepth;
-    int c, i, j, pos, scan, x, y;
-    u_char line[MAXSCANLINE];
-    kgi_u16_t clut[256*3], *pclut;
-    
-    if (pcx_info.zlen < 1)
-	return (1);
+	kgirndr_meta *render;
+	kgi_image_mode_t *img;
+	int swidth, sheight, sbpsl, sdepth;
+	int c, i, j, pos, scan, x, y;
+	u_char line[MAXSCANLINE];
+	kgi_u16_t clut[256*3], *pclut;
 
-    pclut = (pal)?pal:clut;
+	render = kgc_render_meta(r);
+	img = &render->mode.img[0];
     
-    /* Copy the palette
-     * XXX What to do if palette was not 256 bytes long?
-     * Convert 8bits to 16bits palette. What for?
-     */
-    for (i=0; i<256*3; i+=3) {
-	    pclut[i]   = pcx_info.palette[i]   << 8;
-	    pclut[i+1] = pcx_info.palette[i+1] << 8;
-	    pclut[i+2] = pcx_info.palette[i+2] << 8;
-    }
-    if (!pal && render->ilut->Set)
-	    /* Set directly the palette with the display resource */
-	    (render->ilut->Set)(render->ilut, 0, 0, 256, KGI_AM_COLORS,
-				pclut);
+	if (pcx_info.zlen < 1)
+		return (1);
+
+	pclut = (pal) ? pal : clut;
+    
+	/* 
+	 * Copy the palette
+	 * XXX What to do if palette was not 256 bytes long?
+	 * Convert 8bits to 16bits palette. What for?
+	 */
+	for (i = 0; i < 256 * 3; i += 3) {
+		pclut[i] = pcx_info.palette[i] << 8;
+		pclut[i + 1] = pcx_info.palette[i + 1] << 8;
+		pclut[i + 2] = pcx_info.palette[i + 2] << 8;
+	}
+	if (pal == NULL && render->ilut->Set)
+		/* Set directly the palette with the display resource */
+		(render->ilut->Set)(render->ilut, 0, 0, 256, KGI_AM_COLORS, 
+			pclut);
       
-    swidth = img->size.x;
-    sheight = img->size.y;
-    sdepth = kgi_attr_bits(img->bpfa);
+	swidth = img->size.x;
+	sheight = img->size.y;
+	sdepth = kgi_attr_bits(img->bpfa);
 
-    /* Add 1 for the case of 15bits mode */
-    sbpsl = swidth * ((sdepth + 1) / 8);
+	/* Add 1 for the case of 15bits mode */
+	sbpsl = swidth * ((sdepth + 1) / 8);
     
-    bzero(vidmem, sheight*sbpsl);
+	bzero(vidmem, sheight*sbpsl);
     
-    x = (swidth - pcx_info.width) / 2;
-    y = (sheight - pcx_info.height) / 2;
-    pos = y * sbpsl + x;
+	x = (swidth - pcx_info.width) / 2;
+	y = (sheight - pcx_info.height) / 2;
+	pos = y * sbpsl + x;
     
-    for (scan = i = 0; scan < pcx_info.height; ++scan, ++y, pos += sbpsl) {
+	for (scan = i = 0; scan < pcx_info.height; ++scan, ++y, pos += sbpsl) {
 		for (j = 0; j < pcx_info.bpsl && i < pcx_info.zlen; ++i) {
 			if ((pcx_info.zdata[i] & 0xc0) == 0xc0) {
 				c = pcx_info.zdata[i++] & 0x3f;
 				if (i >= pcx_info.zlen)
 					return (1);
-			} else {
+			} else 
 				c = 1;
-			}
+
 			if (j + c > pcx_info.bpsl)
 				return (1);
+	
 			while (c--)
 				line[j++] = pcx_info.zdata[i];
 		}
 		bcopy(line, vidmem + pos, pcx_info.width);
-    }
+	}
 
-    return (0);
+	return (0);
 }

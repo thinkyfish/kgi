@@ -52,26 +52,20 @@ typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy, kgi_u_t cmd, void
 struct kgi_display_s {
 	kgi_u_t		revision;	/* KGI/driver revision 	*/
 #define KGI_MAX_VENDOR_STRING	64
-	kgi_ascii_t	vendor[KGI_MAX_VENDOR_STRING];	/* manufacturer		*/
-	kgi_ascii_t	model[KGI_MAX_VENDOR_STRING];	/* model/trademark	*/
+	kgi_ascii_t	vendor[KGI_MAX_VENDOR_STRING]; /* manufacturer	  */
+	kgi_ascii_t	model[KGI_MAX_VENDOR_STRING];  /* model/trademark */
 	kgi_u32_t	flags;		/* special capabilities	*/
 	kgi_u_t		mode_size;	/* private mode size	*/
-
-
 	kgi_mode_t	*mode;	/* currently set mode			*/
-
 	kgi_u_t	id;		/* display number, init to -1		*/
 	kgi_u_t	graphic;	/* non-console devices attached		*/
 	struct kgi_display_s *prev; /* previous driver 		*/
-
 	kgi_display_refcount_fn		*IncRefcount;
 	kgi_display_refcount_fn		*DecRefcount;
-
 	kgi_display_check_mode_fn	*CheckMode;
 	kgi_display_set_mode_fn		*SetMode;
 	kgi_display_set_mode_fn		*UnsetMode;
 	kgi_display_command_fn		*Command;
-
 	struct kgi_device_s	*focus;	/* current focus	*/
 };
 
@@ -110,13 +104,10 @@ typedef struct kgi_device_s {
 	kgi_u_t			id;	/* device number 		*/
 	kgi_u_t			dpy_id;	/* display number		*/
 	kgi_device_flags_t	flags;	/* device flags			*/
-
 	kgi_device_map_device_fn	*MapDevice;
 	kgi_device_unmap_device_fn	*UnmapDevice;
 	kgi_device_handle_event_fn	*HandleEvent;
-
 	kgi_mode_t	*mode;	/* currently set mode			*/
-
 	kgi_private_t	priv;	/* device private state			*/
 } kgi_device_t;
 
@@ -138,7 +129,8 @@ extern kgi_u_t kgi_current_devid(kgi_u_t dpy_id);
 extern void kgidev_show_gadgets(kgi_device_t *dev);
 extern void kgidev_undo_gadgets(kgi_device_t *dev);
 
-extern kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *data);
+extern kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, 
+		void *data);
 
 #endif /* _KERNEL */
 

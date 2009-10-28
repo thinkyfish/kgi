@@ -104,7 +104,9 @@ kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size)
 void *
 kgi_kmalloc(__kgi_size_t size)
 {
-	void *ptr = malloc(size, M_KGI, M_NOWAIT);
+	void *ptr;
+
+	ptr = malloc(size, M_KGI, M_NOWAIT);
 	KRN_DEBUG(3, "Allocating %p (%d)", (void *)ptr, size);
 	return (ptr);
 }

@@ -61,7 +61,7 @@ static video_info_t console_info;
 	img[0].bpfa[2], img[0].bpfa[3])
 
 void dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
-	  void *dev_mode)
+		void *dev_mode)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)dpy;
 	video_info_t *next = &((vidsw_mode_t *)dev_mode)->mode_info;
@@ -174,7 +174,8 @@ dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 		/* Remove VESA flags. */
 		mode_info->vi_flags &= ~(V_INFO_VESA | V_INFO_LINEAR);
 
-		error = (*vidsw[sc->adp->va_index]->query_mode)(sc->adp, mode_info);
+		error = (*vidsw[sc->adp->va_index]->query_mode)(sc->adp, 
+				mode_info);
 		
 		if (error) {
 			/* Restore flags. */
@@ -195,8 +196,8 @@ dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 
 int
 dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
-	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
-	const kgi_resource_t **r, kgi_u_t rsize)
+		kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
+		const kgi_resource_t **r, kgi_u_t rsize)
 {
 #define	DEFAULT(x)	if (! (x)) { x = sc->mode.x; }
 #define	MATCH(x)	((x) == sc->mode.x)
@@ -206,7 +207,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 	kgi_text16_t *text16;
 	kgi_u_t bpp, bpf, bpc;
 
-	mode_info = (!dev_mode ? &console_info :
+	mode_info = (dev_mode == NULL ? &console_info :
 		     &((vidsw_mode_t *)dev_mode)->mode_info);
 
 	bzero(mode_info, sizeof(*mode_info));
@@ -235,7 +236,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		DEFAULT(img[0].tluts);
 		DEFAULT(img[0].iluts);
 		DEFAULT(img[0].aluts);
-		if (! img[0].fam) {
+		if (img[0].fam == 0) {
 			img[0].fam  = sc->mode.img[0].fam;
 			img[0].cam  = sc->mode.img[0].cam;
 			memcpy(img[0].bpfa, sc->mode.img[0].bpfa,
@@ -254,15 +255,16 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 
 			/* Common attributes are not possible. */
 			if (img[0].cam) {				
-				KRN_DEBUG(1, "Common attributes %.8x not supported",
-					  img[0].cam);
+				KRN_DEBUG(1, "Common attributes %.8x not "
+					"supported", img[0].cam);
 				return (KGI_ERRNO(CHIPSET, INVAL));
 			}
 			
 			bpp = 0;
 		
-			/* If any of the sizes is null, set default image sizes. */
-			if ((0 == img[0].size.x) || (0 == img[0].size.y)) {
+			/* 
+			 * If any of the sizes is null, set default image sizes. 			 */
+			if ((img[0].size.x == 0 ) || (img[0].size.y == 0)) {
 				img[0].size.x = 80;
 				img[0].size.y = 25;
 			}
@@ -299,16 +301,16 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 				  bpf, bpc, bpp);
 			
 			/* 
-			 * Try VESA linear framebuffered mode first, then VGA standard
-			 * modes.
+			 * Try VESA linear framebuffered mode first, then VGA 
+			 * standard modes.
 			 */
 			mode_info->vi_flags |= V_INFO_GRAPHICS | V_INFO_VESA |
 				V_INFO_LINEAR;
 			
-			/*	Check if common attributes are supported. */
+			/* Check if common attributes are supported. */
 			if (img[0].cam) {
-				KRN_DEBUG(1, "Common attributes %.8x not supported", 
-					  img[0].cam);
+				KRN_DEBUG(1, "Common attributes %.8x not "
+					"supported", img[0].cam);
 				return (KGI_ERRNO(CHIPSET, INVAL));
 			}
 
@@ -319,7 +321,8 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		if (img[0].fam & (KGI_AM_COLORS | KGI_AM_COLOR_INDEX))
 			mode_info->vi_flags |= V_INFO_COLOR;
 
-		KRN_DEBUG(2, "dpysw: querying for cwidth = %i, cheight = %i, flags = 0x%x, ",
+		KRN_DEBUG(2, "dpysw: querying for cwidth = %i, cheight = %i, "
+			  "flags = 0x%x, ",
 			  mode_info->vi_cwidth, mode_info->vi_cheight,
 			  mode_info->vi_flags);
 
@@ -329,7 +332,8 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		mode_info->vi_width = img[0].size.x;
 		mode_info->vi_height = img[0].size.y;
 
-		KRN_DEBUG(2, "dpysw: Visible: width = %i, height = %i, depth = %i ",
+		KRN_DEBUG(2, "dpysw: Visible: width = %i, height = %i, "
+			  "depth = %i ",
 			  mode_info->vi_width, mode_info->vi_height,
 			  mode_info->vi_depth);
 
@@ -338,7 +342,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			mode_info->vi_width = img[0].virt.x;
 			mode_info->vi_height = img[0].virt.y;
 
-			KRN_DEBUG(2, "dpysw: Virtual: width = %i, height = %i, depth = %i ",
+			KRN_DEBUG(2, "dpysw: Virtual: width = %i, height = %i, "				  "depth = %i ",
 				  mode_info->vi_width, mode_info->vi_height,
 				  mode_info->vi_depth);
 			

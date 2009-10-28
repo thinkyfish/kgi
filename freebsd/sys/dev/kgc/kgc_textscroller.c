@@ -55,8 +55,7 @@ __FBSDID("$FreeBSD$");
 
 typedef struct {
 	/* the scroller textbuffer */
-	kgc_textbuf_t	tb;		/* interface with the renders */
-
+	kgc_textbuf_t	tb;	/* interface with the renders */
 	/* miscellaneous scroller variables */
 	kgi_u_t		from, to;
 	kgi_u_t		offset;
@@ -68,11 +67,9 @@ typedef struct {
 	kgi_u_t		wpos;
 	kgi_u_t		pos;
 	kgi_u_t		mark;
-
 	unsigned long	tab_stop[MAX_TAB_STOPS];
-
 	/* attributes */
-	kgi_u_t		attrfl,s_attrfl;	/* global (default) kgi attribute */
+	kgi_u_t		attrfl,s_attrfl;/* global (default) kgi attribute */
 	kgi_u_t		attr;		/* global (default) pixel attribute */
 	kgi_u_t		erase;		/* erase pixel + attribute */
 } textscroller_meta;
@@ -120,7 +117,7 @@ textscroller_modified_wrap(scroller_t s)
 
 	scroll = kgc_scroller_meta(s);
 
-	textscroller_modified(s, scroll->mark, scroll->wpos+1);
+	textscroller_modified(s, scroll->mark, scroll->wpos + 1);
 }
 
 static void 
@@ -206,9 +203,8 @@ textscroller_sync(scroller_t s)
 			(!(cons->flags & KGI_CF_NO_HARDSCROLL) &&
 			(cons->flags & KGI_CF_SPLITLINE))) {
 				orig += scroll->tb.virt.y;
-		} else {
+		} else 
 			orig = 0;
-		}
 	}
 	KRN_ASSERT((kgi_u_t) orig < scroll->tb.virt.y);
 
@@ -280,7 +276,7 @@ textscroller_sync(scroller_t s)
 	}
 
 	scroll->last_offset = scroll->offset;
-	scroll->from = (kgi_u_t) -1L;
+	scroll->from = (kgi_u_t) - 1L;
 	scroll->to   = 0;
 }
 
@@ -318,7 +314,7 @@ textscroller_init(scroller_t s, kgi_u16_t *buffer)
 	scroll->tb.virt.x = render_size.x;
 	scroll->tb.virt.y = CONFIG_KGII_CONSOLEBUFSIZE / 
 		(sizeof(*scroll->tb.buf)*scroll->tb.virt.x);
-	if (scroll->tb.virt.y < 2*render_size.y) {
+	if (scroll->tb.virt.y < 2 * render_size.y) {
 		if ((scroll->tb.buf) && (scroll->tb.flags & TBF_ALLOCATED)) {
 			KRN_ERROR("text buffer too small, reset failed");
 			kgi_kfree(scroll->tb.buf);
@@ -419,7 +415,7 @@ textscroller_tbc(scroller_t s, kgi_u_t tab)
 
 	scroll = kgc_scroller_meta(s);
 
-	if (!tab) {		
+	if (tab == 0) {		
 		scroll->tab_stop[scroll->x >> 5] &= ~(1 << (scroll->x & 31));		
 	} else {
 		if (tab == 3) {			
@@ -468,7 +464,7 @@ textscroller_mksound(scroller_t s, kgi_u_t pitch, kgi_u_t duration)
 
 /*
  * Scroll down n lines between t(op) and b(ottom) and clear the new top
- * area using ERASE. If n is greater than b-t, we scroll only b-t lines.
+ * area using ERASE. If n is greater than b - t, we scroll only b - t lines.
  * If bottom is more than SIZE_Y, bottom is less or equal top or n is zero
  * we do nothing.
  */
@@ -479,13 +475,13 @@ textscroller_down(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 	kgi_u_t src, dst, end;	/* first/last pixel to move	*/
 	kgi_u_t cnt;		/* size of area to clean	*/
 	kgi_u_t h1, h2;		/* subexpression		*/
-	kgi_u_t tb_total;		/* text buffer size		*/
+	kgi_u_t tb_total;	/* text buffer size		*/
 	kgc_textbuf_t *tb;
 
 	scroll = kgc_scroller_meta(s);
 	tb = &scroll->tb;
 
-	if ((scroll->tb.size.y < b) || (b <= t) || !n) 
+	if ((scroll->tb.size.y < b) || (b <= t) || n == 0) 
 		return;
 
 	if (n > (b - t)) 
@@ -528,9 +524,8 @@ textscroller_down(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 				tb_move(tb, 0, src - h1, h1);
 				h2 -= h1;
 				tb_move(tb, tb_total - h2, end, h2);
-			} else {
+			} else 
 				tb_move(tb, dst - h2 - tb_total, end, h2);
-			}
 		}
 	}
 
@@ -598,7 +593,9 @@ textscroller_erase_line(scroller_t s, kgi_u_t arg)
 	cons->flags &= ~KGI_CF_NEED_WRAP;
 }
 
-/* Insert n ERASE characters. */
+/* 
+ * Insert n ERASE characters. 
+ */
 static void 
 textscroller_insert_chars(scroller_t s, kgi_u_t n)
 {
@@ -629,7 +626,9 @@ textscroller_insert_chars(scroller_t s, kgi_u_t n)
 }
 
 
-/* Delete n characters. Clear the end of the line using ERASE. */
+/* 
+ * Delete n characters. Clear the end of the line using ERASE. 
+ */
 static void 
 textscroller_delete_chars(scroller_t s, kgi_u_t n)
 {
@@ -651,15 +650,16 @@ textscroller_delete_chars(scroller_t s, kgi_u_t n)
 	if (n < cnt) {
 		tb_move(&scroll->tb, src, src + n, cnt - n);
 		tb_set(&scroll->tb, src + cnt - n, scroll->erase, n);
-	} else {
+	} else 
 		tb_set(&scroll->tb, src, scroll->erase, cnt);
-	}
 
 	cons->flags &= ~KGI_CF_NEED_WRAP;
 }
 
 
-/* erase the following n chars. (maximum is end of line). */
+/* 
+ * Erase the following n chars. (maximum is end of line). 
+ */
 static void 
 textscroller_erase_chars(scroller_t s, kgi_u_t n)
 {
@@ -670,9 +670,8 @@ textscroller_erase_chars(scroller_t s, kgi_u_t n)
 	cons = kgc_scroller_cons(s);
 
 	KRN_ASSERT(n > 0);
-	if (n > (scroll->tb.size.x - scroll->x)) {
+	if (n > (scroll->tb.size.x - scroll->x)) 
 		n = scroll->tb.virt.x - scroll->x;
-	}
 
 	tb_set(&scroll->tb, scroll->pos, scroll->erase, n);
 	textscroller_modified(s, scroll->wpos, scroll->wpos + n);
@@ -695,18 +694,18 @@ textscroller_reverse_lf(scroller_t s)
 
 	RENDER_UNDO_GADGETS(cons->render);
 
-	if (scroll->y == scroll->top) {
+	if (scroll->y == scroll->top) 
 		textscroller_down(s, scroll->top, scroll->bottom, 1);
-	} else {
+	else {
 		if (scroll->y > scroll->top) {
 			scroll->y--;
 			scroll->wpos -= scroll->tb.virt.x;
 
 			if (scroll->pos < scroll->tb.virt.x) {
-				scroll->pos += scroll->tb.total - scroll->tb.virt.x;
-			} else {
+				scroll->pos += 
+				scroll->tb.total - scroll->tb.virt.x;
+			} else 
 				scroll->pos -= scroll->tb.virt.x;
-			}
 		}
 	}
 
@@ -728,7 +727,9 @@ textscroller_done(scroller_t s)
 	}
 }
 
-/* Erase in display using ERASE. The area cleared depends on arg. */
+/* 
+ * Erase in display using ERASE. The area cleared depends on arg.
+ */
 static void 
 textscroller_erase_display(scroller_t s, kgi_u_t arg)
 {
@@ -761,22 +762,23 @@ textscroller_erase_display(scroller_t s, kgi_u_t arg)
 	textscroller_modified(s, src, src + cnt);
 
 	if (src < tb_total) {
-		if (tb_total >= (src + cnt)) {
+		if (tb_total >= (src + cnt)) 
 			tb_set(&scroll->tb, src, scroll->erase, cnt);
-		} else {
+		else {
 			tb_set(&scroll->tb, src, scroll->erase, tb_total-src);
 			tb_set(&scroll->tb, 0, scroll->erase, 
 				src + cnt - tb_total);
 		}
-	} else {
+	} else 
 		tb_set(&scroll->tb, src - tb_total, scroll->erase, cnt);
-	}
 
 	cons->flags &= ~KGI_CF_NEED_WRAP;
 }
 
 
-/* Move cursor to the specified position. We have to check all boundaries. */
+/* 
+ * Move cursor to the specified position. We have to check all boundaries.
+ */
 static void 
 textscroller_gotoxy(scroller_t s, kgi_s_t new_x, kgi_s_t new_y)
 {
@@ -800,8 +802,10 @@ textscroller_gotoxy(scroller_t s, kgi_s_t new_x, kgi_s_t new_y)
 	}
 
 	max_x = scroll->tb.size.x;
-	scroll->x = (new_x < min_x) ? min_x : ((new_x < max_x) ? new_x : max_x-1);
-	scroll->y = (new_y < min_y) ? min_y : ((new_y < max_y) ? new_y : max_y-1);
+	scroll->x = 
+		(new_x < min_x) ? min_x : ((new_x < max_x) ? new_x : max_x-1);
+	scroll->y = 
+		(new_y < min_y) ? min_y : ((new_y < max_y) ? new_y : max_y-1);
 
 	scroll->pos = scroll->wpos = scroll->org +
 		scroll->y*scroll->tb.virt.x + scroll->x;
@@ -855,7 +859,7 @@ textscroller_need_sync(scroller_t s)
  * Increase the scroll-back offset by <lines> lines. <lines> defaults to
  * half the number of lines of the visible screen if less or equal zero. 
  * As we may be called from a IRQ service, we do not sync the display
- * because this may take some long time. We just mark the CONSOLE_BH and
+ * because this may take some time. We just mark the CONSOLE_BH and
  * do syncing there.
  */
 static void 
@@ -870,7 +874,7 @@ textscroller_backward(scroller_t s, int lines)
 	max = scroll->tb.virt.y - scroll->tb.size.y;
 
 	if (lines <= 0) 
-		lines = scroll->tb.size.y/2;
+		lines = scroll->tb.size.y / 2;
 
 	scroll->offset += lines;
 	if (scroll->offset > max) 
@@ -887,7 +891,7 @@ textscroller_backward(scroller_t s, int lines)
  * Decrease the scroll-back offset by <lines> lines. <lines> defaults to
  * half the number of lines of the visible screen if less or equal zero.
  * As we may be called from an IRQ service, we do not sync the display
- * because this may take some long time. We just mark the CONSOLE_BH
+ * because this may take some time. We just mark the CONSOLE_BH
  * and do syncing there.
  */
 static void 
@@ -900,7 +904,7 @@ textscroller_forward(scroller_t s, int lines)
 	cons = kgc_scroller_cons(s);
 
 	if (lines <= 0) 
-		lines = scroll->tb.size.y/2;
+		lines = scroll->tb.size.y / 2;
 
 	scroll->offset -= lines;
 	if (scroll->offset >= scroll->tb.total) 
@@ -916,7 +920,7 @@ textscroller_forward(scroller_t s, int lines)
 
 /*
  * Scroll up n lines between t(op) and b(ottom) and erase the 'new' bottom
- * area using ERASE. If n is greater than b-t, we scroll only b-t lines.
+ * area using ERASE. If n is greater than b - t, we scroll only b - t lines.
  * If bottom is more than SIZE_Y, bottom is less or equal top, or n is zero
  * we do nothing.
  */
@@ -936,109 +940,112 @@ textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 	cons = kgc_scroller_cons(s);
 	tb = &scroll->tb;
 
-	if ((scroll->tb.size.y < b) || (b <= t) || !n) 
+	if ((scroll->tb.size.y < b) || (b <= t) || n == 0) 
 		return;
 
 	if (n > (b - t)) 
 		n = b - t;
 
-	dst  = t + scroll->origin;
-	end  = b + scroll->origin;
+	dst = t + scroll->origin;
+	end = b + scroll->origin;
 
 	tb_total = scroll->tb.virt.x;
 
 	dst *= tb_total;
 	end *= tb_total;
 
-	cnt  = n*tb_total;
+	cnt = n * tb_total;
 	tb_total *= scroll->tb.virt.y;
-	src  = dst + cnt;
+	src = dst + cnt;
 
 	KRN_ASSERT((dst < src) && (src <= end));
 
-	if (CONSOLE_MODE(cons, KGI_CM_ALT_SCREEN) || t || (b < scroll->tb.size.y)) {
-		/* can't use origin adjustment */
-		textscroller_modified(s, dst, end);
+	if (CONSOLE_MODE(cons, KGI_CM_ALT_SCREEN) || t 
+		|| (b < scroll->tb.size.y)) {
+			/* can't use origin adjustment */
+			textscroller_modified(s, dst, end);
 
-		if (end <= src) {
-			clean = dst;
-		} else {
-			clean = end - cnt;
+			if (end <= src) 
+				clean = dst;
+			else {
+				clean = end - cnt;
 
-			if (dst >= tb_total) {
-				dst -= tb_total;
-				src -= tb_total;
-				end -= tb_total;
-			}
-
-			KRN_ASSERT(dst < tb_total);
-
-			if (end <= tb_total) {
-				tb_move(tb, dst, src, end - src);
-			} else {
-				if (src < tb_total) {
-					h1 = tb_total - src;
-					tb_move(tb, dst, src, h1);
-					src += h1;
-					dst += h1;
+				if (dst >= tb_total) {
+					dst -= tb_total;
+					src -= tb_total;
+					end -= tb_total;
 				}
 
-				h1 = tb_total - dst;
-				h2 = end - src;
+				KRN_ASSERT(dst < tb_total);
 
-				KRN_ASSERT((h1 > 0) && (h2 > 0));
+				if (end <= tb_total) 
+					tb_move(tb, dst, src, end - src);
+				else {
+					if (src < tb_total) {
+						h1 = tb_total - src;
+						tb_move(tb, dst, src, h1);
+						src += h1;
+						dst += h1;
+					}
 
-				if (h1 < h2) {
-					tb_move(tb, dst, src - tb_total, h1);
-					tb_move(tb, 0, src - dst, h2 - h1);
-				} else {
-					tb_move(tb, dst, src - tb_total, h2);
+					h1 = tb_total - dst;
+					h2 = end - src;
+
+					KRN_ASSERT((h1 > 0) && (h2 > 0));
+
+					if (h1 < h2) {
+						tb_move(tb, dst, 
+							src - tb_total, h1);
+						tb_move(tb, 0,
+							 src - dst, h2 - h1);
+					} else {
+						tb_move(tb, dst,
+							 src - tb_total, h2);
+					}
 				}
 			}
-		}
-
-	} else {
-
-		/* adjust origin */
-
-		cons->flags |= KGI_CF_SCROLLED;
-
-		if (scroll->offset) {
-			scroll->offset += n;
-			if (scroll->offset > (scroll->tb.virt.y - scroll->tb.size.y)) {
-				scroll->offset = 0;
-			}
-		}
-
-		scroll->origin += n;
-		scroll->org    += cnt;
-		scroll->wpos   += cnt;
-		scroll->pos    += cnt;
-
-		if (tb_total <= scroll->pos) 
-			scroll->pos -= tb_total;
-
-		if (tb_total <= scroll->org) {
-			scroll->org	-= tb_total;
-			scroll->wpos	-= tb_total;
-			scroll->origin	-= scroll->tb.virt.y;
-		}
-		clean = scroll->org + scroll->tb.frame - cnt;
-	}
-
-	/* clear bottom area */
-	textscroller_modified(s, clean, clean + cnt);
-
-	if (clean < tb_total) {
-		if (tb_total >= (clean + cnt)) {
-			tb_set(tb, clean, scroll->erase, cnt);
 		} else {
-			tb_set(tb, clean, scroll->erase, tb_total - clean);
-			tb_set(tb, 0, scroll->erase, clean + cnt - tb_total);
+			/* adjust origin */
+			cons->flags |= KGI_CF_SCROLLED;
+
+			if (scroll->offset) {
+				scroll->offset += n;
+				if (scroll->offset > (scroll->tb.virt.y 
+						- scroll->tb.size.y)) {
+					scroll->offset = 0;
+				}
+			}
+
+			scroll->origin += n;
+			scroll->org    += cnt;
+			scroll->wpos   += cnt;
+			scroll->pos    += cnt;
+
+			if (tb_total <= scroll->pos) 
+				scroll->pos -= tb_total;
+
+			if (tb_total <= scroll->org) {
+				scroll->org 	-= tb_total;
+				scroll->wpos	-= tb_total;
+				scroll->origin	-= scroll->tb.virt.y;
+			}
+			clean = scroll->org + scroll->tb.frame - cnt;
 		}
-	} else {
-		tb_set(tb, clean - tb_total, scroll->erase, cnt);
-	}
+
+		/* clear bottom area */
+		textscroller_modified(s, clean, clean + cnt);
+
+		if (clean < tb_total) {
+			if (tb_total >= (clean + cnt)) 
+				tb_set(tb, clean, scroll->erase, cnt);
+			else {
+				tb_set(tb, clean, 
+					scroll->erase, tb_total - clean);
+				tb_set(tb, 0, 
+					scroll->erase, clean + cnt - tb_total);
+			}
+		} else 
+			tb_set(tb, clean - tb_total, scroll->erase, cnt);
 }
 
 static void 
@@ -1065,17 +1072,16 @@ textscroller_lf(scroller_t s)
 	scroll = kgc_scroller_meta(s);
 	cons = kgc_scroller_cons(s);
 
-	if ((scroll->y + 1) == scroll->bottom) {
+	if ((scroll->y + 1) == scroll->bottom)
 		textscroller_up(s, scroll->top, scroll->bottom, 1);
-	} else {
+	else {
 		if (scroll->y < (scroll->tb.size.y - 1)) {
 			scroll->y++;
 			scroll->wpos += scroll->tb.virt.x;
 			scroll->pos  += scroll->tb.virt.x;
 
-			if (scroll->tb.total <= scroll->pos) {
+			if (scroll->tb.total <= scroll->pos) 
 				scroll->pos -= scroll->tb.total;
-			}
 		}
 	}
 
@@ -1152,10 +1158,10 @@ textscroller_margins(scroller_t s, kgi_u_t top, kgi_u_t bottom)
 {
 	textscroller_meta *scroll = kgc_scroller_meta(s);
 
-	if (!top) 	
+	if (top == 0) 	
 		top++;
 
-	if (!bottom) 		
+	if (bottom == 0) 		
 		bottom = scroll->tb.size.y;
 	
 	/* Minimum allowed region is 2 lines */
@@ -1238,7 +1244,8 @@ textscroller_map(scroller_t s)
 		}
 		KRN_ASSERT(scroll->tb.buf);
 
-		RENDER_PUT_TEXT(cons->render, &scroll->tb, 0, 0, scroll->tb.total);
+		RENDER_PUT_TEXT(cons->render, &scroll->tb, 0, 0, 
+				scroll->tb.total);
 	}
 	textscroller_sync(s);
 }

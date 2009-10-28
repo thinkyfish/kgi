@@ -96,7 +96,7 @@ graph_delete_mapping(graph_mapping_t *map)
 	KRN_ASSERT(map->file);
 	KRN_ASSERT(map->device);
 
-	/*delete mapping from mappings-for-same-file list */
+	/* delete mapping from mappings-for-same-file list */
 	prev = map->next;
 	while (prev->next != map) 
 		prev = prev->next;
@@ -162,7 +162,8 @@ graph_unmap_resource(graph_mapping_t *map)
 	do {
 		KRN_ASSERT(map->resource == first->resource);
 
-		/* The VM pages are deleted but the map is not
+		/* 
+		 * The VM pages are deleted but the map is not
 		 * deleted
 		 */
 		graph_unmap_map(map);

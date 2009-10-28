@@ -40,7 +40,7 @@ kgi_atomic_t
 kgi_test_and_set_bit32(__kgi_u32_t b, volatile void *p)
 {
 	int s = splhigh();
-	__kgi_u32_t m = 1<<b;
+	__kgi_u32_t m = 1 << b;
 	__kgi_u32_t r = *(volatile __kgi_u32_t *)p & m;
 	*(volatile __kgi_u32_t *)p |= m;
 	splx(s);

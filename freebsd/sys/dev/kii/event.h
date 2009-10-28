@@ -37,7 +37,6 @@ typedef struct event_device_s	event_device_t;
  * A device represents the actual device.
  */
 #define	EVENT_DEVICE_SIZE	PAGE_SIZE
-
 #define	EVENT_QUEUE_SIZE	PAGE_SIZE
 
 struct event_device_s {
@@ -58,19 +57,15 @@ typedef enum {
 
 struct event_file_s {
 	event_file_t	*next;
-
 	unsigned long refcnt;
 	event_file_flags_t	flags;
-
 	kii_u_t		device_id;
 	kii_u_t		previous;
-
 	event_device_t	*device;
-
 	struct	{
 		kii_u_t		head, tail, size;
 		kii_u8_t	*buffer;
-	}		queue;
+	} queue;
 };
 
 #endif /* #ifndef _kii_event_h */

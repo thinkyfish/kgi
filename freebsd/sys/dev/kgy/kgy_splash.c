@@ -149,9 +149,9 @@ set_col(void)
 static void 
 show_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 {
-	int line = 0, firstrow = (sizex - 80)/2, i;
+	int line = 0, firstrow = (sizex - 80) / 2, i;
 
-	fb += ((sizey - 25)/2)*sizex;
+	fb += ((sizey - 25) / 2) * sizex;
 
 	curr_col[7] = def_col[7];
 	set_col();
@@ -180,28 +180,35 @@ show_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 		int reg;
 
 		for (reg = 0; reg < 7; reg++) {
-			curr_col[reg].r = msg_col[reg].r*i/100;
-			curr_col[reg].g = msg_col[reg].g*i/100;
-			curr_col[reg].b = msg_col[reg].b*i/100;
+			curr_col[reg].r = msg_col[reg].r * i / 100;
+			curr_col[reg].g = msg_col[reg].g * i / 100;
+			curr_col[reg].b = msg_col[reg].b * i / 100;
 		}
 
-		curr_col[7].r = (msg_col[7].r-def_col[7].r)*i/100+def_col[7].r;
-		curr_col[7].g = (msg_col[7].g-def_col[7].g)*i/100+def_col[7].g;
-		curr_col[7].b = (msg_col[7].b-def_col[7].b)*i/100+def_col[7].b;
+		curr_col[7].r = 
+			(msg_col[7].r - def_col[7].r) * i / 100 + def_col[7].r;
+		curr_col[7].g = 
+			(msg_col[7].g - def_col[7].g) * i / 100 + def_col[7].g;
+		curr_col[7].b = 
+			(msg_col[7].b - def_col[7].b) * i / 100 + def_col[7].b;
+
 		set_col();
 	}
 
 	for (i = 0; i < 100; i++) {
-		curr_col[6].r = (63 - msg_col[6].r)*i/100 + msg_col[6].r;
-		curr_col[6].g = (63 - msg_col[6].g)*i/100 + msg_col[6].g;
-		curr_col[6].b = ( 0 - msg_col[6].b)*i/100 + msg_col[6].b;
+		curr_col[6].r = 
+			(63 - msg_col[6].r) * i / 100 + msg_col[6].r;
+		curr_col[6].g = 
+			(63 - msg_col[6].g) * i / 100 + msg_col[6].g;
+		curr_col[6].b = 
+			(0 - msg_col[6].b) * i / 100 + msg_col[6].b;
 		set_col();
 	}
 
 	for (i = 0; i < 100; i++) {
-		curr_col[6].r = (msg_col[6].r - 63)*i/100 + 63;
-		curr_col[6].g = (msg_col[6].g - 63)*i/100 + 63;
-		curr_col[6].b = (msg_col[6].b -  0)*i/100 +  0;
+		curr_col[6].r = (msg_col[6].r - 63) * i / 100 + 63;
+		curr_col[6].g = (msg_col[6].g - 63) * i / 100 + 63;
+		curr_col[6].b = (msg_col[6].b -  0) * i / 100 +  0;
 		set_col();
 	}
 }
@@ -215,19 +222,22 @@ hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 		int reg;
 
 		for (reg = 0; reg < 7; reg++) {
-			curr_col[reg].r = msg_col[reg].r*i/100;
-			curr_col[reg].g = msg_col[reg].g*i/100;
-			curr_col[reg].b = msg_col[reg].b*i/100;
+			curr_col[reg].r = msg_col[reg].r * i / 100;
+			curr_col[reg].g = msg_col[reg].g * i / 100;
+			curr_col[reg].b = msg_col[reg].b * i / 100;
 		}
 
-		curr_col[7].r = (msg_col[7].r-def_col[7].r)*i/100+def_col[7].r;
-		curr_col[7].g = (msg_col[7].g-def_col[7].g)*i/100+def_col[7].g;
-		curr_col[7].b = (msg_col[7].b-def_col[7].b)*i/100+def_col[7].b;
+		curr_col[7].r = 
+			(msg_col[7].r-def_col[7].r) * i / 100 + def_col[7].r;
+		curr_col[7].g = 
+			(msg_col[7].g-def_col[7].g) * i / 100 + def_col[7].g;
+		curr_col[7].b = 
+			(msg_col[7].b-def_col[7].b) * i / 100 + def_col[7].b;
 
 		set_col();
 	}
 
-	i = sizex*sizey;
+	i = sizex * sizey;
 
 	while (i--) {
 		*fb = (*fb & 0x00FF) | 0x0700;
@@ -251,10 +261,12 @@ kgy_splash(video_adapter_t *adp)
 
 #if defined(__i386__) && !defined(KGI_NOSPLASH)
 
-	show_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, ORIG_VIDEO_LINES);
+	show_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
+		ORIG_VIDEO_LINES);
 	kgi_udelay(1000000);
 
-	hide_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, ORIG_VIDEO_LINES);
+	hide_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
+		ORIG_VIDEO_LINES);
 
 #endif /* __i386__ && !KGI_NOSPLASH */
 

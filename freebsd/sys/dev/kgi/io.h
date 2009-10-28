@@ -102,10 +102,8 @@ extern void pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr);
 
 typedef enum {
     KGI_BUS_UNKNOWN = 0,
-
     KGI_BUS_PCI = 1,
     KGI_BUS_ISA = 2,
-
     KGI_BUS_LAST = 2
 } kgi_bustype_t;
 
@@ -243,7 +241,6 @@ typedef struct {
 	const __kgi_ascii_t	*name;	/* name of the line		*/
 	__kgi_u_t		line;	/* requested IRQ line		*/
 	__kgi_u32_t		rid;	/* region unique id for device  */
-
 	void	*meta;			/* handler meta data		*/
 	void	*meta_io;		/* handler meta I/O data	*/
 	irq_handler_fn	*High, *Low;	/* high/low priority handlers	*/

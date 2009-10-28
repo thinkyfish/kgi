@@ -46,19 +46,16 @@ __FBSDID("$FreeBSD$");
 
 typedef struct {
 	kgi_dot_port_mode_t	dpm;
-
 	kgi_accel_t		blubber_accel;
 	kgi_marker_t		cur;
 	kgi_marker_t		ptr;
 	kgi_text16_t		text16;
-
 } dpy_null_mode_t;
 
 typedef struct {
 	kgi_display_t		dpy;
 	kgi_mode_t		mode;
 	kgi_ucoord_t		size;
-
 } dpy_null_display_t;
 
 static dpy_null_display_t dpy_data[CONFIG_KGI_DISPLAYS];
@@ -81,10 +78,10 @@ dpy_null_hide(kgi_marker_t *marker)
 
 #define	dpy_null_undo	dpy_null_hide
 
-
 static void dpy_null_put_text16(kgi_text16_t *text16,
 	kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count)
 {
+
 }
 
 static void 
@@ -153,13 +150,12 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			return (-EINVAL);
 		}
 
-		devmode->dpm.dots.x = 8*img[0].size.x;
-		devmode->dpm.dots.y = 12*img[0].size.y;
+		devmode->dpm.dots.x = 8 * img[0].size.x;
+		devmode->dpm.dots.y = 12 * img[0].size.y;
 		devmode->dpm.dam    = img[0].fam;
 		devmode->dpm.bpda   = img[0].bpfa;
 		img[0].out = &devmode->dpm;
 		img[0].flags = KGI_IF_TEXT16;
-
 		devmode->cur.meta	= dpy_null;
 		devmode->cur.meta_io	= NULL;
 		devmode->cur.type	= KGI_RT_CURSOR_CONTROL;
@@ -170,7 +166,6 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		devmode->cur.Show	= dpy_null_show;
 		devmode->cur.Hide	= dpy_null_hide;
 		devmode->cur.Undo	= dpy_null_undo;
-
 		devmode->ptr.meta	= dpy_null;
 		devmode->ptr.meta_io	= NULL;
 		devmode->ptr.type	= KGI_RT_POINTER_CONTROL;
@@ -181,7 +176,6 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		devmode->ptr.Show	= dpy_null_show;
 		devmode->ptr.Hide	= dpy_null_hide;
 		devmode->ptr.Undo	= dpy_null_undo;
-
 		devmode->text16.meta		= dpy_null;
 		devmode->text16.meta_io		= NULL;
 		devmode->text16.type		= KGI_RT_TEXT16_CONTROL;
@@ -251,10 +245,8 @@ dpy_null_alloc(kgi_u_t size_x, kgi_u_t size_y)
 	dpy_null->dpy.graphic = 0;
 	dpy_null->dpy.IncRefcount = dpy_null_inc_refcount;
 	dpy_null->dpy.DecRefcount = dpy_null_dec_refcount;
-
 	dpy_null->dpy.CheckMode	 = dpy_null_check_mode;
 	dpy_null->dpy.SetMode	 = dpy_null_set_mode;
-
 	dpy_null->dpy.focus = NULL;
 
 	/* initialize mode struct */
@@ -285,7 +277,7 @@ dpy_null_init(int display, int max_display)
 	 */
 	while (display < max_display) {
 		kgi_display_t *dpy = dpy_null_alloc(80, 25);
-		if (!dpy)
+		if (dpy == NULL)
 			return (display);
 		if (kgi_register_display(dpy, display)) {
 			dpy_index--;

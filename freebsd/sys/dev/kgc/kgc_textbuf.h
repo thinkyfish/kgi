@@ -29,12 +29,10 @@
 
 typedef struct {
 	kgi_u16_t	*buf;	/* background/scrollback buffer	*/
-
 	kgi_u_t		total;	/* total characters in buffer	*/
 	kgi_u_t		frame;	/* characters per visible frame	*/
 	kgi_ucoord_t	size;	/* visible size of buffer	*/
 	kgi_ucoord_t	virt;	/* virtual size of buffer	*/
-
 #define TBF_ALLOCATED	0x00000001
 	kgi_u_t		flags;	/* flags for the buffer         */
 } kgc_textbuf_t;

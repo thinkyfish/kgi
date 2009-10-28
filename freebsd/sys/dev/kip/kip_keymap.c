@@ -59,8 +59,7 @@ keymap_reset(kii_keymap_t *k)
 	if (k && (k != &default_kii_keymap)) {
 #		define	LOCAL_FREE(x)				\
 			if (k->x != default_kii_keymap.x) {	\
-								\
-				kgi_kfree(k->x);			\
+				kgi_kfree(k->x);		\
 				KRN_TRACE(0, k->x = NULL);	\
 			}
 
@@ -78,7 +77,7 @@ keymap_reset(kii_keymap_t *k)
 
 kii_s_t 
 keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
-	  kii_unicode_t sym)
+		kii_unicode_t sym)
 {
 	kii_unicode_t *newmap;
 	kii_u_t i, size;
@@ -114,7 +113,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		kii_unicode_t **newarr;
 
 		size = sizeof(k->keymap[0]) * k->keymap_size;
-		if (!(newarr = kgi_kmalloc(size))) {
+		if ((newarr = kgi_kmalloc(size)) == NULL) {
 			return (KII_ENOMEM);
 		}
 		memcpy(newarr, k->keymap, size);
@@ -123,7 +122,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 			k->keymap_size);
 	}
 	size = k->keymax - k->keymin + 1;
-	if (!(newmap = kgi_kmalloc(sizeof(kii_unicode_t) * size))) 
+	if ((newmap = kgi_kmalloc(sizeof(kii_unicode_t) * size)) == NULL) 
 		return (KII_ENOMEM);
 
 	KRN_DEBUG(2, "%s keymap %i", 
@@ -135,9 +134,8 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 			newmap[i] = default_kii_keymap.keymap[shift][i];
 		}
 	} else {
-		while (i--) {
+		while (i--) 
 			newmap[i] = K_VOID;
-		}
 	}
 	newmap[key] = sym;
 	k->keymap[shift] = newmap;
@@ -164,7 +162,8 @@ kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
 	if (sym == K_VOID) 
 		return (KII_EOK);
 
-	newmap = kgi_kmalloc((k->keymax - k->keymin + 1) * sizeof(kii_unicode_t));
+	newmap = kgi_kmalloc((k->keymax - k->keymin + 1) 
+			* sizeof(kii_unicode_t));
 	if (newmap == NULL) 
 		return (KII_ENOMEM);
 	
@@ -206,7 +205,7 @@ keymap_combine_dead(kii_keymap_t *k, kii_unicode_t diacr, kii_unicode_t base)
 		}
 	}
 	switch (K_TYPE(base)) {
-	case K_TYPE_SPECIAL:
+	case K_TYPE_SPECIAL: /* Fall thru. */
 	case K_TYPE_SHIFT:
 		return (K_VOID);
 	default:

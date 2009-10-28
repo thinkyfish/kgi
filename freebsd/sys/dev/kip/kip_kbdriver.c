@@ -55,8 +55,8 @@ typedef struct kbdriver_softc {
 	kii_input_t	kii_input;
 } kbdriver_softc;
 
-static int kbdriver_nr		= 0;
-static kii_s_t initialized  = 0;
+static int kbdriver_nr = 0;
+static kii_s_t initialized = 0;
 static kbdriver_softc kbdriver_data[MAX_KBD_DRIVERS];
 
 /*
@@ -172,7 +172,8 @@ static kii_u8_t e0_keys[128] = {
 	0, 0, 0, 0, 0, E0_KPSLASH, 0, E0_PRSCR,		/* 0x30-0x37 */
 	E0_RALT, 0, 0, 0, 0, E0_F13, E0_F14, E0_HELP,	/* 0x38-0x3f */
 	E0_DO, E0_F17, 0, 0, 0, 0, E0_BREAK, E0_HOME,	/* 0x40-0x47 */
-	E0_UP, E0_PGUP, 0, E0_LEFT, E0_OK, E0_RIGHT, E0_KPMINPLUS, E0_END,/* 0x48-0x4f */
+							/* 0x48-ox4f */
+	E0_UP, E0_PGUP, 0, E0_LEFT, E0_OK, E0_RIGHT, E0_KPMINPLUS, E0_END,
 	E0_DOWN, E0_PGDN, E0_INS, E0_DEL, 0, 0, 0, 0,	/* 0x50-0x57 */
 	0, 0, 0, E0_MSLW, E0_MSRW, E0_MSTM, 0, 0,	/* 0x58-0x5f */
 	0, 0, 0, 0, 0, 0, 0, 0,				/* 0x60-0x67 */
@@ -180,7 +181,6 @@ static kii_u8_t e0_keys[128] = {
 	0, 0, 0, 0, 0, 0, 0, 0,				/* 0x70-0x77 */
 	0, 0, 0, 0, 0, 0, 0, 0				/* 0x78-0x7f */
 };
-
 
 /*
  * The parser takes scancodes from the RAW output of a FreeBSD kbd driver.
@@ -198,13 +198,13 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 	sc = input->priv.priv_ptr; 
 
 	/* 
-	 * Perform raw treatment at end to enable switches before delivery of key.
+	 * Perform raw treatment at end to enable switches before delivery of 
+	 * key.
 	 */
 	if (input->report & KII_EM_RAW_DATA) {
 		event->raw.type	  = KII_EV_RAW_DATA;
 		event->raw.size	  = sizeof(kii_any_event_t) + 4;
 		*(int *)&event->raw.data = scancode;
-
 		kii_handle_input(event);
 	}
 
@@ -240,9 +240,8 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 				}
 			}
 
-		} else {	/* if (sc->prev_scancode != 0xe0) { ... */
+		} else { 
 			sc->prev_scancode = 0;
-
 			/*
 			 * The keyboard maintains its own internal caps
 			 * lock and num lock status. In caps lock mode
@@ -287,7 +286,7 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 			 */
 			keycode = high_keys[scancode - SC_LIM];
 
-			if (!keycode) {
+			if (keycode == 0) {
 				KRN_ERROR("unknown scancode %2x", scancode);
 				goto end;
 			}
@@ -304,16 +303,14 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 		/* XXX test_and_clear_bit. */
 		if (sc->keys[keycode]) {
 			sc->keys[keycode] = 0;
-
 			/*
 			 * Unexpected, but this can happen: maybe this
 			 * was a key release for a FOCUS 9000 PF key;
 			 */
-			if (keycode >= SC_LIM || keycode == 85) {				
+			if (keycode >= SC_LIM || keycode == 85) {
 				event->key.type = KII_EV_KEY_PRESS;
-				if (input->report & KII_EV_KEY_PRESS) {					
+				if (input->report & KII_EV_KEY_PRESS) 		
 					kii_handle_input(event);
-				}
 				event->key.type = KII_EV_KEY_RELEASE;
 			}
 		}
@@ -390,7 +387,7 @@ kip_kbd_register(keyboard_t *kbd, int index)
 
 	sc = &kbdriver_data[index];
 	
-	if (!sc->kbd) {
+	if (sc->kbd == NULL) {
 		sc->kbd = kbd;
 		/*
 		 * Try to get exclusive access to this kbd.
@@ -399,8 +396,6 @@ kip_kbd_register(keyboard_t *kbd, int index)
 				kbd->kb_name, kbd->kb_unit);
 
 		KBD_UNBUSY(kbd);
-		KBD_VALID(kbd);
-		KBD_DEACTIVATE(kbd);
 		ka = kbd_allocate(kbd->kb_name, kbd->kb_unit, (void *)&sc->kbd,
 				 kbdriver_event, sc);
 
@@ -429,22 +424,26 @@ kip_kbd_register(keyboard_t *kbd, int index)
 			sc->kii_input.Parse = kbdriver_parser;
 
 			/* 
-			 * Register the keyboard to a focus. If the kbd unit doesn't match
-			 * the current focus, then we assume that kbd is a slave of kbdmux
-			 * and reassign the focus found from kbd unit with the current kbd.
+			 * XXX
+			 * Register the keyboard to a focus. If the kbd unit 
+			 * doesn't match the current focus, then we assume that
+			 * the kbd is a slave of kbdmux & needs to be reassigned
+			 * as the new focus.
 			 */
 			if (kbd->kb_unit != kbdriver_nr) {
-				kii_error = kii_register_input(kbd->kb_unit, &sc->kii_input, 1);
-				KRN_DEBUG(1, "KII device %d, keyboard %s%d \
-						registered on focus %d with error %d",
-				    	index, kbd->kb_name, kbd->kb_unit, kbd->kb_unit, 
-						kii_error);
+				kii_error = kii_register_input(kbd->kb_unit, 
+					&sc->kii_input, 1);
+				KRN_DEBUG(1, "KII device %d, keyboard %s%d " 
+					 "registered on focus %d with error %d",
+				    	 index, kbd->kb_name, kbd->kb_unit, 
+					 kbd->kb_unit, kii_error);
 			} else {
-				kii_error = kii_register_input(kbdriver_nr, &sc->kii_input, 0);
-				KRN_DEBUG(1, "KII device %d, keyboard %s%d \
-						registered on focus %d with error %d",
-				    	index, kbd->kb_name, kbd->kb_unit, kbdriver_nr, 
-						kii_error);
+				kii_error = kii_register_input(kbdriver_nr, 
+					&sc->kii_input, 0);
+				KRN_DEBUG(1, "KII device %d, keyboard %s%d "
+					"registered on focus %d with error %d",
+				    	index, kbd->kb_name, kbd->kb_unit,
+					kbdriver_nr, kii_error); 
 			}
 
 			kbdriver_nr++;

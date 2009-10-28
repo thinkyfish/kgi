@@ -181,11 +181,11 @@ kgim_display_command(kgi_display_t *kgi_dpy, kgi_u_t cmd, void *data)
 
 static kgi_error_t 
 kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
-	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, const kgi_resource_t
-	**r, kgi_u_t rsize)
+	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
+	const kgi_resource_t **r, kgi_u_t rsize)
 {
 	kgi_s_t cnt;
-	kgim_display_t *dpy = (kgim_display_t *) kgi_dpy;
+	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
 	kgim_display_mode_t *dpy_mode = dev_mode;
 
 	kgim_monitor_mode_t	*monitor_mode;
@@ -195,12 +195,12 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 
 	KRN_DEBUG(2, "kgim_display_check_mode()");
 
-	if (1 != images) {
+	if (images != 1) {
 		KRN_ERROR("%i images not yet supported", images);
 		return (-KGI_ERRNO(DRIVER, NOSUP));
 	}
 
-	if (KGI_TC_PROPOSE == cmd) {
+	if (cmd == KGI_TC_PROPOSE) {
 		kgi_u_t i;
 
 		KRN_DEBUG(2, "KGI_TC_PROPOSE:");
@@ -223,7 +223,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			}
 		}
 
-		if (! img[0].fam) {
+		if (img[0].fam == 0) {
 			if (img[0].flags & KGI_IF_TEXT16) {
 				KRN_DEBUG(2, "Proposing default textmode");
 
@@ -244,7 +244,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 	clock_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_clock];
 	monitor_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_monitor];
 
-	if (KGI_TC_PROPOSE == cmd) {
+	if (cmd == KGI_TC_PROPOSE) {
 		KRN_DEBUG(2, "KGI_TC_PROPOSE(2):");
 
 		chipset_mode->crt	= monitor_mode;
@@ -397,8 +397,8 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 				: NULL;
 
 			if (resource) {
-				KRN_DEBUG(2, "img resource %i: %s io %p meta %p",
-					index, resource->name,
+				KRN_DEBUG(2, "img resource %i: %s io %p meta %p"
+					, index, resource->name,
 					resource->meta_io, resource->meta);
 				img[0].resource[index++] = resource;
 				subsys_index++;
@@ -416,7 +416,7 @@ static void
 kgim_display_set_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	images, void *dev_mode)
 {
-	kgim_display_t *dpy = (kgim_display_t *) kgi_dpy;
+	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
 	kgim_display_mode_t *dpy_mode = dev_mode;
 	const kgim_meta_t *meta;
 	
@@ -464,7 +464,7 @@ static void
 kgim_display_unset_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	images, void *dev_mode)
 {
-	kgim_display_t *dpy = (kgim_display_t *) kgi_dpy;
+	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
 	kgim_display_mode_t *dpy_mode = dev_mode;
 	const kgim_meta_t *meta;
 
@@ -499,7 +499,7 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 
 	KRN_ASSERT(dpy);
 
-	if (NULL == meta) {
+	if (meta == NULL) {
 		KRN_ERROR("No meta-language for subsystem %i", system);
 		return (-EINVAL);
 	}
@@ -511,8 +511,8 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	meta_io   = meta->io_size   ?
 		kgim_alloc(meta->io_size)   : NULL;
 
-	if ((meta->data_size && (NULL == meta_data)) ||
-		(meta->io_size && (NULL == meta_io))) {
+	if ((meta->data_size && (meta_data == NULL)) ||
+		(meta->io_size && (meta_io == NULL))) {
 		KRN_ERROR("Failed to allocate meta data and I/O context");
 		kgim_free(meta_io);
 		meta_io = NULL;
@@ -531,7 +531,7 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	if (meta->io_size)   kgim_memset(meta_io, 0, meta->io_size);
 	
 	if ((0 == meta->io_size) && (KGIM_SUBSYSTEM_chipset != system)) {
-		KRN_ASSERT(NULL == meta_io);
+		KRN_ASSERT(meta_io == NULL);
 
 		KRN_DEBUG(3, "meta->io_size == 0; Assigning chipset's meta_io");
 

@@ -56,7 +56,7 @@ void
 kgi_daemon(void)
 {
 	kgi_mutex_lock(&kgi_lock);
-	while (TRUE) {
+	for (;;) {
 		msleep(&kgiproc, &kgi_lock.mutex, PZERO /* XXX */,
 		       "kdsleep", hz /* 1s */);
 

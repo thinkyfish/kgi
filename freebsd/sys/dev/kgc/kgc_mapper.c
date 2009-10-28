@@ -87,7 +87,7 @@ kgc_map_kgi(kgi_device_t *dev)
 {
 	kgi_console_t *cons = dev->priv.priv_ptr;
 
-	/* Render mapped before scroller to enable scroller sync */
+	/* Renderer mapped before scroller to enable scroller sync */
 	if (cons && cons->render)
 		RENDER_MAP((render_t)cons->render);
 	if (cons && cons->scroller)

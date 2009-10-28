@@ -88,6 +88,7 @@ static void kgi_pager_putfake(vm_page_t m);
 static void
 kgi_pager_init(void)
 {
+
 	TAILQ_INIT(&kgi_pager_object_list);
 	TAILQ_INIT(&kgi_pager_vma_list);
 	sx_init(&kgi_pager_sx, "kgi_pager create");
@@ -176,15 +177,17 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 static void
 kgi_pager_dealloc(vm_object_t object)
 {
-	vm_area_t vma = (vm_area_t )object->handle;
+	vm_area_t vma = (vm_area_t)object->handle;
 	vm_page_t m;
 
 	mtx_lock(&kgi_pager_mtx);
 	TAILQ_REMOVE(&kgi_pager_object_list, object, pager_object_list);
 	mtx_unlock(&kgi_pager_mtx);
 
-	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) != 0) {
-		TAILQ_REMOVE(&vma->vm_object->un_pager.kgip.kgip_pglist, m, pageq);
+	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) 
+		!= 0) {
+		TAILQ_REMOVE(&vma->vm_object->un_pager.kgip.kgip_pglist, m, 
+			pageq);
 		kgi_pager_putfake(m);
 	}
 
@@ -217,8 +220,8 @@ kgi_pager_getpages(vm_object_t object, vm_page_t *m, int count, int reqpage)
 	page = kgi_pager_getfake();
 
 	/* Get the corresponding physical address from KGI graphic resource */
-	ret = vma->vm_ops->nopage(vma, page, (vm_offset_t) offset << PAGE_SHIFT, 
-							  &paddr, prot);
+	ret = vma->vm_ops->nopage(vma, page, (vm_offset_t) offset << PAGE_SHIFT,
+			&paddr, prot);
 
 	KASSERT(ret == 0,("kgi_pager_getpage: map function returns error"));
 
@@ -232,9 +235,9 @@ kgi_pager_getpages(vm_object_t object, vm_page_t *m, int count, int reqpage)
 	VM_OBJECT_LOCK(object);
 	TAILQ_INSERT_TAIL(&object->un_pager.kgip.kgip_pglist, page, pageq);
 	vm_page_lock_queues();
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++) 
 		vm_page_free(m[i]);
-	}
+
 	vm_page_unlock_queues();
 	vm_page_insert(page, object, offset);
 	m[reqpage] = page;
@@ -312,7 +315,8 @@ kgi_pager_remove_all(vm_area_t vma)
 	vm_page_t m;
 	int num = 0;
 
-	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) != 0) {
+	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) 
+		!= 0) {
 		kgi_pager_remove(vma, m);
 		num ++;
 	}
@@ -334,7 +338,8 @@ kgi_pager_getfake(void)
 
 	m = uma_zalloc(fakepg_zone, M_WAITOK);
 
-	/* Compared to the device pager, KGI pages have a PV entry
+	/* 
+	 * Compared to the device pager, KGI pages have a PV entry
 	 * thus PG_FICTITIOUS is not used.
 	 */
 	m->flags = VPO_BUSY;
@@ -357,5 +362,6 @@ kgi_pager_getfake(void)
 static void
 kgi_pager_putfake(vm_page_t m)
 {
+
 	uma_zfree(fakepg_zone, m);
 }

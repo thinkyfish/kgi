@@ -49,7 +49,6 @@ struct render {
 	 * current ops table for the object.
 	 */
 	KOBJ_FIELDS;
-
 	kgi_u_t		devid;
 	kgi_console_t	*cons;
 	void		*meta;

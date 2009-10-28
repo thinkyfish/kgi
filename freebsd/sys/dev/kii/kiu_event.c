@@ -71,7 +71,6 @@ static struct cdevsw kiu_cdevsw;
 
 struct wq_entry {
 	struct thread *td;
-
 	TAILQ_ENTRY(wq_entry) others;
 };
 
@@ -110,7 +109,8 @@ event_device_unit(struct cdev *dev, struct thread *td)
 		unit = dev2unit(dev) - 1;
 	else
 		if (td)
-			unit = dev2unit(td->td_proc->p_pgrp->pg_session->s_ttyp->t_dev);
+			unit = dev2unit(td->td_proc->p_pgrp->pg_session->
+				s_ttyp->t_dev);
 		else
 			unit = 0;
 	
@@ -122,7 +122,7 @@ event_device_unit(struct cdev *dev, struct thread *td)
  */
 static int 
 event_command(event_file_t *file, unsigned int cmd, void *data,
-			  struct thread *td)
+		struct thread *td)
 {
 	
 	switch (cmd) {
@@ -150,13 +150,13 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 		}
 	}
 	/* All commands below require identification. */
-	if (!(file->flags & EVENT_FF_CLIENT_IDENTIFIED)) {
-		KRN_DEBUG(1, "cmd = %.8x, but client has not yet identified", cmd);
+	if ((file->flags & EVENT_FF_CLIENT_IDENTIFIED) == 0) {
+		KRN_DEBUG(1, "cmd = %.8x, but client has not yet identified",
+				cmd);
 		return (KII_EPROTO);
 	}
 #define	MUST_BE_SESSION_LEADER					\
-	if (! (file->flags & EVENT_FF_SESSION_LEADER)) {	\
-								\
+	if ((file->flags & EVENT_FF_SESSION_LEADER) == 0) {	\
 		KRN_DEBUG(1, "client is not session leader");	\
 		return KII_EPROTO;				\
 	}
@@ -181,7 +181,7 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 		kii_map_device(file->device->kii.id);
 		return (KII_EOK);
 		}
-		}
+	}
 	case KIIC_MAPPER_UNMAP_DEVICE:
 		MUST_BE_SESSION_LEADER
 		return (kii_unmap_device(file->device->kii.id));
@@ -191,7 +191,7 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 
 		memset(out, 0, sizeof(*out));
 
-		if (NULL == focus) 
+		if (focus == NULL) 
 			return (KII_EINVAL);
 
 		out->fn_buf_size  = focus->kmap.fn_buf_size;
@@ -202,7 +202,7 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 		out->combine_size = focus->kmap.combine_size;
 
 		return (KII_EOK);
-		}
+	}
 	case KIIC_MAPPER_GET_KEYMAP: {
 		kiic_mapper_get_keymap_request_t local = 
 			*(kiic_mapper_get_keymap_request_t *)data;
@@ -211,7 +211,7 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 		kiic_mapper_get_keymap_result_t *out = data;
 		kii_u_t cnt;
 
-		if ((NULL == focus) ||
+		if ((focus == NULL) ||
 			(focus->kmap.keymap_size <= in->keymap) ||
 			(in->keymin > focus->kmap.keymax) ||
 			(in->keymax < focus->kmap.keymin)){
@@ -250,7 +250,7 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 				out->map[cnt] = K_VOID;
 		}
 		return (KII_EOK);
-		}
+	}
 	default:
 		KRN_DEBUG(1, "command %.4x not (yet) implemented", cmd);
 		return (KII_ENXIO);
@@ -267,7 +267,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 	int io_result = KGI_EOK;
 
 	/* Unit 0 is used to get a free /dev/event unit. */
-	if (!dev2unit(dev)) {
+	if (dev2unit(dev) == 0) {
 		kiic_mapper_get_unit_request_t local = 
 			*(kiic_mapper_get_unit_request_t *)data;
 		kiic_mapper_get_unit_result_t *out = (void *)data;
@@ -283,8 +283,9 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 			
 			/* If the VT unit is not free lookup one. */
 			if (event_files[unit]) {
-				for (unit=0; unit<EVENT_MAX_NR_FILES; unit++)
-					if (!event_files[unit])
+				for (unit = 0; unit < EVENT_MAX_NR_FILES; 
+					unit++)
+					if (event_files[unit] == 0)
 						break;
 				if (unit >= EVENT_MAX_NR_FILES)
 					return (KII_ENODEV);
@@ -292,7 +293,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		}
 			
 		file = kgi_kmalloc(sizeof(*file));
-		if (NULL == file) {
+		if (file == NULL) {
 			KRN_DEBUG(1, "failed to allocate event_file");
 			return (KII_ENOMEM);
 		}
@@ -353,7 +354,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		return (KGI_EOK);
 	}
 
-	if (!file->device) {
+	if (file->device == 0) {
 		KRN_ERROR("ioctl() failed: no device attached");
 		return KII_ENXIO;
 	}
@@ -433,7 +434,7 @@ event_handle_event(kii_device_t *dev, kii_event_t *ev)
 		}
 
 		if (file->queue.size < file->queue.head) {
-			KRN_ASSERT(file->queue.head < 2*file->queue.size);
+			KRN_ASSERT(file->queue.head < 2 * file->queue.size);
 
 			memcpy(file->queue.buffer + file->queue.head - 
 				file->queue.size, ev, ev->size);
@@ -469,12 +470,12 @@ event_read(struct cdev *dev, struct uio *uio, int ioflag)
 	 * Avoid further operations on unit 0,
 	 * It's just there to allocate a free unit number.
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (EINVAL);
 
 	file = event_files[dev2unit(dev) - 1];
 
-	if (!file->device)
+	if (file->device == 0)
 		return (EINVAL);
 
 	mtx_lock(&file->device->cmd_mutex);
@@ -483,9 +484,10 @@ event_read(struct cdev *dev, struct uio *uio, int ioflag)
 	if (file->queue.head == file->queue.tail) {
 		TAILQ_INSERT_TAIL(&waitqueue, &wait, others);
 
-		while (!error && (file->queue.head == file->queue.tail)) {
-			error = msleep((caddr_t)&waitqueue, &file->device->cmd_mutex,
-				       PWAIT | PCATCH, "kiuvent", 0);
+		while (error == 0 && (file->queue.head == file->queue.tail)) {
+			error = msleep((caddr_t)&waitqueue, 
+				  &file->device->cmd_mutex, PWAIT | PCATCH,
+				  "kiuvent", 0);
 		}
 
 		TAILQ_REMOVE(&waitqueue, &wait, others);
@@ -504,10 +506,11 @@ event_read(struct cdev *dev, struct uio *uio, int ioflag)
 
 	while (count) {
 		if (uio->uio_resid > 0) {
-			if ((error = uiomove(&file->queue.buffer[file->queue.tail], 1, uio)))
+			if ((error = uiomove(&file->queue.buffer[file->
+					queue.tail], 1, uio)))
 				return error;
 		}
-		count --;
+		count--;
 		file->queue.tail++;
 		if (file->queue.tail < file->queue.size) 
 			continue;
@@ -533,12 +536,14 @@ event_poll(struct cdev *dev, int poll, struct thread *td)
 	 * Avoid further operations on unit 0,
 	 * It's just there to allocate a free unit number.
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (EINVAL);
 
 	file = event_files[dev2unit(dev) - 1];
 
-	return ((file->queue.tail == file->queue.head) ? 0 : (POLLIN | POLLRDNORM));
+	return ((file->queue.tail == file->queue.head) 
+		? 0 
+		: (POLLIN | POLLRDNORM));
 }
 
 static kii_s_t 
@@ -556,13 +561,13 @@ event_device_init(kii_s_t device_id, struct thread *td)
 	}
 	if (event_dev[device_id].cnt) {
 		KRN_DEBUG(1, "event_device %i has pending (mmap) references",
-				  device_id);
+				device_id);
 		return (KII_EBUSY);
 	}
 	KRN_ASSERT(event_dev[device_id].pid == 0);
 	KRN_ASSERT(event_dev[device_id].gid == 0);
 
-	if (NULL == (device = kgi_kmalloc(sizeof(*device)))) {
+	if ((device = kgi_kmalloc(sizeof(*device))) == NULL) {
 		KRN_DEBUG(1, "failed to allocate event_device %i", device_id);
 		return (KII_ENOMEM);
 	}
@@ -576,8 +581,9 @@ event_device_init(kii_s_t device_id, struct thread *td)
 	device->kii.event_mask	= KII_EM_KEY | KII_EM_POINTER;
 	device->kii.priv.priv_ptr = device;
 
-	if (KII_EOK != (err = kii_register_device(&device->kii, device_id))) {
-		KRN_DEBUG(1, "failed to register kii_device (index %i)", device_id);
+	if ((err = kii_register_device(&device->kii, device_id)) != KII_EOK) {
+		KRN_DEBUG(1, "failed to register kii_device (index %i)",
+				device_id);
 		kgi_kfree(device);
 		return (err);
 	}
@@ -645,10 +651,10 @@ event_open(struct cdev *dev, int flag, int mode, struct thread *td)
 	 * It's just there to allocate a free unit number.
 	 * See event_ioctl().
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (0);
 
-	if (!(file = event_files[dev2unit(dev) - 1])) {
+	if ((file = event_files[dev2unit(dev) - 1]) == NULL) {
 		KRN_DEBUG(1, "open: unit not allocated");
 		return (ENODEV);
 	}
@@ -665,7 +671,7 @@ event_open(struct cdev *dev, int flag, int mode, struct thread *td)
 	}
 
 	queue_buffer = kgi_kmalloc(EVENT_QUEUE_SIZE);
-	if (NULL == queue_buffer) {
+	if (queue_buffer == NULL) {
 		KRN_DEBUG(1, "failed to allocate queue_buffer");
 		return (ENOMEM);
 	}
@@ -687,11 +693,11 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 	 * Avoid further operations on unit 0,
 	 * It's just there to allocate a free unit number.
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (0);
 
 	unit = dev2unit(dev) - 1;
-	if (!(file = event_files[unit])) {
+	if ((file = event_files[unit]) == NULL) {
 		KRN_DEBUG(1, "release: unit not allocated");
 		return (ENODEV);
 	}
@@ -706,7 +712,8 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 		if (event_dev[file->device_id].ptr->files == file) {
 			event_dev[file->device_id].ptr->files = file->next;
 		} else {
-			event_file_t *prev = event_dev[file->device_id].ptr->files;
+			event_file_t *prev = 
+					event_dev[file->device_id].ptr->files;
 			while (prev->next != file) {
 				prev = prev->next;
 			}
@@ -717,8 +724,10 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 		file->next = NULL;
 
 		if (td->td_proc->p_pid == event_dev[file->device_id].pid) {
-			KRN_DEBUG(1, "session leader (pid %i) closed event_device %i",
-				  event_dev[file->device_id].pid, file->device_id);
+			KRN_DEBUG(1, "session leader (pid %i) closed "
+				  "event_device %i",
+				  event_dev[file->device_id].pid, 
+				  file->device_id);
 			event_dev[file->device_id].pid = 0;
 			event_dev[file->device_id].gid = 0;
 		}
@@ -777,7 +786,10 @@ kiu_modevent(module_t mod, int type, void *unused)
 		error = dev_event_init();
 		break;
 	case MOD_UNLOAD:
-		/* XXX dev_event_done(); Destroy devs! */
+		/* 
+		 * XXX 
+		 * dev_event_done(); Destroy devs!
+		 */
 	default:
 		break;
 	}

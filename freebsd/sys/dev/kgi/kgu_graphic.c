@@ -74,9 +74,10 @@ graph_device_unit(struct cdev *dev, struct thread *td)
 	if (dev2unit(dev))
 		device_id = dev2unit(dev) - 1;
 	else
-		if (td)
-			device_id = dev2unit(td->td_proc->p_pgrp->pg_session->s_ttyp->t_dev);
-		else
+		if (td) {
+			device_id = dev2unit(td->td_proc->p_pgrp->pg_session->
+					s_ttyp->t_dev);
+		} else
 			device_id = 0;
 
 	return (device_id);
@@ -107,7 +108,7 @@ graph_device_init(kgi_s_t device_id, struct thread *td)
 	KRN_ASSERT(graph_dev[device_id].pid == 0);
 	KRN_ASSERT(graph_dev[device_id].gid == 0);
 
-	if (NULL == (device = kgi_kmalloc(sizeof(*device)))) {
+	if ((device = kgi_kmalloc(sizeof(*device))) == NULL) {
 		KRN_DEBUG(1, "failed to allocate graph_device %i", device_id);
 		return (KGI_ENOMEM);
 	}
@@ -172,14 +173,14 @@ graph_device_done(kgi_u_t device_id, kgi_u_t previous)
  */
 static int 
 graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
-	  struct thread *td)
+		struct thread *td)
 {
 	kgi_u_t unit;
 	graph_file_t *file;
 	int io_result = 0;
 
 	/* Unit 0 is used to get a free /dev/event unit. */
-	if (!dev2unit(dev)) {
+	if (dev2unit(dev) == 0) {
 		kgic_mapper_get_unit_request_t local = 
 			*(kgic_mapper_get_unit_request_t *)data;
 		kgic_mapper_get_unit_result_t *out = (void *)data;
@@ -197,16 +198,18 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 			
 			/* If the VT unit is not free lookup one. */
 			if (graph_files[unit]) {
-				for (unit=0; unit<GRAPH_MAX_NR_FILES; unit++)
-					if (!graph_files[unit])
+				for (unit = 0; unit < GRAPH_MAX_NR_FILES; 
+					unit++) {
+					if (graph_files[unit] == 0)
 						break;
+				}
 				if (unit >= GRAPH_MAX_NR_FILES)
 					return (KGI_ENODEV);
 			}
 		}
 		
 		file = kgi_kmalloc(sizeof(*file));
-		if (NULL == file) {
+		if (file == NULL) {
 			KRN_DEBUG(1, "failed to allocate event_file");
 			return (KGI_ENOMEM);
 		}
@@ -253,21 +256,25 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		if (graph_dev[in->device_id].pid == td->td_proc->p_pid) 
 			file->flags |= GRAPH_FF_SESSION_LEADER;
 
-		KRN_DEBUG(2, "ioctl: attached graphics device %i", in->device_id);
+		KRN_DEBUG(2, "ioctl: attached graphics device %i",
+			in->device_id);
 
 		kgi_mutex_unlock(&kgi_lock);
 		return (KGI_EOK);
 	}
 
-	if (!file->device) {
+	if (file->device == NULL) {
 		KRN_ERROR("ioctl() failed: no device attached");
 		return (KGI_ENXIO);
 	}
 
 	kgi_mutex_lock(&kgi_lock);
 
-	/* XXX Don't lock yet
-	   kgi_mutex_lock(&file->device->cmd_mtx); */
+	/* 
+	 * XXX
+	 * Don't lock yet
+	 * kgi_mutex_lock(&file->device->cmd_mtx);
+	 */
 
 	switch (cmd & KGIC_TYPE_MASK) {
 	case KGIC_MAPPER_COMMAND:
@@ -278,7 +285,8 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		break;
 	case KGIC_DISPLAY_COMMAND:
 		if (KGI_VALID_DEVICE_ID(file->device->kgi.id))
-			io_result = kgidev_display_command(&file->device->kgi, cmd, data);
+			io_result = kgidev_display_command(&file->device->kgi,
+					 cmd, data);
 		else
 			io_result = KGI_EPROTO;
 		break;
@@ -290,8 +298,11 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 	}
 
 unlock:
-	/* XXX Don't lock yet
-	   kgi_mutex_unlock(&file->device->cmd_mtx); */
+	/* 
+	 * XXX 
+	 * Don't lock yet
+	 * kgi_mutex_unlock(&file->device->cmd_mtx);
+	 */
 
 	kgi_mutex_unlock(&kgi_lock);
 
@@ -306,8 +317,8 @@ graph_device_map(kgi_device_t *dev)
 	KRN_ASSERT(dev->id >= KGI_MAX_NR_CONSOLES);
 	
 	if (!graph_dev[dev->id - KGI_MAX_NR_CONSOLES].ptr) {	
-		KRN_DEBUG(2, "Could not find device %i (graph %i)", \
-				  dev->id, dev->id - KGI_MAX_NR_CONSOLES);
+		KRN_DEBUG(2, "Could not find device %i (graph %i)", 
+			dev->id, dev->id - KGI_MAX_NR_CONSOLES);
 		return;
 	}
 
@@ -338,11 +349,11 @@ graph_device_unmap(kgi_device_t *dev)
 	
 	if (!graph_dev[dev->id - KGI_MAX_NR_CONSOLES].ptr) {	
 		KRN_DEBUG(2, "Could not find device %i (graph %i)",
-			  dev->id, dev->id - KGI_MAX_NR_CONSOLES);
+			dev->id, dev->id - KGI_MAX_NR_CONSOLES);
 		return (KGI_EOK);
 	}
 
-	for (i=0; i < __KGI_MAX_NR_RESOURCES; i++)
+	for (i = 0; i < __KGI_MAX_NR_RESOURCES; i++)
 	{
 		graph_mapping_t *map;
 
@@ -373,12 +384,12 @@ graph_open(struct cdev *dev, int flags, int mode, struct thread *td)
 	 * Avoid further operations on unit 0,
 	 * It's just there to allocate a free unit number.
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (0);
 
 	kgi_mutex_lock(&kgi_lock);
 
-	if (!(file = graph_files[dev2unit(dev) - 1])) {
+	if ((file = graph_files[dev2unit(dev) - 1]) == NULL) {
 		KRN_DEBUG(1, "open: unit not allocated");
 		return (KGI_ENODEV);
 	}
@@ -410,12 +421,12 @@ graph_release(struct cdev *dev, int flags, int mode, struct thread *td)
 	 * Avoid further operations on unit 0,
 	 * It's just there to allocate a free unit number.
 	 */
-	if (!dev2unit(dev))
+	if (dev2unit(dev) == 0)
 		return (0);
 
 	kgi_mutex_lock(&kgi_lock);
 
-	if (!(file = graph_files[dev2unit(dev) - 1])) {
+	if ((file = graph_files[dev2unit(dev) - 1]) == NULL) {
 		KRN_DEBUG(1, "open: unit not allocated");
 		return (KGI_ENODEV);
 	}
@@ -450,7 +461,7 @@ graph_release(struct cdev *dev, int flags, int mode, struct thread *td)
 
 	if (td->td_proc->p_pid == graph_dev[file->device_id].pid) {
 		KRN_DEBUG(1, "session leader (pid %i) closed graph_device %i",
-			  graph_dev[file->device_id].pid, file->device_id);
+			graph_dev[file->device_id].pid, file->device_id);
 		graph_dev[file->device_id].pid = 0;
 		graph_dev[file->device_id].gid = 0;
 	}
@@ -474,10 +485,13 @@ graph_release(struct cdev *dev, int flags, int mode, struct thread *td)
 int 
 graph_mmap(struct cdev *dev, vm_area_t vma)
 {
-	kgi_u_t unit = dev2unit(dev) - 1;		/* XXX see graph_open() */
-	graph_file_t *file = graph_files[unit];
+	kgi_u_t unit;
+	graph_file_t *file;
 	graph_mapping_t *map;
 	int err;
+
+	unit = dev2unit(dev) - 1; /* XXX see graph_open() */
+	file = graph_files[unit];
 
 	if (file->mmap_setup.resource == NULL) {
 		KRN_ERROR("mmap not set up");
@@ -565,7 +579,10 @@ kgu_modevent(module_t mod, int type, void *unused)
 		error = dev_graphic_init();
 		break;
 	case MOD_UNLOAD:
-		/* XXX dev_graphic_done(); Destroy devs! */
+		/* 
+		 * XXX 
+		 * dev_graphic_done(); Destroy devs!
+		 */
 	default:
 		break;
 	}

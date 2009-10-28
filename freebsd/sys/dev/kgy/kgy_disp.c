@@ -167,11 +167,11 @@ dpysw_set_offset(kgi_mmio_region_t *r, kgi_size_t offset)
 
 static void 
 dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
-	   kgi_attribute_mask_t am, const kgi_u16_t *data)
+		kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
 	int error;
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
-	kgi_u8_t clut[256*3];
+	kgi_u8_t clut[256 * 3];
 	int i;
 
 	KRN_ASSERT(table == 0);
@@ -184,10 +184,10 @@ dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 		return;
 
 	/* XXX stupid convertion. */
-	for (i=0; i<256*3; i+=3) {
-		clut[i]   = data[i]   >> 8;
-		clut[i+1] = data[i+1] >> 8;
-		clut[i+2] = data[i+2] >> 8;
+	for (i = 0; i < 256 * 3; i += 3) {
+		clut[i] = data[i] >> 8;
+		clut[i + 1] = data[i + 1] >> 8;
+		clut[i + 2] = data[i + 2] >> 8;
 	}
 
 	error = (*vidsw[sc->adp->va_index]->load_palette)
@@ -246,7 +246,7 @@ dpysw_configure(int flags)
 		}
 	}
 
-	if (!adp && vgadp)
+	if (adp == NULL && vgadp)
 		adp = vgadp;
 
 	if (adp == NULL) {
@@ -304,13 +304,14 @@ dpysw_configure(int flags)
 
 	fb->meta 		= dpy;
 	fb->type 		= KGI_RT_MMIO_FRAME_BUFFER;
-	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS | KGI_PF_DRV_RWS;
+	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS 
+				  | KGI_PF_DRV_RWS;
 	fb->name 		= "Frame buffer";
 	fb->access 		= 8 + 16 + 32 + 64;
 	fb->align 		= 8 + 16;
 	fb->win.size 		= (kgi_size_t)adp->va_window_size;
-	fb->win.virt 		= (kgi_virt_addr_t)adp->va_window;	/* XXX */
-	fb->win.bus 		= (kgi_bus_addr_t)0;			/* XXX */
+	fb->win.virt 		= (kgi_virt_addr_t)adp->va_window; /* XXX */
+	fb->win.bus 		= (kgi_bus_addr_t)0;		   /* XXX */
 	fb->win.phys 		= (kgi_phys_addr_t)adp->va_mem_base;
 	fb->size 		= (kgi_size_t)adp->va_mem_size;
 	fb->offset 		= 0;

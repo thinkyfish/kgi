@@ -41,8 +41,7 @@ typedef struct
 /*
  * Accelerator mappings
  */
-typedef struct
-{
+typedef struct {
 	__GRAPH_RESOURCE_MAPPING
 
 	unsigned long	buf_offset;	/* current mapped buffer offset	*/
@@ -50,14 +49,13 @@ typedef struct
 	unsigned long	buf_mask;	/* mask to wrap buffer		*/
 	unsigned int	buf_order;	/* ln2(buffer_size)-PAGE_SHIFT	*/
 
-	graph_accel_buffer_t *buf_current;	/* list of buffers		*/
-
+	graph_accel_buffer_t *buf_current; /* list of buffers		*/
 } graph_accel_mapping_t;
 
 #define SIZ(order) (1 << (order + PAGE_SHIFT))
 #define VM(field) (vma->vm_##field)
 
 extern int graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
-			    graph_mapping_t **the_map);
+		graph_mapping_t **the_map);
 
 #endif /* #ifndef _kgi_accel_h */

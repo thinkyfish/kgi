@@ -124,14 +124,14 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 	switch (resource->type) {
 	case KGI_RT_MMIO_FRAME_BUFFER:
 		KRN_DEBUG(2, "mmio fb: %s", resource->name);
-		render->fb = (kgi_mmio_region_t *) resource;
+		render->fb = (kgi_mmio_region_t *)resource;
 		break;
 	case KGI_RT_TEXT16_CONTROL:
 		KRN_DEBUG(2, "text16: %s", resource->name);
-		render->text16 = (kgi_text16_t *) resource;
+		render->text16 = (kgi_text16_t *)resource;
 		break;
 	case KGI_RT_CURSOR_CONTROL:
-		marker = (kgi_marker_t *) resource;
+		marker = (kgi_marker_t *)resource;
 		if ((NULL == render->cur) ||
 		    (render->cur->Undo && (NULL == marker->Undo))) {
 			KRN_DEBUG(2, "cursor: %s", resource->name);
@@ -139,20 +139,20 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 		}
 		break;
 	case KGI_RT_POINTER_CONTROL:
-		marker = (kgi_marker_t *) resource;
-		if ((NULL == render->ptr) ||
-		    (render->ptr->Undo && (NULL == marker->Undo))) {
+		marker = (kgi_marker_t *)resource;
+		if ((render->ptr == NULL) ||
+		    (render->ptr->Undo && (marker->Undo == NULL))) {
 			KRN_DEBUG(2, "pointer: %s", resource->name);
 			render->ptr = marker;
 		}
 		break;
 	case KGI_RT_TLUT_CONTROL:
 		KRN_DEBUG(2, "tlut: %s", resource->name);
-		render->tlut = (kgi_tlut_t *) resource;
+		render->tlut = (kgi_tlut_t *)resource;
 		break;
 	case KGI_RT_ILUT_CONTROL:
 		KRN_DEBUG(2, "ilut: %s", resource->name);
-		render->ilut = (kgi_ilut_t *) resource;
+		render->ilut = (kgi_ilut_t *)resource;
 		break;
 	default:
 		KRN_ERROR("unknown resource->type 0x%.8x", resource->type);
@@ -241,7 +241,7 @@ kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 	kgirndr_undo_gadgets(r);
 
 	if ((render->kgi.flags & KGI_DF_FOCUSED) &&
-		(cons->kii.flags & KII_DF_FOCUSED) && !offset) {
+		(cons->kii.flags & KII_DF_FOCUSED) && offset == 0) {
 		if (CONSOLE_MODE(cons, KGI_CM_SHOW_CURSOR) && render->cur) {
 			cons->flags |= KGI_CF_CURSOR_SHOWN;
 			render->cur->Show(render->cur, x, y);
@@ -253,8 +253,8 @@ kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 		}
 
 	} else {
-		KRN_ASSERT(! (cons->flags & KGI_CF_CURSOR_SHOWN));
-		KRN_ASSERT(! (cons->flags & KGI_CF_POINTER_SHOWN));
+		KRN_ASSERT(!(cons->flags & KGI_CF_CURSOR_SHOWN));
+		KRN_ASSERT(!(cons->flags & KGI_CF_POINTER_SHOWN));
 	}
 }
 

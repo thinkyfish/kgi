@@ -37,7 +37,6 @@ typedef struct {
 #define	VC_XLATE	1
 #define	VC_MEDIUMRAW	2
 #define	VC_UNICODE	3
-
 	unsigned char	kbled;
 	unsigned char	led;
 } kgi_console_kd_t;
@@ -52,7 +51,6 @@ typedef enum {
 	KGI_CM_ALT_SCREEN,	/* use alternate screen		*/
 	KGI_CM_SHOW_CURSOR,	/* show/hide cursor mark	*/
 	KGI_CM_SHOW_POINTER,	/* show/hide pointer mark	*/
-
 	KGI_CM_LAST /* NOTE: there *must* not be more than 32 modes! */
 } kgi_console_mode_t;
 
@@ -79,10 +77,8 @@ typedef enum {
 typedef enum {
 	KGI_CF_NEED_WRAP	= 0x00000001,
 	KGI_CF_SCROLLED		= 0x00000002,
-
 	KGI_CF_NO_HARDSCROLL	= 0x00000004,
 	KGI_CF_SPLITLINE	= 0x00000008,
-
 	KGI_CF_CURSOR_SHOWN	= 0x00000010,
 	KGI_CF_CURSOR_TO_SHOW	= 0x00000020,
 	KGI_CF_POINTER_SHOWN	= 0x00000040,
@@ -95,34 +91,29 @@ typedef struct kgi_console_s kgi_console_t;
 
 struct kgi_console_s {
 	kgi_u_t	refcnt;
-
 	kii_device_t	kii;
-	int	(*DoWrite)(kgi_console_t *, const char *, int);
-
-	void		*meta_console;
-
+	int (*DoWrite)(kgi_console_t *, const char *, int);
+	void *meta_console;
 	/* input handling variables (mostly for cn) */
 #define EMPTY 0x0
 #define FULL 0x1
 #define HAS_DATA 0x2
-	int		status;
-	int		head, tail, size;
-	int		buffer[MAX_IO_BUF_SIZE];
-
-	kgi_console_flags_t	flags;
-	kgi_console_mode_t	mode;
-
+	int status;
+	int head, tail, size;
+	int buffer[MAX_IO_BUF_SIZE];
+	kgi_console_flags_t flags;
+	kgi_console_mode_t  mode;
 	/*
 	 * scroller and render are defined void* to avoid
 	 * .h dependencies
 	 */
-	void		*parser;
-	void		*scroller;
-	void		*render;
+	void *parser;
+	void *scroller;
+	void *render;
 };
 
 enum kgi_console_color_e {
-	KGI_CC_BLACK=0,
+	KGI_CC_BLACK = 0,
 	KGI_CC_BLUE,
 	KGI_CC_GREEN,
 	KGI_CC_CYAN,
@@ -180,7 +171,7 @@ enum kgi_console_color_e {
 #define	ASCII_RS	30	/* record separator	*/
 #define	ASCII_US	31	/* unit separator	*/
 
-extern const kgi_u16_t			default_color_text16_ilut[16*3];
+extern const kgi_u16_t			default_color_text16_ilut[16 * 3];
 extern const kgi_rgb_color_t		default_ptr_color[3];
 extern const kgi_u8_t			default_ptr_64x64[1024];
 

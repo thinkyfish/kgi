@@ -56,9 +56,7 @@ LIST_HEAD(pcicfg_resource_list, pcicfg_resource);
 
 struct pcicfg_resource {
 	int type;
-	
 	int rid;
-	
 	struct resource *res;
 	void *intrhand;
 	union {
@@ -73,10 +71,8 @@ struct pcicfg_resource {
 struct pcicfg_dev {
 	pcicfg_vaddr_t pcidev;
 	device_t dev;
-
 #define PCICFG_CLAIMED	1
 	int flags;
-
 	struct pcicfg_resource_list resources;
 
 	LIST_ENTRY(pcicfg_dev) entries;
@@ -100,12 +96,15 @@ pcicfg_lookup_device(pcicfg_vaddr_t pcidev)
 	return (NULL);
 }
 
-/* lookup the first matching pcicfg device_t */
+/* 
+ * lookup the first matching pcicfg device_t
+ */
 device_t 
 pcicfg_get_device(pcicfg_vaddr_t pcidev)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(pcidev);
+	struct pcicfg_dev *p;
 
+	p = pcicfg_lookup_device(pcidev);
 	if (p)
 		return (p->dev);
 
@@ -124,7 +123,10 @@ pcicfg_dev2cfg(device_t dev)
 	return (PCICFG_VADDR(bus, slot, func)); 
 }
 
-/* XXX not SMP safe */
+/* 
+ * XXX 
+ * not SMP safe 
+ */
 int 
 pcicfg_add_device(device_t dev)
 {
@@ -132,7 +134,7 @@ pcicfg_add_device(device_t dev)
 	pcicfg_vaddr_t pcidev;
 
 	/* If not done, initialize the pcicfg system. */
-	if (!initialized) {
+	if (initialized == 0) {
 		LIST_INIT(&pcicfg_head);
 		initialized = 1;
 	}
@@ -146,7 +148,7 @@ pcicfg_add_device(device_t dev)
 	}
 
 	p = (struct pcicfg_dev *)kgi_kmalloc(sizeof(struct pcicfg_dev));
-	if (!p)
+	if (p == NULL)
 		return (KGI_ENOMEM);
 
 	memset(p, 0, sizeof(*p));
@@ -164,14 +166,17 @@ pcicfg_add_device(device_t dev)
 	return (KGI_EOK);
 }
 
-/* XXX not SMP safe */
+/* 
+ * XXX 
+ * not SMP safe
+ */
 int 
 pcicfg_remove_device(device_t dev)
 {
 	struct pcicfg_dev *p;
 	struct pcicfg_resource *r;
 
-	if (!initialized)
+	if (initialized == 0)
 		return (KGI_EINVAL);
 
 	/* Scan the list of pci configs. */
@@ -195,21 +200,27 @@ pcicfg_remove_device(device_t dev)
 	return (KGI_EINVAL);
 }
 
-/* claim the device so that no other driver will get it */
+/* 
+ * claim the device so that no other driver will get it
+ */
 void 
 pcicfg_claim_device(pcicfg_vaddr_t addr)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(addr);
+	struct pcicfg_dev *p;
 
+	p = pcicfg_lookup_device(addr);
 	if (p)
 		p->flags |= PCICFG_CLAIMED;
 }
 
-/* free the device so that other driver will get it */
+/* 
+ * free the device so that other driver will get it
+ */
 void 
 pcicfg_free_device(pcicfg_vaddr_t addr)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(addr);
+	struct pcicfg_dev *p;
+	p = pcicfg_lookup_device(addr);
 
 	if (p)
 		p->flags &= ~PCICFG_CLAIMED;
@@ -356,42 +367,46 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 __kgi_u8_t  
 pcicfg_in8 (const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return (-1);
 
-	return pci_read_config(dev, VADDR_OFFSET, 1);
+	return (pci_read_config(dev, VADDR_OFFSET, 1));
 }
 
 __kgi_u16_t 
 pcicfg_in16(const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return (-1);
 
-	return pci_read_config(dev, VADDR_OFFSET, 2);
+	return (pci_read_config(dev, VADDR_OFFSET, 2));
 }
 
 __kgi_u32_t 
 pcicfg_in32(const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return (-1);
 
-	return pci_read_config(dev, VADDR_OFFSET, 4);
+	return (pci_read_config(dev, VADDR_OFFSET, 4));
 }
 
 void 
 pcicfg_out8 (const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return;
 
 	pci_write_config(dev, VADDR_OFFSET, val, 1);
@@ -402,9 +417,10 @@ pcicfg_out8 (const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
 void 
 pcicfg_out16(const __kgi_u16_t val, const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return;
 
 	pci_write_config(dev, VADDR_OFFSET, val, 2);
@@ -415,9 +431,10 @@ pcicfg_out16(const __kgi_u16_t val, const pcicfg_vaddr_t vaddr)
 void 
 pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr)
 {
-	device_t dev = pcicfg_get_device(VADDR_BASE);
+	device_t dev;
 
-	if (!dev)
+	dev = pcicfg_get_device(VADDR_BASE);
+	if (dev == NULL)
 		return;
 
 	pci_write_config(dev, VADDR_OFFSET, val, 4);
@@ -429,12 +446,14 @@ pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr)
 __kgi_error_t 
 io_check_region(io_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
+	struct pcicfg_dev *p;
 	struct resource *res = NULL;
 	int rid = r->rid;
 
+	p = pcicfg_lookup_device(r->device);
+
 	/* Is the device registered? */
-	if (!p)
+	if (p == NULL)
 		goto error;
 
 	/* Try to allocate the resource */
@@ -470,16 +489,19 @@ error:
 io_vaddr_t 
 io_claim_region(io_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
-	device_t dev = pcicfg_get_device(r->device);
+	struct pcicfg_dev *p;
+	device_t dev;
 	struct pcicfg_resource *pcicfg_res = NULL;
 	struct resource *res = NULL;
 	int rid = r->rid;
 
+	p = pcicfg_lookup_device(r->device);
+	dev = pcicfg_get_device(r->device);
+
 	pcicfg_res = (struct pcicfg_resource *)kgi_kmalloc(sizeof(struct
 		pcicfg_resource));
 
-	if (!p || !dev || !pcicfg_res)
+	if (p == NULL || dev == NULL || pcicfg_res == NULL)
 		goto error;
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
@@ -517,11 +539,12 @@ error:
 io_vaddr_t 
 io_free_region(io_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
+	struct pcicfg_dev *p;
 	struct pcicfg_resource *pcicfg_res = NULL;
 	int error;
 
-	if (!p)
+	p = pcicfg_lookup_device(r->device);
+	if (p == NULL)
 		return (KGI_EINVAL);
 
 	LIST_FOREACH(pcicfg_res, &p->resources, entries) {
@@ -533,8 +556,9 @@ io_free_region(io_region_t *r)
 	}
 
 	if (pcicfg_res) {
-		KRN_DEBUG(2, "io_free_region('%s', base_io %.4x, base_virt %.4x, "
-			  "base_phys %.4x, base_bus %.4x)", r->name,
+		KRN_DEBUG(2, "io_free_region('%s', base_io %.4x,"
+			  " base_virt %.4x,"
+			  " base_phys %.4x, base_bus %.4x)", r->name,
 			  r->base_io, r->base_virt, r->base_phys,
 			  r->base_bus);
 		
@@ -564,12 +588,13 @@ io_alloc_region(io_region_t *r)
 __kgi_error_t 
 mem_check_region(mem_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
+	struct pcicfg_dev *p;
 	struct resource *res = NULL;
 	int rid = r->rid;
 
+	p = pcicfg_lookup_device(r->device);
 	/* Is the device registered? */
-	if (!p)
+	if (p == NULL)
 		goto error;
 
 	/* Try to allocate the resource */
@@ -604,16 +629,19 @@ error:
 mem_vaddr_t 
 mem_claim_region(mem_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
-	device_t dev = pcicfg_get_device(r->device);
+	struct pcicfg_dev *p;
+	device_t dev;
 	struct pcicfg_resource *pcicfg_res = NULL;
 	struct resource *res = NULL;
 	int rid = r->rid;
 
+	p = pcicfg_lookup_device(r->device);
+	dev = pcicfg_get_device(r->device);
+
 	pcicfg_res = (struct pcicfg_resource *)kgi_kmalloc(sizeof(struct
 		pcicfg_resource));
 
-	if (!p || !dev || !pcicfg_res)
+	if (p == NULL || dev == NULL || pcicfg_res == NULL)
 		goto error;
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
@@ -652,11 +680,12 @@ error:
 mem_vaddr_t 
 mem_free_region(mem_region_t *r)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(r->device);
+	struct pcicfg_dev *p;
 	struct pcicfg_resource *pcicfg_res = NULL;
 	int error;
 
-	if (!p)
+	p = pcicfg_lookup_device(r->device);
+	if (p == NULL)
 		return ((mem_vaddr_t)NULL);
 
 	LIST_FOREACH(pcicfg_res, &p->resources, entries) {
@@ -691,7 +720,7 @@ mem_vaddr_t
 mem_alloc_region(mem_region_t *r)
 {
 	/*
-	 * AFAIK there is no resource management for memory regions
+	 * AFAIK there is know resource management for memory regions
 	 * in Linux yet. We just report it failed.
 	 */
 	return ((mem_vaddr_t)NULL);
@@ -714,18 +743,21 @@ irq_handler(void *priv)
 __kgi_error_t 
 irq_claim_line(irq_line_t *irq)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(irq->device);
-	device_t dev = pcicfg_get_device(irq->device);
+	struct pcicfg_dev *p;
+	device_t dev;
 	struct pcicfg_resource *pcicfg_res = NULL;
 	struct resource *res = NULL;
 	int rid = irq->line;
 	unsigned int flags = RF_ACTIVE;
 	int error;
 
+	p = pcicfg_lookup_device(irq->device);
+	dev = pcicfg_get_device(irq->device);
+
 	pcicfg_res = (struct pcicfg_resource *)kgi_kmalloc(sizeof(struct
 		pcicfg_resource));
 
-	if (!p || !dev || !pcicfg_res)
+	if (p == NULL || dev == NULL || pcicfg_res == NULL)
 		goto error;
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
@@ -765,8 +797,10 @@ error:
 void 
 irq_free_line(irq_line_t *irq)
 {
-	struct pcicfg_dev *p = pcicfg_lookup_device(irq->device);
+	struct pcicfg_dev *p;
 	struct pcicfg_resource *pcicfg_res = NULL;
+
+	p = pcicfg_lookup_device(irq->device);
 
 	LIST_FOREACH(pcicfg_res, &p->resources, entries) {
 		if ((pcicfg_res->type == SYS_RES_IRQ) &&
@@ -776,9 +810,11 @@ irq_free_line(irq_line_t *irq)
 	}
 
 	if (pcicfg_res) {
-		KRN_DEBUG(2, "irq_free_line('%s', line %i)", irq->name, irq->line);
+		KRN_DEBUG(2, "irq_free_line('%s', line %i)", 
+			irq->name, irq->line);
 
-		bus_teardown_intr(p->dev, pcicfg_res->res, pcicfg_res->intrhand);
+		bus_teardown_intr(p->dev, pcicfg_res->res,
+			pcicfg_res->intrhand);
 		bus_release_resource(p->dev, SYS_RES_IRQ, 0, pcicfg_res->res);
 		
 		LIST_REMOVE(pcicfg_res, entries);

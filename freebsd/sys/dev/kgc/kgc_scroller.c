@@ -72,8 +72,8 @@ kgc_scroller_init(void)
  * Allocate a new scroller instance. The driver (scroller class) has already been
  * registered to the display.
  * The scroller instance is assigned to the given KII consoles.
- * If the scroller is statically allocated, then let the caller allocate the scroller
- * meta.
+ * If the scroller is statically allocated, then let the caller allocate the 
+ * scroller meta.
  */
 scroller_t 
 kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
@@ -82,8 +82,8 @@ kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
 	kgi_u_t display;
 
 	/*
-	 * One can't allocated the console 0 'cause reserved to
-	 * boot messages and is allocated statically.
+	 * console0 can not be allocated because it is reserved boot messages
+	 * and is already statically allocated.
 	 */
 	if (!KII_VALID_CONSOLE_ID(devid))
 		return (NULL);
@@ -95,26 +95,26 @@ kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
 
 	display = display_map[devid];
 
-	if (!kgc_scroller_drivers[display].drv) {
+	if (kgc_scroller_drivers[display].drv == NULL) {
 		KRN_ERROR("No scroller class registered to display %d", display);
 		return (NULL);
 	}
 
-	if (!static_scroller) {
+	if (static_scroller == NULL) {
 		s = (scroller_t)kobj_create((kobj_class_t)
 			kgc_scroller_drivers[display].drv, M_KGI, M_WAITOK);
 	} else
 		s = static_scroller;
 
-	if (!s) {
+	if (s == NULL) {
 		KRN_ERROR("Could not create scroller %d", devid);
 		return (NULL);
 	}
 
-	if (!static_scroller) {
-		if (!(s->meta = kgi_kmalloc(kgc_scroller_drivers[display].drv->size))) {
+	if (static_scroller == NULL) {
+		s->meta = kgi_kmalloc(kgc_scroller_drivers[display].drv->size);
+		if (s->meta == NULL)
 			KRN_ERROR("Could not allocate scroller meta %d", devid);
-		}
 	}
 
 	kgc_scrollers[devid].s = s;
@@ -131,12 +131,12 @@ kgc_scroller_release(kgi_u_t devid)
 	if (!KII_VALID_CONSOLE_ID(devid))
 		return;
 
-	if (!kgc_scrollers[devid].s) {
+	if (kgc_scrollers[devid].s == NULL) {
 		KRN_ERROR("Render not allocated to %d", devid);
 		return;
 	}
 
-	if (!kgc_scrollers[devid].static_alloc) {
+	if (kgc_scrollers[devid].static_alloc == 0) {
 		kgi_kfree(kgc_scrollers[devid].s->meta);
 		kobj_delete((kobj_t)kgc_scrollers[devid].s, M_KGI);
 	}
@@ -150,20 +150,20 @@ kgc_scroller_register(scroller_driver_t *driver, kgi_u_t display,
 		kgi_u8_t already_allocated)
 {
 
-	if (!KGI_VALID_DISPLAY_ID(display) || !driver)
+	if (!KGI_VALID_DISPLAY_ID(display) || driver == NULL)
 		return (KGI_EINVAL);
 
 	if (kgc_scroller_drivers[display].drv) {
-		KRN_ERROR("Render driver already registered to display %d", display);
+		KRN_ERROR("Render driver already registered to display %d", 
+			  display);
 		return (KGI_EINVAL);
 	}
 
-	if (!already_allocated) {
+	if (already_allocated == 0) {
 		/* Compile the scroller class */
 		kobj_class_compile((kobj_class_t)driver);
-	} else {
+	} else 
 		kgc_scroller_drivers[display].static_alloc = 1;
-	}
 
 	/* Remember the scroller class for the display */
 	kgc_scroller_drivers[display].drv = driver;
@@ -176,7 +176,7 @@ kgc_scroller_unregister(scroller_driver_t *driver)
 {
 	kgi_u_t i, display = -1;
 
-	if (!driver)
+	if (driver == NULL)
 		return (KGI_EOK);
 
 	/* All devices of the display shall have their scroller freed */
@@ -184,7 +184,8 @@ kgc_scroller_unregister(scroller_driver_t *driver)
 		if (kgc_scroller_drivers[display_map[i]].drv == driver) {
 			display = display_map[i];
 			if (kgc_scrollers[i].s) {
-				KRN_ERROR("At least a scroller still allocated to device %d", i);
+				KRN_ERROR("At least a scroller still allocated to device %i",
+						  i);
 				return (KGI_EINVAL);
 			}
 		}
@@ -192,7 +193,7 @@ kgc_scroller_unregister(scroller_driver_t *driver)
 
 	if (display != -1) {
 		/* Free the scroller class if not allocated statically */
-		if (!kgc_scroller_drivers[display].static_alloc)
+		if (kgc_scroller_drivers[display].static_alloc == 0)
 			kobj_class_free((kobj_class_t)driver);
 
 		kgc_scroller_drivers[display].drv = NULL;

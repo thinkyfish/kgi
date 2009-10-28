@@ -42,10 +42,9 @@ struct scroller {
 	 * current ops table for the object.
 	 */
 	KOBJ_FIELDS;
-
 	kgi_u_t		devid;
-	kgi_console_t		*cons;
-	void			*meta;
+	kgi_console_t	*cons;
+	void		*meta;
 };
 
 #define SCROLLMETHOD		KOBJMETHOD
@@ -79,8 +78,8 @@ extern void kgc_scroller_init(void);
 extern scroller_t kgc_get_scroller(kgi_u_t devid);
 extern scroller_t kgc_scroller_alloc(kgi_u_t devid, scroller_t s);
 extern void kgc_scroller_release(kgi_u_t devid);
-extern kgi_error_t kgc_scroller_register(scroller_driver_t *scroller, kgi_u_t display,
-				       kgi_u8_t already_allocated);
+extern kgi_error_t kgc_scroller_register(scroller_driver_t *scroller, 
+				 kgi_u_t display, kgi_u8_t already_allocated); 
 extern kgi_error_t kgc_scroller_unregister(scroller_driver_t *driver);
 extern void *kgc_scroller_meta(scroller_t s);
 extern kgi_console_t *kgc_scroller_cons(scroller_t s);

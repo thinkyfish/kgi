@@ -40,14 +40,11 @@ typedef enum {
 	KGI_A_ALPHA,		/* alpha value			*/
 	KGI_A_PRIVATE,		/* hardware or driver private	*/
 	KGI_A_APPLICATION,	/* store what you want here	*/
-
 	KGI_A_STENCIL,		/* stencil buffer		*/
 	KGI_A_Z,		/* z-value			*/
-
 	KGI_A_FOREGROUND_INDEX,	/* foreground color index	*/
 	KGI_A_TEXTURE_INDEX,	/* texture index		*/
 	KGI_A_BLINK,		/* blink bit/frequency		*/
-
 	KGI_A_LAST,
 } kgi_attribute_t;
 
@@ -65,7 +62,6 @@ typedef enum {
 	__KGI_AM(FOREGROUND_INDEX),
 	__KGI_AM(TEXTURE_INDEX),
 	__KGI_AM(BLINK),
-
 	KGI_AM_COLORS = KGI_AM_COLOR1 | KGI_AM_COLOR2 | KGI_AM_COLOR3,
 	KGI_AM_ALL = (1 << KGI_A_LAST) - 1
 } kgi_attribute_mask_t;
@@ -171,44 +167,37 @@ typedef enum {
 	KGI_IF_TLUT	= 0x00000080,	/* can do pixel texture look-up	*/
 	KGI_IF_STEREO	= 0x00000100,	/* stereo image			*/
 	KGI_IF_TEXT16	= 0x00000200,	/* can do text16 output		*/
-
 	KGI_IF_ALL	= 0x000003FF	/* all flags known		*/
 } kgi_image_flags_t;
 
 typedef struct {
 	kgi_dot_port_mode_t *out;
 	kgi_image_flags_t flags;
-
 	kgi_ucoord_t	virt;
 	kgi_ucoord_t	size;
-
 	kgi_u8_t	frames;
 	kgi_u8_t	tluts;
 	kgi_u8_t	iluts;
 	kgi_u8_t	aluts;
 	kgi_attribute_mask_t	ilutm;
 	kgi_attribute_mask_t	alutm;
-
 	kgi_attribute_mask_t	fam, cam; /* frame, common attribute mask     */
 	kgi_u8_t	bpfa[__KGI_MAX_NR_ATTRIBUTES];/* bits per frame attr  */
 	kgi_u8_t	bpca[__KGI_MAX_NR_ATTRIBUTES];/* bits per common attr */
-
 	kgi_resource_t	*resource[__KGI_MAX_NR_IMAGE_RESOURCES];
 } kgi_image_mode_t;
 
 typedef enum {
-	KGI_MF_ALLOCATED		= 0x00000001,	/* has been allocated */
-	KGI_MF_BOOT			= 0x00000002	/* mode for boot console */
+	KGI_MF_ALLOCATED	= 0x00000001,	/* has been allocated */
+	KGI_MF_BOOT		= 0x00000002	/* mode for boot console */
 } kgi_mode_flags_t;
 
 #define	KGI_MODE_REVISION	0x00010001
 typedef struct {
-	kgi_u_t			revision;  /* data structure revision		*/
-	void			*dev_mode; /* device dependent mode		*/
-	kgi_mode_flags_t	flags;     /* mode flags                	*/
-
+	kgi_u_t			revision;  /* data structure revision	*/
+	void			*dev_mode; /* device dependent mode	*/
+	kgi_mode_flags_t	flags;     /* mode flags               	*/
 	const kgi_resource_t	*resource[__KGI_MAX_NR_RESOURCES];
-
 	kgi_u_t			images;	   /* number of images		*/
 	kgi_image_mode_t	img[1];	   /* image(s)			*/
 } kgi_mode_t;

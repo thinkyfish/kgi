@@ -57,17 +57,17 @@ struct vm_area_struct {
 					 * allocation */
 	vm_ooffset_t vm_size;		/* size of the mapped area */
 	vm_prot_t vm_prot;		/* area protection */
-
 	vm_object_t vm_object;		/* the object of this area */
-
-	struct vm_operations_struct *vm_ops; /* hook operations of the underlying
-					      * mapping type (mmio, accel...) */
-
+	/*
+	 * Hook operations of the underlying mapping type (mmio, accel, ...)
+	 */
+	struct vm_operations_struct *vm_ops; 
 	void *vm_private_data;		/* actually the graph map, but void *
 					 * to avoid type dependency */
-
 	int vm_unit;			/* minor of the graphic dev */
-	int vm_type;			/* type of the corresponding kgi resource */
+	int vm_type;			/* type of the corresponding kgi
+					 * resource 
+					 */
 };
 
 /* 

@@ -58,7 +58,7 @@ __FBSDID("$FreeBSD$");
 
 #include "render_if.h"
 
-/* For now don't use background in high/true colour modes */
+/* For now don't use background in high or true colour modes. */
 #ifdef KGC_RENDER_16BITS 
 #undef KGC_RENDER_BACKGROUND
 #endif
@@ -256,7 +256,8 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 		}
 		for (i = 0; i < j; i++) {
 			_p = mask[i];
-			for (k = 0, mask[i] = 0; k < sizeof(kgi_u32_t); k++, _p >>= 8) {
+			for (k = 0, mask[i] = 0; k < sizeof(kgi_u32_t); 
+				k++, _p >>= 8) {
 				mask[i] <<= 8;
 				mask[i] |= (_p & 0xff);
 			}
@@ -290,10 +291,12 @@ gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 
 	/* Iterate on the string */
 	for (n = 0; n < count; n++) {
-		/* Get the start of the array of pixels rows for this
+		/* 
+		 * Get the start of the array of pixels rows for this
 		 * character...
 		 */
-		pixel = &render->font->data[PIX2POS(text[n]) * render->font->height];
+		pixel = 
+		&render->font->data[PIX2POS(text[n]) * render->font->height];
 
 		/* Calculate the new cursor position... */
 		row = (offset + n) / render->width;
@@ -378,12 +381,13 @@ gfbrndr_bgnd_draw(render_t r)
 		backgnd_draw(r->devid, render->bgnd, render->palette);
 
 		/*
-		 * XXX Force 7 as light gray, consequently your
+		 * XXX 
+		 * Force 7 as light gray, consequently your
 		 * image shall not contain any 7 or it will be
 		 * light gray!!
 		 */
-		render->palette[7*3] = render->palette[7*3+1] =
-			render->palette[7*3+2] = 66*0xFF/100 << 8;
+		render->palette[7 * 3] = render->palette[7 * 3 + 1] =
+			render->palette[7 * 3 + 2] = 66 * 0xFF / 100 << 8;
 		
 		/* Apply the modified palette */
 		if (render->ilut->Set)
@@ -403,12 +407,13 @@ gfbrndr_callback(render_t r, int action, void *arg)
 
 	switch (action) {
 	case BACKGND_INIT:
-		/* If no background allocated for this render, do it */
-		if (!render->bgnd) {
-			size = render->mode.img[0].size.x * render->mode.img[0].size.y *
-				((kgi_attr_bits(render->mode.img[0].bpfa) + 1) / 8);
+		/* If no background is allocated for this render, do it. */
+		if (render->bgnd == NULL) {
+			size = 
+			render->mode.img[0].size.x * render->mode.img[0].size.y *
+			((kgi_attr_bits(render->mode.img[0].bpfa) + 1) / 8);
 		
-			if (!(render->bgnd = kgi_kmalloc(size)))
+			if ((render->bgnd = kgi_kmalloc(size)) == NULL)
 				return (ENOMEM);
 		
 			bzero(render->bgnd, size);
@@ -482,16 +487,15 @@ gfbrndr_hide_gadgets(render_t r)
 	for (i = render->font->height-2; i < render->font->height; i++) {
 		/* Get the address of the character's pixel-row... */
 		poff = (((((render->cursor.y * render->font->height) + i) *
-			  render->mode.img[0].size.x) +
-			 (render->cursor.x * render->font->width)) *
+			render->mode.img[0].size.x) +
+			(render->cursor.x * render->font->width)) *
 			(render->depth / 8));
 
 		/* Iterate over the columns of this row */
 		for (j = 0; j < render->font->width; j += render->depth / 8) {
 			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j; 
-			for (k = 0; k < render->depth / 8; k++) {
+			for (k = 0; k < render->depth / 8; k++) 
 				addr[k] = *saved++;
-			}
 		}
 	}
 
@@ -520,11 +524,11 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 
 	/* Overwrite 2 lines to print the cursor */
 	save = &render->pointed[0];
-	for(i = render->font->height-2; i < render->font->height; i++) {
+	for(i = render->font->height - 2; i < render->font->height; i++) {
 		/* Get the address of the character's pixel-row... */
 		poff = (((((render->cursor.y * render->font->height) + i) *
-			  render->mode.img[0].size.x) +
-			 (render->cursor.x * render->font->width)) *
+			render->mode.img[0].size.x) +
+			(render->cursor.x * render->font->width)) *
 			(render->depth / 8));
 
 		/* Iterate over the columns of this row */
@@ -581,7 +585,10 @@ gfbrndr_handle_event(kgi_device_t *device, kgi_event_t *event)
 
 	switch (event->notice.command) {
 	case KGI_EVENT_NOTICE_NEW_DISPLAY:
-		/* Redo common initialization, especially concerning KGI resources */
+		/* 
+		 * Redo common initialization, especially concerning KGI 
+		 * resources
+		 */
 		kgirndr_init(r);
 		break;
 	default:
@@ -595,10 +602,9 @@ static kgi_s_t
 gfbrndr_init(render_t r, kgi_u_t devid)
 {
 	gfbrndr_meta *render;
-	kgi_s_t i, error;
+	kgi_s_t i, error = KGI_ENODEV;
 
 	render = kgc_render_meta(r);
-	error = KGI_ENODEV;
 
 	bzero(render, sizeof(*render));
 
@@ -625,10 +631,13 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	render->kgi.HandleEvent = gfbrndr_handle_event;
 
 	for (i = 0; modes[i][0] && modes[i][1]; i++) {
-		render->mode.img[0].size.x = render->mode.img[0].virt.x = modes[i][0];
-		render->mode.img[0].size.y = render->mode.img[0].virt.y = modes[i][1];
+		render->mode.img[0].size.x = 
+			render->mode.img[0].virt.x = modes[i][0];
+		render->mode.img[0].size.y = 
+			render->mode.img[0].virt.y = modes[i][1];
 
-		if (!(error = kgi_register_device(&(render->kgi), r->devid)))
+		error = kgi_register_device(&(render->kgi), r->devid);
+		if (error == KGI_EOK)
 			goto found;
 	}
 	return (error);
@@ -650,7 +659,7 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	render->depth = 8;
 #endif
 
-	if (!kgi_current_focus(render->kgi.dpy_id))
+	if (kgi_current_focus(render->kgi.dpy_id) == NULL)
 		kgi_map_device(render->kgi.id);
 
 	/* Initialize the background */

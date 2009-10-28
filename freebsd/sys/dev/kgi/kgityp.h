@@ -44,20 +44,40 @@
 #define	KGI_ISOCHAR_ROW(isochar)	(((isochar) >>  8) & 0xFF)
 #define	KGI_ISOCHAR_CELL(isochar)	((isochar) & 0xFF)
 
-typedef struct { kgi_u8_t major, minor, patch, extra; } kgi_version_t;
-typedef struct { kgi_s_t x,y; }		kgi_scoord_t;
-typedef struct { kgi_u_t x,y; }		kgi_ucoord_t;
-typedef struct { kgi_u8_t x,y; }	kgi_u8_coord_t;
-typedef struct { kgi_s_t min, max; }	kgi_srange_t;
-typedef struct { kgi_u_t min, max; }	kgi_urange_t;
+typedef struct { 
+	kgi_u8_t major, minor, patch, extra; 
+} kgi_version_t;
 
-typedef struct { kgi_u_t mul, div; }	kgi_ratio_t;
+typedef struct { 
+	kgi_s_t x,y; 
+} kgi_scoord_t;
 
-typedef struct { kgi_u16_t r,g,b; }	kgi_rgb_color_t;
+typedef struct { 
+	kgi_u_t x,y; 
+} kgi_ucoord_t;
+
+typedef struct { 
+	kgi_u8_t x,y; 
+} kgi_u8_coord_t;
+
+typedef struct { 
+	kgi_s_t min, max; 
+} kgi_srange_t;
+
+typedef struct { 
+	kgi_u_t min, max; 
+} kgi_urange_t;
+
+typedef struct { 
+	kgi_u_t mul, div; 
+} kgi_ratio_t;
+
+typedef struct { 
+	kgi_u16_t r,g,b; 
+} kgi_rgb_color_t;
+
 typedef union {
-
 	kgi_rgb_color_t	rgb;
-
 } kgi_color_t;
 
 /*

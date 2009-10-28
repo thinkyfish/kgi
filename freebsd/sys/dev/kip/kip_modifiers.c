@@ -120,7 +120,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 		npadch.key.locked = f->locked; 
 		npadch.key.sticky = f->sticky;
 
-		if (!event->any.dontdispatch)
+		if (event->any.dontdispatch == 0)
 			kii_put_event(f, &npadch);
 	}
 
@@ -186,12 +186,14 @@ do_action(kii_focus_t *f, kii_event_t *event)
 			do_modifier(f, event);
 		return;
 	case K_TYPE_ASCII:
-		if ((sym < K_LAST_ASCII) && (event->key.type == KII_EV_KEY_PRESS))
+		if ((sym < K_LAST_ASCII) 
+			&& (event->key.type == KII_EV_KEY_PRESS))
 			do_ascii(f, event);
 		return;
 	case K_TYPE_DEAD:
-		if ((sym < K_LAST_DEAD) && (event->key.type == KII_EV_KEY_PRESS ||
-			 event->key.type == KII_EV_KEY_REPEAT)) {
+		if ((sym < K_LAST_DEAD) 
+			&& (event->key.type == KII_EV_KEY_PRESS 
+			||  event->key.type == KII_EV_KEY_REPEAT)) {
 			do_dead(f, event);
 		}
 		return;
@@ -255,8 +257,8 @@ kii_handle_input(kii_event_t *event)
 			case K_TYPE_NUMPAD: 	/* Fall thru. */
 			case K_TYPE_CONSOLE:	/* Fall thru. */
 			case K_TYPE_CURSOR: 	/* Fall thru. */		
-			case K_TYPE_SHIFT: 		/* Fall thru. */
-			case K_TYPE_META: 		/* Fall thru. */
+			case K_TYPE_SHIFT: 	/* Fall thru. */
+			case K_TYPE_META: 	/* Fall thru. */
 				break;
 			default:
 				composed.key = event->key;
@@ -268,7 +270,7 @@ kii_handle_input(kii_event_t *event)
 					composed.key.sym);
 				f->dead = (K_TYPE(event->key.sym) ==
 					K_TYPE_DEAD) ? event->key.sym : K_VOID;
-				if (!event->any.dontdispatch)
+				if (event->any.dontdispatch == 0)
 					kii_put_event(f, &composed);
 			}
 		}
@@ -303,6 +305,6 @@ kii_handle_input(kii_event_t *event)
 	/* Global actions. */
 	kii_action(f, event);
 
-	if (!event->any.dontdispatch)
+	if (event->any.dontdispatch == 0)
 		kii_put_event(f, event);
 }

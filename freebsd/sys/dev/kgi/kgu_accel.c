@@ -84,7 +84,7 @@ graph_accel_removepages(vm_area_t vma, graph_accel_buffer_t *buf, int free)
  */
 static int 
 graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
-			      vm_paddr_t *paddr, int prot)
+		vm_paddr_t *paddr, int prot)
 {
 	graph_accel_mapping_t *map;
 	kgi_accel_t *accel;
@@ -120,7 +120,7 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	 */
 	nstart = (map->buf_offset + map->buf_size) & map->buf_mask;
 	nend = nstart + map->buf_size;
-	if (! ((nstart <= ooffset) && (ooffset < nend))) {
+	if (((nstart <= ooffset) && (ooffset < nend)) == 0) {
 		KRN_DEBUG(1, "ooffset %.8lx not in %.8lx-%.8lx for next buffer",
 			(u_long)ooffset, nstart, nend);
 		return (-1);
@@ -184,21 +184,22 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 static void 
 graph_accel_close(vm_area_t vma)
 {
-	graph_accel_mapping_t *map = (graph_accel_mapping_t *) VM(private_data);
-	kgi_accel_t *accel = (kgi_accel_t *) map->resource;
+	graph_accel_mapping_t *map;
+	kgi_accel_t *accel = (kgi_accel_t *)map->resource;
 	graph_accel_buffer_t *buf = NULL;
 
-	map = (graph_accel_mapping_t *) VM(private_data);
+	map = (graph_accel_mapping_t *)VM(private_data);
 	if (map == NULL) 
 		return;
 	KRN_ASSERT(map->vma == vma);
 
-	accel = (kgi_accel_t *) map->resource;
+	accel = (kgi_accel_t *)map->resource;
 	KRN_ASSERT(KGI_RT_ACCELERATOR == accel->type);
 
 	KRN_DEBUG(1, "accel_unmap vma %p, map %p", vma, map);
 
-	/* Search executable buffers among all its buffers.
+	/* 
+	 * Search executable buffers among all its buffers.
 	 */
 	buf = (graph_accel_buffer_t *)map->buf_current->next;
 	while ((buf->execution.next == NULL) &&
@@ -269,10 +270,11 @@ graph_accel_close(vm_area_t vma)
 static void 
 graph_accel_unmap(vm_area_t vma)
 {
-	graph_accel_mapping_t *map = (graph_accel_mapping_t *) VM(private_data);
+	graph_accel_mapping_t *map;
 	graph_accel_buffer_t *buf;
 
 	/* Reset the buffer queues of pages */
+	map = (graph_accel_mapping_t *) VM(private_data);
 	buf = map->buf_current;
 	do {
 		kgi_accel_buffer_t *next = buf->next;
@@ -281,7 +283,6 @@ graph_accel_unmap(vm_area_t vma)
 		TAILQ_INIT(&buf->memq);
 
 		buf = (graph_accel_buffer_t *)next;
-
 	} while (buf != map->buf_current);
 
 	/* Free every pages of the map */
@@ -290,10 +291,10 @@ graph_accel_unmap(vm_area_t vma)
 
 static struct vm_operations_struct graph_accel_vmops =
 {
-	.open	=	NULL,
-	.close	=	graph_accel_close,
-	.nopage	=	graph_accel_nopage,
-	.unmap  =	graph_accel_unmap,
+	.open	= NULL,
+	.close	= graph_accel_close,
+	.nopage	= graph_accel_nopage,
+	.unmap  = graph_accel_unmap,
 };
 
 /*
@@ -301,7 +302,7 @@ static struct vm_operations_struct graph_accel_vmops =
  */
 int 
 graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
-	  graph_mapping_t **the_map)
+		graph_mapping_t **the_map)
 {
 	kgi_accel_t *accel = (kgi_accel_t *)mmap_setup->resource;
 	unsigned long min_order, max_order, priority, order, buffers, i;
@@ -319,7 +320,7 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	memset(buf, 0, sizeof(buf));
 
-	if (buffers > sizeof(buf)/sizeof(buf[0])) {
+	if (buffers > sizeof(buf) / sizeof(buf[0])) {
 		KRN_ERROR("too many buffers (%li) requested", buffers);
 		return (KGI_EINVAL);
 	}
@@ -337,7 +338,7 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	 *
 	 * allocate mapping and init accelerator context
 	 */
-	if (!(context = kgi_kmalloc(accel->context_size))) {
+	if ((context = kgi_kmalloc(accel->context_size)) == NULL) {
 		KRN_ERROR("failed to allocate accelerator context");
 		goto no_memory; 
 	}
@@ -373,15 +374,17 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 		for (i = 0; buf[i]->aperture.virt && (i < buffers); i++) {
 			KRN_DEBUG(1, "freeing %i with order %li",
 				buf[i]->aperture.virt, order + 1);
-			kgi_cfree((void *)buf[i]->aperture.virt, SIZ(order + 1));
+			kgi_cfree((void *)buf[i]->aperture.virt, 
+				SIZ(order + 1));
 		}
 
 		KRN_DEBUG(1, "trying %i byte buffers", SIZ(order));
 		for (i = 0; i < buffers; i++) {
-			buf[i]->aperture.virt = (kgi_virt_addr_t)kgi_cmalloc(SIZ(order));
-			if (!buf[i]->aperture.virt) {
+			buf[i]->aperture.virt = 
+				(kgi_virt_addr_t)kgi_cmalloc(SIZ(order));
+			if (!buf[i]->aperture.virt) 
 				break;
-			}
+			
 			KRN_DEBUG(1, "allocated %i with order %li",
 				buf[i]->aperture.virt, order);
 		}
@@ -394,7 +397,8 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	/* arrange buffers in circular list and attach to mapping. */
 	for (i = 0; i < buffers; i++) {
-		buf[i]->next = (kgi_accel_buffer_t *)buf[((i + 1) < buffers) ? (i + 1) : 0];
+		buf[i]->next = 
+		  (kgi_accel_buffer_t *)buf[((i + 1) < buffers) ? (i + 1) : 0];
 		buf[i]->priority = priority;
 		buf[i]->context  = context;
 

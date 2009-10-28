@@ -34,25 +34,20 @@ enum kgi_console_mode_xterm_e {
 	KGI_CM_XT_TOGGLE_META,		/* set meta bit 0x80		*/
 	KGI_CM_XT_UTF8,			/* do utf8 decoding		*/
 	KGI_CM_XT_APPLIC_KEY,		/* keypad in application mode	*/
-
 	KGI_CM_XT_CURSOR_KEY,		/* DECCKM - cursor key mode	*/
 	KGI_CM_XT_COLUMN132,		/* 132 column mode		*/
 	KGI_CM_XT_X10_MOUSE,		/* x10 compatible mouse report	*/
 	KGI_CM_XT_TEXTRONIX_MODE,	/* enter textronix mode		*/
-
 	KGI_CM_XT_ALLOW_132MODE,	/* allow switch to 132 columns	*/
 	KGI_CM_XT_CURSES_FIX,		/* allow hack for curses	*/
 	KGI_CM_XT_MARGIN_BELL,		/* margin bell			*/
 	KGI_CM_XT_LOGGING,		/* do logging			*/
-
 	KGI_CM_XT_REPORT_MOUSE,		/* report mouse			*/
 	KGI_CM_XT_TRACK_MOUSE,		/* report & hilite track mouse	*/
 	KGI_CM_XT_ANSI,			/* DECANM - ANSI mode		*/
 	KGI_CM_XT_NEWLINE,		/* ENTER sends CR/CRLF		*/
-
 	KGI_CM_XT_INSERT,		/* ANSI insert mode		*/
 	KGI_CM_XT_META_ESC,		/* META chars with ESC-prefix	*/
-
 	KGI_CM_XT_LAST
 };
 
@@ -61,7 +56,6 @@ enum kgi_console_flags_xterm_e {
 	KGI_CF_XT_NUM_LOCK	= 0x20000000,	/* num_lock key active	*/
 	KGI_CF_XT_CAPS_LOCK	= 0x10000000,	/* CAPS-shift, locked	*/
 	KGI_CF_XT_CAPS_STICKY	= 0x08000000,	/* CAPS-shift, sticky	*/
-
 	KGI_CF_XT_ALL		= 0x78000000
 };
 
@@ -74,7 +68,6 @@ enum xterm_states_e {
 
 typedef struct {
 	kgi_console_t	cons;
-
 	kgi_u8_t	state;
 	kgi_u8_t	charset;	
 	kgi_u8_t	s_charset;
@@ -82,23 +75,18 @@ typedef struct {
 
 	struct {
 		kgi_u_t pitch, duration;
-
-	}		bell;
+	} bell;
 
 	kgi_u_t		npar;
 	unsigned long	par[XTERM_MAX_NPAR];
-
 	kgi_isochar_t	utf_char;
 	kgi_unicode_t	*translate;
-
 	kgi_s_t		s_x, s_y;	/* saved cursor position	*/
 	kgi_s_t		p_x, p_y;	/* saved pointer position	*/
-
 	kgi_u8_t	s_g[4];
 	kgi_u8_t	g[4];
 	kgi_u8_t	colors[8];
 	kgi_u8_t	s_colors[8];
-
 	kgi_u_t		s_attrfl;
 	unsigned long	s_mode;	/* saved modes			*/
 } kgi_console_xterm_t;

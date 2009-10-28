@@ -46,9 +46,8 @@ __FBSDID("$FreeBSD$");
 void 
 tb_set(kgc_textbuf_t *tb, kgi_u_t src, kgi_u_t val, kgi_u_t cnt)
 {
-	kgi_u16_t *buf;
+	kgi_u16_t *buf = tb->buf + src;
 
-	buf = tb->buf + src;
 	cnt--;
 	do {
 		buf[cnt] = val;
@@ -64,13 +63,13 @@ tb_move(kgc_textbuf_t *tb, kgi_u_t dst, kgi_u_t src, kgi_u_t cnt)
 	size_t count = sizeof(kgi_u16_t)*cnt;
 
 	if (dest <= source) {
-		tmp = (char *) dest;
-		s = (char *) source;
+		tmp = (char *)dest;
+		s = (char *)source;
 		while (count--)
 			*tmp++ = *s++;
 	} else {
-		tmp = (char *) dest + count;
-		s = (char *) source + count;
+		tmp = (char *)dest + count;
+		s = (char *)source + count;
 		while (count--)
 			*--tmp = *--s;
 	}
@@ -78,7 +77,10 @@ tb_move(kgc_textbuf_t *tb, kgi_u_t dst, kgi_u_t src, kgi_u_t cnt)
 
 #ifdef not_used
 
-/* XXX Shall be provided by the render, not the scroller */
+/* 
+ * XXX 
+ * Shall be provided by the render, not the scroller
+ */
 static void 
 tb_invert(kgc_textbuf_t *tb, kgi_u_t start, kgi_u_t end)
 {

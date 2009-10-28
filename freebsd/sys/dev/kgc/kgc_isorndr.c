@@ -53,7 +53,6 @@ typedef struct {
 	 * Must be there if you use KGI resources interface
 	 */
 	__KGC_KGIRNDR_DATA
-
 	kgi_console_font_t	*font;
 } isorndr_meta;
 
@@ -65,13 +64,12 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 	kgi_u_t row;
 	kgi_u_t cell;
 	kgi_console_font_cellinfo_t *cellinfo;
-	kgi_u_t l, h, m;
+	kgi_u_t l = 0, h, m;
 
 	isorndr = kgc_render_meta(r);
 	font = isorndr->font;
 	row  = KGI_ISOCHAR_ROW(sym);
 	cell = KGI_ISOCHAR_CELL(sym);
-	l = 0;
 
 	KRN_ASSERT(font);
 	cellinfo = font->info->cellinfo[row];
@@ -103,11 +101,10 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 
 		m = (--h + l) >> 1;
 
-		if (sym > cellinfo[m].sym) {
+		if (sym > cellinfo[m].sym) 
 			l = m;
-		} else { 
+		else  
 			h = m;
-		}
 	} while (l < h); 
 
 	return (font->info->default_pos); /* No position defined. */
@@ -134,8 +131,8 @@ isorndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 	render = kgc_render_meta(r);
 
 	if (render->text16) {
-		(render->text16->PutText16)(render->text16, offset, tb->buf + start,
-		 count);
+		(render->text16->PutText16)(render->text16, offset, 
+					tb->buf + start, count);
 	}
 }
 
@@ -154,7 +151,7 @@ isorndr_get_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 
 static void 
 isorndr_set_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
-			      kgi_u8_t depth)
+		  kgi_u8_t depth)
 {
 	isorndr_meta *render;
 
@@ -173,9 +170,8 @@ isorndr_default_font(render_t r)
 {
 	isorndr_meta *render;
 	kgi_u_t i;
-
+ 
 	render = kgc_render_meta(r);
-	i = 0;
 
 	KRN_DEBUG(3, "searching font for height %i", render->text16->font.y);
 	for (i = 0; default_font[i] && 

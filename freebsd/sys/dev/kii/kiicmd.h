@@ -63,10 +63,8 @@ typedef kiic_null_request_t kiic_mapper_get_keymap_info_request_t;
 typedef struct {
 	kii_u_t	fn_buf_size;
 	kii_u_t fn_str_size;
-
 	kii_u_t	keymin, keymax;
 	kii_u_t keymap_size;
-
 	kii_u_t combine_size;
 } kiic_mapper_get_keymap_info_result_t;
 

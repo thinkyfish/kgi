@@ -189,24 +189,19 @@ typedef struct kgi_accel_s {
 	kgi_accel_flags_t	flags;	/* accelerator flags		*/
 	kgi_u_t		buffers;	/* recommended number buffers	*/
 	kgi_u_t		buffer_size;	/* recommended buffer size	*/
-
 	void		*context;	/* current context		*/
 	kgi_u_t		context_size;	/* context buffer size		*/
-
 	struct {
 		kgi_accel_buffer_t *queue;	/* buffers to execute	*/
 		void *context;			/* current context	*/
 	} execution;			/* dynamic state		*/
 
 	wait_queue_head_t	*idle;	/* wakeup when becoming idle	*/
-
 	kgi_accel_init_fn	*Init;
 	kgi_accel_done_fn	*Done;
 	kgi_accel_exec_fn	*Exec;
-
 	kgi_mutex_t		mtx;	/* accel resource mutex		*/
 } kgi_accel_t;
-
 
 /*
  * Shared Memory
@@ -215,12 +210,12 @@ typedef struct kgi_shmem_context_s kgi_shmem_context_t;
 typedef struct kgi_shmem_s kgi_shmem_t;
 
 typedef kgi_error_t kgi_shmem_context_init_fn(kgi_shmem_t *shmem, 
-	kgi_shmem_context_t *ctx, kgi_size_t size);
+		kgi_shmem_context_t *ctx, kgi_size_t size);
 
 typedef void kgi_shmem_context_fn(kgi_shmem_t *shmem, kgi_shmem_context_t *ctx);
 typedef void kgi_shmem_art_fn(kgi_shmem_t *shmem, kgi_aperture_t *range);
 typedef void kgi_shmem_art_map_fn(kgi_shmem_t *shmem, kgi_aperture_t *dst,
-	kgi_aperture_t *src);
+		kgi_aperture_t *src);
 
 struct kgi_shmem_context_s {
 	kgi_aperture_t	aperture;	/* aperture window exported	*/
@@ -232,14 +227,11 @@ struct kgi_shmem_s {
 	__KGI_RESOURCE
 
 	kgi_size_t	aperture_size;	/* (maximum) aperture size	*/
-
 	void		*ctx;		/* current context		*/
 	kgi_size_t	ctx_size;	/* context struct size		*/
-
 	kgi_shmem_context_init_fn	*ContextInit;
 	kgi_shmem_context_fn		*ContextDone;
 	kgi_shmem_context_fn		*ContextMap;
-
 	kgi_shmem_context_fn		*ARTInit;
 	kgi_shmem_art_fn		*ARTFlush;
 	kgi_shmem_art_map_fn		*ARTMapPages;
@@ -256,7 +248,6 @@ struct kgi_marker_s {
 	kgi_marker_mode_t	modes;	/* possible operation modes	*/
 	kgi_u8_t		shapes;	/* number of shapes		*/
 	kgi_u8_coord_t		size;	/* pattern size			*/
-
 	void (*SetMode)(kgi_marker_t *marker, kgi_marker_mode_t mode);
 	void (*Select)(kgi_marker_t *marker, kgi_u_t shape);
 	void (*SetShape)(kgi_marker_t *marker, kgi_u_t shape,

@@ -95,26 +95,27 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 
 	display = display_map[devid];
 
-	if (!kgc_render_drivers[display].drv) {
+	if (kgc_render_drivers[display].drv == NULL) {
 		KRN_ERROR("No render class registered to display %d", display);
 		return (NULL);
 	}
 
-	if (!static_render) {
-		r = (render_t)kobj_create((kobj_class_t)kgc_render_drivers[display].drv,
-					  M_KGI, M_WAITOK);
+	if (static_render == 0) {
+		r = (render_t)kobj_create(
+				(kobj_class_t)kgc_render_drivers[display].drv,
+			 	M_KGI, M_WAITOK);
 	} else 
 		r = static_render;
 	
-	if (!r) {
+	if (r == 0) {
 		KRN_ERROR("Could not create render %d", devid);
 		return (NULL);
 	}
 
-	if (!static_render) {
-		if (!(r->meta = kgi_kmalloc(kgc_render_drivers[display].drv->size))) {
+	if (static_render == 0) {
+		r->meta = kgi_kmalloc(kgc_render_drivers[display].drv->size); 
+		if (r->meta == NULL)
 			KRN_ERROR("Could not allocate render meta %d", devid);
-		}
 	}
 
 	kgc_renders[devid].r = r;
@@ -131,12 +132,12 @@ kgc_render_release(kgi_u_t devid)
 	if (!KII_VALID_CONSOLE_ID(devid))
 		return;
 
-	if (!kgc_renders[devid].r) {
+	if (kgc_renders[devid].r == NULL) {
 		KRN_ERROR("Render not allocated to %d", devid);
 		return;
 	}
 
-	if (!kgc_renders[devid].static_alloc) {
+	if (kgc_renders[devid].static_alloc == 0) {
 		kgi_kfree(kgc_renders[devid].r->meta);
 		kobj_delete((kobj_t)kgc_renders[devid].r, M_KGI);
 	}
@@ -150,15 +151,16 @@ kgc_render_register(render_driver_t *driver, kgi_u_t display,
 		kgi_u8_t already_allocated)
 {
 
-	if (!KGI_VALID_DISPLAY_ID(display) || !driver)
+	if (!KGI_VALID_DISPLAY_ID(display) || driver == NULL)
 		return (KGI_EINVAL);
 
 	if (kgc_render_drivers[display].drv) {
-		KRN_ERROR("Render driver already registered to display %d", display);
+		KRN_ERROR("Render driver already registered to display %d",
+			  display);
 		return (KGI_EINVAL);
 	}
 
-	if (!already_allocated) {
+	if (already_allocated == 0) {
 		/* Compile the render class */
 		kobj_class_compile((kobj_class_t)driver);
 	} else 
@@ -176,7 +178,7 @@ kgc_render_unregister(render_driver_t *driver)
 {
 	kgi_u_t i, display = -1;
 
-	if (!driver)
+	if (driver == NULL)
 		return (KGI_EOK);
 
 	/* All devices of the display shall have their render freed */
@@ -184,7 +186,7 @@ kgc_render_unregister(render_driver_t *driver)
 		if (kgc_render_drivers[display_map[i]].drv == driver) {
 			display = display_map[i];
 			if (kgc_renders[i].r) {
-				KRN_ERROR("At least a render still allocated to device %d", i);
+				KRN_ERROR("At least a render still allocated " 				   		"to device %d", i);
 				return (KGI_EINVAL);
 			}
 		}
@@ -192,7 +194,7 @@ kgc_render_unregister(render_driver_t *driver)
 
 	if (display != -1) {
 		/* Free the render class if not allocated statically */
-		if (!kgc_render_drivers[display].static_alloc)
+		if (kgc_render_drivers[display].static_alloc == 0)
 			kobj_class_free((kobj_class_t)driver);
 
 		kgc_render_drivers[display].drv = NULL;

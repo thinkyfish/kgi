@@ -294,7 +294,8 @@ typedef struct {
 } I2CDevRec;
 
 typedef struct {
-	kgi_error_t	(*WriteRead)(I2CDevRec *, kgi_u8_t*, kgi_u_t, kgi_u8_t *, kgi_u_t);
+	kgi_error_t	(*WriteRead)(I2CDevRec *, kgi_u8_t*, kgi_u_t, 
+				kgi_u8_t *, kgi_u_t);
 	
 	kgi_error_t	(*PutByte)(I2CDevRec *, kgi_u8_t);
 	kgi_error_t	(*GetByte)(I2CDevRec *, kgi_u8_t* , kgi_u8_t);

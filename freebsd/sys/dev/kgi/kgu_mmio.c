@@ -75,12 +75,13 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		panic("don't know how to signal...");	/* XXX */
 	}
 
-	mmio = (kgi_mmio_region_t *) map->resource;
+	mmio = (kgi_mmio_region_t *)map->resource;
 	KRN_ASSERT((mmio->type & KGI_RT_MASK) == KGI_RT_MMIO);
 
-	if (!ooffset)
-		KRN_DEBUG(3, "mmio_nopage @%.8x, vma %p, %x", ooffset, vma, prot);
-
+	if (!ooffset) {
+		KRN_DEBUG(3, "mmio_nopage @%.8x, vma %p, %x", 
+			ooffset, vma, prot);
+	}
 	if (map->device->kgi.flags & KGI_DF_FOCUSED) {
 		switch(map->type) {
 			/*
@@ -103,7 +104,7 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 			map->offset = ooffset % mmio->win.size;
 			*paddr = mmio->win.phys + map->offset;
 			break;
-		case GRAPH_MM_PAGED_PAGED:
+		case GRAPH_MM_PAGED_PAGED: /* Fall thru. */
 		case GRAPH_MM_LINEAR_PAGED:
 		default:
 			KRN_INTERNAL_ERROR;
@@ -113,7 +114,7 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		if (!ooffset)
 			KRN_DEBUG(3, "mmio_nopage @%.8x, remap vma %p, "
 				  "to '%s' phys %x, offset %x",
-				  ooffset, map->vma, mmio->name, *paddr, offset);
+				ooffset, map->vma, mmio->name, *paddr, offset);
 
 		/*
 		 * Check if we have to move the HW window. If we have,
@@ -123,11 +124,10 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 			/* XXX Not tested */
 			graph_unmap_resource((graph_mapping_t *) map);
 
-			if (mmio->SetOffset) {
+			if (mmio->SetOffset) 
 				mmio->SetOffset(mmio, offset);
-			} else {
+			else 
 				mmio->offset = offset;
-			}
 		}
 
 		kgi_mutex_unlock(&kgi_lock);
@@ -140,7 +140,8 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		 * The thread is trying to access an area while the
 		 * device is not focused --> block it
 		 */
-		msleep(map->device, &kgi_lock.mutex, PDROP | PVM, "mmiosleep", 0);
+		msleep(map->device, &kgi_lock.mutex, PDROP | PVM, "mmiosleep",
+			 0);
 		goto Retry;
 	}
 }
@@ -209,7 +210,7 @@ graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	/* XXX warning determine protection flags here! */
 
-	if (!(map = kgi_kmalloc(sizeof(*map)))) {
+	if ((map = kgi_kmalloc(sizeof(*map))) == NULL) {
 		KRN_ERROR("failed to allocate mmio map");
 		return (KGI_ENOMEM);
 	}

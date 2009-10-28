@@ -43,7 +43,7 @@ __FBSDID("$FreeBSD$");
 
 SYSINIT(kgi, SI_SUB_COPYRIGHT, SI_ORDER_FIRST, kgi_init, NULL);
 
-static int initialized  = 0;
+static int initialized = 0;
 int console_initialized = 0;
 
 kgi_mutex_t kgi_lock;
@@ -55,8 +55,8 @@ kgi_u8_t display_map[CONFIG_KGII_MAX_NR_DEVICES];
 
 MALLOC_DEFINE(M_KGI, "kgi", "KGI data structures");
 
-static kgi_device_t	 *kgidevice[KGI_MAX_NR_DEVICES];
-static kgi_display_t *kgidpy[KGI_MAX_NR_DISPLAYS];
+static kgi_device_t	*kgidevice[KGI_MAX_NR_DEVICES];
+static kgi_display_t 	*kgidpy[KGI_MAX_NR_DISPLAYS];
 
 /*
  * Display handling.
@@ -70,14 +70,15 @@ kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *data)
 		return (KGI_EPROTO);
 	}
 	if (!KGI_VALID_DISPLAY_ID(dev->dpy_id) ||
-		(NULL == kgidpy[dev->dpy_id])) {
+		(kgidpy[dev->dpy_id]) == NULL) {
 		KRN_DEBUG(1, "No valid display device.");
 		return (KGI_ENODEV);
 	}
 	KRN_ASSERT((cmd & KGIC_TYPE_MASK) == KGIC_DISPLAY_COMMAND);
-	return ((NULL == kgidpy[dev->dpy_id]->Command)
+	return ((kgidpy[dev->dpy_id]->Command == NULL)
 		? -ENXIO
-		: (kgidpy[dev->dpy_id]->Command)(kgidpy[dev->dpy_id], cmd, data));
+		: (kgidpy[dev->dpy_id]->Command)
+		  (kgidpy[dev->dpy_id], cmd, data));
 }
 
 /*
@@ -94,9 +95,9 @@ kgidpy_check_mode(kgi_display_t *dpy, kgi_mode_t *m, kgi_timing_command_t cmd)
 	KRN_ASSERT(m);
 	KRN_ASSERT(cmd == KGI_TC_PROPOSE || cmd == KGI_TC_CHECK);
 
-	if (!m->dev_mode && dpy->mode_size) {
+	if (m->dev_mode == NULL && dpy->mode_size) {
 		m->dev_mode = kgi_kmalloc(dpy->mode_size);
-		if (!m->dev_mode) {			
+		if (m->dev_mode == NULL) {			
 			KRN_ERROR("Out of memory.");
 			return (KGI_ENOMEM);
 		}
@@ -235,7 +236,7 @@ kgi_register_device(kgi_device_t *dev, kgi_u_t index)
 		KRN_ERROR("No display to attach device (dpy %i, dev %i)",
 			dev->dpy_id, dev->id);
 		dev->dpy_id = KGI_INVALID_DISPLAY;
-		dev->id  = KGI_INVALID_DEVICE;
+		dev->id = KGI_INVALID_DEVICE;
 		return (KGI_ENODEV);
 	}
 	if ((err = kgidpy_check_mode(kgidpy[dev->dpy_id], dev->mode,
@@ -304,7 +305,7 @@ kgi_check_device_mode(kgi_display_t *dpy, kgi_s_t id)
 
 	KRN_ASSERT(KGI_VALID_DEVICE_ID(id));
 
-	if (!dev)
+	if (dev == NULL)
 		return (KGI_EOK);
 
 	/* Refuse to reattach a device not in console mode. */
@@ -348,7 +349,7 @@ kgi_reattach_device(kgi_display_t *dpy, kgi_s_t id)
 
 	KRN_ASSERT(KGI_VALID_DEVICE_ID(id));
 
-	if (!dev)
+	if (dev == NULL)
 		return;
 
 	/* Refuse to reattach a device not in console mode. */
@@ -365,9 +366,11 @@ kgi_reattach_device(kgi_display_t *dpy, kgi_s_t id)
 		kgidpy_release_mode(dpy, dev->mode);
 
 		/* Allocate the new display mode, supposed to be ok. */
-		if ((error = kgidpy_check_mode(dpy, dev->mode, KGI_TC_PROPOSE)))
-			KRN_ERROR("Failed to reattach device %i (%d)", id, error);
-		
+		error = kgidpy_check_mode(dpy, dev->mode, KGI_TC_PROPOSE);
+		if (error != KGI_EOK) {	
+			KRN_ERROR("Failed to reattach device %i (%d)", 
+				  id, error);
+		}	
 		/* Notify the device of the display change. */
 		event.notice.command = KGI_EVENT_NOTICE_NEW_DISPLAY;
 		
@@ -397,7 +400,7 @@ kgi_can_do_console(kgi_display_t *dpy)
 		mode.dev_mode = NULL;
 	}
 
-	return ((KGI_EOK == err) ? (mode.img[0].flags & KGI_IF_TEXT16) : 0);
+	return ((err == KGI_EOK) ? (mode.img[0].flags & KGI_IF_TEXT16) : 0);
 }
 
 static inline kgi_u_t 
@@ -437,7 +440,7 @@ kgi_register_display(kgi_display_t *dpy, kgi_u_t id)
 		KRN_DEBUG(2, "Auto-assigned new id %i", id);
 	}
 
-	if (!KGI_VALID_DISPLAY_ID(id) || !dpy ||
+	if (!KGI_VALID_DISPLAY_ID(id) || dpy == NULL ||
 		(kgidpy[id] && kgidpy[id]->graphic)) {
 		KRN_ERROR("Can't replace display %i", id);
 		return (KGI_EINVAL);
@@ -469,7 +472,7 @@ kgi_register_display(kgi_display_t *dpy, kgi_u_t id)
 	 * If no error during checks, check display specific modes and
 	 * set the mode for the focused device if any.
 	 */
-	if (!error) {
+	if (error == 0) {
 		for (i = 0; i < KGI_MAX_NR_DEVICES; i++) {
 			if (display_map[i] == id) {
 				kgi_reattach_device(dpy, i);
@@ -532,7 +535,7 @@ kgi_unmap_device(kgi_u_t dev_id)
 		return (KGI_EINVAL);
 	}
 
-	if (!(dev = dpy->focus))
+	if ((dev = dpy->focus) == NULL)
 		return (KGI_EOK);
 
 	KRN_DEBUG(3, "Unmapping device %i from display %i", dev->id, dpy->id);
@@ -560,7 +563,7 @@ kgi_map_device(kgi_u_t dev_id)
 	if (!(KGI_VALID_DEVICE_ID(dev_id) && (dev = kgidevice[dev_id]) &&
 		KGI_VALID_DISPLAY_ID(display_map[dev_id]) &&
 		(dpy = kgidpy[display_map[dev_id]]))) {
-		KRN_DEBUG(3, "No target or display for device %i, no map done.", dev_id);
+		KRN_DEBUG(3, "No target or display for device %i, no map done.", 			  dev_id);
 		return;
 	}
 	KRN_ASSERT(dpy->focus == NULL);
@@ -590,10 +593,10 @@ kgi_u_t
 kgi_current_devid(kgi_u_t dpy_id)
 {
 
-	if (!kgidpy[dpy_id])
+	if (kgidpy[dpy_id] == 0)
 		return (0);
 
-	if (!kgidpy[dpy_id]->focus)
+	if (kgidpy[dpy_id]->focus == 0)
 		return (-1);
 
 	return (kgidpy[dpy_id]->focus->id);
@@ -619,24 +622,33 @@ kgi_init_maps(kgi_u_t nr_displays, kgi_u_t nr_focuses)
 {
 	kgi_u_t display = 0, device;
 	for (device = 0; device < CONFIG_KGII_MAX_NR_CONSOLES; device++) {
-		kgi_u_t focus = device / 
-					(CONFIG_KGII_MAX_NR_CONSOLES / CONFIG_KGII_MAX_NR_FOCUSES);
-		kgi_u_t console = device % 
-					(CONFIG_KGII_MAX_NR_CONSOLES / CONFIG_KGII_MAX_NR_FOCUSES);
-		if (!(KGI_VALID_FOCUS_ID(focus) && KGI_VALID_CONSOLE_ID(console)))
+		kgi_u_t focus = 
+			device / 
+			(CONFIG_KGII_MAX_NR_CONSOLES / 
+			 CONFIG_KGII_MAX_NR_FOCUSES);
+		kgi_u_t console =
+			device % 
+			(CONFIG_KGII_MAX_NR_CONSOLES /
+			 CONFIG_KGII_MAX_NR_FOCUSES);
+		if (!(KGI_VALID_FOCUS_ID(focus) && 
+			KGI_VALID_CONSOLE_ID(console)))
 			continue;
 		
-		KRN_DEBUG(4, "Mapping device %i on focus %i, display %i, console %i",
-			device, focus, display, console);
+		KRN_DEBUG(4, "Mapping device %i on focus %i," 
+				  "display %i, console %i",
+				  device, focus, display, console);
 
 		console_map[focus][console] = device;
-		graphic_map[focus][console] = device + CONFIG_KGII_MAX_NR_CONSOLES;
+		graphic_map[focus][console] = device +
+			CONFIG_KGII_MAX_NR_CONSOLES;
 
 		focus_map[device] = 
-				focus_map[device + CONFIG_KGII_MAX_NR_CONSOLES] = focus;
+			focus_map[device +
+			CONFIG_KGII_MAX_NR_CONSOLES] = focus;
 
 		display_map[device] = 
-				display_map[device + CONFIG_KGII_MAX_NR_CONSOLES] = display;
+			display_map[device + CONFIG_KGII_MAX_NR_CONSOLES] =
+			display;
 
 		if ((device % CONFIG_KGII_MAX_NR_FOCUSES) ==
 			CONFIG_KGII_MAX_NR_FOCUSES - 1) {
@@ -678,7 +690,7 @@ kgi_init(void)
 
 	kii_configure(0);
 
-	if (!initialized) {	
+	if (initialized == 0) {	
 		memset(display_map, 0xFF, sizeof(display_map));
 		memset(focus_map,   0xFF, sizeof(focus_map));
 		memset(console_map, 0xFF, sizeof(console_map));
