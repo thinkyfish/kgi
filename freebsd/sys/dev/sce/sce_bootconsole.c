@@ -97,7 +97,7 @@ static void
 console_printk(char *b, unsigned count)
 {
 	kgi_console_t *cons;
-	kgi_u_t c;
+	kgi_u_t c, attrfl;
 	static int printing = 0;
 
 	cons = (kgi_console_t *)&scecons;
@@ -108,12 +108,18 @@ console_printk(char *b, unsigned count)
 	printing = 1;
 
 	SCROLLER_MARK(cons->scroller);
-
+	SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl, 0);
+	
 	while (count--) {
 		c = *(b++);
 
 		/* Is it a printable character? */
-		if (c >= 32) {
+		if (c >= 32) {			
+			 /* Have kernel/boot console messages stand out. */
+			attrfl |= KGI_CA_BOLD;
+			SCROLLER_SET(cons->scroller, attrfl, 0);
+			SCROLLER_UPDATE_ATTR(cons->scroller);
+
 			if (cons->flags & KGI_CF_NEED_WRAP) {
 				SCROLLER_MODIFIED_MARK(cons->scroller);
 				if (CONSOLE_MODE(cons, KGI_CM_AUTO_WRAP)) {
@@ -126,6 +132,9 @@ console_printk(char *b, unsigned count)
 			SCROLLER_WRITE(cons->scroller, c);
 
 		} else {
+			attrfl &= ~KGI_CA_BOLD;
+			SCROLLER_SET(cons->scroller, attrfl, 0);
+			SCROLLER_UPDATE_ATTR(cons->scroller);
 			switch (c) {
 			case ASCII_LF:
 				SCROLLER_MODIFIED_MARK(cons->scroller);
