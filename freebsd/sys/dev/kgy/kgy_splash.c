@@ -114,14 +114,14 @@ static kgi_u32_t msg[] = {
 
 static kgi_rgb_color_t msg_col[8] = 
 {
-	{ 0, 0, 0}, { 0, 0,13}, { 0, 0,26}, { 0, 0,38},
-	{ 0, 0,51}, { 0, 0,63}, {24, 0,24}, {63,63, 0}
+	{ 0, 0,  0}, { 0, 0, 13}, { 0, 0, 26}, { 0, 0, 38},
+	{ 0, 0, 51}, { 0, 0, 63}, {24, 0, 24}, {63, 63, 0}
 };
 
 static kgi_rgb_color_t def_col[8] =
 {
-	{ 0, 0, 0}, { 0, 0,42}, { 0,42, 0}, { 0,42,42},
-	{42, 0, 0}, {42, 0,42}, {42,42, 0}, {42,42,42}
+	{ 0, 0, 0}, { 0, 0, 42}, { 0, 42, 0}, { 0, 42, 42},
+	{42, 0, 0}, {42, 0, 42}, {42, 42, 0}, {42, 42, 42}
 };
 
 static kgi_rgb_color_t curr_col[8] = { };
@@ -135,15 +135,19 @@ set_col(void)
 		outb_p((i == 6) ? 0x14 : i, 0x3C8);
 		outb_p(curr_col[i].r, 0x3C9);
 		outb_p(curr_col[i].g, 0x3C9);
-		while (inb_p(0x3DA) & 1);
-		while (!(inb_p(0x3DA) & 1));
+		while (inb_p(0x3DA) & 1)
+			;
+		while (!(inb_p(0x3DA) & 1))
+			;
 		outb_p(curr_col[i].b, 0x3C9);
 	}
 
 	if (inb_p(0x3DA) & 8) 
-		while (inb_p(0x3DA) & 8);
+		while (inb_p(0x3DA) & 8)
+			;
 
-	while (!(inb_p(0x3DA) & 8));
+	while (!(inb_p(0x3DA) & 8))
+		;
 }
 
 static void 
