@@ -433,8 +433,7 @@ csi_m(kgi_console_t *cons)
 	for (i = 0; i <= xterm->npar; i++) {
 		switch (xterm->par[i]) {
 		case 0:
-			attrfl = 
-			  KGI_CA_NORMAL | KGI_CA_COLOR(DEFAULT_FG, DEFAULT_BG);
+			attrfl =  KGI_CA_NORMAL | KGI_CA_COLOR(DEFAULT_FG, DEFAULT_BG);
 			break;
 		case 1:
 			attrfl &= ~KGI_CA_INTENSITY;
@@ -553,7 +552,7 @@ csi_m(kgi_console_t *cons)
 					&& (xterm->par[i] <= 47)) {	
 					attrfl &= ~KGI_CA_BG_COLOR;
 					attrfl |= 
-					((unsigned long)colormap[xterm->par[i] - 					 40]);
+					((unsigned long)colormap[xterm->par[i] - 40]);
 				}
 			}
 			break;

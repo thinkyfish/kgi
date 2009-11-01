@@ -85,10 +85,11 @@ static int
 pcx_start(render_t r)
 {
 	kgirndr_meta *render;
-	kgi_image_mode_t *img = &render->mode.img[0];
+	kgi_image_mode_t *img;
 	int depth;
 
 	render = kgc_render_meta(r);
+ 	img = &render->mode.img[0];
 
 	/* Use the nebula daemon by default */
 	if (pcx_decoder.data == NULL || pcx_decoder.data_size <= 0) {
@@ -152,9 +153,7 @@ struct pcxheader {
 static int
 pcx_init(char *data, int size)
 {
-	const struct pcxheader *hdr;
-
-	hdr = (const struct pcxheader *)data;
+	const struct pcxheader *hdr = (const struct pcxheader *)data;
 
 	if (size < 128 + 1 + 1 + 768
 		|| hdr->manufactor != 10
@@ -163,7 +162,7 @@ pcx_init(char *data, int size)
 		|| hdr->nplanes != 1
 		|| hdr->bpp != 8
 		|| hdr->bpsl > MAXSCANLINE
-		|| data[size-769] != 12) {
+		|| data[size - 769] != 12) {
 		printf("backgnd_pcx: invalid PCX image\n");
 		return (1);
 	}
@@ -187,7 +186,7 @@ pcx_draw(render_t r, unsigned char *vidmem, kgi_u16_t *pal)
 	int swidth, sheight, sbpsl, sdepth;
 	int c, i, j, pos, scan, x, y;
 	u_char line[MAXSCANLINE];
-	kgi_u16_t clut[256*3], *pclut;
+	kgi_u16_t clut[256 * 3], *pclut;
 
 	render = kgc_render_meta(r);
 	img = &render->mode.img[0];

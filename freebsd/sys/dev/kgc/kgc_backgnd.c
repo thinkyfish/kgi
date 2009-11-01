@@ -205,7 +205,7 @@ backgnd_init(kgi_u_t devid, backgnd_callback_t callback, void *arg)
 {
 	int i, error = ENODEV;
 
-	if (!KGI_VALID_DEVICE_ID(devid))
+	if (KGI_VALID_DEVICE_ID(devid) == 0)
 		return (EINVAL);
 
 	backgnd_callbacks[devid] = callback;
@@ -232,7 +232,7 @@ backgnd_term(kgi_u_t devid)
 	int error = 0;
 	render_t r;
 
-	if (!KGI_VALID_DEVICE_ID(devid) || (r = kgc_get_render(devid)) == NULL)
+	if (KGI_VALID_DEVICE_ID(devid) == 0|| (r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	if (backgnd_decoders[devid] != NULL) {
@@ -256,7 +256,7 @@ backgnd_draw(kgi_u_t devid, unsigned char *mem, kgi_u16_t *pal)
 {
 	render_t r;
 
-	if (!KGI_VALID_DEVICE_ID(devid) || (r = kgc_get_render(devid)) == NULL)
+	if (KGI_VALID_DEVICE_ID(devid) == 0 || (r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	if (backgnd_decoders[devid] != NULL)

@@ -69,8 +69,8 @@ kgc_scroller_init(void)
 }
 
 /*
- * Allocate a new scroller instance. The driver (scroller class) has already been
- * registered to the display.
+ * Allocate a new scroller instance. The driver (scroller class) has already 
+ * been registered to the display.
  * The scroller instance is assigned to the given KII consoles.
  * If the scroller is statically allocated, then let the caller allocate the 
  * scroller meta.
@@ -85,7 +85,7 @@ kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
 	 * console0 can not be allocated because it is reserved boot messages
 	 * and is already statically allocated.
 	 */
-	if (!KII_VALID_CONSOLE_ID(devid))
+	if (KII_VALID_CONSOLE_ID(devid) == 0)
 		return (NULL);
 
 	if (kgc_scrollers[devid].s) {
