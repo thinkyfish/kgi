@@ -232,7 +232,7 @@ backgnd_term(kgi_u_t devid)
 	int error = 0;
 	render_t r;
 
-	if (KGI_VALID_DEVICE_ID(devid) == 0|| (r = kgc_get_render(devid)) == NULL)
+	if (KGI_VALID_DEVICE_ID(devid) == 0 || (r = kgc_get_render(devid)) == NULL)
 		return (EINVAL);
 
 	if (backgnd_decoders[devid] != NULL) {

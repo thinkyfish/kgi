@@ -80,7 +80,7 @@ typedef struct {
 	kgc_gfb_font_t	*font;
 	unsigned char	*bgnd;
 
-	kgi_u16_t	palette[256*3];
+	kgi_u16_t	palette[256 * 3];
 } gfbrndr_meta;
 
 static int
@@ -393,6 +393,7 @@ gfbrndr_bgnd_draw(render_t r)
 		if (render->ilut->Set)
 			render->ilut->Set(render->ilut, 0, 0, 256, KGI_AM_COLORS,
 					  render->palette);
+
 	}
 }
 
