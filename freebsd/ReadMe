@@ -15,6 +15,12 @@ Installation:
    The included KGI kernel config disables & enables some FreeBSD devices &
    options. Read sys/i386/conf/KGI for more information.
  * Recommend using INSTKERNNAME=kernel.KGI when make'ing kernel.
+ * Once you have a KGI enabled system running, make sure your TERM environment
+   is set to "xterm"
+   For (t)csh:
+	# setevn TERM xterm
+   For sh:
+	# export TERM=xterm
 
 GGI:
  * Setup headers:
