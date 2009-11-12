@@ -49,33 +49,35 @@
 #define DEBUG_LEVEL 0
 #endif
 
-extern int console_initialized;
+#define	KGI_ERROR(fmt, args...)	printf(fmt "\n", ##args)
+#define	KGI_NOTICE(fmt, args...) printf(fmt "\n", ##args)
 
-#define	KRN_ERROR(fmt, args...) 					\
-		if (console_initialized)				\
-			printf(fmt "\n", ##args)
-#define	KRN_NOTICE(fmt, args...) 					\
-		if (console_initialized)				\
-			printf(fmt "\n", ##args)
-#define	KRN_DEBUG(level, fmt, args...)					\
-		if (console_initialized && (level <= KGI_DBG_LEVEL ||   \
-		    level <= DEBUG_LEVEL))				\
-			printf("<%i> " fmt "\n", level, ##args)
-#define KRN_BOOT(fmt, args...)						\
-		if (console_initialized && bootverbose)			\
-			printf(fmt "\n", ##args)
+#ifdef KGI_VERBOSE_DEBUG
+#define	KGI_DEBUG(level, fmt, args...)					\
+	if (level <= KGI_DBG_LEVEL || level <= DEBUG_LEVEL)   \
+ 		printf("KGI_DBG(%i) %s:%s:%d: " fmt "\n", level, 	\
+			__FILE__, __FUNCTION__, __LINE__, ##args)
+#else
+#define	KGI_DEBUG(level, fmt, args...)					\
+	if (level <= KGI_DBG_LEVEL || level <= DEBUG_LEVEL)   \
+ 		printf("KGI_DBG(%i) " fmt "\n", level, ##args)
+#endif
 
-#define	KRN_ASSERT(x)							\
-	if (x) {} else { KRN_DEBUG(0, "%s", #x); }
+#define KGI_BOOT(fmt, args...)						\
+	if (bootverbose)			\
+		printf(fmt "\n", ##args)
 
-#define	KRN_INTERNAL_ERROR						\
-		KRN_ERROR("KGI internal error")
+#define	KGI_ASSERT(x)							\
+	if (x) {} else { KGI_DEBUG(0, "%s", #x); }
+
+#define	KGI_INTERNAL_ERROR						\
+		KGI_ERROR("KGI internal error")
 
 #ifdef KGI_DBG_LEVEL
-#define	KRN_TRACE(level, x)	\
+#define	KGI_TRACE(level, x)	\
 		if (level <= KGI_DBG_LEVEL) { x; } else do {} while (0)
 #else
-#define	KRN_TRACE(level, x)	
+#define	KGI_TRACE(level, x)	
 #endif
 
 #ifndef PANIC

@@ -174,7 +174,7 @@ kgim_display_command(kgi_display_t *kgi_dpy, kgi_u_t cmd, void *data)
 	 * kgim_display_t *kgim = (kgim_display_t *) kgi_dpy;
 	 * kgim_display_mode_t *kgim_mode = (kgim_display_mode_t *) dev_mode;
 	 */
-	KRN_ERROR("kgim_display_command(cmd = %d)", cmd);
+	KGI_ERROR("kgim_display_command(cmd = %d)", cmd);
 
 	return (-KGI_ERRNO(DRIVER, INVAL));
 }
@@ -193,17 +193,17 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 	kgim_chipset_mode_t	*chipset_mode;
 	kgim_clock_mode_t	*clock_mode;
 
-	KRN_DEBUG(2, "kgim_display_check_mode()");
+	KGI_DEBUG(2, "kgim_display_check_mode()");
 
 	if (images != 1) {
-		KRN_ERROR("%i images not yet supported", images);
+		KGI_ERROR("%i images not yet supported", images);
 		return (-KGI_ERRNO(DRIVER, NOSUP));
 	}
 
 	if (cmd == KGI_TC_PROPOSE) {
 		kgi_u_t i;
 
-		KRN_DEBUG(2, "KGI_TC_PROPOSE:");
+		KGI_DEBUG(2, "KGI_TC_PROPOSE:");
 
 		kgim_memset(dpy_mode, 0, dpy->kgi.mode_size);
 
@@ -218,20 +218,20 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 				dev_mode = ((kgi_u8_t *) dev_mode) +
 					KGIM_ALIGN(meta->mode_size);
 
-				KRN_DEBUG(2, "subsystem_mode %i @ %p", i,
+				KGI_DEBUG(2, "subsystem_mode %i @ %p", i,
 				dpy_mode->subsystem_mode[i]);
 			}
 		}
 
 		if (img[0].fam == 0) {
 			if (img[0].flags & KGI_IF_TEXT16) {
-				KRN_DEBUG(2, "Proposing default textmode");
+				KGI_DEBUG(2, "Proposing default textmode.");
 
 				img[0].fam = KGI_AM_TEXT;
 				kgim_strcpy(img[0].bpfa, (kgi_u8_t[]){4,4,8,0});
 
 			} else {
-				KRN_DEBUG(2, "Proposing default graphic mode");
+				KGI_DEBUG(2, "Proposing default graphic mode.");
 
 				img[0].fam = KGI_AM_COLOR_INDEX;
 				kgim_strcpy(img[0].bpfa, (kgi_u8_t[]){8,0});
@@ -245,17 +245,17 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 	monitor_mode	= dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_monitor];
 
 	if (cmd == KGI_TC_PROPOSE) {
-		KRN_DEBUG(2, "KGI_TC_PROPOSE(2):");
+		KGI_DEBUG(2, "KGI_TC_PROPOSE(2):");
 
 		chipset_mode->crt	= monitor_mode;
 		dac_mode->crt		= monitor_mode;
 
 		img[0].out = &(monitor_mode->in);
-		KRN_DEBUG(2, "monitor_mode @ %p, dpm @ %p", monitor_mode,
+		KGI_DEBUG(2, "monitor_mode @ %p, dpm @ %p", monitor_mode,
 			&(monitor_mode->in));
 	}
 
-	KRN_DEBUG(3, "Getting ready to check mode against all subsystems....");
+	KGI_DEBUG(3, "Getting ready to check mode against all subsystems....");
 
 	cnt = 10;
 	while (cnt-- && (KGI_TC_READY != cmd)) {
@@ -272,54 +272,54 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 				dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_##sys],\
 				cmd, img, images)			\
 			: KGI_EOK;					\
-		KRN_DEBUG(2, "system %i, io %p, mode %p, cmd %i, return %.8x", \
+		KGI_DEBUG(2, "system %i, io %p, mode %p, cmd %i, return %.8x", \
 			KGIM_SUBSYSTEM_##sys, 				\
 			dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_io,	\
 			dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_##sys],	\
 			cmd, error);
 
-		KRN_DEBUG(4, "Checking against clock...");
+		KGI_DEBUG(4, "Checking against clock...");
 		SUBSYSTEM_CHECK_MODE(clock)
 		if (error) {
-			KRN_ERROR("Clock check failed! (%.8x)", error);
+			KGI_ERROR("Clock check failed! (%.8x)", error);
 			return (error);
 		}
 
-		KRN_DEBUG(4, "Checking against ramdac...");
+		KGI_DEBUG(4, "Checking against ramdac...");
 		SUBSYSTEM_CHECK_MODE(ramdac)
 		if (error) {
-			KRN_ERROR("Ramdac check failed! (%.8x)", error);
+			KGI_ERROR("Ramdac check failed! (%.8x)", error);
 			return (error);
 		}
 
-		KRN_DEBUG(4, "Checking against chipset...");
+		KGI_DEBUG(4, "Checking against chipset...");
 		SUBSYSTEM_CHECK_MODE(chipset)
 		if (error) {
-			KRN_ERROR("Chipset check failed! (%.8x)", error);
+			KGI_ERROR("Chipset check failed! (%.8x)", error);
 			return error;
 		}
 
-		KRN_DEBUG(4, "Checking against clock(2)...");
+		KGI_DEBUG(4, "Checking against clock(2)...");
 		SUBSYSTEM_CHECK_MODE(clock)
 		if (error) {
-			KRN_ERROR("Clock check 2 failed! (%.8x)", error);
+			KGI_ERROR("Clock check 2 failed! (%.8x)", error);
 			return error;
 		}
 
-		KRN_DEBUG(4, "Checking against monitor...");
+		KGI_DEBUG(4, "Checking against monitor...");
 		SUBSYSTEM_CHECK_MODE(monitor)
 
 		switch (error) {
 		case KGI_TC_LOWER:
-			KRN_DEBUG(2, "KGI_TC_LOWER:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_LOWER:"); cmd = error; continue;
 		case KGI_TC_RAISE:
-			KRN_DEBUG(2, "KGI_TC_RAISE:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_RAISE:"); cmd = error; continue;
 		case KGI_TC_CHECK:
-			KRN_DEBUG(2, "KGI_TC_CHECK:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_CHECK:"); cmd = error; continue;
 		case KGI_TC_READY:
-			KRN_DEBUG(2, "KGI_TC_READY:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_READY:"); cmd = error; continue;
 		default:
-			KRN_ERROR("Unknown command %.8x from monitor", error);
+			KGI_ERROR("Unknown command %.8x from monitor", error);
 			return (error);
 		}
 
@@ -327,14 +327,14 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 	}
 
 	if (cnt < 0) {
-		KRN_ERROR("Exceeded 10 tries for a good mode, bailing out....");
+		KGI_ERROR("Exceeded 10 tries for a good mode, bailing out....");
 		return (-EINVAL);
 	} else {
 		kgi_u_t index, subsys_index;
 		kgim_subsystem_type_t subsys;
 
-		KRN_DEBUG(4, "Setting up global resources and metadata "
-			"for %i subsystems", KGIM_LAST_SUBSYSTEM);
+		KGI_DEBUG(4, "Setting up global resources and metadata "
+			"for %i subsystems.", KGIM_LAST_SUBSYSTEM);
 		index = 0;
 		subsys = 0;
 		subsys_index = 0;
@@ -344,7 +344,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			kgi_resource_t *resource;
 
 			if (rsize <= index) {
-				KRN_ERROR("rsize (%i) <= index (%i)",
+				KGI_ERROR("rsize (%i) <= index (%i)",
 					rsize, index);
 				return (-ENOMEM);
 			}
@@ -359,7 +359,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 				: NULL;
 
 			if (resource) {
-				KRN_DEBUG(2, "resource %i: %s io %p meta %p",
+				KGI_DEBUG(2, "resource %i: %s io %p meta %p",
 					index, resource->name,
 					resource->meta_io, resource->meta);
 				r[index++] = resource;
@@ -371,8 +371,8 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			continue;
 		}
 
-		KRN_DEBUG(4, "Setting up image resources and metadata "
-			"for %i subsystems", KGIM_LAST_SUBSYSTEM);
+		KGI_DEBUG(4, "Setting up image resources and metadata "
+			"for %i subsystems.", KGIM_LAST_SUBSYSTEM);
 		index = 0;
 		subsys = 0;
 		subsys_index = 0;
@@ -382,7 +382,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			kgi_resource_t *resource;
 
 			if (__KGI_MAX_NR_IMAGE_RESOURCES <= index) {
-				KRN_ERROR("%i <= index",
+				KGI_ERROR("%i <= index",
 					__KGI_MAX_NR_IMAGE_RESOURCES);
 				return (-ENOMEM);
 			}
@@ -397,7 +397,7 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 				: NULL;
 
 			if (resource) {
-				KRN_DEBUG(2, "img resource %i: %s io %p meta %p"
+				KGI_DEBUG(2, "img resource %i: %s io %p meta %p"
 					, index, resource->name,
 					resource->meta_io, resource->meta);
 				img[0].resource[index++] = resource;
@@ -420,13 +420,13 @@ kgim_display_set_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	kgim_display_mode_t *dpy_mode = dev_mode;
 	const kgim_meta_t *meta;
 	
-	KRN_DEBUG(2, "kgim_display_set_mode()");
+	KGI_DEBUG(2, "kgim_display_set_mode()");
 
 #define	SUBSYSTEM_PREPARE_MODE(sys)					\
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
 		if (meta && meta->ModePrepare) {			\
 									\
-			KRN_DEBUG(3, "preparing " #sys);		\
+			KGI_DEBUG(3, "preparing " #sys);		\
 			meta->ModePrepare(				\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_data,\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_io,\
@@ -468,7 +468,7 @@ kgim_display_unset_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	kgim_display_mode_t *dpy_mode = dev_mode;
 	const kgim_meta_t *meta;
 
-	KRN_DEBUG(2, "kgim_display_unset_mode()");
+	KGI_DEBUG(2, "kgim_display_unset_mode()");
 
 #define	SUBSYSTEM_LEAVE_MODE(sys)					\
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
@@ -495,16 +495,16 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	void *meta_data, *meta_io;
 	kgi_error_t error;
 
-	KRN_DEBUG(2, "kgim_display_subsystem_init()");
+	KGI_DEBUG(2, "kgim_display_subsystem_init()");
 
-	KRN_ASSERT(dpy);
+	KGI_ASSERT(dpy);
 
 	if (meta == NULL) {
-		KRN_ERROR("No meta-language for subsystem %i", system);
+		KGI_ERROR("No meta-language for subsystem %i", system);
 		return (-EINVAL);
 	}
 
-	KRN_DEBUG(2, "Initializing subsystem %i", system);
+	KGI_DEBUG(2, "Initializing subsystem %i", system);
 
 	meta_data = meta->data_size ?
 		kgim_alloc(meta->data_size) : NULL;
@@ -513,7 +513,7 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 
 	if ((meta->data_size && (meta_data == NULL)) ||
 		(meta->io_size && (meta_io == NULL))) {
-		KRN_ERROR("Failed to allocate meta data and I/O context");
+		KGI_ERROR("Failed to allocate meta data and I/O context");
 		kgim_free(meta_io);
 		meta_io = NULL;
 		kgim_free(meta_data);
@@ -531,20 +531,20 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	if (meta->io_size)   kgim_memset(meta_io, 0, meta->io_size);
 	
 	if ((0 == meta->io_size) && (KGIM_SUBSYSTEM_chipset != system)) {
-		KRN_ASSERT(meta_io == NULL);
+		KGI_ASSERT(meta_io == NULL);
 
-		KRN_DEBUG(3, "meta->io_size == 0; Assigning chipset's meta_io");
+		KGI_DEBUG(3, "meta->io_size == 0; Assigning chipset's meta_io");
 
 		meta_io = dpy->subsystem[KGIM_SUBSYSTEM_chipset].meta_io;
 	}
 
-	KRN_DEBUG(2, "meta->InitModule = %p", meta->InitModule);
+	KGI_DEBUG(2, "meta->InitModule = %p", meta->InitModule);
 
 	if (meta->InitModule) { 
 		error = meta->InitModule(meta_data, meta_io, &(dpy->options));
 
 		if (error) {
-			KRN_ERROR("Failed to initialize meta data (%.8x)",
+			KGI_ERROR("Failed to initialize meta data (%.8x)",
 				error);
 
 			if (meta->io_size) {
@@ -558,20 +558,20 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 			return (error);
 		}
 
-		KRN_DEBUG(3, "Meta data initialized");
+		KGI_DEBUG(3, "Meta data initialized.");
 	} else {
-		KRN_DEBUG(2, "No meta->InitModule() function for this device");
+		KGI_DEBUG(2, "No meta->InitModule() function for this device.");
 	}
 
-	KRN_DEBUG(2, "meta->Init = %p", meta->Init);
-	KRN_DEBUG(2, "meta_data[%i]=%p meta_io[%i]=%p",
+	KGI_DEBUG(2, "meta->Init = %p", meta->Init);
+	KGI_DEBUG(2, "meta_data[%i]=%p meta_io[%i]=%p",
 		meta->data_size, meta_data, meta->io_size, meta_io);
 
 	if (meta->Init) {
 		error = meta->Init(meta_data, meta_io, &(dpy->options));
 
 		if (error) {
-			KRN_ERROR("Failed to initialize device (%.8x)", error);
+			KGI_ERROR("Failed to initialize device (%.8x)", error);
 
 			if (meta->DoneModule) {
 				meta->DoneModule(meta_data, meta_io,
@@ -589,17 +589,16 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 			return (error);
 		}
 
-		KRN_DEBUG(2, "Device initialized");
-	} else {
-		KRN_DEBUG(2, "No meta->Init() function for this device");
-	}
+		KGI_DEBUG(2, "Device initialized.");
+	} else
+		KGI_DEBUG(2, "No meta->Init() function for this device.");
 
 	dpy->subsystem[system].meta_data = meta_data;
 	dpy->subsystem[system].meta_io   = meta_io;
 	dpy->kgi.mode_size += KGIM_ALIGN(meta->mode_size);
 
-	KRN_DEBUG(2, "Subsystem %i initialized", system);
-
+	KGI_DEBUG(2, "Subsystem %i initialized.", system);
+ 
 	return (KGI_EOK);
 }
 
@@ -610,7 +609,7 @@ kgim_display_subsystem_done(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	void *meta_data   = dpy->subsystem[system].meta_data;
 	void *meta_io     = dpy->subsystem[system].meta_io;
 
-	KRN_DEBUG(2, "kgim_display_subsystem_done()");
+	KGI_DEBUG(2, "kgim_display_subsystem_done()");
 
 	if (meta->Done)
 		meta->Done(meta_data, meta_io, &(dpy->options));
@@ -634,37 +633,37 @@ kgim_display_init(kgim_display_t *dpy)
 {
 	kgi_error_t error;
 
-	KRN_DEBUG(2, "kgim_display_init()");
+	KGI_DEBUG(2, "kgim_display_init()");
 
 	dpy->kgi.mode_size = KGIM_ALIGN(sizeof(kgim_display_mode_t));
 
-	KRN_DEBUG(4, "Initializing chipset subsystem....");
+	KGI_DEBUG(4, "Initializing chipset subsystem....");
 	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_chipset))){
-		KRN_ERROR("Failed (%.8x) to initialize chipset", error);
+		KGI_ERROR("Failed (%.8x) to initialize chipset.", error);
 		goto chipset;
 	}
-	KRN_DEBUG(4, "Chipset subsystem initialized");
+	KGI_DEBUG(4, "Chipset subsystem initialized.");
 
-	KRN_DEBUG(4, "Initializing ramdac subsystem....");
+	KGI_DEBUG(4, "Initializing ramdac subsystem....");
 	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_ramdac))) {
-		KRN_ERROR("Failed (%.8x) to initialize ramdac", error);
+		KGI_ERROR("Failed (%.8x) to initialize ramdac.", error);
 		goto ramdac;
 	}
-	KRN_DEBUG(4, "Ramdac subsystem initialized");
+	KGI_DEBUG(4, "Ramdac subsystem initialized.");
 
-	KRN_DEBUG(4, "Initializing clock subsystem....");
+	KGI_DEBUG(4, "Initializing clock subsystem....");
 	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_clock))) {
-		KRN_ERROR("Failed (%.8x) to initialize clock", error);
+		KGI_ERROR("Failed (%.8x) to initialize clock", error);
 		goto clock;
 	}
-	KRN_DEBUG(4, "Clock subsystem initialized");
+	KGI_DEBUG(4, "Clock subsystem initialized.");
 
-	KRN_DEBUG(4, "Initializing monitor subsystem....");
+	KGI_DEBUG(4, "Initializing monitor subsystem....");
 	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_monitor))){
-		KRN_ERROR("Failed (%.8x) to initialize monitor", error);
+		KGI_ERROR("Failed (%.8x) to initialize monitor.", error);
 		goto monitor;
 	}
-	KRN_DEBUG(4, "Monitor subsystem initialized");
+	KGI_DEBUG(4, "Monitor subsystem initialized.");
 
 	dpy->kgi.revision	= KGI_DISPLAY_REVISION;
 /* no KGIM_INVALID{_DISPLAY,} in module.h*/
@@ -676,11 +675,11 @@ kgim_display_init(kgim_display_t *dpy)
 
 	if ((error = kgi_register_display(&(dpy->kgi),
 		dpy->options.misc->display))) {
-		KRN_ERROR("Failed (%d) to register display.", error);
+		KGI_ERROR("Failed (%d) to register display.", error);
 		goto display;
 	}
 
-	KRN_DEBUG(1, "%s %s driver loaded as display %i (%p)",
+	KGI_DEBUG(1, "%s %s driver loaded as display %i (%p)",
 		dpy->kgi.vendor, dpy->kgi.model, dpy->kgi.id, dpy);
 	return (KGI_EOK);
 
@@ -703,7 +702,7 @@ chipset:
 void 
 kgim_display_done(kgim_display_t *dpy)
 {
-	KRN_DEBUG(2, "kgim_display_done()");
+	KGI_DEBUG(2, "kgim_display_done()");
 
 	kgi_unregister_display(&dpy->kgi);
 
@@ -717,8 +716,8 @@ static int
 kgim_modevent(module_t mode, int type, void *unused)
 {
 	switch (type) {
-	case MOD_LOAD:
-	case MOD_UNLOAD:
+	case MOD_LOAD: /* Fall thru. */
+	case MOD_UNLOAD: /* Fall thru. */
 	default:
 		break;
 	}

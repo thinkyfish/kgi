@@ -53,7 +53,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	register kii_unicode_t ksym = event->key.sym;
 	kii_u_t effect = f->effect;
 
-	KRN_DEBUG(6, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
+	KGI_DEBUG(10, "old modifiers: %.2x %.2x %.2x %.2x, modifier key %.4x",
 		f->effect, f->normal, f->locked, f->sticky, ksym);
 
 	/*
@@ -61,7 +61,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	 * they are pressed.
 	 */
 	if ((K_FIRST_STICKY <= ksym) && (ksym < K_LAST_STICKY)) {
-		KRN_DEBUG(3, "sticky modifer key");
+		KGI_DEBUG(10, "sticky modifer key.");
 
 		if (event->key.type == KII_EV_KEY_PRESS) {
 			f->sticky ^= 1 << (ksym - K_FIRST_STICKY);	
@@ -69,7 +69,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	}
 
 	if ((K_FIRST_LOCKED <= ksym) && (ksym < K_LAST_LOCKED)) {
-		KRN_DEBUG(3, "locked modifier key");
+		KGI_DEBUG(10, "locked modifier key.");
 		if (event->key.type == KII_EV_KEY_PRESS)
 			f->locked ^= 1 << (ksym - K_FIRST_LOCKED);
 	}
@@ -85,15 +85,15 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 	if ((K_FIRST_NORMAL <= ksym) && (ksym < K_LAST_NORMAL)) {
 		register kii_u_t mask = 1 << (ksym - K_FIRST_NORMAL);
 
-		KRN_DEBUG(3, "normal modifier key");
+		KGI_DEBUG(10, "normal modifier key.");
 
 		if (event->key.type == KII_EV_KEY_PRESS) {
 			f->down_mod[ksym - K_FIRST_NORMAL]++;
 			f->normal |=  mask;
 			f->locked &= ~mask;
 		} else {
-			KRN_ASSERT(event->key.type == KII_EV_KEY_RELEASE);
-			KRN_ASSERT(f->down_mod[ksym - K_FIRST_NORMAL] > 0);
+			KGI_ASSERT(event->key.type == KII_EV_KEY_RELEASE);
+			KGI_ASSERT(f->down_mod[ksym - K_FIRST_NORMAL] > 0);
 
 			if (! --(f->down_mod[ksym - K_FIRST_NORMAL])) {
 				f->normal &= ~mask;
@@ -124,7 +124,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 			kii_put_event(f, &npadch);
 	}
 
-	KRN_DEBUG(3, "new modifers: %.2x %.2x %.2x %.2x", f->effect, 
+	KGI_DEBUG(10, "new modifers: %.2x %.2x %.2x %.2x", f->effect, 
 		f->normal, f->locked, f->sticky);
 }
 
@@ -133,7 +133,7 @@ do_ascii(kii_focus_t *f, kii_event_t *event)
 {
 	kii_s_t base = 10, value = event->key.sym - K_FIRST_ASCII;
 
-	KRN_DEBUG(3, "doing ascii key %.4x", event->key.sym);
+	KGI_DEBUG(10, "doing ascii key %.4x", event->key.sym);
 
 	if (value >= 10) {
 		value -= 10;
@@ -158,7 +158,7 @@ do_dead(kii_focus_t *f, kii_event_t *event)
 {
 	kii_unicode_t dead = kii_dead_key[event->key.sym - K_FIRST_DEAD];
 
-	KRN_DEBUG(3, "dead key %.4x", dead);
+	KGI_DEBUG(10, "dead key %.4x", dead);
 	f->dead = (f->dead == event->key.sym) ? K_VOID : dead;
 }
 
@@ -170,7 +170,7 @@ do_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;
 
-	KRN_DEBUG(6, "key %s, code 0x%.2x, sym %.2x", 
+	KGI_DEBUG(10, "key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
@@ -210,10 +210,10 @@ kii_handle_input(kii_event_t *event)
 	mask = 1 << event->any.type;	
 	sym_string = NULL;
 		
-	KRN_ASSERT(KII_VALID_FOCUS_ID(event->any.focus));
+	KGI_ASSERT(KII_VALID_FOCUS_ID(event->any.focus));
 
 	f = kiifocus[event->any.focus];
-	KRN_ASSERT(f != NULL);
+	KGI_ASSERT(f != NULL);
 
 	if (mask & (KII_EM_KEY | KII_EM_POINTER)) {
 		event->key.effect = f->effect;
@@ -230,7 +230,7 @@ kii_handle_input(kii_event_t *event)
 			event->key.sym = keymap_toggled_case(event->key.sym);
 
 		sym_string = keysyms_pretty_print(event->key.sym);
-		KRN_DEBUG(6, "key %i %s, sym %.4x <%s>", event->key.code,
+		KGI_DEBUG(10, "key %i %s, sym %.4x <%s>", event->key.code,
 			(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 			event->key.sym, sym_string);
 	}
@@ -265,7 +265,7 @@ kii_handle_input(kii_event_t *event)
 				composed.key.code = 0xFFFF;
 				composed.key.sym = keymap_combine_dead(&f->kmap,
 					f->dead, event->key.sym);
-				KRN_DEBUG(2, "composed %.4x + %.4x -> %.4x",
+				KGI_DEBUG(10, "composed %.4x + %.4x -> %.4x",
 					f->dead, event->key.sym,
 					composed.key.sym);
 				f->dead = (K_TYPE(event->key.sym) ==

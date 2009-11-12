@@ -59,8 +59,7 @@ kgi_daemon(void)
 	for (;;) {
 		msleep(&kgiproc, &kgi_lock.mutex, PZERO /* XXX */,
 		       "kdsleep", hz /* 1s */);
-
-		/* Poll the keyboard events needing system action */
+		/* Poll the keyboard events needing system action. */
 		kii_bottomhalf();
 	}
 }

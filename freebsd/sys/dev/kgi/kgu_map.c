@@ -51,16 +51,16 @@ graph_add_mapping(graph_file_t *file, graph_mapping_t *map)
 {
 	unsigned int i;
 
-	KRN_ASSERT(file);
-	KRN_ASSERT(file->device);
-	KRN_ASSERT(file->device->kgi.mode);
-	KRN_ASSERT(map->resource);
+	KGI_ASSERT(file);
+	KGI_ASSERT(file->device);
+	KGI_ASSERT(file->device->kgi.mode);
+	KGI_ASSERT(map->resource);
 
 	for (i = 0; i < __KGI_MAX_NR_RESOURCES; i++) {
 		if (file->device->kgi.mode->resource[i] == map->resource) 
 			break;
 	}
-	KRN_ASSERT(i < __KGI_MAX_NR_RESOURCES);
+	KGI_ASSERT(i < __KGI_MAX_NR_RESOURCES);
 
 	file->refcnt++;
 
@@ -82,7 +82,7 @@ graph_add_mapping(graph_file_t *file, graph_mapping_t *map)
 		map->other = map;
 		map->device->mappings[i] = map;
 	}
-	KRN_DEBUG(1, "added mapping %p", map);
+	KGI_DEBUG(1, "added mapping %p", map);
 }
 
 void 
@@ -91,10 +91,10 @@ graph_delete_mapping(graph_mapping_t *map)
 	graph_mapping_t *prev;
 	unsigned int i;
 
-	KRN_DEBUG(1, "deleting mapping %p", map);
-	KRN_ASSERT(map);
-	KRN_ASSERT(map->file);
-	KRN_ASSERT(map->device);
+	KGI_DEBUG(1, "deleting mapping %p", map);
+	KGI_ASSERT(map);
+	KGI_ASSERT(map->file);
+	KGI_ASSERT(map->device);
 
 	/* delete mapping from mappings-for-same-file list */
 	prev = map->next;
@@ -116,7 +116,7 @@ graph_delete_mapping(graph_mapping_t *map)
 		(map->device->kgi.mode->resource[i] != map->resource)) {
 		i++;
 	}
-	KRN_ASSERT(i < __KGI_MAX_NR_RESOURCES);
+	KGI_ASSERT(i < __KGI_MAX_NR_RESOURCES);
 
 	if (map->device->mappings[i] == map)
 		map->device->mappings[i] = (prev != map) ? prev : NULL;
@@ -125,7 +125,7 @@ graph_delete_mapping(graph_mapping_t *map)
 
 	map->file->refcnt--;
 
-	KRN_TRACE(1, memset(map, 0, sizeof(*map)));
+	KGI_TRACE(1, memset(map, 0, sizeof(*map)));
 }
 
 /*
@@ -140,7 +140,7 @@ graph_unmap_map(graph_mapping_t *map)
 	if (!vma->vm_ops || !vma->vm_ops->unmap) 
 		panic("Don't know how to unmap!!");
 
-	KRN_DEBUG(3, "Unmapping map %p", map);
+	KGI_DEBUG(3, "Unmapping map %p", map);
 
 	/* This operation is resource dependent */
 	vma->vm_ops->unmap(vma);
@@ -160,7 +160,7 @@ graph_unmap_resource(graph_mapping_t *map)
 	graph_mapping_t *first = map;
 
 	do {
-		KRN_ASSERT(map->resource == first->resource);
+		KGI_ASSERT(map->resource == first->resource);
 
 		/* 
 		 * The VM pages are deleted but the map is not
@@ -170,5 +170,5 @@ graph_unmap_resource(graph_mapping_t *map)
 		map = map->other;
 	} while (map != first);
 
-	KRN_DEBUG(3, "mappings for region '%s' unmapped", map->resource->name);
+	KGI_DEBUG(3, "mappings for region '%s' unmapped", map->resource->name);
 }

@@ -126,7 +126,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 			val[0] = _p & 0xffffffff;
 		break;
 #endif
-	case 8:
+	case EIGHTBIT_COLOUR:
 		if (size > 0) {
 			a &= 0x000000ff;
 			val = a | (a << 8) | (a << 16) | (a << 24);
@@ -178,7 +178,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 			if (_p & 0x80000000) mask[7] |= (0xff << 24);
 		}
 		break;
-	case 16:
+	case HIGHCOLOUR_16BIT:
 		if (size > 0) {
 			a &= 0x0000ffff;
 			val = 0xffffffff;
@@ -307,13 +307,13 @@ gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 			/* Get the address of the character's pixel-row... */
 			poff = (((((row * render->font->height) + i) *
 				  render->mode.img[0].size.x) +
-				 (col * render->font->width)) *
-				(render->depth / 8) / sizeof(kgi_u32_t));
+				  (col * render->font->width)) *
+				  (render->depth / 8) / sizeof(kgi_u32_t));
 			
 			/* Now display the current pixel row... */
 			gfbrndr_putp(render->fb->win.virt, poff, pixel[i],
-				     PIX2ATTR(text[n]), sizeof(kgi_u8_t),
-				     render->depth, 1, 0, render->bgnd);
+					PIX2ATTR(text[n]), sizeof(kgi_u8_t),
+					render->depth, 1, 0, render->bgnd);
 		}
 	}
 	return(0);
@@ -461,7 +461,7 @@ gfbrndr_map(render_t r)
 
 	render = kgc_render_meta(r);
 	/* Draw/redraw the background */
-#ifdef KGC_RENDER_BACKGROUND
+#ifdef KGC_RENDER_BACKGROUND	
 	gfbrndr_bgnd_draw(r);
 #endif
 
@@ -546,7 +546,7 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 }
 
 /*
- * Some common display resolutions. 
+ * Some common screen display resolutions. 
  */
 const kgi_u16_t modes[][2] =
 {
@@ -655,9 +655,9 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	render->width = render->mode.img[0].size.x / render->font->width;
 	render->height = render->mode.img[0].size.y / render->font->height;
 #ifdef KGC_RENDER_16BITS
-	render->depth = 16;
+	render->depth = HIGHCOLOUR_16BIT;
 #else
-	render->depth = 8;
+	render->depth = EIGHTBIT_COLOUR;
 #endif
 
 	if (kgi_current_focus(render->kgi.dpy_id) == NULL)

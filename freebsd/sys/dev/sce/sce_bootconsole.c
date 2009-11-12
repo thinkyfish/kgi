@@ -82,13 +82,17 @@ static cn_term_t	sce_cnterm;
 static cn_getc_t	sce_cngetc;
 static cn_putc_t	sce_cnputc;
 
-/*
- * Define manually until we activate the CONSOLE_DRIVER macro.
- * Use of CONSOLE_DRIVER(sce) currently causes a panic at RENDER_INIT
- * in sce_cninit.
- */
-static struct consdev sce_consdev = {
-	sce_cnprobe, sce_cninit, sce_cnterm, sce_cngetc, NULL, sce_cnputc};
+static const struct consdev_ops sce_cnops = {
+	.cn_probe = sce_cnprobe,
+	.cn_init  = sce_cninit,
+	.cn_term  = sce_cnterm,
+	.cn_getc  = sce_cngetc,
+	.cn_putc  = sce_cnputc
+};
+
+static struct consdev sce_cndev = {
+	.cn_ops  = &sce_cnops
+};
 
 /*
  * This is a printk() implementation based on the scroll->* functions. 
@@ -97,7 +101,7 @@ static void
 console_printk(char *b, unsigned count)
 {
 	kgi_console_t *cons;
-	kgi_u_t c, attrfl;
+	kgi_u_t c, attr;
 	static int printing = 0;
 
 	cons = (kgi_console_t *)&scecons;
@@ -108,16 +112,16 @@ console_printk(char *b, unsigned count)
 	printing = 1;
 
 	SCROLLER_MARK(cons->scroller);
-	SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attrfl, 0);
-	
+	SCROLLER_GET(cons->scroller, 0, 0, 0, 0, 0, &attr, 0);
+
 	while (count--) {
 		c = *(b++);
 
 		/* Is it a printable character? */
 		if (c >= 32) {			
 			 /* Have kernel/boot console messages stand out. */
-			attrfl |= KGI_CA_BOLD;
-			SCROLLER_SET(cons->scroller, attrfl, 0);
+			attr |= KGI_CA_BOLD;	
+			SCROLLER_SET(cons->scroller, attr, 0);
 			SCROLLER_UPDATE_ATTR(cons->scroller);
 
 			if (cons->flags & KGI_CF_NEED_WRAP) {
@@ -132,9 +136,11 @@ console_printk(char *b, unsigned count)
 			SCROLLER_WRITE(cons->scroller, c);
 
 		} else {
-			attrfl &= ~KGI_CA_BOLD;
-			SCROLLER_SET(cons->scroller, attrfl, 0);
+			/* Remove bold. */
+			attr &= ~KGI_CA_BOLD;
+			SCROLLER_SET(cons->scroller, attr, 0);
 			SCROLLER_UPDATE_ATTR(cons->scroller);
+
 			switch (c) {
 			case ASCII_LF:
 				SCROLLER_MODIFIED_MARK(cons->scroller);
@@ -172,7 +178,8 @@ do_reset(kgi_console_t *cons)
 	scroller_t scroll;
 	
 	scroll = (scroller_t)cons->scroller;	
-	cons->kii.event_mask = KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT | KII_EM_POINTER;
+	cons->kii.event_mask = KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT | 
+			KII_EM_POINTER;
 
 	SCROLLER_RESET(scroll);
 
@@ -241,24 +248,9 @@ sce_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 static void
 sce_cnprobe(struct consdev *cp)
 {
-// 	int i, unit;
-// 
-// 	/*
-// 	 * sce is the internal console of the system.
-// 	 */
-// 	unit = 0;
-// 	cp->cn_pri = CN_INTERNAL;
-// 
-// 	/* See if this driver is disabled in probe hint. */ 
-// 	if ((resource_int_value("sce", unit, "disabled", &i)) == 0 && i)
-// 		cp->cn_pri = CN_DEAD;
-// 
-// 	if (cp->cn_pri == CN_DEAD)
-// 		return;
-	
-	strcpy(cp->cn_name, "ttyv0");
-	cp->cn_pri = CN_INTERNAL;
 
+	cp->cn_pri = CN_INTERNAL;	
+	strcpy(cp->cn_name, "ttyv0");
 }
 
 /*
@@ -268,9 +260,8 @@ sce_cnprobe(struct consdev *cp)
 static void
 sce_cninit(struct consdev *cp)
 {
-	kgi_console_t *cons;
-	
-	cons = (kgi_console_t *)&scecons;	
+	kgi_console_t *cons = (kgi_console_t *)&scecons;
+
 	memset(cons, 0, sizeof(*cons));
 
 	/* 
@@ -304,9 +295,7 @@ sce_cninit(struct consdev *cp)
 
 	kii_map_device(cons->kii.id);
 	
-	do_reset(cons);
-	
-	console_initialized = 1;
+	do_reset(cons);	
 }
 
 /*
@@ -315,8 +304,6 @@ sce_cninit(struct consdev *cp)
 static void
 sce_cnterm(struct consdev *cp)
 {
-
-	return;
 }
 
 /*
@@ -351,12 +338,10 @@ sce_cnputc(struct consdev *cp, int c)
 	console_printk(&cc, 1);
 }
 
-/* 
- * Early initialization of sce. Configure the video drivers.
- */
 static void
-scecn_vid_init(void)
-{	
+scecn_init(void)
+{
+
 	/*
 	 * Access the video adapter driver through the back door!
 	 * Video adapter drivers need to be configured before syscons.
@@ -366,26 +351,26 @@ scecn_vid_init(void)
 	 */
 	vid_configure(VIO_PROBE_ONLY);
 }
-SYSINIT(sce, SI_SUB_KGI, SI_ORDER_MIDDLE, scecn_vid_init, NULL);
+SYSINIT(sce, SI_SUB_KGI, SI_ORDER_ANY, scecn_init, NULL);
 
 static int
 scecn_mod_event(module_t mod, int type, void *data)
 {
-
-	switch (type) {
-	case MOD_LOAD:
-		memset(sce_consoles, 0, sizeof(sce_consoles));		
-		sce_cnprobe(&sce_consdev);
-		sce_cninit(&sce_consdev);
-		cnadd(&sce_consdev);
-		break;
-	case MOD_UNLOAD:
-		return (ENXIO);
-	default:
-		break;
-	}
-
-	return (0);
+ 
+ 	switch (type) {
+ 	case MOD_LOAD:
+ 		memset(sce_consoles, 0, sizeof(sce_consoles));	
+ 		sce_cnprobe(&sce_cndev);	
+ 		sce_cninit(&sce_cndev);
+ 		cnadd(&sce_cndev);
+ 		break;
+ 	case MOD_UNLOAD:
+ 		return (ENXIO);
+ 	default:
+ 		break;
+ 	}
+ 
+ 	return (0);
 }
 
 static moduledata_t scecn_mod = {

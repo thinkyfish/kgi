@@ -89,14 +89,14 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 		return (NULL);
 
 	if (kgc_renders[devid].r) {
-		KRN_ERROR("Render already allocated to %d", devid);
+		KGI_ERROR("Render already allocated to %d", devid);
 		return (NULL);
 	}
 
 	display = display_map[devid];
 
 	if (kgc_render_drivers[display].drv == NULL) {
-		KRN_ERROR("No render class registered to display %d", display);
+		KGI_ERROR("No render class registered to display %d", display);
 		return (NULL);
 	}
 
@@ -108,14 +108,14 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 		r = static_render;
 	
 	if (r == 0) {
-		KRN_ERROR("Could not create render %d", devid);
+		KGI_ERROR("Could not create render %d", devid);
 		return (NULL);
 	}
 
 	if (static_render == 0) {
 		r->meta = kgi_kmalloc(kgc_render_drivers[display].drv->size); 
 		if (r->meta == NULL)
-			KRN_ERROR("Could not allocate render meta %d", devid);
+			KGI_ERROR("Could not allocate render meta %d", devid);
 	}
 
 	kgc_renders[devid].r = r;
@@ -133,7 +133,7 @@ kgc_render_release(kgi_u_t devid)
 		return;
 
 	if (kgc_renders[devid].r == NULL) {
-		KRN_ERROR("Render not allocated to %d", devid);
+		KGI_ERROR("Render not allocated to %d", devid);
 		return;
 	}
 
@@ -155,7 +155,7 @@ kgc_render_register(render_driver_t *driver, kgi_u_t display,
 		return (KGI_EINVAL);
 
 	if (kgc_render_drivers[display].drv) {
-		KRN_ERROR("Render driver already registered to display %d",
+		KGI_ERROR("Render driver already registered to display %d",
 			  display);
 		return (KGI_EINVAL);
 	}
@@ -186,7 +186,8 @@ kgc_render_unregister(render_driver_t *driver)
 		if (kgc_render_drivers[display_map[i]].drv == driver) {
 			display = display_map[i];
 			if (kgc_renders[i].r) {
-				KRN_ERROR("At least a render still allocated " 				   		"to device %d", i);
+				KGI_ERROR("At least a render still allocated " 				   	
+"to device %d", i);
 				return (KGI_EINVAL);
 			}
 		}
@@ -211,7 +212,7 @@ kgc_get_render(kgi_u_t devid)
 	if (!KGI_VALID_CONSOLE_ID(devid))
 		return (NULL);
 
-	KRN_ASSERT(kgc_renders[devid].r->devid == devid);
+	KGI_ASSERT(kgc_renders[devid].r->devid == devid);
 
 	return kgc_renders[devid].r;
 }

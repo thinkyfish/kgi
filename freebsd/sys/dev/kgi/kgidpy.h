@@ -47,7 +47,8 @@ typedef kgi_error_t kgi_display_check_mode_fn(kgi_display_t *dpy,
 typedef	void kgi_display_set_mode_fn(kgi_display_t *dpy,
 		kgi_image_mode_t *img, kgi_u_t images, void *dev_mode);
 
-typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy, kgi_u_t cmd, void *data);
+typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy, kgi_u_t cmd, 
+		void *data);
 
 struct kgi_display_s {
 	kgi_u_t		revision;	/* KGI/driver revision 	*/

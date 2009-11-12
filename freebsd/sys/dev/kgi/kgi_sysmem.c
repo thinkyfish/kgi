@@ -107,7 +107,7 @@ kgi_kmalloc(__kgi_size_t size)
 	void *ptr;
 
 	ptr = malloc(size, M_KGI, M_NOWAIT);
-	KRN_DEBUG(3, "Allocating %p (%d)", (void *)ptr, size);
+	KGI_DEBUG(3, "Allocating %p (%d)", (void *)ptr, size);
 	return (ptr);
 }
 
@@ -118,7 +118,7 @@ void
 kgi_kfree(const void *ptr)
 {
 
-	KRN_DEBUG(3, "Freeing %p", (void *)ptr);
+	KGI_DEBUG(3, "Freeing %p", (void *)ptr);
 	free((void *)ptr, M_KGI);
 }
 

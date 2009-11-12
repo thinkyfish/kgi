@@ -86,15 +86,16 @@ __FBSDID("$FreeBSD$");
 #include "render_if.h"
 
 static int first_minor_allocated = 0;
+static int scevt_init = SCEVT_COLD;
 sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
 
 /* Prototypes */
 static void assign_parser(kgi_console_t *cons, int do_reset);
 static void sce_handle_kii_event(kii_device_t *dev, kii_event_t *e);
-static int sce_close_vt(int unit);
-static int sce_ttytounit(struct tty *tp);
-static int sce_init_vt(struct tty *tp);
+static int sce_close(int unit);
 static struct tty* sce_create_tty(int unit);
+static int sce_init(struct tty *tp);
+static inline int sce_ttytounit(struct tty *tp);
 
 /* TTY */
 static tsw_ioctl_t		sce_tswioctl;
@@ -125,7 +126,7 @@ static void
 assign_parser(kgi_console_t *cons, int do_reset)
 {
 
-	KRN_ASSERT(cons);
+	KGI_ASSERT(cons);
 
 	cons->kii.MapDevice		= kgc_map_kii;
 	cons->kii.UnmapDevice	= kgc_unmap_kii;
@@ -166,7 +167,7 @@ sce_handle_kii_event(kii_device_t *dev, kii_event_t *e)
  * Create a console & associate a TTY with it.
  */
 static int
-sce_init_vt(struct tty *tp)
+sce_init(struct tty *tp)
 {	
 	kgi_u_t unit;
 	kgi_console_t *cons;
@@ -174,17 +175,17 @@ sce_init_vt(struct tty *tp)
 
 	unit = sce_ttytounit(tp);
 	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
-		KRN_ERROR("Reached maximum amount of consoles.");
+		KGI_ERROR("Reached maximum amount of consoles.");
 		return (ENXIO);
 	}
 
 	cons = (kgi_console_t *)sce_consoles[unit];
 
 	if (cons == NULL) {
-		KRN_DEBUG(3, "Creating virtual terminal %d", unit);
+		KGI_DEBUG(3, "Creating virtual terminal %d", unit);
 		cons = kgi_kmalloc(sizeof(sce_console));
 		if (cons == NULL) {
-			KRN_ERROR("Failed: Not enough memory.");
+			KGI_ERROR("Failed: Not enough memory.");
 			return (ENOMEM);
 		}
 		memset(cons, 0, sizeof(sce_console));
@@ -205,7 +206,7 @@ sce_init_vt(struct tty *tp)
 	if (sce_consoles[unit] == NULL) {
 		err = kii_register_device(&(cons->kii), unit);
 		if (err != KII_EOK) {
-			KRN_ERROR("Failed: Could not register input on %d %d", unit, err);
+			KGI_ERROR("Failed: Could not register input on %d %d", unit, err);
 			goto fail_reg_device;
 		}
 
@@ -215,13 +216,13 @@ sce_init_vt(struct tty *tp)
 		 */
 		cons->render = kgc_render_alloc(unit, NULL);
 		if (cons->render == NULL) {			
-			KRN_ERROR("Failed: Could not allocate render device %d", unit);
+			KGI_ERROR("Failed: Could not allocate render device %d", unit);
 			goto fail_render_alloc;
 		}
 
 		((render_t) cons->render)->cons = cons;	/* XXX */
 		if (RENDER_INIT((render_t)cons->render, 0)) {			
-			KRN_ERROR("Failed: Could not initialize renderer!");
+			KGI_ERROR("Failed: Could not initialize renderer!");
 			goto fail_render_init;
 		}
 
@@ -231,13 +232,13 @@ sce_init_vt(struct tty *tp)
 		 */
 		cons->scroller = kgc_scroller_alloc(unit, NULL);
 		if (cons->scroller == NULL) {			
-			KRN_ERROR("Failed: Could not allocate scroller device %d", unit);
+			KGI_ERROR("Failed: Could not allocate scroller device %d", unit);
 			goto fail_scroller_alloc;
 		}
 
 		((render_t)cons->scroller)->cons = cons; /* XXX */		
 		if (SCROLLER_INIT((scroller_t)cons->scroller, NULL)) {
-			KRN_ERROR("Failed: Could not reset console");
+			KGI_ERROR("Failed: Could not reset console");
 			goto fail_scroller_init;
 		}
 
@@ -248,7 +249,7 @@ sce_init_vt(struct tty *tp)
 		 * Initialization OK.
 		 */
 		sce_consoles[unit] = (sce_console *)cons;
-		KRN_DEBUG(4, "Virtual terminal console %i allocated.", unit);
+		KGI_DEBUG(4, "Virtual terminal console %i allocated.", unit);
 	}
 
 	assign_parser(cons, (unit) ? 1 : 0);
@@ -277,7 +278,7 @@ sce_init_vt(struct tty *tp)
  * Cleanup and remove virtual terminals.
  */
 static int
-sce_close_vt(int unit)
+sce_close(int unit)
 {
 	kgi_console_t *cons;
 	
@@ -285,12 +286,12 @@ sce_close_vt(int unit)
 
 	unit = sce_ttytounit(cons->kii.tty);
 	if (unit >= CONFIG_KGII_MAX_NR_CONSOLES) {
-		KRN_ERROR("Bad console %i", unit);
+		KGI_ERROR("Bad console %i", unit);
 		return (EINVAL);
 	}
 	
 	if (cons && (unit || first_minor_allocated)) {
-		KRN_DEBUG(2, "Freeing console %i", unit);
+		KGI_DEBUG(2, "Freeing console %i", unit);
 
 		if (cons->kii.flags & KII_DF_FOCUSED)
 			kii_unmap_device(cons->kii.id);
@@ -338,7 +339,7 @@ sce_create_tty(int unit)
 	sc->unit = unit;	
 	
 	/* Allocate TTY & store device number. */
-	KRN_DEBUG(5, "Allocating TTY %i", unit);
+	KGI_DEBUG(5, "Allocating TTY %i", unit);
 	tp = tty_alloc(&scevt_ttydevsw, sc);
 	
 	/* Create TTY device node. */
@@ -352,14 +353,10 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
 	int error;
 
-	/* kbdcontrol routines. */
-	
-	/* vidcontrol routines. */
-
 	/* mouse ioctl routines. */
  	error = sce_sysmouse_ioctl(tp, cmd, data, td);
  	if (error != ENOIOCTL)
- 		return error;
+ 		return (error);
 
 	switch (cmd) {
 		/* Translate from KII to KBD format. */
@@ -398,9 +395,13 @@ sce_tswopen(struct tty *tp)
 	if (cons == NULL)
 		return (ENXIO);
 
+	KGI_DEBUG(9, "Opening TTY %d", unit);
 	if (tp->t_winsize.ws_col == 0 || tp->t_winsize.ws_row == 0) {
 		SCROLLER_GET(cons->scroller, &sz, 0, 0, 0, 0, 0, 0);
 		RENDER_GET(cons->render, &rz, 0, 0);
+
+		KGI_DEBUG(9, "TTY dimensions: %d(%drows)x%d(%dcols)", 
+				  sz.x, rz.x, sz.y, rz.y);
 
 		tp->t_winsize.ws_col = sz.x;
 		tp->t_winsize.ws_xpixel = rz.x;	
@@ -429,12 +430,12 @@ sce_tswoutwakeup(struct tty *tp)
 
  	kiidev_sync(&(cons->kii), KII_SYNC_LED_FLAGS);
 	
-	KRN_DEBUG(8, "Receiving data from TTY %d", unit);
+	KGI_DEBUG(11, "Receiving data from TTY %d", unit);
 
 	for (;;) {
 		/* Fill the buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
-		KRN_DEBUG(8, "%d bytes in buffer.", len);
+		KGI_DEBUG(11, "%d bytes in TTY %d's buffer.", len, unit);
 		if (len == 0)
 			break;
 		cons->DoWrite(cons, buf, len);
@@ -458,7 +459,6 @@ scevt_mod_event(module_t mod, int type, void *data)
 	int err, unit;
 	struct cdev *dev;
 	struct tty *tp;
-	static int scevt_init = SCEVT_COLD;
 
 	switch (type) {
 	case MOD_LOAD:
@@ -469,7 +469,7 @@ scevt_mod_event(module_t mod, int type, void *data)
 		if (scevt_init == SCEVT_COLD ) {
 			for (unit = 0; unit < MAXCONS; unit++) {
 				tp = sce_create_tty(unit);
-				sce_init_vt(tp);
+				sce_init(tp);
 			}
 			dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
 			scevt_init = SCEVT_WARM;
@@ -482,9 +482,9 @@ scevt_mod_event(module_t mod, int type, void *data)
 	case MOD_UNLOAD:
 		if (scevt_init == SCEVT_WARM) {
 			for (unit = 0; unit < MAXCONS; unit++) {
-				err = sce_close_vt(unit);
+				err = sce_close(unit);
 				if (err != KGI_EOK)
-					KRN_ERROR("Failed to remove console %d", unit);
+					KGI_ERROR("Failed to remove console %d", unit);
 			}
 			scevt_init = SCEVT_COLD;
 		}

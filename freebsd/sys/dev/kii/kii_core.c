@@ -122,7 +122,7 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 	}
 
 	if (!(dev && KII_VALID_FOCUS_ID(focus))) {
-		KRN_ERROR("Invalid parameters: focus = %i, dev = %p",
+		KGI_ERROR("Invalid parameters: focus = %i, dev = %p",
 			focus, dev);
 		return (KII_EINVAL);
 	}
@@ -131,10 +131,10 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 	if (f == NULL || reset) {
  		kii_s_t i;
 
-		KRN_DEBUG(2, "Allocating focus %i...", focus);
+		KGI_DEBUG(2, "Allocating focus %i...", focus);
 		f = kiifocus[focus] = kgi_kmalloc(sizeof(kii_focus_t));
 		if (f == NULL) { 
-			KRN_ERROR("Focus %i allocation failed.", focus);
+			KGI_ERROR("Focus %i allocation failed.", focus);
 			return (KII_ENOMEM);
 		}
 		memset(f, 0, sizeof(*f));
@@ -158,14 +158,14 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 		
 		if ((KII_VALID_DEVICE_ID(f->graphic_map[i]) &&
 			kiidevice[f->graphic_map[i]])) {
-			KRN_DEBUG(3, "Found valid KII graphic map %d", i);
+			KGI_DEBUG(3, "Found valid KII graphic map %d", i);
 			f->curr_console = i;
 			f->focus = kiidevice[f->graphic_map[i]];
 		}
 
 		if ((KII_VALID_DEVICE_ID(f->console_map[i]) &&
 			kiidevice[f->console_map[i]])) {
-			KRN_DEBUG(3, "Found valid KII console map %d", i);
+			KGI_DEBUG(3, "Found valid KII console map %d", i);
 			f->curr_console = i;
 			f->focus = kiidevice[f->console_map[i]];
 		}
@@ -177,13 +177,13 @@ kii_register_input(kii_u_t focus, kii_input_t *dev, int reset)
 			}
 		}
 
-		KRN_DEBUG(2, "Focus %i allocated, focused on console %i",
+		KGI_DEBUG(2, "Focus %i allocated, focused on console %i",
 			focus, f->curr_console);
 	}
 	
 	input_id = kii_next_input_id(f);
 	if (input_id == KII_INVALID_INPUT) {
-		KRN_ERROR("Could not get valid input ID.");
+		KGI_ERROR("Could not get valid input ID.");
 		return (KII_EBUSY);
 	}
 	dev->id = input_id;
@@ -216,11 +216,11 @@ kii_unregister_input(kii_input_t *dev)
 
 	if (! (dev && KII_VALID_FOCUS_ID(dev->focus) && 
 		(f = kiifocus[dev->focus]))) {
-		KRN_ERROR("Invalid paramters: dev = %p, focus = %i",
+		KGI_ERROR("Invalid paramters: dev = %p, focus = %i",
 			dev, dev ? dev->focus : KII_INVALID_FOCUS);
 		return;
 	}
-	KRN_ASSERT(dev->focus == f->id);
+	KGI_ASSERT(dev->focus == f->id);
 
 	if (dev != f->inputs) {
 		prev = f->inputs;
@@ -238,7 +238,7 @@ kii_unregister_input(kii_input_t *dev)
 			 * The device is not listed in that focus. 
 			 * We better report...
 			 */
-			KRN_ERROR("Device %p ('%s %s') not in list?",
+			KGI_ERROR("Device %p ('%s %s') not in list?",
 				dev, dev->vendor, dev->model);
 			return;
 		}
@@ -295,7 +295,7 @@ kii_clone_console(kii_u_t source, kii_u_t target)
 	error = kii_register_device(dest, target);
 
 	if (error) {
-		KRN_DEBUG(2, "Registration of cloned KII console failed.");
+		KGI_DEBUG(2, "Registration of cloned KII console failed.");
 		kgi_kfree(dest);
 		return (NULL);
 	}
@@ -330,15 +330,15 @@ kii_register_device(kii_device_t *dev, kii_u_t index)
 	kii_u_t focus, console;
 	kii_u8_t *map;
 
-	KRN_ASSERT(dev);
+	KGI_ASSERT(dev);
 	if (!(dev && KII_VALID_CONSOLE_ID(index))) {
-		KRN_ERROR("Invalid arguments %p, %i", dev, index);
+		KGI_ERROR("Invalid arguments %p, %i", dev, index);
 		return (KII_EINVAL);
 	}
 	dev->id = (dev->flags & KII_DF_CONSOLE) 
 		? index : index + KII_MAX_NR_CONSOLES;
 
-	KRN_ASSERT(sizeof(console_map) == sizeof(graphic_map));
+	KGI_ASSERT(sizeof(console_map) == sizeof(graphic_map));
 	map = (dev->flags & KII_DF_CONSOLE) ? console_map[0] : graphic_map[0];
 	index = 0;
 	while ((index < sizeof(console_map)) && (map[index] != dev->id)) 
@@ -348,14 +348,14 @@ kii_register_device(kii_device_t *dev, kii_u_t index)
 	console = index % KII_MAX_NR_CONSOLES;
 	if (!(KII_VALID_FOCUS_ID(focus) && KII_VALID_CONSOLE_ID(console) &&
 		KII_VALID_DEVICE_ID(map[index]) && (map[index] == dev->id))) {
-		KRN_ERROR("No %s device allowed (device-id %i)",
+		KGI_ERROR("No %s device allowed (device-id %i)",
 			(dev->flags & KII_DF_CONSOLE) ? "console" : "graphic",
 			dev->id);
 		dev->id = KII_INVALID_DEVICE;
 		return (KII_ENODEV);
 	}
 	if (kiidevice[dev->id]) {
-		KRN_ERROR("Device %i (%s %i-%i) is busy", dev->id,
+		KGI_ERROR("Device %i (%s %i-%i) is busy", dev->id,
 			(dev->flags & KII_DF_CONSOLE) ? "console" : "graphic",
 			focus, console);
 		dev->id = KII_INVALID_DEVICE;
@@ -366,7 +366,7 @@ kii_register_device(kii_device_t *dev, kii_u_t index)
 
 	kiidevice[dev->id] = dev;
 
-	KRN_DEBUG(2, "KII device %i registered.", dev->id);
+	KGI_DEBUG(2, "KII device %i registered.", dev->id);
 
 	return (KII_EOK);
 }
@@ -374,12 +374,12 @@ kii_register_device(kii_device_t *dev, kii_u_t index)
 void 
 kii_unregister_device(kii_device_t *dev)
 {
-	KRN_ASSERT(dev);
-	KRN_ASSERT(KII_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(dev == kiidevice[dev->id]);
-	KRN_ASSERT(!(dev->flags & KII_DF_FOCUSED));
+	KGI_ASSERT(dev);
+	KGI_ASSERT(KII_VALID_DEVICE_ID(dev->id));
+	KGI_ASSERT(dev == kiidevice[dev->id]);
+	KGI_ASSERT(!(dev->flags & KII_DF_FOCUSED));
 
-	KRN_DEBUG(2, "KII device %i unregistered.", dev->id);
+	KGI_DEBUG(2, "KII device %i unregistered.", dev->id);
 
 	kiidevice[dev->id] = NULL;
 	dev->focus_id = KII_INVALID_FOCUS;
@@ -395,12 +395,12 @@ kii_map_device(kii_u_t dev_id)
 	if (!(KII_VALID_DEVICE_ID(dev_id) && (dev = kiidevice[dev_id]) &&
 		KII_VALID_FOCUS_ID(focus_map[dev_id]) && 
 		(f = kiifocus[focus_map[dev_id]]))) {
-		KRN_ERROR("No target or focus for device %i, no map done.", 
+		KGI_ERROR("No target or focus for device %i, no map done.", 
 			dev_id);
 		return;
 	}
-	KRN_ASSERT(f->focus == NULL);
-	KRN_DEBUG(3, "Mapping device %i on focus %i", dev->id, f->id);
+	KGI_ASSERT(f->focus == NULL);
+	KGI_DEBUG(3, "Mapping device %i on focus %i", dev->id, f->id);
 
 	f->focus = dev;
 	f->curr_console = dev_id % KII_MAX_NR_CONSOLES;
@@ -433,7 +433,7 @@ kii_unmap_device(kii_u_t dev_id)
 	if (!(KII_VALID_DEVICE_ID(dev_id) && kiidevice[dev_id] &&
 		KII_VALID_FOCUS_ID(focus_map[dev_id]) &&
 		(f = kiifocus[focus_map[dev_id]]))) {
-		KRN_ERROR("No target or focus for device %i, no unmap done.",
+		KGI_ERROR("No target or focus for device %i, no unmap done.",
 			 dev_id);
 		return (KII_EINVAL);
 	}
@@ -441,7 +441,7 @@ kii_unmap_device(kii_u_t dev_id)
 	if ((dev = f->focus) == NULL)
 		return (KII_EOK);
 
-	KRN_DEBUG(3, "Unmapping device %i from focus %i", dev->id, f->id);
+	KGI_DEBUG(3, "Unmapping device %i from focus %i", dev->id, f->id);
 
 	if (dev->UnmapDevice) {
 		if ((err = dev->UnmapDevice(dev))) {
@@ -467,7 +467,7 @@ kii_device_t *
 kii_current_focus(kii_u_t focus_id)
 {
 
-	KRN_ASSERT(KII_VALID_FOCUS_ID(focus_id));
+	KGI_ASSERT(KII_VALID_FOCUS_ID(focus_id));
 
 	return (kiifocus[focus_id] ? kiifocus[focus_id]->focus : NULL);
 }
@@ -476,7 +476,7 @@ void
 kii_put_event(kii_focus_t *f, kii_event_t *event)
 {
 
-	KRN_ASSERT(f && event);
+	KGI_ASSERT(f && event);
 
 	if (f->focus && (f->focus->event_mask & (1 << event->any.type))) 
 		(f->focus->HandleEvent)(f->focus, event);
@@ -580,7 +580,7 @@ kii_console_device(kii_s_t focus)
 	f = kiifocus[focus];
 
 	if (f && KII_VALID_CONSOLE_ID(f->curr_console)) {
-		KRN_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
+		KGI_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
 		return (f->console_map[f->curr_console]);
 	}
 
@@ -598,9 +598,9 @@ kiidev_set_pointer_window(kii_device_t *dev, kii_s_t minx, kii_s_t maxx,
 	  kii_s_t miny, kii_s_t maxy)
 {
 	
-	KRN_ASSERT(dev && KII_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(minx < maxx);
-	KRN_ASSERT(miny < maxy);
+	KGI_ASSERT(dev && KII_VALID_DEVICE_ID(dev->id));
+	KGI_ASSERT(minx < maxx);
+	KGI_ASSERT(miny < maxy);
 
 	dev->ptr_min.x = minx;
 	dev->ptr_min.y = miny;
@@ -614,7 +614,7 @@ kiidev_set_pointer_window(kii_device_t *dev, kii_s_t minx, kii_s_t maxx,
 
 	if (dev->flags & KII_DF_FOCUSED) {	
 		kii_focus_t *f = kiifocus[dev->focus_id];
-		KRN_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) &&
+		KGI_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) &&
 			kiifocus[dev->focus_id]);
 
 		f->ptr_min.x = minx;
@@ -630,15 +630,15 @@ void
 kiidev_sync(kii_device_t *dev, kii_sync_flags_t what)
 {
 	
-	KRN_DEBUG(4, "kiidev_sync() not implemented yet!");
+	KGI_DEBUG(9, "kiidev_sync() not implemented yet!");
 }
 
 const 
 kii_ascii_t *kiidev_get_fnstring(kii_device_t *dev, kii_u_t key)
 {
 	
-	KRN_ASSERT(dev && KII_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) && 
+	KGI_ASSERT(dev && KII_VALID_DEVICE_ID(dev->id));
+	KGI_ASSERT(KII_VALID_FOCUS_ID(dev->focus_id) && 
 		kiifocus[dev->focus_id]);
 
 	return (keymap_get_fnstring(&(kiifocus[dev->focus_id]->kmap), key));
@@ -658,8 +658,8 @@ kiidev_focus(kii_s_t dev_id)
 		return (NULL);
 
 	if (kiidevice[dev_id]) {
-		KRN_ASSERT(kiidevice[dev_id]->id == dev_id);
-		KRN_ASSERT(KII_VALID_FOCUS_ID(kiidevice[dev_id]->focus_id));
+		KGI_ASSERT(kiidevice[dev_id]->id == dev_id);
+		KGI_ASSERT(KII_VALID_FOCUS_ID(kiidevice[dev_id]->focus_id));
 		return (kiifocus[kiidevice[dev_id]->focus_id]);
 	}
 
@@ -683,6 +683,7 @@ kii_configure(int flags)
 		memset(kiifocus, 0, sizeof(kiifocus));
 		memset(kiidevice, 0, sizeof(kiidevice));	
 		initialized = 1;
+		KGI_DEBUG(3, "KII Initialized.");
 	}
 
 	return (KII_EOK);

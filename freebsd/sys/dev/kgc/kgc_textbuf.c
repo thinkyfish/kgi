@@ -88,8 +88,8 @@ tb_invert(kgc_textbuf_t *tb, kgi_u_t start, kgi_u_t end)
 
 	buf = tb->buf + start;
 	while (start++ <= end) {
-		*buf = ((*buf) & 0x88FF) 
-			| (((*buf)<<4) & 0x7000) | (((*buf>>4)) & 0x0700);
+		*buf = ((*buf) &0x88FF) 
+			| (((*buf) << 4) &0x7000) | (((*buf >> 4)) &0x0700);
 		buf++;
 	}
 }

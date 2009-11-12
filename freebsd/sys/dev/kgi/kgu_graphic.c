@@ -92,24 +92,24 @@ graph_device_init(kgi_s_t device_id, struct thread *td)
 {
 	graph_device_t *device;
 
-	KRN_ASSERT(device_id >= 0);
+	KGI_ASSERT(device_id >= 0);
 	kgi_mutex_assert(&kgi_lock, KGI_MUTEX_OWNED);
 
 	if (graph_dev[device_id].ptr) {
-		KRN_DEBUG(1, "graph_device %i already initialized", device_id);
+		KGI_DEBUG(1, "graph_device %i already initialized", device_id);
 		graph_dev[device_id].cnt++;
 		return (KGI_EOK);
 	}
 	if (graph_dev[device_id].cnt) {
-		KRN_DEBUG(1, "graph_device %i has pending (mmap) references",
+		KGI_DEBUG(1, "graph_device %i has pending (mmap) references",
 			device_id);
 		return (KGI_EBUSY);
 	}
-	KRN_ASSERT(graph_dev[device_id].pid == 0);
-	KRN_ASSERT(graph_dev[device_id].gid == 0);
+	KGI_ASSERT(graph_dev[device_id].pid == 0);
+	KGI_ASSERT(graph_dev[device_id].gid == 0);
 
 	if ((device = kgi_kmalloc(sizeof(*device))) == NULL) {
-		KRN_DEBUG(1, "failed to allocate graph_device %i", device_id);
+		KGI_DEBUG(1, "failed to allocate graph_device %i", device_id);
 		return (KGI_ENOMEM);
 	}
 	memset(device, 0, sizeof(*device));	
@@ -123,7 +123,7 @@ graph_device_init(kgi_s_t device_id, struct thread *td)
 	graph_dev[device_id].ptr = device;
 	graph_dev[device_id].cnt++;
 
-	KRN_DEBUG(1, "graph_device %i initialized", device_id);
+	KGI_DEBUG(1, "graph_device %i initialized", device_id);
 	return (KGI_EOK);
 }
 
@@ -132,16 +132,16 @@ graph_device_done(kgi_u_t device_id, kgi_u_t previous)
 {
 	graph_device_t *device = graph_dev[device_id].ptr;
 
-	KRN_ASSERT(device_id >= 0);
+	KGI_ASSERT(device_id >= 0);
 	kgi_mutex_assert(&kgi_lock, KGI_MUTEX_OWNED);
 
 	if (--graph_dev[device_id].cnt) {
-		KRN_DEBUG(1, "graph_device %i closed", device_id);
+		KGI_DEBUG(1, "graph_device %i closed", device_id);
 		return;
 	}
 
 	if (KGI_VALID_DEVICE_ID(device->kgi.id)) {
-		KRN_DEBUG(1, "device still registered (id %i)",	device->kgi.id);
+		KGI_DEBUG(1, "device still registered (id %i)",	device->kgi.id);
 
 		if (device->kgi.flags & KGI_DF_FOCUSED) {
 			kgi_unmap_device(device->kgi.id);
@@ -158,11 +158,11 @@ graph_device_done(kgi_u_t device_id, kgi_u_t previous)
 	kgi_kfree(device);
 	graph_dev[device_id].ptr = NULL;
 
-	KRN_ASSERT(graph_dev[device_id].cnt == 0);
-	KRN_ASSERT(graph_dev[device_id].pid == 0);
-	KRN_ASSERT(graph_dev[device_id].gid == 0);
+	KGI_ASSERT(graph_dev[device_id].cnt == 0);
+	KGI_ASSERT(graph_dev[device_id].pid == 0);
+	KGI_ASSERT(graph_dev[device_id].gid == 0);
 
-	KRN_DEBUG(1, "graph_device %i finally closed", device_id);
+	KGI_DEBUG(1, "graph_device %i finally closed.", device_id);
 }
 
 /*
@@ -210,7 +210,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		
 		file = kgi_kmalloc(sizeof(*file));
 		if (file == NULL) {
-			KRN_DEBUG(1, "failed to allocate event_file");
+			KGI_DEBUG(1, "failed to allocate event_file");
 			return (KGI_ENOMEM);
 		}
 		memset(file, 0, sizeof(*file));
@@ -218,7 +218,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 
 		graph_files[unit] = file;
 		unit ++;
-		KRN_DEBUG(1, "allocating /dev/graphic%i", unit);
+		KGI_DEBUG(1, "allocating /dev/graphic%i", unit);
 
 		/* Create the dev entry. */
 		make_dev(&kgu_cdevsw, unit, UID_ROOT, GID_WHEEL,
@@ -239,7 +239,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		kgic_mapper_attach_request_t *in = (void *)data;
 
 		if (file->device) {
-			KRN_ERROR("ioctl() failed: device already attached");
+			KGI_ERROR("ioctl() failed: device already attached");
 			return (KGI_EINVAL);
 		}
 
@@ -256,7 +256,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		if (graph_dev[in->device_id].pid == td->td_proc->p_pid) 
 			file->flags |= GRAPH_FF_SESSION_LEADER;
 
-		KRN_DEBUG(2, "ioctl: attached graphics device %i",
+		KGI_DEBUG(2, "ioctl: attached graphics device %i",
 			in->device_id);
 
 		kgi_mutex_unlock(&kgi_lock);
@@ -264,7 +264,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 	}
 
 	if (file->device == NULL) {
-		KRN_ERROR("ioctl() failed: no device attached");
+		KGI_ERROR("ioctl() failed: no device attached");
 		return (KGI_ENXIO);
 	}
 
@@ -291,7 +291,7 @@ graph_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 			io_result = KGI_EPROTO;
 		break;
 	default:
-		KRN_DEBUG(1, "command type %.4x not (yet) implemented",
+		KGI_DEBUG(1, "command type %.4x not (yet) implemented.",
 			(kgi_u_t)(cmd & KGIC_TYPE_MASK));
 		io_result = KGI_EINVAL;
 		goto unlock;
@@ -313,11 +313,11 @@ void
 graph_device_map(kgi_device_t *dev)
 {
 
-	KRN_ASSERT(KGI_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(dev->id >= KGI_MAX_NR_CONSOLES);
+	KGI_ASSERT(KGI_VALID_DEVICE_ID(dev->id));
+	KGI_ASSERT(dev->id >= KGI_MAX_NR_CONSOLES);
 	
 	if (!graph_dev[dev->id - KGI_MAX_NR_CONSOLES].ptr) {	
-		KRN_DEBUG(2, "Could not find device %i (graph %i)", 
+		KGI_DEBUG(2, "Could not find device %i (graph %i)", 
 			dev->id, dev->id - KGI_MAX_NR_CONSOLES);
 		return;
 	}
@@ -344,11 +344,11 @@ graph_device_unmap(kgi_device_t *dev)
 
 	kgi_mutex_assert(&kgi_lock, KGI_MUTEX_OWNED);
 
-	KRN_ASSERT(KGI_VALID_DEVICE_ID(dev->id));
-	KRN_ASSERT(dev->id >= KGI_MAX_NR_CONSOLES);
+	KGI_ASSERT(KGI_VALID_DEVICE_ID(dev->id));
+	KGI_ASSERT(dev->id >= KGI_MAX_NR_CONSOLES);
 	
 	if (!graph_dev[dev->id - KGI_MAX_NR_CONSOLES].ptr) {	
-		KRN_DEBUG(2, "Could not find device %i (graph %i)",
+		KGI_DEBUG(2, "Could not find device %i (graph %i)",
 			dev->id, dev->id - KGI_MAX_NR_CONSOLES);
 		return (KGI_EOK);
 	}
@@ -390,7 +390,7 @@ graph_open(struct cdev *dev, int flags, int mode, struct thread *td)
 	kgi_mutex_lock(&kgi_lock);
 
 	if ((file = graph_files[dev2unit(dev) - 1]) == NULL) {
-		KRN_DEBUG(1, "open: unit not allocated");
+		KGI_DEBUG(1, "open: unit not allocated.");
 		return (KGI_ENODEV);
 	}
 
@@ -401,7 +401,7 @@ graph_open(struct cdev *dev, int flags, int mode, struct thread *td)
 	 * (see graph_command()).
 	 */
 	if (file->refcnt) {
-		KRN_DEBUG(1, "open: failed, already opened");
+		KGI_DEBUG(1, "open: failed, already opened.");
 		return (KGI_EBUSY);
 	}
 
@@ -427,11 +427,11 @@ graph_release(struct cdev *dev, int flags, int mode, struct thread *td)
 	kgi_mutex_lock(&kgi_lock);
 
 	if ((file = graph_files[dev2unit(dev) - 1]) == NULL) {
-		KRN_DEBUG(1, "open: unit not allocated");
+		KGI_DEBUG(1, "open: unit not allocated.");
 		return (KGI_ENODEV);
 	}
 
-	KRN_DEBUG(1, "closing graph device %i (refcnt %i)", 
+	KGI_DEBUG(1, "closing graph device %i (refcnt %i)", 
 		  file->device_id, graph_dev[file->device_id].cnt);
 
 	/*
@@ -457,10 +457,10 @@ graph_release(struct cdev *dev, int flags, int mode, struct thread *td)
 	file->device = NULL;
 
 	file->refcnt--;
-	KRN_ASSERT(file->refcnt == 0);
+	KGI_ASSERT(file->refcnt == 0);
 
 	if (td->td_proc->p_pid == graph_dev[file->device_id].pid) {
-		KRN_DEBUG(1, "session leader (pid %i) closed graph_device %i",
+		KGI_DEBUG(1, "session leader (pid %i) closed graph_device %i",
 			graph_dev[file->device_id].pid, file->device_id);
 		graph_dev[file->device_id].pid = 0;
 		graph_dev[file->device_id].gid = 0;
@@ -494,7 +494,7 @@ graph_mmap(struct cdev *dev, vm_area_t vma)
 	file = graph_files[unit];
 
 	if (file->mmap_setup.resource == NULL) {
-		KRN_ERROR("mmap not set up");
+		KGI_ERROR("mmap not set up.");
 		return (KGI_ENXIO);
 	}
 
@@ -508,20 +508,20 @@ graph_mmap(struct cdev *dev, vm_area_t vma)
 	switch (vma->vm_type & KGI_RT_MASK) {
 	case KGI_RT_MMIO:
 		if ((err = graph_mmio_mmap(vma, &file->mmap_setup, &map))) {
-			KRN_ERROR("mmio mapping failed");
+			KGI_ERROR("mmio mapping failed.");
 			return (err);
 		}
-		KRN_DEBUG(1, "mmio mapping succeeded");
+		KGI_DEBUG(1, "mmio mapping succeeded.");
 		break;
 	case KGI_RT_ACCEL:
 		if ((err = graph_accel_mmap(vma, &file->mmap_setup, &map))) {
-			KRN_ERROR("accel mapping failed");
+			KGI_ERROR("accel mapping failed.");
 			return (err);
 		}
-		KRN_DEBUG(1, "accel mapping succeeded");
+		KGI_DEBUG(1, "accel mapping succeeded.");
 		break;
 	default:
-		KRN_ERROR("unkown mapping type %.8x", vma->vm_type);
+		KGI_ERROR("unkown mapping type %.8x", vma->vm_type);
 		return (KGI_ENXIO);
 	}
 
@@ -540,7 +540,7 @@ graph_mmap(struct cdev *dev, vm_area_t vma)
 	if (vma->vm_ops && vma->vm_ops->open)
 		vma->vm_ops->open(vma);
 
-	KRN_DEBUG(1, "mapped resource %s @ %.8x, size %u",
+	KGI_DEBUG(1, "mapped resource %s @ %.8x, size %u",
 		file->mmap_setup.resource->name, 
 		(kgi_u_t)vma->vm_offset, (kgi_u_t)vma->vm_size);
 

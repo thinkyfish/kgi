@@ -234,7 +234,7 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 					keycode = E1_PAUSE;
 					sc->prev_scancode = 0;
 				} else {
-					KRN_ERROR("unknown E1 sequence");
+					KGI_ERROR("unknown E1 sequence.");
 					sc->prev_scancode = 0;
 					goto end;
 				}
@@ -262,7 +262,7 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 			if (e0_keys[scancode])
 				keycode = e0_keys[scancode];
 			else {
-				KRN_ERROR("unknown scancode e0 %02x", scancode);
+				KGI_ERROR("unknown scancode e0 %02x", scancode);
 				goto end;
 			}
 		}
@@ -287,7 +287,7 @@ kbdriver_parser(kii_input_t *input, kii_event_t *event, int scancode)
 			keycode = high_keys[scancode - SC_LIM];
 
 			if (keycode == 0) {
-				KRN_ERROR("unknown scancode %2x", scancode);
+				KGI_ERROR("unknown scancode %2x", scancode);
 				goto end;
 			}
 		} else 
@@ -392,14 +392,14 @@ kip_kbd_register(keyboard_t *kbd, int index)
 		/*
 		 * Try to get exclusive access to this kbd.
 		 */
-		KRN_DEBUG(1, "Attempting to allocate keyboard %s%d", 
+		KGI_DEBUG(3, "Attempting to allocate keyboard %s%d", 
 				kbd->kb_name, kbd->kb_unit);
 
 		KBD_UNBUSY(kbd);
 		ka = kbd_allocate(kbd->kb_name, kbd->kb_unit, (void *)&sc->kbd,
 				 kbdriver_event, sc);
 
-		KRN_DEBUG(3, "kbd_allocate() returned '%d'", ka);
+		KGI_DEBUG(4, "kbd_allocate() returned '%d'", ka);
 		
 		/* Check if allocation succeeded. */
 		if (ka >= 0) {
@@ -433,14 +433,14 @@ kip_kbd_register(keyboard_t *kbd, int index)
 			if (kbd->kb_unit != kbdriver_nr) {
 				kii_error = kii_register_input(kbd->kb_unit, 
 					&sc->kii_input, 1);
-				KRN_DEBUG(1, "KII device %d, keyboard %s%d " 
+				KGI_DEBUG(2, "KII device %d, keyboard %s%d " 
 					 "registered on focus %d with error %d",
 				    	 index, kbd->kb_name, kbd->kb_unit, 
 					 kbd->kb_unit, kii_error);
 			} else {
 				kii_error = kii_register_input(kbdriver_nr, 
 					&sc->kii_input, 0);
-				KRN_DEBUG(1, "KII device %d, keyboard %s%d "
+				KGI_DEBUG(2, "KII device %d, keyboard %s%d "
 					"registered on focus %d with error %d",
 				    	index, kbd->kb_name, kbd->kb_unit,
 					kbdriver_nr, kii_error); 
@@ -493,7 +493,7 @@ kbdriver_modevent(module_t mod, int type, void *unused)
 
 				kbd_release(sc->kbd, (void *)sc);
 
-				KRN_NOTICE("%s: keyboard %d unregistered",
+				KGI_NOTICE("%s: keyboard %d unregistered.",
 					__FUNCTION__, kbdriver_nr);
 			}
 			sc->kbd = NULL;

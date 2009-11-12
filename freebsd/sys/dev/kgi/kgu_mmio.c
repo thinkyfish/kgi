@@ -71,15 +71,15 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 
 	map = (graph_mmio_mapping_t *) vma->vm_private_data;
 	if (map == NULL) {
-		KRN_ERROR("invalid (cloned ?) vma %p, sending signal", vma);
+		KGI_ERROR("invalid (cloned ?) vma %p, sending signal", vma);
 		panic("don't know how to signal...");	/* XXX */
 	}
 
 	mmio = (kgi_mmio_region_t *)map->resource;
-	KRN_ASSERT((mmio->type & KGI_RT_MASK) == KGI_RT_MMIO);
+	KGI_ASSERT((mmio->type & KGI_RT_MASK) == KGI_RT_MMIO);
 
 	if (!ooffset) {
-		KRN_DEBUG(3, "mmio_nopage @%.8x, vma %p, %x", 
+		KGI_DEBUG(3, "mmio_nopage @%.8x, vma %p, %x", 
 			ooffset, vma, prot);
 	}
 	if (map->device->kgi.flags & KGI_DF_FOCUSED) {
@@ -107,12 +107,12 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		case GRAPH_MM_PAGED_PAGED: /* Fall thru. */
 		case GRAPH_MM_LINEAR_PAGED:
 		default:
-			KRN_INTERNAL_ERROR;
+			KGI_INTERNAL_ERROR;
 			panic("don't know how to signal...");
 		}
 
 		if (!ooffset)
-			KRN_DEBUG(3, "mmio_nopage @%.8x, remap vma %p, "
+			KGI_DEBUG(3, "mmio_nopage @%.8x, remap vma %p, "
 				  "to '%s' phys %x, offset %x",
 				ooffset, map->vma, mmio->name, *paddr, offset);
 
@@ -134,7 +134,7 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		return (0);
 
 	} else {
-		KRN_DEBUG(2, "Not focused, going to sleep!");
+		KGI_DEBUG(2, "Not focused, going to sleep!");
 
 		/*
 		 * The thread is trying to access an area while the
@@ -189,10 +189,10 @@ graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	graph_mmio_mapping_t *map = NULL;
 	vm_ooffset_t size = vma->vm_size;
 
-	KRN_DEBUG(1, "mapping mmio '%s' to vma %p", mmio->name, vma);
+	KGI_DEBUG(1, "mapping mmio '%s' to vma %p", mmio->name, vma);
 
-	KRN_ASSERT(0 == (mmio->size % mmio->win.size));
-	KRN_ASSERT(mmio->size >= mmio->win.size);
+	KGI_ASSERT(0 == (mmio->size % mmio->win.size));
+	KGI_ASSERT(mmio->size >= mmio->win.size);
 
 	if ((mmio->win.size & PAGE_MASK) ||
 	    (size > mmio->size) ||
@@ -200,18 +200,18 @@ graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	    ((mmio->win.size != mmio->size) && (size < mmio->size) &&
 	     (mmio->win.size != size))) {
 
-		KRN_ERROR("mmap size %i, but region size %i, win.size %i",
+		KGI_ERROR("mmap size %i, but region size %i, win.size %i",
 			  (int)size, (int)mmio->size, (int)mmio->win.size);
 		return (KGI_EINVAL);
 	}
 
-	KRN_DEBUG(1, "mmap size %i, region size %i, win.size %i OK",
+	KGI_DEBUG(1, "mmap size %i, region size %i, win.size %i OK",
 		  (int)size, (int)mmio->size, (int)mmio->win.size);
 
 	/* XXX warning determine protection flags here! */
 
 	if ((map = kgi_kmalloc(sizeof(*map))) == NULL) {
-		KRN_ERROR("failed to allocate mmio map");
+		KGI_ERROR("failed to allocate mmio map");
 		return (KGI_ENOMEM);
 	}
 	memset(map, 0, sizeof(*map));

@@ -29,6 +29,9 @@ __FBSDID("$FreeBSD$");
 
 #include "opt_kgi.h"
 
+#include <sys/param.h>
+#include <sys/systm.h>
+
 #ifndef KGI_DBG_LEVEL
 #define	KGI_DBG_LEVEL	1
 #endif
@@ -53,8 +56,9 @@ static int vt_dont_switch = 0;	/* XXX should be in vt.c */
 static void 
 make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration)
 {
-
-	KRN_DEBUG(2, "make_sound() not implemented yet!");
+	
+	KGI_DEBUG(5, "make_sound(%p, %i, %i)", f, frequency, duration);
+	sysbeep(frequency, duration);
 }
 
 /*
@@ -104,10 +108,10 @@ kii_bottomhalf(void)
 		 */
 		if (kiidevice[dev] == NULL) {
 			/* 
-			 * Converted from a KRN_ERROR to KRN_DEBUG
+			 * Converted from a KGI_ERROR to KGI_DEBUG
 			 * to avoid verbosity with syscons.
 			 */
-			KRN_DEBUG(20, "Invalid device %i (console %i)", 
+			KGI_DEBUG(13, "Invalid device %i (console %i)", 
 				  dev, f->want_console);
 			f->want_console = KII_INVALID_CONSOLE;
 			continue;
@@ -123,7 +127,7 @@ kii_bottomhalf(void)
 		case KII_EOK:
 			break;
 		default:
-			KRN_INTERNAL_ERROR;
+			KGI_INTERNAL_ERROR;
 		}
 
 		/* 
@@ -136,8 +140,7 @@ kii_bottomhalf(void)
 		case KII_EINVAL:
 			f->want_console = KII_INVALID_CONSOLE;
 		case KII_EAGAIN:
-			KRN_DEBUG(2, "Could not unmap kgi device %i", dev);
-
+			KGI_DEBUG(2, "Could not unmap kgi device %i", dev);
 			/* 
 			 * Map at least the input to let a chance to blind 
 			 * commands.
@@ -147,7 +150,7 @@ kii_bottomhalf(void)
 		case KII_EOK:
 			break;
 		default:
-			KRN_INTERNAL_ERROR;
+			KGI_INTERNAL_ERROR;
 		}
 #endif
 
@@ -178,7 +181,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	if (event->any.type != KII_EV_KEY_PRESS) 
 		return;
 
-	KRN_DEBUG(6, "Doing special key sym=%.4x code=%d effect=%d",
+	KGI_DEBUG(10, "Doing special key sym=%.4x code=%d effect=%d",
 		  event->key.sym, event->key.code, event->key.effect);
 
 	switch(event->key.sym) {
@@ -243,7 +246,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		if (!KII_VALID_CONSOLE_ID(f->curr_console)) {
 			search = (start = 0) + 1;
 		} else {
-			KRN_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
+			KGI_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
 			search = ((start = f->curr_console) <
 				KII_MAX_NR_DEVICES - 1) 
 				? f->curr_console + 1 : 0;
@@ -268,7 +271,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		return;
 	}
 	case K_SPAWNCONSOLE:
-		KRN_ASSERT(sizeof(pid_t) <= sizeof(kii_u_t));
+		KGI_ASSERT(sizeof(pid_t) <= sizeof(kii_u_t));
 		if (f->focus && ((pid_t) f->focus->spawnpid.priv_u)) {
 
 #ifdef notavail	/* XXX */
@@ -321,7 +324,7 @@ kii_action(kii_focus_t *f, kii_event_t *event)
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
 		return;	
 
-	KRN_DEBUG(6, "Key %s, code 0x%.2x, sym %.2x", 
+	KGI_DEBUG(10, "Key %s, code 0x%.2x, sym %.2x", 
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 

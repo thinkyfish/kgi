@@ -141,10 +141,10 @@ mouse_event(struct sce_mice *mouse, mouse_info_t *info)
 
 	if (event.pbutton.type && (mouse->input.report & 
 			(1 << event.pbutton.type))) {		
-		KRN_DEBUG(2, "%s", 
-			  (event.pbutton.type == KII_EV_PTR_BUTTON_PRESS)
-			  ? "KII_EV_PTR_BUTTON_PRESS" 
-			  : "KII_EV_PTR_BUTTON_RELEASE");
+		KGI_DEBUG(10, "%s", 
+			  (event.pbutton.type == KII_EV_PTR_BUTTON_PRESS) ?
+			  "KII_EV_PTR_BUTTON_PRESS" :
+			  "KII_EV_PTR_BUTTON_RELEASE");
 
 		kii_handle_input(&event);
 	}
@@ -156,7 +156,7 @@ static int
 sce_ctlclose(struct cdev *dev, int flag, int mode, struct thread *td)
 {
 
-	KRN_DEBUG(2, "sce_ctlclose: dev:%s, vty:,%d\n", 
+	KGI_DEBUG(2, "sce_ctlclose: dev:%s, vty:,%d\n", 
 			devtoname(dev), dev2unit(dev));
 
 	sce_mouse[dev2unit(dev)].opened = 0;
@@ -217,7 +217,7 @@ sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
 {
 	struct sce_mice *mouse;
 
-	KRN_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
+	KGI_DEBUG(2, "sce_ctlopen: dev:%s, vty:%d\n",
 			devtoname(dev), dev2unit(dev));
 
 	mouse = &sce_mouse[dev2unit(dev)];
@@ -235,7 +235,7 @@ sce_ctlopen(struct cdev *dev, int flag, int mode, struct thread *td)
 	mouse->input.priv.priv_ptr = mouse;
 	
 	if (kii_register_input(dev2unit(dev), &mouse->input, 0))
-		KRN_ERROR("Could not register sce_mouse %d", dev2unit(dev));
+		KGI_ERROR("Could not register sce_mouse %d", dev2unit(dev));
 
 	mouse->opened = 1;
 

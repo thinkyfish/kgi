@@ -3,7 +3,7 @@
  */
 #define	I(x)	((0xFFFF * (x))/100)
 
-const kgi_u16_t default_color_text16_ilut[3*16] =
+const kgi_u16_t default_color_text16_ilut[3 * 16] =
 {
 	I(  0), I(  0), I(  0),		/* black		*/
 	I(  0), I(  0), I( 66),		/* blue			*/

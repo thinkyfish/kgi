@@ -89,14 +89,14 @@ kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
 		return (NULL);
 
 	if (kgc_scrollers[devid].s) {
-		KRN_ERROR("Render already allocated to %d", devid);
+		KGI_ERROR("Render already allocated to %d", devid);
 		return (NULL);
 	}
 
 	display = display_map[devid];
 
 	if (kgc_scroller_drivers[display].drv == NULL) {
-		KRN_ERROR("No scroller class registered to display %d", display);
+		KGI_ERROR("No scroller class registered to display %d", display);
 		return (NULL);
 	}
 
@@ -107,14 +107,14 @@ kgc_scroller_alloc(kgi_u_t devid, scroller_t static_scroller)
 		s = static_scroller;
 
 	if (s == NULL) {
-		KRN_ERROR("Could not create scroller %d", devid);
+		KGI_ERROR("Could not create scroller %d", devid);
 		return (NULL);
 	}
 
 	if (static_scroller == NULL) {
 		s->meta = kgi_kmalloc(kgc_scroller_drivers[display].drv->size);
 		if (s->meta == NULL)
-			KRN_ERROR("Could not allocate scroller meta %d", devid);
+			KGI_ERROR("Could not allocate scroller meta %d", devid);
 	}
 
 	kgc_scrollers[devid].s = s;
@@ -132,7 +132,7 @@ kgc_scroller_release(kgi_u_t devid)
 		return;
 
 	if (kgc_scrollers[devid].s == NULL) {
-		KRN_ERROR("Render not allocated to %d", devid);
+		KGI_ERROR("Render not allocated to %d", devid);
 		return;
 	}
 
@@ -154,7 +154,7 @@ kgc_scroller_register(scroller_driver_t *driver, kgi_u_t display,
 		return (KGI_EINVAL);
 
 	if (kgc_scroller_drivers[display].drv) {
-		KRN_ERROR("Render driver already registered to display %d", 
+		KGI_ERROR("Render driver already registered to display %d", 
 			  display);
 		return (KGI_EINVAL);
 	}
@@ -184,7 +184,7 @@ kgc_scroller_unregister(scroller_driver_t *driver)
 		if (kgc_scroller_drivers[display_map[i]].drv == driver) {
 			display = display_map[i];
 			if (kgc_scrollers[i].s) {
-				KRN_ERROR("At least a scroller still allocated to device %i",
+				KGI_ERROR("At least a scroller still allocated to device %i",
 						  i);
 				return (KGI_EINVAL);
 			}
@@ -210,7 +210,7 @@ kgc_get_scroller(kgi_u_t devid)
 	if (!KGI_VALID_CONSOLE_ID(devid))
 		return (NULL);
 
-	KRN_ASSERT(kgc_scrollers[devid].s->devid == devid);
+	KGI_ASSERT(kgc_scrollers[devid].s->devid == devid);
 
 	return (kgc_scrollers[devid].s);
 }

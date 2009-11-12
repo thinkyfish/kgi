@@ -131,9 +131,14 @@ enum kgi_console_color_e {
 	KGI_CC_WHITE
 };
 
+/* Pixel colour depths. */
+#define EIGHTBIT_COLOUR		8
+#define HIGHCOLOUR_15BIT	15
+#define HIGHCOLOUR_16BIT	16
+#define TRUECOLOUR_24BIT	24
+#define DEEPCOLOUR_32BIT	48
 
 /* ASCII control code definitions */
-
 #define	ASCII_NUL	0	/* null (end of string) */
 #define	ASCII_SOH	1	/* start of heading	*/
 #define	ASCII_STX	2	/* start of text	*/

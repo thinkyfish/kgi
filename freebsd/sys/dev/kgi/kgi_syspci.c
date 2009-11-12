@@ -245,7 +245,7 @@ pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	__kgi_u32_t signature;
 	u_int16_t vendor, device;
 
-	KRN_DEBUG(4, "scanning device in pcicfg space:");
+	KGI_DEBUG(4, "scanning device in pcicfg space:");
 
 	/* Search among registered boards */
 	LIST_FOREACH(p, &pcicfg_head, entries) {
@@ -256,7 +256,7 @@ pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 		device = pci_get_device(p->dev);
 		vendor = pci_get_vendor(p->dev);
 
-		KRN_DEBUG(4, "scanning device %x %x\n", vendor, device);
+		KGI_DEBUG(4, "scanning device %x %x\n", vendor, device);
 
 		signature = PCICFG_SIGNATURE(vendor, device);
 
@@ -269,7 +269,7 @@ pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 		if (*check && (*check == signature)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KRN_DEBUG(4, "found device %.8x at %.8x", 
+			KGI_DEBUG(4, "found device %.8x at %.8x", 
 				  signature, *addr);
 			return (0);
 		}
@@ -288,7 +288,7 @@ pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	u_int16_t subvendor, subdevice;
 	u_int16_t vendor, device;
 
-	KRN_DEBUG(4, "scanning subsystem in pcicfg space:");
+	KGI_DEBUG(4, "scanning subsystem in pcicfg space:");
 
 	/* Search among registered boards */
 	LIST_FOREACH(p, &pcicfg_head, entries) {
@@ -304,7 +304,7 @@ pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 
 		signature = PCICFG_SIGNATURE(subvendor, subdevice);
 
-		KRN_DEBUG(4, "scanning device %x %x, subsystem %x %x\n", 
+		KGI_DEBUG(4, "scanning device %x %x, subsystem %x %x\n", 
 			vendor, device, subvendor, subdevice);
 
 		check = signatures;
@@ -314,7 +314,7 @@ pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 		if (*check && (*check == signature)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KRN_DEBUG(4, "found device %.8x at %.8x", 
+			KGI_DEBUG(4, "found device %.8x at %.8x", 
 				  signature, *addr);
 			return (KGI_EOK);
 		}
@@ -331,7 +331,7 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	const __kgi_u32_t *check;
 	u_int16_t class;
 
-	KRN_DEBUG(4, "scanning class in pcicfg space:");
+	KGI_DEBUG(4, "scanning class in pcicfg space:");
 
 	LIST_FOREACH(p, &pcicfg_head, entries) {
 		/* If device already claimed, not a candidate */
@@ -340,7 +340,7 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 
 		class = pci_get_class(p->dev) << 8;
 
-		KRN_DEBUG(4, "scanning device with class %.8x", class);
+		KGI_DEBUG(4, "scanning device with class %.8x", class);
 
 		check = signatures;
 		while (*check && (*check != class)) 
@@ -349,7 +349,7 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 		if (*check && (*check == class)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KRN_DEBUG(4, "found device of class %.8x at %.8x", 
+			KGI_DEBUG(4, "found device of class %.8x at %.8x", 
 				  class, *addr);
 
 			return (KGI_EOK);
@@ -474,14 +474,14 @@ io_check_region(io_region_t *r)
 	if (res) {
 		bus_release_resource(p->dev, SYS_RES_IOPORT, rid, res);
 
-		KRN_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): ok",
+		KGI_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): ok",
 			  r->name, r->base_io, r->size);
 
 		return (KGI_EOK);
 	}
 
 error:
-	KRN_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): "
+	KGI_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): "
 		  "failed", r->name, r->base_io, r->size);
 	return (KGI_ENODEV);
 }
@@ -506,7 +506,7 @@ io_claim_region(io_region_t *r)
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
 
-	KRN_ASSERT(r->base_virt == 0); /* claim of claimed region? */
+	KGI_ASSERT(r->base_virt == 0); /* claim of claimed region? */
 
 	if (!(res = bus_alloc_resource(dev, SYS_RES_IOPORT, &rid,
 				       r->base_io, r->base_io + (r->size -1),
@@ -522,14 +522,14 @@ io_claim_region(io_region_t *r)
 
 	LIST_INSERT_HEAD(&p->resources, pcicfg_res, entries);
 
-	KRN_DEBUG(2, "io_claim_region('%s', base_io %.4x, base_virt %.4x, "
+	KGI_DEBUG(2, "io_claim_region('%s', base_io %.4x, base_virt %.4x, "
 		"base_phys %.4x, base_bus %.4x): success", r->name,
 		r->base_io, r->base_virt, r->base_phys, r->base_bus);
 
 	return (r->base_virt);
 
 error:
-	KRN_DEBUG(2, "mem_claim_region('%s', base_io 0x%x, size %i): failed",
+	KGI_DEBUG(2, "mem_claim_region('%s', base_io 0x%x, size %i): failed",
 		  r->name, (kgi_u32_t)r->base_io, (kgi_u_t)r->size);
 	if (pcicfg_res)
 		kgi_kfree(pcicfg_res);
@@ -556,7 +556,7 @@ io_free_region(io_region_t *r)
 	}
 
 	if (pcicfg_res) {
-		KRN_DEBUG(2, "io_free_region('%s', base_io %.4x,"
+		KGI_DEBUG(2, "io_free_region('%s', base_io %.4x,"
 			  " base_virt %.4x,"
 			  " base_phys %.4x, base_bus %.4x)", r->name,
 			  r->base_io, r->base_virt, r->base_phys,
@@ -614,14 +614,14 @@ mem_check_region(mem_region_t *r)
 	if (res) {
 		bus_release_resource(p->dev, SYS_RES_MEMORY, rid, res);
 
-		KRN_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): ok",
+		KGI_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): ok",
 			  r->name, r->base_io, r->size);
 
 		return (KGI_EOK);
 	}
 
 error:
-	KRN_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): "
+	KGI_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): "
 		  "failed", r->name, r->base_io, r->size);
 	return (KGI_ENODEV);
 }
@@ -662,7 +662,7 @@ mem_claim_region(mem_region_t *r)
 
 	LIST_INSERT_HEAD(&p->resources, pcicfg_res, entries);
 
-	KRN_DEBUG(2, "mem_claim_region('%s', base_io %p, base_virt %p, "
+	KGI_DEBUG(2, "mem_claim_region('%s', base_io %p, base_virt %p, "
 		"base_phys %p, base_bus %p): success", r->name, 
 		(void *) r->base_io, (void *) r->base_virt, 
 		(void *) r->base_phys, (void *) r->base_bus);
@@ -670,7 +670,7 @@ mem_claim_region(mem_region_t *r)
 	return (r->base_virt);
 
 error:
-	KRN_DEBUG(2, "mem_claim_region('%s', base_io 0x%x, size %i): failed",
+	KGI_DEBUG(2, "mem_claim_region('%s', base_io 0x%x, size %i): failed",
 		  r->name, r->base_io, r->size);
 	if (pcicfg_res)
 		kgi_kfree(pcicfg_res);
@@ -697,7 +697,7 @@ mem_free_region(mem_region_t *r)
 	}
 
 	if (pcicfg_res) {
-		KRN_DEBUG(2, "mem_free_region %s, base_io %p, base_virt %p, "
+		KGI_DEBUG(2, "mem_free_region %s, base_io %p, base_virt %p, "
 			  "base_phys %p, base_bus %p", r->name,
 			  (void *) r->base_io, (void *) r->base_virt,
 			  (void *) r->base_phys, (void *) r->base_bus);
@@ -779,13 +779,13 @@ irq_claim_line(irq_line_t *irq)
 
 	LIST_INSERT_HEAD(&p->resources, pcicfg_res, entries);
 
-	KRN_DEBUG(2, "irq_claim_line('%s', line %i): success", irq->name,
+	KGI_DEBUG(2, "irq_claim_line('%s', line %i): success", irq->name,
 		irq->line);
 
 	return (KGI_EOK);
 
 error:
-	KRN_DEBUG(2, "irq_claim_line('%s', line %i): failed", irq->name,
+	KGI_DEBUG(2, "irq_claim_line('%s', line %i): failed", irq->name,
 		irq->line);
 	if (res)
 		bus_release_resource(p->dev, SYS_RES_IRQ, 0, res);
@@ -810,7 +810,7 @@ irq_free_line(irq_line_t *irq)
 	}
 
 	if (pcicfg_res) {
-		KRN_DEBUG(2, "irq_free_line('%s', line %i)", 
+		KGI_DEBUG(2, "irq_free_line('%s', line %i)", 
 			irq->name, irq->line);
 
 		bus_teardown_intr(p->dev, pcicfg_res->res,

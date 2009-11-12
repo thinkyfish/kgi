@@ -56,14 +56,14 @@ __FBSDID("$FreeBSD$");
 kgi_u_t 
 kgirndr_atop_color(render_t r, kgi_u_t attr)
 {
-	register kgi_u_t val = (attr & KGI_CA_REVERSE)
-		? (((attr & 0x0007) << 8) | ((attr & 0x0700) << 4))
-		: (((attr & 0x0007) << 12) | (attr & 0x0700));
+	register kgi_u_t val = (attr &KGI_CA_REVERSE) ?
+			(((attr &0x0007) << 8)  | ((attr &0x0700) << 4)) : 
+			(((attr &0x0007) << 12) | (attr &0x0700));
 
-	if (attr & KGI_CA_BLINK) 
+	if (attr &KGI_CA_BLINK) 
 		val |= 0x8000;
 
-	if (attr & KGI_CA_BOLD) 
+	if (attr &KGI_CA_BOLD) 
 		val |= 0x0800;
 
 	return (val);
@@ -73,9 +73,9 @@ kgi_u_t
 kgirndr_ptoa_color(render_t r, kgi_u_t val)
 {
 
-	return (((val & 0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL)
-		| ((val & 0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL)
-		| ((val & 0x7000) >> 12) | (val & 0x0F00));
+	return (((val &0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
+			((val &0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL) |
+			((val &0x7000) >> 12) | (val &0x0F00));
 }
 
 /*
@@ -85,15 +85,14 @@ kgirndr_ptoa_color(render_t r, kgi_u_t val)
 kgi_u_t 
 kgirndr_atop_mono(kgi_u_t attr)
 {
-	register kgi_u_t
-	val = (attr & KGI_CA_UNDERLINE)
-		? 0x0100	/* MDA can't do reverse underline :-( */
-		: ((attr & KGI_CA_REVERSE) ? 0x7000 : 0x0700);
+	/* MDA can't do reverse underline :-( */
+	register kgi_u_t val = (attr & KGI_CA_UNDERLINE) ? 0x0100 :		
+			((attr & KGI_CA_REVERSE) ? 0x7000 : 0x0700);
 
-	if (attr & KGI_CA_BLINK) 
+	if (attr &KGI_CA_BLINK) 
 		val |= 0x8000;
 
-	if (attr & KGI_CA_BOLD) 
+	if (attr &KGI_CA_BOLD) 
 		val |= 0x0800;
 
 	return (val);
@@ -102,15 +101,13 @@ kgirndr_atop_mono(kgi_u_t attr)
 kgi_u_t 
 kgirndr_ptoa_mono(render_t r, kgi_u_t val)
 {
-	register kgi_u_t
-	attr = ((val & 0x7700) == 0x0100)
-		? KGI_CA_UNDERLINE
-		: (val & 0x7000) ? KGI_CA_REVERSE : KGI_CA_NORMAL;
+	register kgi_u_t attr = ((val & 0x7700) == 0x0100) ? KGI_CA_UNDERLINE :
+			(val & 0x7000) ? KGI_CA_REVERSE : KGI_CA_NORMAL;
 
-	if (val & 0x8000) 
+	if (val &0x8000) 
 		attr |= KGI_CA_BLINK;
 
-	if (val & 0x0800) 
+	if (val &0x0800) 
 		attr |= KGI_CA_BOLD;
 
 	return (attr);
@@ -123,18 +120,18 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 
 	switch (resource->type) {
 	case KGI_RT_MMIO_FRAME_BUFFER:
-		KRN_DEBUG(2, "mmio fb: %s", resource->name);
+		KGI_DEBUG(2, "mmio fb: %s", resource->name);
 		render->fb = (kgi_mmio_region_t *)resource;
 		break;
 	case KGI_RT_TEXT16_CONTROL:
-		KRN_DEBUG(2, "text16: %s", resource->name);
+		KGI_DEBUG(2, "text16: %s", resource->name);
 		render->text16 = (kgi_text16_t *)resource;
 		break;
 	case KGI_RT_CURSOR_CONTROL:
 		marker = (kgi_marker_t *)resource;
 		if ((NULL == render->cur) ||
 		    (render->cur->Undo && (NULL == marker->Undo))) {
-			KRN_DEBUG(2, "cursor: %s", resource->name);
+			KGI_DEBUG(2, "cursor: %s", resource->name);
 			render->cur = marker;
 		}
 		break;
@@ -142,20 +139,20 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 		marker = (kgi_marker_t *)resource;
 		if ((render->ptr == NULL) ||
 		    (render->ptr->Undo && (marker->Undo == NULL))) {
-			KRN_DEBUG(2, "pointer: %s", resource->name);
+			KGI_DEBUG(2, "pointer: %s", resource->name);
 			render->ptr = marker;
 		}
 		break;
 	case KGI_RT_TLUT_CONTROL:
-		KRN_DEBUG(2, "tlut: %s", resource->name);
+		KGI_DEBUG(2, "tlut: %s", resource->name);
 		render->tlut = (kgi_tlut_t *)resource;
 		break;
 	case KGI_RT_ILUT_CONTROL:
-		KRN_DEBUG(2, "ilut: %s", resource->name);
+		KGI_DEBUG(2, "ilut: %s", resource->name);
 		render->ilut = (kgi_ilut_t *)resource;
 		break;
 	default:
-		KRN_ERROR("unknown resource->type 0x%.8x", resource->type);
+		KGI_ERROR("unknown resource->type 0x%.8x", resource->type);
 		break;
 	}
 
@@ -199,12 +196,12 @@ kgirndr_hide_gadgets(render_t r)
 	cons = kgc_render_cons(r);
 
 	if (cons->flags & KGI_CF_POINTER_SHOWN) {
-		KRN_ASSERT(render->ptr);
+		KGI_ASSERT(render->ptr);
 		render->ptr->Hide(render->ptr);
 		cons->flags &= ~KGI_CF_POINTER_SHOWN;
 	}
 	if (cons->flags & KGI_CF_CURSOR_SHOWN) {
-		KRN_ASSERT(render->cur);
+		KGI_ASSERT(render->cur);
 		render->cur->Hide(render->cur);
 		cons->flags &= ~KGI_CF_CURSOR_SHOWN;
 	}
@@ -251,10 +248,9 @@ kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 			render->ptr->Show(render->ptr,
 				cons->kii.ptr.x, cons->kii.ptr.y);
 		}
-
 	} else {
-		KRN_ASSERT(!(cons->flags & KGI_CF_CURSOR_SHOWN));
-		KRN_ASSERT(!(cons->flags & KGI_CF_POINTER_SHOWN));
+		KGI_ASSERT(!(cons->flags & KGI_CF_CURSOR_SHOWN));
+		KGI_ASSERT(!(cons->flags & KGI_CF_POINTER_SHOWN));
 	}
 }
 
@@ -262,16 +258,19 @@ kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 void 
 kgirndr_unmap(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
-
+	kgirndr_meta *render;
+	 
+	render = kgc_render_meta(r);
 	render->flags &= ~KGI_RF_NEEDS_UPDATE;
 }
 
 void 
 kgirndr_map(render_t r)
 {
-	kgirndr_meta *render = kgc_render_meta(r);
+	kgirndr_meta *render;
+	kgi_console_t *cons;
 
+	render = kgc_render_meta(r);
 	render->flags |= KGI_RF_NEEDS_UPDATE;
 
 	if (render->ilut) {
@@ -283,8 +282,8 @@ kgirndr_map(render_t r)
 			(render->ilut->Select)(render->ilut, 0);
 	}
 	
-	kgirndr_meta *render = kgc_render_meta(r);
-	kgi_console_t *cons = kgc_render_cons(r);
+	render = kgc_render_meta(r);
+ 	cons = kgc_render_cons(r);
 
 	if (render->tlut) {
 		if (render->tlut->Set) {
@@ -300,7 +299,7 @@ kgirndr_map(render_t r)
 		(render->ptr->size.x == 64 && render->ptr->size.y == 64)) {
 		(render->ptr->SetMode)(render->ptr, KGI_MM_3COLOR);
 		(render->ptr->SetShape)(render->ptr, 0, 
-			0,0, default_ptr_64x64, default_ptr_color);
+			0, 0, default_ptr_64x64, default_ptr_color);
 		if (render->ptr->Select) 
 			(render->ptr->Select)(render->ptr, 0);
 	}

@@ -34,6 +34,9 @@ __FBSDID("$FreeBSD$");
 #define	KGI_DBG_LEVEL	2
 #endif
 
+#include <sys/param.h>
+#include <sys/systm.h>
+
 #define KGI_SYS_NEED_MALLOC
 #define KGI_SYS_NEED_ATOMIC
 #include <dev/kgi/system.h>
@@ -50,8 +53,8 @@ __FBSDID("$FreeBSD$");
 #include "scroller_if.h"
 #include "render_if.h"
 
-#define	MAX_COLUMNS	160
-#define	MAX_TAB_STOPS	MAX_COLUMNS/(8*sizeof(unsigned long))
+#define	MAX_COLUMNS		160
+#define	MAX_TAB_STOPS	MAX_COLUMNS / (8 * sizeof(unsigned long))
 
 typedef struct {
 	/* the scroller textbuffer */
@@ -90,7 +93,7 @@ textscroller_modified(scroller_t s, kgi_u_t from, kgi_u_t to)
 
 	scroll = kgc_scroller_meta(s);
 
-	KRN_ASSERT(from <= to);
+	KGI_ASSERT(from <= to);
 
 	if (from < scroll->from) 
 		scroll->from = from;
@@ -191,7 +194,7 @@ textscroller_sync(scroller_t s)
 	scroll = kgc_scroller_meta(s);
 	cons = kgc_scroller_cons(s);
 
-	KRN_ASSERT(cons);
+	KGI_ASSERT(cons);
 
 	RENDER_GET(cons->render, 0, 0, &render_flags);
 	if (!(render_flags & KGI_RF_NEEDS_UPDATE))
@@ -206,7 +209,7 @@ textscroller_sync(scroller_t s)
 		} else 
 			orig = 0;
 	}
-	KRN_ASSERT((kgi_u_t) orig < scroll->tb.virt.y);
+	KGI_ASSERT((kgi_u_t) orig < scroll->tb.virt.y);
 
 	if (cons->flags & KGI_CF_NO_HARDSCROLL) {
 		kgi_s_t frm = scroll->from;
@@ -216,7 +219,7 @@ textscroller_sync(scroller_t s)
 		kgi_s_t back = (orig *= scroll->tb.virt.x) + scroll->tb.frame;
 		kgi_u16_t *buf = scroll->tb.buf;
 
-		KRN_ASSERT(buf);
+		KGI_ASSERT(buf);
 
 		if (scroll->offset || (scroll->last_offset != scroll->offset) ||
 			(cons->flags & KGI_CF_SCROLLED)) {
@@ -299,7 +302,7 @@ textscroller_init(scroller_t s, kgi_u16_t *buffer)
 		scroll->tb.buf = buffer;
 	} else {
 		if (!(scroll->tb.buf = kgi_kmalloc(CONFIG_KGII_CONSOLEBUFSIZE))) {
-			KRN_ERROR("text buffer allocation failed");
+			KGI_ERROR("text buffer allocation failed");
 			return (KGI_ENOMEM);
 		}
 		memset(scroll->tb.buf, 0, CONFIG_KGII_CONSOLEBUFSIZE);
@@ -316,7 +319,7 @@ textscroller_init(scroller_t s, kgi_u16_t *buffer)
 		(sizeof(*scroll->tb.buf)*scroll->tb.virt.x);
 	if (scroll->tb.virt.y < 2 * render_size.y) {
 		if ((scroll->tb.buf) && (scroll->tb.flags & TBF_ALLOCATED)) {
-			KRN_ERROR("text buffer too small, reset failed");
+			KGI_ERROR("text buffer too small, reset failed");
 			kgi_kfree(scroll->tb.buf);
 			scroll->tb.buf = NULL;
 		}
@@ -343,11 +346,11 @@ textscroller_init(scroller_t s, kgi_u16_t *buffer)
 
 	CONSOLE_SET_MODE(cons, KGI_CM_SHOW_CURSOR);
 
-	KRN_ASSERT(render_size.x == scroll->tb.size.x);
-	KRN_ASSERT(render_size.y == scroll->tb.size.y);
-	KRN_ASSERT(render_virt.x == scroll->tb.virt.x);
+	KGI_ASSERT(render_size.x == scroll->tb.size.x);
+	KGI_ASSERT(render_size.y == scroll->tb.size.y);
+	KGI_ASSERT(render_virt.x == scroll->tb.virt.x);
 
-	KRN_DEBUG(4, "%ix%i (%ix%i virt) scroller initialized",
+	KGI_DEBUG(4, "%ix%i (%ix%i virt) scroller initialized.",
 		render_size.x, render_size.y,
 		render_virt.x, render_virt.y);
 
@@ -362,15 +365,15 @@ static kgi_s_t textscroller_resize(scroller_t s, kgi_u_t new_sizex,
 	kgi_u16_t *src, *dst;
 	kgi_u_t new_tb_sizey, i,j;
 
-	KRN_ASSERT(new_sizex);
-	KRN_ASSERT(new_sizey);
+	KGI_ASSERT(new_sizex);
+	KGI_ASSERT(new_sizey);
 
 	new_tb_sizey = CONFIG_KGII_CONSOLEBUFSIZE /
 		(sizeof(*scroll->tb.buf)*new_sizex);
 
 	if (new_tb_sizey < 2*new_sizey) {
 
-		KRN_DEBUG(1, "text buffer to small, resize failed")
+		KGI_DEBUG(1, "text buffer to small, resize failed.")
 	}
 
 #warning finish!
@@ -458,8 +461,9 @@ static void
 textscroller_mksound(scroller_t s, kgi_u_t pitch, kgi_u_t duration)
 {
 
-	KRN_DEBUG(3, "textscroller_mksound(%p, %i, %i) not implemented yet.",
-		  s, pitch, duration);
+	KGI_DEBUG(5, "textscroller_mksound(%p, %i, %i)", 
+			  s, pitch, duration);
+	sysbeep(pitch, duration);
 }
 
 /*
@@ -496,7 +500,7 @@ textscroller_down(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 	tb_total *= scroll->tb.virt.y;
 	src  = dst - cnt;
 
-	KRN_ASSERT((end <= src) && (src < dst));
+	KGI_ASSERT((end <= src) && (src < dst));
 
 	textscroller_modified(s, end, dst);
 
@@ -609,7 +613,7 @@ textscroller_insert_chars(scroller_t s, kgi_u_t n)
 	src = scroll->wpos;
 	cnt = scroll->tb.virt.x - scroll->x;
 
-	KRN_ASSERT((cnt > 0) && (n > 0));
+	KGI_ASSERT((cnt > 0) && (n > 0));
 
 	textscroller_modified(s, src, src + cnt);
 
@@ -669,7 +673,7 @@ textscroller_erase_chars(scroller_t s, kgi_u_t n)
 	scroll = kgc_scroller_meta(s);
 	cons = kgc_scroller_cons(s);
 
-	KRN_ASSERT(n > 0);
+	KGI_ASSERT(n > 0);
 	if (n > (scroll->tb.size.x - scroll->x)) 
 		n = scroll->tb.virt.x - scroll->x;
 
@@ -958,7 +962,7 @@ textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 	tb_total *= scroll->tb.virt.y;
 	src = dst + cnt;
 
-	KRN_ASSERT((dst < src) && (src <= end));
+	KGI_ASSERT((dst < src) && (src <= end));
 
 	if (CONSOLE_MODE(cons, KGI_CM_ALT_SCREEN) || t 
 		|| (b < scroll->tb.size.y)) {
@@ -976,7 +980,7 @@ textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 					end -= tb_total;
 				}
 
-				KRN_ASSERT(dst < tb_total);
+				KGI_ASSERT(dst < tb_total);
 
 				if (end <= tb_total) 
 					tb_move(tb, dst, src, end - src);
@@ -991,7 +995,7 @@ textscroller_up(scroller_t s, kgi_u_t t, kgi_u_t b, kgi_u_t n)
 					h1 = tb_total - dst;
 					h2 = end - src;
 
-					KRN_ASSERT((h1 > 0) && (h2 > 0));
+					KGI_ASSERT((h1 > 0) && (h2 > 0));
 
 					if (h1 < h2) {
 						tb_move(tb, dst, 
@@ -1226,8 +1230,8 @@ textscroller_map(scroller_t s)
 		if (org < 0) 
 			org += scroll->tb.virt.y;
 
-		KRN_ASSERT((0 <= org && org) < scroll->tb.virt.y);
-		KRN_DEBUG(3, "using softscroll");
+		KGI_ASSERT((0 <= org && org) < scroll->tb.virt.y);
+		KGI_DEBUG(5, "using softscroll.");
 
 		cons->flags |= KGI_CF_NO_HARDSCROLL | KGI_CF_SPLITLINE;
 		org *= scroll->tb.virt.x;
@@ -1237,12 +1241,12 @@ textscroller_map(scroller_t s)
 
 		if (render_flags & KGI_RF_TILE_Y) {
 			cons->flags |= KGI_CF_SPLITLINE;
-			KRN_DEBUG(1, "hardscroll & splitline");
+			KGI_DEBUG(1, "hardscroll & splitline.");
 		} else {
 			cons->flags &= ~KGI_CF_SPLITLINE;
-			KRN_DEBUG(1, "hardscroll only");
+			KGI_DEBUG(1, "hardscroll only.");
 		}
-		KRN_ASSERT(scroll->tb.buf);
+		KGI_ASSERT(scroll->tb.buf);
 
 		RENDER_PUT_TEXT(cons->render, &scroll->tb, 0, 0, 
 				scroll->tb.total);

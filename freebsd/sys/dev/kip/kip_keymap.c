@@ -60,7 +60,7 @@ keymap_reset(kii_keymap_t *k)
 #		define	LOCAL_FREE(x)				\
 			if (k->x != default_kii_keymap.x) {	\
 				kgi_kfree(k->x);		\
-				KRN_TRACE(0, k->x = NULL);	\
+				KGI_TRACE(0, k->x = NULL);	\
 			}
 
 		LOCAL_FREE(fn_buf)
@@ -82,7 +82,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 	kii_unicode_t *newmap;
 	kii_u_t i, size;
 
-	KRN_ASSERT(k);
+	KGI_ASSERT(k);
 
 	if ((k == NULL) || (k->keymap_size <= shift) || (key < k->keymin) ||
 		(k->keymax < key)) {
@@ -118,14 +118,14 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		}
 		memcpy(newarr, k->keymap, size);
 		k->keymap = newarr;
-		KRN_DEBUG(2, "allocated new keymap array (%i slots)", 
+		KGI_DEBUG(2, "allocated new keymap array (%i slots)", 
 			k->keymap_size);
 	}
 	size = k->keymax - k->keymin + 1;
 	if ((newmap = kgi_kmalloc(sizeof(kii_unicode_t) * size)) == NULL) 
 		return (KII_ENOMEM);
 
-	KRN_DEBUG(2, "%s keymap %i", 
+	KGI_DEBUG(2, "%s keymap %i", 
 		default_kii_keymap.keymap[shift] ? "reallocated" : "allocated",
 		shift);
 	i = size;
@@ -139,7 +139,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 	}
 	newmap[key] = sym;
 	k->keymap[shift] = newmap;
-	KRN_ASSERT(k->keymap[shift] != default_kii_keymap.keymap[shift]);
+	KGI_ASSERT(k->keymap[shift] != default_kii_keymap.keymap[shift]);
 	return (KII_EOK);
 }
 
@@ -224,7 +224,7 @@ kii_s_t
 keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, const kii_ascii_t *s)
 {
 
-	KRN_DEBUG(2, "keymap_set_fnstring() not implemented yet!");
+	KGI_DEBUG(2, "keymap_set_fnstring() not implemented yet!");
 	return (KII_EINVAL);
 }
 

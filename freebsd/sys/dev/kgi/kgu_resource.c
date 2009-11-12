@@ -50,7 +50,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	} *r;
 
 	if (!(file->flags & GRAPH_FF_CLIENT_IDENTIFIED)) {
-		KRN_ERROR("cmd = %.8x, but client has not yet identified", cmd);
+		KGI_ERROR("cmd = %.8x, but client has not yet identified", cmd);
 		return (KGI_EPROTO);
 	}
 
@@ -58,14 +58,14 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE)?
 		__KGI_MAX_NR_IMAGE_RESOURCES:
 		__KGI_MAX_NR_RESOURCES) <= in->resource) {
-		KRN_ERROR("invalid resource ID");
+		KGI_ERROR("invalid resource ID");
 		return (KGI_EINVAL);
 	}
 
 	/* check that the image number is ok */
 	if ((in->image < 0) || (file->device->kgi.mode->images <= in->image)) {
 		if (in->image != KGIC_MAPPER_NON_IMAGE_RESOURCE) {
-			KRN_ERROR("invalid image %d", in->image);
+			KGI_ERROR("invalid image %d", in->image);
 			return (KGI_EINVAL);
 		}
 	}
@@ -76,7 +76,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	    (void*)file->device->kgi.mode->img[in->image].resource[in->resource];
 
 	if (r == NULL) {
-		KRN_ERROR("no %s resource %d", 
+		KGI_ERROR("no %s resource %d", 
 			in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE ?
 			"mode" : "image", in->resource);
 		return (KGI_EINVAL);
@@ -293,7 +293,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		return (KGI_EOK);
 	}
 	default:
-		KRN_DEBUG(1, "unknown resource command %.4x", cmd);
+		KGI_DEBUG(1, "unknown resource command %.4x", cmd);
 		return (KGI_ENXIO);
 	}
 }

@@ -71,7 +71,7 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 	row  = KGI_ISOCHAR_ROW(sym);
 	cell = KGI_ISOCHAR_CELL(sym);
 
-	KRN_ASSERT(font);
+	KGI_ASSERT(font);
 	cellinfo = font->info->cellinfo[row];
 
 	if (row == 0xF0) /* Display directly. */
@@ -132,7 +132,7 @@ isorndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 
 	if (render->text16) {
 		(render->text16->PutText16)(render->text16, offset, 
-					tb->buf + start, count);
+				tb->buf + start, count);
 	}
 }
 
@@ -173,11 +173,11 @@ isorndr_default_font(render_t r)
  
 	render = kgc_render_meta(r);
 
-	KRN_DEBUG(3, "searching font for height %i", render->text16->font.y);
+	KGI_DEBUG(3, "searching font for height %i", render->text16->font.y);
 	for (i = 0; default_font[i] && 
 		(default_font[i]->size.y > render->text16->font.y); i++) 
 		;
-	KRN_DEBUG(3, "found font %i (%p)", i, default_font[i]);
+	KGI_DEBUG(3, "found font %i (%p)", i, default_font[i]);
 	return (default_font[i]);
 }
 

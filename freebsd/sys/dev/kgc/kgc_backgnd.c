@@ -91,7 +91,7 @@ backgnd_find_data(backgnd_decoder_t *decoder)
 	if (p == NULL)
 		return (ENOENT);
 	decoder->data_size = *(kgi_u32_t *)p;
-	KRN_BOOT("backgnd: image@%p, size:%lu\n",
+	KGI_BOOT("backgnd: image@%p, size:%lu\n",
 		 (void *)decoder->data, (long)decoder->data_size);
 	return (0);
 }
@@ -190,7 +190,7 @@ backgnd_unregister(backgnd_decoder_t *decoder)
 			if ((r = kgc_get_render(i)) == NULL)
 				continue;
 			if ((error = backgnd_term(i)) != 0) {
-				KRN_ERROR("Can't terminate backgnd %d (%d)",
+				KGI_ERROR("Can't terminate backgnd %d (%d)",
 					 i, error);
 			}
 		}

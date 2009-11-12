@@ -151,13 +151,13 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 	}
 	/* All commands below require identification. */
 	if ((file->flags & EVENT_FF_CLIENT_IDENTIFIED) == 0) {
-		KRN_DEBUG(1, "cmd = %.8x, but client has not yet identified",
+		KGI_DEBUG(1, "cmd = %.8x, but client has not yet identified.",
 				cmd);
 		return (KII_EPROTO);
 	}
 #define	MUST_BE_SESSION_LEADER					\
 	if ((file->flags & EVENT_FF_SESSION_LEADER) == 0) {	\
-		KRN_DEBUG(1, "client is not session leader");	\
+		KGI_DEBUG(1, "client is not session leader.");	\
 		return KII_EPROTO;				\
 	}
 	switch (cmd) {
@@ -168,16 +168,16 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 
 		prev = kii_current_focus(file->device->kii.focus_id);
 		if (prev) {
-			KRN_DEBUG(1, "unmapping previous device");
+			KGI_DEBUG(1, "unmapping previous device.");
 			switch (kii_unmap_device(prev->id)) {
 			case KII_EOK:
 				file->previous = prev->id;
 				break;
 			default:
-				KRN_DEBUG(1, "can't unmap current");
+				KGI_DEBUG(1, "can't unmap current.");
 				return (KII_EBUSY);
 			}
-		KRN_DEBUG(1, "mapping new device");
+		KGI_DEBUG(1, "mapping new device.");
 		kii_map_device(file->device->kii.id);
 		return (KII_EOK);
 		}
@@ -227,11 +227,11 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 
 		cnt = out->keymax - out->keymin + 1;
 
-		KRN_DEBUG(1, "put keymap %i, keys %i-%i, cnt %i",
+		KGI_DEBUG(1, "put keymap %i, keys %i-%i, cnt %i",
 			out->keymap, out->keymin, out->keymax, cnt);
 
 		if (sizeof(out->map)/sizeof(out->map[0]) < cnt) {
-			KRN_DEBUG(1, "keymap request > %i keys",
+			KGI_DEBUG(1, "keymap request > %i keys",
 				sizeof(out->map)/sizeof(out->map[0]));
 			return (KII_EINVAL);
 		}
@@ -239,20 +239,20 @@ event_command(event_file_t *file, unsigned int cmd, void *data,
 		if (focus->kmap.keymap[out->keymap]) {
 			kii_unicode_t *map;
 
-			KRN_DEBUG(1, "map %i @ %p", out->keymap,
+			KGI_DEBUG(1, "map %i @ %p", out->keymap,
 				focus->kmap.keymap[out->keymap]);
 			map = focus->kmap.keymap[out->keymap] +
 				(out->keymin - focus->kmap.keymin);
 			memcpy(out->map, map,cnt*sizeof(kii_unicode_t));
 		} else {
-			KRN_DEBUG(1, "map does not exist, %i VOIDs",cnt);
+			KGI_DEBUG(1, "map does not exist, %i VOIDs",cnt);
 			while (cnt--) 
 				out->map[cnt] = K_VOID;
 		}
 		return (KII_EOK);
 	}
 	default:
-		KRN_DEBUG(1, "command %.4x not (yet) implemented", cmd);
+		KGI_DEBUG(1, "command %.4x not (yet) implemented.", cmd);
 		return (KII_ENXIO);
 	}
 }
@@ -294,7 +294,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 			
 		file = kgi_kmalloc(sizeof(*file));
 		if (file == NULL) {
-			KRN_DEBUG(1, "failed to allocate event_file");
+			KGI_DEBUG(1, "failed to allocate event_file.");
 			return (KII_ENOMEM);
 		}
 		memset(file, 0, sizeof(*file));
@@ -302,7 +302,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 
 		event_files[unit] = file;
 		unit ++;
-		KRN_DEBUG(1, "allocating /dev/event%i", unit);
+		KGI_DEBUG(1, "allocating /dev/event%i", unit);
 
 		/* Create the dev entry. */
 		make_dev(&kiu_cdevsw, unit, UID_ROOT, GID_WHEEL,
@@ -321,7 +321,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		kiic_mapper_attach_request_t *in;
 
 		if (file->device) {
-			KRN_ERROR("ioctl() failed: device already attached");
+			KGI_ERROR("ioctl() failed: device already attached.");
 			return (KII_EINVAL);
 		}
 
@@ -336,7 +336,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 			in->device_id = unit;
 
 		if ((io_result = event_device_init(in->device_id, td))) {
-			KRN_DEBUG(2, "failed to initialize event device %i",
+			KGI_DEBUG(2, "failed to initialize event device %i",
 				  in->device_id);
 			return (io_result);
 		}
@@ -350,12 +350,12 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		file->next = event_dev[in->device_id].ptr->files;
 		event_dev[in->device_id].ptr->files = file;
 
-		KRN_DEBUG(2, "ioctl: attached event device %i", in->device_id);
+		KGI_DEBUG(2, "ioctl: attached event device %i", in->device_id);
 		return (KGI_EOK);
 	}
 
 	if (file->device == 0) {
-		KRN_ERROR("ioctl() failed: no device attached");
+		KGI_ERROR("ioctl() failed: no device attached.");
 		return KII_ENXIO;
 	}
 
@@ -366,7 +366,7 @@ event_ioctl(struct cdev *dev, u_long cmd, caddr_t data, int flags,
 		io_result = event_command(file, cmd, data, td);
 		break;
 	default:
-		KRN_DEBUG(1, "command type %.4x not (yet) implemented",
+		KGI_DEBUG(1, "command type %.4x not (yet) implemented.",
 			  (kii_u_t)(cmd & KIIC_TYPE_MASK));
 		io_result = (KGI_EINVAL);
 		goto unlock;
@@ -384,14 +384,14 @@ static void
 event_map_kii(kii_device_t *dev)
 {
 
-	KRN_DEBUG(2, "event_device %i mapped", dev->id);
+	KGI_DEBUG(2, "event_device %i mapped.", dev->id);
 }
 
 static kii_s_t 
 event_unmap_kii(kii_device_t *dev)
 {
 
-	KRN_DEBUG(2, "event_device %i unmapped", dev->id);
+	KGI_DEBUG(2, "event_device %i unmapped.", dev->id);
 	return (KII_EOK);
 }
 
@@ -403,7 +403,7 @@ event_handle_event(kii_device_t *dev, kii_event_t *ev)
 	event_device_t *device = dev->priv.priv_ptr;
 	event_file_t *file;
 
-	KRN_DEBUG(3, "type %i, size %i, time %i", 
+	KGI_DEBUG(3, "type %i, size %i, time %i", 
 		ev->any.type, ev->any.size, ev->any.time);
 
 	mtx_lock(&device->cmd_mutex);
@@ -411,15 +411,15 @@ event_handle_event(kii_device_t *dev, kii_event_t *ev)
 	for (file = device->files; file; file = file->next) {
 		kii_u_t new_head = file->queue.head + ev->size;
 
-		KRN_ASSERT(device->files->device_id == file->device_id);
-		KRN_ASSERT(file->queue.tail < file->queue.size);
-		KRN_ASSERT(file->queue.tail <= file->queue.head);
+		KGI_ASSERT(device->files->device_id == file->device_id);
+		KGI_ASSERT(file->queue.tail < file->queue.size);
+		KGI_ASSERT(file->queue.tail <= file->queue.head);
 
-		KRN_DEBUG(3, "queuing for file %p, head %i, tail %i",
+		KGI_DEBUG(3, "queuing for file %p, head %i, tail %i",
 			file, file->queue.head, file->queue.tail);
 
 		if (new_head < file->queue.size) {
-			KRN_ASSERT(file->queue.head < file->queue.size);
+			KGI_ASSERT(file->queue.head < file->queue.size);
 			memcpy(file->queue.buffer + file->queue.head,
 				ev, ev->size);
 			file->queue.head = new_head;
@@ -427,14 +427,14 @@ event_handle_event(kii_device_t *dev, kii_event_t *ev)
 		}
 
 		if (file->queue.tail <= (new_head - file->queue.size)) {
-			KRN_DEBUG(1, "queue overrun (file %p), event dropped",
+			KGI_DEBUG(1, "queue overrun (file %p), event dropped.",
 				file);
 			file->flags |= EVENT_FF_QUEUE_OVERRUN;
 			continue;
 		}
 
 		if (file->queue.size < file->queue.head) {
-			KRN_ASSERT(file->queue.head < 2 * file->queue.size);
+			KGI_ASSERT(file->queue.head < 2 * file->queue.size);
 
 			memcpy(file->queue.buffer + file->queue.head - 
 				file->queue.size, ev, ev->size);
@@ -449,7 +449,7 @@ event_handle_event(kii_device_t *dev, kii_event_t *ev)
 		file->queue.head = new_head;
 	}
 
-	KRN_ASSERT(device->files);
+	KGI_ASSERT(device->files);
 
 	mtx_unlock(&device->cmd_mutex);
 
@@ -499,7 +499,7 @@ event_read(struct cdev *dev, struct uio *uio, int ioflag)
 	count = (uio->uio_resid > file->queue.head - file->queue.tail) ?
 		file->queue.head - file->queue.tail : uio->uio_resid;
 
-	KRN_ASSERT(count > 0);
+	KGI_ASSERT(count > 0);
 
 	/* XXX Can't lock while using uiomove. */
 	mtx_unlock(&file->device->cmd_mutex);
@@ -515,7 +515,7 @@ event_read(struct cdev *dev, struct uio *uio, int ioflag)
 		if (file->queue.tail < file->queue.size) 
 			continue;
 
-		KRN_ASSERT(file->queue.tail <= file->queue.head);
+		KGI_ASSERT(file->queue.tail <= file->queue.head);
 		file->queue.tail -= file->queue.size;
 		file->queue.head -= file->queue.size;
 	}
@@ -552,23 +552,23 @@ event_device_init(kii_s_t device_id, struct thread *td)
 	int err;
 	event_device_t *device;
 
-	KRN_ASSERT(device_id >= 0);
+	KGI_ASSERT(device_id >= 0);
 
 	if (event_dev[device_id].ptr) {
-		KRN_DEBUG(1, "event_device %i already initialized", device_id);
+		KGI_DEBUG(1, "event_device %i already initialized.", device_id);
 		event_dev[device_id].cnt++;
 		return (KII_EOK);
 	}
 	if (event_dev[device_id].cnt) {
-		KRN_DEBUG(1, "event_device %i has pending (mmap) references",
+		KGI_DEBUG(1, "event_device %i has pending (mmap) references.",
 				device_id);
 		return (KII_EBUSY);
 	}
-	KRN_ASSERT(event_dev[device_id].pid == 0);
-	KRN_ASSERT(event_dev[device_id].gid == 0);
+	KGI_ASSERT(event_dev[device_id].pid == 0);
+	KGI_ASSERT(event_dev[device_id].gid == 0);
 
 	if ((device = kgi_kmalloc(sizeof(*device))) == NULL) {
-		KRN_DEBUG(1, "failed to allocate event_device %i", device_id);
+		KGI_DEBUG(1, "failed to allocate event_device %i", device_id);
 		return (KII_ENOMEM);
 	}
 	memset(device, 0, sizeof(*device));
@@ -582,12 +582,12 @@ event_device_init(kii_s_t device_id, struct thread *td)
 	device->kii.priv.priv_ptr = device;
 
 	if ((err = kii_register_device(&device->kii, device_id)) != KII_EOK) {
-		KRN_DEBUG(1, "failed to register kii_device (index %i)",
+		KGI_DEBUG(1, "failed to register kii_device (index %i)",
 				device_id);
 		kgi_kfree(device);
 		return (err);
 	}
-	KRN_DEBUG(2, "registered kii_device %i on focus %i", 
+	KGI_DEBUG(2, "registered kii_device %i on focus %i", 
 		device->kii.id, device->kii.focus_id);
 
 	mtx_init(&device->cmd_mutex, "kiu mutex lock", NULL, MTX_DEF);
@@ -597,7 +597,7 @@ event_device_init(kii_s_t device_id, struct thread *td)
 	event_dev[device_id].ptr = device;
 	event_dev[device_id].cnt++;
 
-	KRN_DEBUG(1, "event_device %i initialized", device_id);
+	KGI_DEBUG(1, "event_device %i initialized.", device_id);
 
 	return (KII_EOK);
 }
@@ -607,15 +607,15 @@ event_device_done(kii_u_t device_id, kii_u_t previous)
 {
 	event_device_t *device = event_dev[device_id].ptr;
 
-	KRN_ASSERT(device_id >= 0);
+	KGI_ASSERT(device_id >= 0);
 
 	if (--event_dev[device_id].cnt) {
-		KRN_DEBUG(1, "event %i closed", device_id);
+		KGI_DEBUG(1, "event %i closed.", device_id);
 		return;
 	}
 
 	if (KII_VALID_DEVICE_ID(device->kii.id)) {
-		KRN_DEBUG(1, "device still registered (id %i)",
+		KGI_DEBUG(1, "device still registered (id %i)",
 			  device->kii.id);
 
 		if (device->kii.flags & KII_DF_FOCUSED) {
@@ -631,11 +631,11 @@ event_device_done(kii_u_t device_id, kii_u_t previous)
 	kgi_kfree(device);
 	event_dev[device_id].ptr = NULL;
 
-	KRN_ASSERT(event_dev[device_id].cnt == 0);
-	KRN_ASSERT(event_dev[device_id].pid == 0);
-	KRN_ASSERT(event_dev[device_id].gid == 0);
+	KGI_ASSERT(event_dev[device_id].cnt == 0);
+	KGI_ASSERT(event_dev[device_id].pid == 0);
+	KGI_ASSERT(event_dev[device_id].gid == 0);
 
-	KRN_DEBUG(1, "event %i finally closed", device_id);
+	KGI_DEBUG(1, "event %i finally closed.", device_id);
 }
 
 static int 
@@ -644,7 +644,7 @@ event_open(struct cdev *dev, int flag, int mode, struct thread *td)
 	event_file_t *file;
 	void *queue_buffer;
 
-	KRN_DEBUG(1, "open() /dev/event%i", dev2unit(dev));
+	KGI_DEBUG(1, "open() /dev/event%i", dev2unit(dev));
 
 	/* 
 	 * Avoid further operations on unit 0,
@@ -655,7 +655,7 @@ event_open(struct cdev *dev, int flag, int mode, struct thread *td)
 		return (0);
 
 	if ((file = event_files[dev2unit(dev) - 1]) == NULL) {
-		KRN_DEBUG(1, "open: unit not allocated");
+		KGI_DEBUG(1, "open: unit not allocated.");
 		return (ENODEV);
 	}
 		
@@ -666,13 +666,13 @@ event_open(struct cdev *dev, int flag, int mode, struct thread *td)
 	 * (see graph_command()).
 	 */
 	if (file->refcnt) {
-		KRN_DEBUG(1, "open: failed, already opened");
+		KGI_DEBUG(1, "open: failed, already opened.");
 		return (EBUSY);
 	}
 
 	queue_buffer = kgi_kmalloc(EVENT_QUEUE_SIZE);
 	if (queue_buffer == NULL) {
-		KRN_DEBUG(1, "failed to allocate queue_buffer");
+		KGI_DEBUG(1, "failed to allocate queue_buffer.");
 		return (ENOMEM);
 	}
 
@@ -698,11 +698,11 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 
 	unit = dev2unit(dev) - 1;
 	if ((file = event_files[unit]) == NULL) {
-		KRN_DEBUG(1, "release: unit not allocated");
+		KGI_DEBUG(1, "release: unit not allocated.");
 		return (ENODEV);
 	}
 
-	KRN_DEBUG(1, "closing /dev/event%i (refcnt %li)", unit, file->refcnt);
+	KGI_DEBUG(1, "closing /dev/event%i (refcnt %li)", unit, file->refcnt);
 
 	/* 
 	 * Only remove the file from the device list of files
@@ -717,14 +717,14 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 			while (prev->next != file) {
 				prev = prev->next;
 			}
-			KRN_ASSERT(prev->next == file);
+			KGI_ASSERT(prev->next == file);
 			
 			prev->next = file->next;
 		}
 		file->next = NULL;
 
 		if (td->td_proc->p_pid == event_dev[file->device_id].pid) {
-			KRN_DEBUG(1, "session leader (pid %i) closed "
+			KGI_DEBUG(1, "session leader (pid %i) closed "
 				  "event_device %i",
 				  event_dev[file->device_id].pid, 
 				  file->device_id);
@@ -740,7 +740,7 @@ event_release(struct cdev *dev, int flags, int mode, struct thread *td)
 	file->device = NULL;
 
 	file->refcnt--;
-	KRN_ASSERT(file->refcnt == 0);
+	KGI_ASSERT(file->refcnt == 0);
 
 	kgi_kfree(file);
 	event_files[unit] = NULL;

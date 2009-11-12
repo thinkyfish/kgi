@@ -66,14 +66,14 @@ static void
 dpy_null_show(kgi_marker_t *marker, kgi_u_t x, kgi_u_t y)
 {
 
-	KRN_ASSERT(marker);
+	KGI_ASSERT(marker);
 }
 
 static void 
 dpy_null_hide(kgi_marker_t *marker)
 {
 
-	KRN_ASSERT(marker);
+	KGI_ASSERT(marker);
 }
 
 #define	dpy_null_undo	dpy_null_hide
@@ -88,16 +88,16 @@ static void
 dpy_null_inc_refcount(kgi_display_t *dpy)
 {
 
-	KRN_ASSERT(dpy);
-	KRN_DEBUG(2, "dpy_null display refcount increment");
+	KGI_ASSERT(dpy);
+	KGI_DEBUG(2, "dpy_null display refcount increment.");
 }
 
 static void 
 dpy_null_dec_refcount(kgi_display_t *dpy)
 {
 
-	KRN_ASSERT(dpy);
-	KRN_DEBUG(2, "dpy_null display refcount decrement");
+	KGI_ASSERT(dpy);
+	KGI_DEBUG(2, "dpy_null display refcount decrement.");
 }
 
 static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
@@ -110,7 +110,7 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 	dpy_null_mode_t *devmode = (dpy_null_mode_t *) dev_mode;
 
 	if (images != 1) {
-		KRN_DEBUG(2, "%i image layers are not supported.", images);
+		KGI_DEBUG(2, "%i image layers are not supported.", images);
 		return (-EINVAL);
 	}
 
@@ -138,7 +138,7 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			MATCH(img[0].size.x) && MATCH(img[0].size.y) &&
 			MATCH(img[0].frames) && MATCH(img[0].tluts) &&
 			MATCH(img[0].iluts) && MATCH(img[0].aluts))) {
-			KRN_DEBUG(2, "image mode does not match boot mode");
+			KGI_DEBUG(2, "image mode does not match boot mode.");
 			return (-EINVAL);
 		}
 		if (!MATCH(img[0].fam) || !MATCH(img[0].cam) ||
@@ -146,7 +146,7 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 				__KGI_MAX_NR_ATTRIBUTES) ||
 			strncmp(img[0].bpca, dpy_null->mode.img[0].bpca,
 				__KGI_MAX_NR_ATTRIBUTES)) {
-			KRN_DEBUG(2, "attributes do not match boot mode");
+			KGI_DEBUG(2, "attributes do not match boot mode.");
 			return (-EINVAL);
 		}
 
@@ -197,7 +197,7 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 
 		return (KGI_EOK);
 	default:
-		KRN_INTERNAL_ERROR;
+		KGI_INTERNAL_ERROR;
 		return (-EINVAL);
 	}
 #undef	MATCH
@@ -209,10 +209,10 @@ dpy_null_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img,
 	kgi_u_t images, void *dev_mode)
 {
 
-	KRN_ASSERT(dpy);
-	KRN_ASSERT(img);
-	KRN_ASSERT(images == 1);
-	KRN_ASSERT(dev_mode);
+	KGI_ASSERT(dpy);
+	KGI_ASSERT(img);
+	KGI_ASSERT(images == 1);
+	KGI_ASSERT(dev_mode);
 }
 
 static inline kgi_display_t *
@@ -220,7 +220,7 @@ dpy_null_alloc(kgi_u_t size_x, kgi_u_t size_y)
 {
 	dpy_null_display_t *dpy_null;
 
-	KRN_ASSERT(size_x && size_y);
+	KGI_ASSERT(size_x && size_y);
 
 	if (dpy_index >= CONFIG_KGI_DISPLAYS)
 		return (NULL);
