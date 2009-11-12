@@ -32,8 +32,6 @@ __FBSDID("$FreeBSD$");
 
 #include "opt_kgi.h"
 
-#ifndef KGI_IGNORE_VGAPCI
-
 /*
  * Simple driver for PCI VGA display devices.  Drivers such as agp(4) and
  * drm(4) should attach as children of this device.
@@ -429,6 +427,7 @@ static driver_t vga_pci_driver = {
 
 static devclass_t vga_devclass;
 
+#ifndef KGI_IGNORE_VGAPCI
 DRIVER_MODULE(vgapci, pci, vga_pci_driver, vga_devclass, 0, 0);
-#endif /* KGI_IGNORE_VGAPCI */
+#endif 
 
