@@ -32,7 +32,6 @@
 #define	MB	*(1024*1024)
 #define	GB	*(1024*1024*1024)
 
-
 /*
  * ISO 10646 defines symbol codes as 32 bit unsigned int organized into
  * groups, planes, rows and cells. By now only the first plane (group=0,
@@ -49,15 +48,15 @@ typedef struct {
 } kgi_version_t;
 
 typedef struct { 
-	kgi_s_t x,y; 
+	kgi_s_t x, y; 
 } kgi_scoord_t;
 
 typedef struct { 
-	kgi_u_t x,y; 
+	kgi_u_t x, y; 
 } kgi_ucoord_t;
 
 typedef struct { 
-	kgi_u8_t x,y; 
+	kgi_u8_t x, y; 
 } kgi_u8_coord_t;
 
 typedef struct { 
@@ -73,7 +72,7 @@ typedef struct {
 } kgi_ratio_t;
 
 typedef struct { 
-	kgi_u16_t r,g,b; 
+	kgi_u16_t r, g, b; 
 } kgi_rgb_color_t;
 
 typedef union {
