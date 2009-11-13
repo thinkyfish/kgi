@@ -83,8 +83,8 @@ static void
 dpysw_inc_refcount(kgi_display_t *dpy)
 {
 
-	KRN_ASSERT(dpy);
-	KRN_DEBUG(2, "dpysw display refcount increment");
+	KGI_ASSERT(dpy);
+	KGI_DEBUG(2, "dpysw display refcount increment");
 
 	return;
 }
@@ -93,8 +93,8 @@ static void
 dpysw_dec_refcount(kgi_display_t *dpy)
 {
 
-	KRN_ASSERT(dpy);
-	KRN_DEBUG(2, "dpysw display refcount decrement");
+	KGI_ASSERT(dpy);
+	KGI_DEBUG(2, "dpysw display refcount decrement");
 
 	return;
 }
@@ -174,9 +174,9 @@ dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 	kgi_u8_t clut[256 * 3];
 	int i;
 
-	KRN_ASSERT(table == 0);
-	KRN_ASSERT(count == 256);
-	KRN_ASSERT(index == 0);
+	KGI_ASSERT(table == 0);
+	KGI_ASSERT(count == 256);
+	KGI_ASSERT(index == 0);
 	
 	/* All colors must change at once. */
 	if (!(am & KGI_AM_COLOR1) || !(am & KGI_AM_COLOR2) ||
@@ -203,9 +203,9 @@ dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t
 	int error;
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
 
-	KRN_ASSERT(table == 0);
-	KRN_ASSERT(count == 256);
-	KRN_ASSERT(index == 0);
+	KGI_ASSERT(table == 0);
+	KGI_ASSERT(count == 256);
+	KGI_ASSERT(index == 0);
 	
 	/* All colors must change at once .*/
 	if (!(am & KGI_AM_COLOR1) || !(am & KGI_AM_COLOR2) ||
@@ -241,7 +241,7 @@ dpysw_configure(int flags)
 		if (adp->va_type == KD_VGA)
 			vgadp = adp;
 		if (adp->va_flags & V_ADP_VESA) {
-			KRN_DEBUG(1, "dpysw: Found VESA adapter!");
+			KGI_DEBUG(1, "dpysw: Found VESA adapter!");
 			break;
 		}
 	}
@@ -250,7 +250,7 @@ dpysw_configure(int flags)
 		adp = vgadp;
 
 	if (adp == NULL) {
-		KRN_ERROR("dpysw: no VGA adapter found!");
+		KGI_ERROR("dpysw: no VGA adapter found!");
 		return (ENXIO);
 	}
 
@@ -428,7 +428,7 @@ dpysw_configure(int flags)
 	}
 
 	if (kgi_register_display(dpy, 0)) {
-		KRN_NOTICE("Could not register vidsw display.\n");
+		KGI_NOTICE("Could not register vidsw display.\n");
 		return (ENXIO);
 	}
 
