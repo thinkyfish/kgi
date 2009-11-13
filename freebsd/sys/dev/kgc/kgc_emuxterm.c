@@ -62,7 +62,7 @@ __FBSDID("$FreeBSD$");
 #undef	STRICT_XTERM	/* #define to restrict to original XTERM	*/
 #undef	SETEC_ASTRONOMY	/* #define to force display of concealed text	*/
 
-#define TRACE(x)	KGI_TRACE(8,(x))
+#define TRACE(x)	KGI_TRACE(13,(x))
 
 static kgi_u8_t DEFAULT_COLORS[8] = {
 	KGI_CC_LIGHTGRAY,	KGI_CC_BLACK, /* Normal.	*/
