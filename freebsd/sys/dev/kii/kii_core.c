@@ -630,7 +630,7 @@ void
 kiidev_sync(kii_device_t *dev, kii_sync_flags_t what)
 {
 	
-	KGI_DEBUG(9, "kiidev_sync() not implemented yet!");
+	KGI_DEBUG(12, "kiidev_sync() not implemented yet!");
 }
 
 const 
