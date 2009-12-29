@@ -56,9 +56,16 @@ __FBSDID("$FreeBSD$");
 kgi_u_t 
 kgirndr_atop_color(render_t r, kgi_u_t attr)
 {
+#ifdef KGC_RENDER_16BITS
 	register kgi_u_t val = (attr &KGI_CA_REVERSE) ?
-			(((attr &0x0007) << 8)  | ((attr &0x0700) << 4)) : 
-			(((attr &0x0007) << 12) | (attr &0x0700));
+			(((attr &0x0007) << 16)  | ((attr &0x0700) << 8)) : 
+			(((attr &0x0007) << 20) | (attr &0x0700));
+#else
+ 	register kgi_u_t val = (attr &KGI_CA_REVERSE) ?
+ 			(((attr &0x0007) << 8)  | ((attr &0x0700) << 4)) : 
+ 			(((attr &0x0007) << 12) | (attr &0x0700));	
+#endif
+
 
 	if (attr &KGI_CA_BLINK) 
 		val |= 0x8000;
@@ -73,9 +80,15 @@ kgi_u_t
 kgirndr_ptoa_color(render_t r, kgi_u_t val)
 {
 
+#ifdef KGC_RENDER_16BITS
+	return (((val &0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
+			((val &0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL) |
+			((val &0x7000) >> 20) | (val &0x0F00));
+#else
 	return (((val &0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
 			((val &0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL) |
 			((val &0x7000) >> 12) | (val &0x0F00));
+#endif
 }
 
 /*

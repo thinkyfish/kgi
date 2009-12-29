@@ -434,7 +434,7 @@ kip_kbd_register(keyboard_t *kbd, int index)
 				kii_error = kii_register_input(kbd->kb_unit, 
 					&sc->kii_input, 1);
 				KGI_DEBUG(2, "KII device %d, keyboard %s%d " 
-					 "registered on focus %d with error %d",
+					 "registered on existing focus %d with "					 " error %d",
 				    	 index, kbd->kb_name, kbd->kb_unit, 
 					 kbd->kb_unit, kii_error);
 			} else {

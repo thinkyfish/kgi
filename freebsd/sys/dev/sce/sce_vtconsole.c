@@ -384,7 +384,7 @@ static int
 sce_tswopen(struct tty *tp)
 {
 	int unit;
-	kgi_ucoord_t sz, rz;
+	kgi_ucoord_t px, sz;
 	kgi_console_t *cons;
 
 	/* 
@@ -395,18 +395,18 @@ sce_tswopen(struct tty *tp)
 	if (cons == NULL)
 		return (ENXIO);
 
-	KGI_DEBUG(9, "Opening TTY %d", unit);
+	KGI_DEBUG(8, "Opening TTY %d", unit);
 	if (tp->t_winsize.ws_col == 0 || tp->t_winsize.ws_row == 0) {
 		SCROLLER_GET(cons->scroller, &sz, 0, 0, 0, 0, 0, 0);
-		RENDER_GET(cons->render, &rz, 0, 0);
+		RENDER_GET(cons->render, &px, 0, 0);
 
-		KGI_DEBUG(9, "TTY dimensions: %d(%drows)x%d(%dcols)", 
-				  sz.x, rz.x, sz.y, rz.y);
+		KGI_DEBUG(9, "Terminal dimensions: %ux%u (%urows by %ucolums)", 
+			  px.x, px.y, sz.x, sz.y);
 
 		tp->t_winsize.ws_col = sz.x;
-		tp->t_winsize.ws_xpixel = rz.x;	
+		tp->t_winsize.ws_xpixel = px.x;	
 		tp->t_winsize.ws_row = sz.y;
-		tp->t_winsize.ws_ypixel = rz.y;
+		tp->t_winsize.ws_ypixel = px.y;
 	}
 
 	return (0);

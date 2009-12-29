@@ -229,7 +229,8 @@ mmap(td, uap)
 	pos = uap->pos;
 
 	fp = NULL;
-	/* make sure mapping fits into numeric range etc */
+
+	/* Make sure mapping fits into numeric range, etc. */
 	if ((uap->len == 0 && !SV_CURPROC_FLAG(SV_AOUT) &&
 	     curproc->p_osrel >= 800104) ||
 	    ((flags & MAP_ANON) && uap->fd != -1))
@@ -267,6 +268,7 @@ mmap(td, uap)
 		addr -= pageoff;
 		if (addr & PAGE_MASK)
 			return (EINVAL);
+
 		/* Address range must be all in user VM space. */
 		if (addr < vm_map_min(&vms->vm_map) ||
 		    addr + size > vm_map_max(&vms->vm_map))
@@ -371,11 +373,6 @@ mmap(td, uap)
 			}
 		} else if (vp->v_type != VCHR || (fp->f_flag & FWRITE) != 0) {
 			maxprot |= VM_PROT_WRITE;
-		}
-		/* Recognize a KGI backend. */
-		if ((vp->v_type == VCHR) && 
-			(vp->v_rdev->si_devsw->d_flags & D_KGI_PAGING)) {
-			flags |= MAP_KGI;
 		}
 		handle = (void *)vp;
 		handle_type = OBJT_VNODE;

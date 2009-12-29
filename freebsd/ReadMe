@@ -1,5 +1,8 @@
 About:
- * This alpha release is based on FreeBSD8.
+ * This release is based on FreeBSD-9.CURRENT.
+ * Currently i386 is the only supported platform.
+ * KGI makes use of FreeBSD's VGA VESA system for mode setting and the graphics
+   console. No other drivers are included.
 
 Prerequisites:
  * Knowledge of using svn(or cvs/csup) to checkout a FreeBSD source tree.
@@ -9,18 +12,11 @@ Prerequisites:
    Make sure to load vesa.ko before executing the above. 
  
 Installation:
- * Your KGI checkout needs to be copied to a working copy of your FreeBSD src
-   tree.
+ * Copy your KGI checkout over a working copy of your FreeBSD src tree.
  * You can use the included KGI kernel config for building a KGI kernel.
    The included KGI kernel config disables & enables some FreeBSD devices &
    options. Read sys/i386/conf/KGI for more information.
- * Recommend using INSTKERNNAME=kernel.KGI when make'ing kernel.
- * Once you have a KGI enabled system running, make sure your TERM environment
-   is set to "xterm"
-   For (t)csh:
-	# setevn TERM xterm
-   For sh:
-	# export TERM=xterm
+ * Recommend using INSTKERNNAME=kernel.KGI or similar when installing kernel.
 
 GGI:
  * Setup headers:

@@ -63,7 +63,7 @@ typedef struct sce_ttysoftc {
 extern sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
 
 extern int sce_mouse_init(void);
-extern void sce_sysmouse_event(kii_event_t *ev);
+extern int sce_sysmouse_event(kii_event_t *ev);
 extern int sce_sysmouse_init(void);
 extern int sce_sysmouse_ioctl(struct tty *tp, u_long cmd, caddr_t data, 
 		struct thread *td);
