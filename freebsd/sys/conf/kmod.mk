@@ -60,6 +60,9 @@
 #		Unload a module.
 #
 
+# backwards compat option for older systems.
+MACHINE_CPUARCH?=${MACHINE_ARCH:C/mipse[lb]/mips/:C/armeb/arm/:C/powerpc64/powerpc/}
+
 AWK?=		awk
 KMODLOAD?=	/sbin/kldload
 KMODUNLOAD?=	/sbin/kldunload
@@ -67,6 +70,11 @@ OBJCOPY?=	objcopy
 
 .if defined(KMODDEPS)
 .error "Do not use KMODDEPS on 5.0+; use MODULE_VERSION/MODULE_DEPEND"
+.endif
+
+# Enable CTF conversion on request.
+.if defined(WITH_CTF)
+.undef NO_CTF
 .endif
 
 .include <bsd.init.mk>
@@ -106,7 +114,7 @@ CFLAGS+=	-I. -I@
 # for example.
 CFLAGS+=	-I@/contrib/altq
 
-.if ${CC} != "icc"
+.if ${CC} != "icc" && ${CC} != "clang"
 CFLAGS+=	-finline-limit=${INLINE_LIMIT}
 CFLAGS+= --param inline-unit-growth=100
 CFLAGS+= --param large-function-growth=1000
@@ -124,8 +132,16 @@ CFLAGS+=	${DEBUG_FLAGS}
 CFLAGS+=	-fno-omit-frame-pointer
 .endif
 
-.if ${MACHINE_ARCH} == "powerpc"
+.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "powerpc64"
 CFLAGS+=	-mlongcall -fno-omit-frame-pointer
+.endif
+
+.if ${MACHINE_ARCH} == "mips"
+CFLAGS+=	-G0 -fno-pic -mno-abicalls -mlong-calls
+.endif
+
+.if defined(DEBUG) || defined(DEBUG_FLAGS)
+CTFFLAGS+=	-g
 .endif
 
 .if defined(FIRMWS)
@@ -174,7 +190,7 @@ ${PROG}.symbols: ${FULLPROG}
 	${OBJCOPY} --only-keep-debug ${FULLPROG} ${.TARGET}
 .endif
 
-.if ${MACHINE_ARCH} != amd64
+.if ${MACHINE_ARCH} != amd64 && ${MACHINE_ARCH} != mips
 ${FULLPROG}: ${KMOD}.kld
 	${LD} -Bshareable ${LDFLAGS} -o ${.TARGET} ${KMOD}.kld
 .if !defined(DEBUG_FLAGS)
@@ -187,12 +203,13 @@ EXPORT_SYMS?=	NO
 CLEANFILES+=	export_syms
 .endif
 
-.if ${MACHINE_ARCH} != amd64
+.if ${MACHINE_ARCH} != amd64 && ${MACHINE_ARCH} != mips
 ${KMOD}.kld: ${OBJS}
 .else
 ${FULLPROG}: ${OBJS}
 .endif
 	${LD} ${LDFLAGS} -r -d -o ${.TARGET} ${OBJS}
+	@[ -z "${CTFMERGE}" -o -n "${NO_CTF}" ] || ${CTFMERGE} ${CTFFLAGS} -o ${.TARGET} ${OBJS}
 .if defined(EXPORT_SYMS)
 .if ${EXPORT_SYMS} != YES
 .if ${EXPORT_SYMS} == NO
@@ -206,13 +223,14 @@ ${FULLPROG}: ${OBJS}
 	    export_syms | xargs -J% ${OBJCOPY} % ${.TARGET}
 .endif
 .endif
-.if !defined(DEBUG_FLAGS) && ${MACHINE_ARCH} == amd64
+.if !defined(DEBUG_FLAGS) && \
+    (${MACHINE_ARCH} == amd64 || ${MACHINE_ARCH} == mips)
 	${OBJCOPY} --strip-debug ${.TARGET}
 .endif
 
 _ILINKS=@ machine
-.if ${MACHINE} != ${MACHINE_ARCH}
-_ILINKS+=${MACHINE_ARCH}
+.if ${MACHINE} != ${MACHINE_CPUARCH}
+_ILINKS+=${MACHINE_CPUARCH}
 .endif
 
 all: objwarn ${PROG}
@@ -239,8 +257,8 @@ SYSDIR=	${_dir}
 
 ${_ILINKS}:
 	@case ${.TARGET} in \
-	${MACHINE_ARCH}) \
-		path=${SYSDIR}/${MACHINE_ARCH}/include ;; \
+	${MACHINE_CPUARCH}) \
+		path=${SYSDIR}/${MACHINE_CPUARCH}/include ;; \
 	machine) \
 		path=${SYSDIR}/${MACHINE}/include ;; \
 	@) \
@@ -320,11 +338,14 @@ ${_src}:
 .endfor
 .endif
 
+# Respect configuration-specific C flags.
+CFLAGS+=	${CONF_CFLAGS}
+
 MFILES?= dev/acpica/acpi_if.m dev/acpi_support/acpi_wmi_if.m \
 	dev/agp/agp_if.m dev/ata/ata_if.m dev/eisa/eisa_if.m \
 	dev/iicbus/iicbb_if.m dev/iicbus/iicbus_if.m \
 	dev/mmc/mmcbr_if.m dev/mmc/mmcbus_if.m \
-	dev/mii/miibus_if.m dev/ofw/ofw_bus_if.m \
+	dev/mii/miibus_if.m dev/mvs/mvs_if.m dev/ofw/ofw_bus_if.m \
 	dev/pccard/card_if.m dev/pccard/power_if.m dev/pci/pci_if.m \
 	dev/pci/pcib_if.m dev/ppbus/ppbus_if.m dev/smbus/smbus_if.m \
 	dev/sound/pcm/ac97_if.m dev/sound/pcm/channel_if.m \
@@ -433,11 +454,11 @@ assym.s: @/kern/genassym.sh
 .endif
 	sh @/kern/genassym.sh genassym.o > ${.TARGET}
 .if exists(@)
-genassym.o: @/${MACHINE_ARCH}/${MACHINE_ARCH}/genassym.c
+genassym.o: @/${MACHINE_CPUARCH}/${MACHINE_CPUARCH}/genassym.c
 .endif
 genassym.o: @ machine ${SRCS:Mopt_*.h}
 	${CC} -c ${CFLAGS:N-fno-common} \
-	    @/${MACHINE_ARCH}/${MACHINE_ARCH}/genassym.c
+	    @/${MACHINE_CPUARCH}/${MACHINE_CPUARCH}/genassym.c
 .endif
 
 lint: ${SRCS}

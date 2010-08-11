@@ -64,6 +64,8 @@ extern int stathz;			/* statistics clock's frequency */
 extern int profhz;			/* profiling clock's frequency */
 extern int profprocs;			/* number of process's profiling */
 extern int ticks;
+extern int timer1hz;			/* timer 1 frequency */
+extern int timer2hz;			/* timer 2 frequency */
 
 #endif /* _KERNEL */
 
@@ -107,7 +109,7 @@ enum sysinit_sub_id {
 	SI_SUB_LOCK		= 0x1B00000,	/* various locks */
 	SI_SUB_EVENTHANDLER	= 0x1C00000,	/* eventhandler init */
 	SI_SUB_KGI		= 0x1D00000,	/* KGI */
-	SI_SUB_VNET_PRELINK	= 0x1E00000,	/* vnet init before modules !/ */
+	SI_SUB_VNET_PRELINK	= 0x1E00000,	/* vnet init before modules */
 	SI_SUB_KLD		= 0x2000000,	/* KLD and module setup */
 	SI_SUB_CPU		= 0x2100000,	/* CPU resource(s)*/
 	SI_SUB_RANDOM		= 0x2120000,	/* random number generator */

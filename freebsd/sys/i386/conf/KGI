@@ -2,11 +2,12 @@ include	GENERIC
 ident	KGI
 
 # See sys/dev/kgi/i386-compiler.h for the reason behind using -fgnu89-inline
-makeoptions CWARNFLAGS+= -fgnu89-inline
+makeoptions CWARNFLAGS+= -fgnu89-inline 
+makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
 
 # KGI (Kernel Graphic Interface)
 options	KGI_COMPAT		# Enables KGI compatibility.
-options	KGI_DBG_LEVEL=0		# KGI debug output level.
+options	KGI_DBG_LEVEL=4		# KGI debug output level.
 
 # Restrict building of dev/pci/vga_pci.c to avoid probing.
 options	KGI_IGNORE_VGAPCI	
@@ -55,10 +56,10 @@ device	kgim	# KGI module driver interface.
 # Syscons emulation.
 device	sce
 
-# Disable sc(syscons) and splash
+# Disable syscons and splash
 nodevice	sc
 nodevice	splash
 
-# FreeBSD's VGA VESA system.
+# FreeBSD's VESA system.
 options 	VESA
 options 	X86BIOS # Required for VESA.	

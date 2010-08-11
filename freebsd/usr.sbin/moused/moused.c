@@ -1092,7 +1092,8 @@ moused(void)
 	    FD_SET(rodent.mremcfd, &fds);
 
 	c = select(FD_SETSIZE, &fds, NULL, NULL,
-		   (rodent.flags & Emulate3Button) ? &timeout : NULL);
+		   ((rodent.flags & Emulate3Button) &&
+		    S_DELAYED(mouse_button_state)) ? &timeout : NULL);
 	if (c < 0) {                    /* error */
 	    logwarn("failed to read from mouse");
 	    continue;

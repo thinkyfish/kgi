@@ -54,6 +54,7 @@ struct file;
 struct cdev {
 	void		*__si_reserved;
 	u_int		si_flags;
+#define	SI_ETERNAL	0x0001	/* never destroyed */
 #define SI_ALIAS	0x0002	/* carrier of alias name */
 #define SI_NAMED	0x0004	/* make_dev{_alias} has been called */
 #define SI_CHEAPCLONE	0x0008	/* can be removed_dev'ed when vnode reclaims */
@@ -135,9 +136,7 @@ typedef int d_read_t(struct cdev *dev, struct uio *uio, int ioflag);
 typedef int d_write_t(struct cdev *dev, struct uio *uio, int ioflag);
 typedef int d_poll_t(struct cdev *dev, int events, struct thread *td);
 typedef int d_kqfilter_t(struct cdev *dev, struct knote *kn);
-typedef int d_mmap_t(struct cdev *dev, vm_offset_t offset, vm_paddr_t *paddr,
-   		     int nprot);
-typedef int d_mmap2_t(struct cdev *dev, vm_offset_t offset, vm_paddr_t *paddr,
+typedef int d_mmap_t(struct cdev *dev, vm_ooffset_t offset, vm_paddr_t *paddr,
 		     int nprot, vm_memattr_t *memattr);
 typedef int d_mmap_single_t(struct cdev *cdev, vm_ooffset_t *offset,
     vm_size_t size, struct vm_object **object, int nprot);
@@ -172,7 +171,6 @@ typedef int dumper_t(
 #define D_PSEUDO	0x00200000	/* make_dev() can return NULL */
 #define D_NEEDGIANT	0x00400000	/* driver want Giant */
 #define	D_NEEDMINOR	0x00800000	/* driver uses clone_create() */
-#define	D_MMAP2		0x01000000	/* driver uses d_mmap2() */
 #define D_KGI_PAGING	0x01600000	/* is a KGI pager backend */
 
 /*
@@ -181,7 +179,8 @@ typedef int dumper_t(
 #define D_VERSION_00	0x20011966
 #define D_VERSION_01	0x17032005	/* Add d_uid,gid,mode & kind */
 #define D_VERSION_02	0x28042009	/* Add d_mmap_single */
-#define D_VERSION	D_VERSION_02
+#define D_VERSION_03	0x17122009	/* d_mmap takes memattr,vm_ooffset_t */
+#define D_VERSION	D_VERSION_03
 
 /*
  * Flags used for internal housekeeping
@@ -202,10 +201,7 @@ struct cdevsw {
 	d_write_t		*d_write;
 	d_ioctl_t		*d_ioctl;
 	d_poll_t		*d_poll;
-	union {
-		d_mmap_t		*old;
-		d_mmap2_t		*new;
-	} __d_mmap;
+	d_mmap_t		*d_mmap;
 	d_strategy_t		*d_strategy;
 	dumper_t		*d_dump;
 	d_kqfilter_t		*d_kqfilter;
@@ -223,8 +219,6 @@ struct cdevsw {
 		SLIST_ENTRY(cdevsw)	postfree_list;
 	} __d_giant;
 };
-#define	d_mmap			__d_mmap.old
-#define	d_mmap2			__d_mmap.new
 #define	d_gianttrick		__d_giant.gianttrick
 #define	d_postfree_list		__d_giant.postfree_list
 
@@ -257,9 +251,9 @@ int	destroy_dev_sched(struct cdev *dev);
 int	destroy_dev_sched_cb(struct cdev *dev, void (*cb)(void *), void *arg);
 void	destroy_dev_drain(struct cdevsw *csw);
 void	drain_dev_clone_events(void);
-struct cdevsw *dev_refthread(struct cdev *_dev);
-struct cdevsw *devvn_refthread(struct vnode *vp, struct cdev **devp);
-void	dev_relthread(struct cdev *_dev);
+struct cdevsw *dev_refthread(struct cdev *_dev, int *_ref);
+struct cdevsw *devvn_refthread(struct vnode *vp, struct cdev **devp, int *_ref);
+void	dev_relthread(struct cdev *_dev, int _ref);
 void	dev_depends(struct cdev *_pdev, struct cdev *_cdev);
 void	dev_ref(struct cdev *dev);
 void	dev_refl(struct cdev *dev);
@@ -270,16 +264,29 @@ struct cdev *make_dev(struct cdevsw *_devsw, int _unit, uid_t _uid, gid_t _gid,
 struct cdev *make_dev_cred(struct cdevsw *_devsw, int _unit,
 		struct ucred *_cr, uid_t _uid, gid_t _gid, int _perms,
 		const char *_fmt, ...) __printflike(7, 8);
-#define MAKEDEV_REF     0x1
-#define MAKEDEV_WHTOUT	0x2
+#define	MAKEDEV_REF     0x01
+#define	MAKEDEV_WHTOUT	0x02
+#define	MAKEDEV_NOWAIT	0x04
+#define	MAKEDEV_WAITOK	0x08
+#define	MAKEDEV_ETERNAL	0x10
 struct cdev *make_dev_credf(int _flags,
 		struct cdevsw *_devsw, int _unit,
 		struct ucred *_cr, uid_t _uid, gid_t _gid, int _mode,
 		const char *_fmt, ...) __printflike(8, 9);
-struct cdev *make_dev_alias(struct cdev *_pdev, const char *_fmt, ...) __printflike(2, 3);
+int	make_dev_p(int _flags, struct cdev **_cdev, struct cdevsw *_devsw,
+		struct ucred *_cr, uid_t _uid, gid_t _gid, int _mode,
+		const char *_fmt, ...) __printflike(8, 9);
+struct cdev *make_dev_alias(struct cdev *_pdev, const char *_fmt, ...)
+		__printflike(2, 3);
 void	dev_lock(void);
 void	dev_unlock(void);
 void	setconf(void);
+
+#ifdef KLD_MODULE
+#define	MAKEDEV_ETERNAL_KLD	0
+#else
+#define	MAKEDEV_ETERNAL_KLD	MAKEDEV_ETERNAL
+#endif
 
 #define	dev2unit(d)	((d)->si_drv0)
 

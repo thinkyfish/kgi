@@ -110,13 +110,13 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 	vm_area_t vma;
 	struct cdev *dev;
 	struct cdevsw *csw;
-	int err = 0;
+	int err = 0, ref;
 
 	/*
 	 * Make sure this device can be mapped.
 	 */
 	dev = (struct cdev *)handle;
-	csw = dev_refthread(dev);
+	csw = dev_refthread(dev, &ref);
 	if (csw == NULL)
 		return (NULL);
 
@@ -167,7 +167,7 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 
 	sx_xunlock(&kgi_pager_sx);
 	mtx_unlock(&Giant);
-	dev_relthread(dev);
+	dev_relthread(dev, ref);
 	return (object);
 }
 

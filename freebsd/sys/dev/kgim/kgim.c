@@ -62,7 +62,7 @@ kgim_ansi_debug(int level, const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-		vsprintf(buf, fmt, args);
+	vsprintf(buf, fmt, args);
 	va_end(args);
 	printf("<%i>%s\n", level, buf);
 }
@@ -74,7 +74,7 @@ kgim_ansi_error(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-		vsprintf(buf, fmt, args);
+	vsprintf(buf, fmt, args);
 	va_end(args);
 	printf("%s\n", buf);
 }
@@ -87,7 +87,7 @@ kgim_gnu_debug(const char *file, int line, const char *func, int level,
 	va_list args;
 
 	va_start(args, fmt);
-		vsprintf(buf, fmt, args);
+	vsprintf(buf, fmt, args);
 	va_end(args);
 	printf("<%i>%s:%s:%i:D:%s\n", level, file, func, line, buf);
 }
@@ -100,7 +100,7 @@ kgim_gnu_error(const char *file, int line, const char *func,
 	va_list args;
 
 	va_start(args, fmt);
-		vsprintf(buf, fmt, args);
+	vsprintf(buf, fmt, args);
 	va_end(args);
 	printf(KERN_ERR "%s:%s:%i:E:%s\n", file, func, line, buf);
 }
@@ -112,7 +112,7 @@ kgim_notice(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-		vsprintf(buf, fmt, args);
+	vsprintf(buf, fmt, args);
 	va_end(args);
 	printf(KERN_NOTICE "%s\n", buf);
 }
@@ -508,8 +508,8 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 
 	meta_data = meta->data_size ?
 		kgim_alloc(meta->data_size) : NULL;
-	meta_io   = meta->io_size   ?
-		kgim_alloc(meta->io_size)   : NULL;
+	meta_io = meta->io_size ?
+		kgim_alloc(meta->io_size) : NULL;
 
 	if ((meta->data_size && (meta_data == NULL)) ||
 		(meta->io_size && (meta_io == NULL))) {
@@ -530,7 +530,7 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	if (meta->data_size) kgim_memset(meta_data, 0, meta->data_size);
 	if (meta->io_size)   kgim_memset(meta_io, 0, meta->io_size);
 	
-	if ((0 == meta->io_size) && (KGIM_SUBSYSTEM_chipset != system)) {
+	if ((meta->io_size == 0) && (KGIM_SUBSYSTEM_chipset != system)) {
 		KGI_ASSERT(meta_io == NULL);
 
 		KGI_DEBUG(3, "meta->io_size == 0; Assigning chipset's meta_io");
@@ -638,7 +638,7 @@ kgim_display_init(kgim_display_t *dpy)
 	dpy->kgi.mode_size = KGIM_ALIGN(sizeof(kgim_display_mode_t));
 
 	KGI_DEBUG(4, "Initializing chipset subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_chipset))){
+	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_chipset))) {
 		KGI_ERROR("Failed (%.8x) to initialize chipset.", error);
 		goto chipset;
 	}
@@ -659,7 +659,7 @@ kgim_display_init(kgim_display_t *dpy)
 	KGI_DEBUG(4, "Clock subsystem initialized.");
 
 	KGI_DEBUG(4, "Initializing monitor subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_monitor))){
+	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_monitor))) {
 		KGI_ERROR("Failed (%.8x) to initialize monitor.", error);
 		goto monitor;
 	}

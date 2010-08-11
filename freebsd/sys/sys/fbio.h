@@ -335,7 +335,8 @@ struct video_adapter {
 #define V_ADP_INITIALIZED (1 << 17)
 #define V_ADP_REGISTERED (1 << 18)
 #define V_ADP_ATTACHED	(1 << 19)
-#define V_ADP_KGI	(1 << 20)
+#define	V_ADP_DAC8	(1 << 20)
+#define V_ADP_KGI	(1 << 21)
     vm_offset_t		va_io_base;
     int			va_io_size;
     vm_offset_t		va_crtc_addr;
