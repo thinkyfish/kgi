@@ -462,10 +462,10 @@ readrest:
 			      fs.pindex < fs.entry->lastr + VM_FAULT_READ)) &&
 			    (fs.first_object == fs.object ||
 			     (is_first_object_locked = VM_OBJECT_TRYLOCK(fs.first_object))) &&
-			    (fs.first_object->type != OBJT_DEVICE) &&
-			    (fs.first_object->type != OBJT_PHYS) &&
-				(fs.first_object->type != OBJT_SG) &&
-			    (fs.first_object->type != OBJT_KGI)) {
+				fs.first_object->type != OBJT_DEVICE &&
+				fs.first_object->type != OBJT_PHYS &&
+				fs.first_object->type != OBJT_SG &&
+				fs.first_object->type != OBJT_KGI) {
 				vm_pindex_t firstpindex;
 
 				if (fs.first_pindex < 2 * VM_FAULT_READ)
