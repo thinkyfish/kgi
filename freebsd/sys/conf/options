@@ -547,7 +547,7 @@ SI_DEBUG		opt_debug_si.h
 KGI_COMPAT		opt_kgi.h
 KGI_DBG_LEVEL		opt_kgi.h
 KGC_DEFAULT_FONT	opt_kgi.h
-KGI_IGNORE_VGAPCI       opt_kgi.h
+KGI_DISABLE_VGAPCI      opt_kgi.h
 KGC_RENDER_BACKGROUND	opt_kgi.h
 KGC_RENDER_1280x1024	opt_kgi.h
 KGC_RENDER_1024x768	opt_kgi.h 

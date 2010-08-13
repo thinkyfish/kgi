@@ -9,8 +9,8 @@ makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
 options	KGI_COMPAT		# Enables KGI compatibility.
 options	KGI_DBG_LEVEL=4		# KGI debug output level.
 
-# Restrict building of dev/pci/vga_pci.c to avoid probing.
-options	KGI_IGNORE_VGAPCI	
+# Disable the VGAPCI driver from loading.
+options	KGI_DISABLE_VGAPCI	
 
 # Text based splash screen at loader.
 #options KGI_NOSPLASH

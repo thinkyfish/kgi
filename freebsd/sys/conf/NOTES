@@ -2919,7 +2919,7 @@ options 	AAC_DEBUG	# Debugging levels:
 options 	KGI_COMPAT # Enables KGI compatibility.
 options 	KGI_DBG_LEVEL=0 # KGI debug output level.
 options 	KGC_DEFAULT_FONT # The default font to be used by the console.
-options 	KGI_IGNORE_VGAPCI # Restrict vga_pci.c binding to the video card.
+options 	KGI_DISABLE_VGAPCI # Disable loading of the vgapci driver module
 options 	KGC_RENDER_BACKGROUND # Render a console background.
 # Kernel Graphics Console screen resolutions.
 options 	KGC_RENDER_1280x1024
@@ -2932,10 +2932,10 @@ options 	KGC_RENDER_320x200
 options 	KGC_RENDER_16BITS # 16bit per pixel depth for the console.
 device 		kgi # Kernel Graphic Interface core system (includes KII)
 device 		kip # Kernel Input Parser.
-device 		kgu	# KGI graphic user interface.
-device 		kiu	# KGI input user interface.
-device 		kgc	# Kernel graphic console.
-device 		kgy	# KGI VESA compatible display.
+device 		kgu # KGI graphic user interface.
+device 		kiu # KGI input user interface.
+device 		kgc # Kernel graphic console.
+device 		kgy # KGI VESA compatible display.
 device 		kgim # KGI module driver interface.
 device 		kga # FreeBSD compatible adapter
 device 		sce # Syscons emulation.

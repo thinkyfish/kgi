@@ -447,7 +447,7 @@ static driver_t vga_pci_driver = {
 
 static devclass_t vga_devclass;
 
-#ifndef KGI_IGNORE_VGAPCI
+#ifndef KGI_DISABLE_VGAPCI
 DRIVER_MODULE(vgapci, pci, vga_pci_driver, vga_devclass, 0, 0);
 #endif 
 
