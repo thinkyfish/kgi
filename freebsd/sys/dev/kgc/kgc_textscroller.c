@@ -461,8 +461,8 @@ static void
 textscroller_mksound(scroller_t s, kgi_u_t pitch, kgi_u_t duration)
 {
 
-	KGI_DEBUG(5, "textscroller_mksound(%p, %i, %i)", 
-			  s, pitch, duration);
+	KGI_DEBUG(9, "textscroller_mksound(%p, %i, %i)", 
+		  s, pitch, duration);
 	sysbeep(pitch, duration);
 }
 

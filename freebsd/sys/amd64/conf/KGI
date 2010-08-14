@@ -12,8 +12,8 @@ options	KGI_DBG_LEVEL=8		# KGI debug output level.
 # Disable the VGAPCI driver from loading.
 options	KGI_DISABLE_VGAPCI	
 
-# Text based splash screen at loader.
-#options KGI_NOSPLASH
+# text16 based splash screen at the boot loader.
+options KGI_BOOTLOADER_SPLASH
 
 # Graphics console setup:
 # Define one of the following modes for the console display resolution:

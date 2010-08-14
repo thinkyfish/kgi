@@ -982,4 +982,4 @@ options 	VM_KMEM_SIZE_SCALE
 options 	ASR_COMPAT
 
 # Kernel Graphics Interface.
-KGI_NOSPLASH # text16 mode splash screen at boot.
+KGI_BOOTLOADER_SPLASH # text16 mode splash screen at the boot loader.

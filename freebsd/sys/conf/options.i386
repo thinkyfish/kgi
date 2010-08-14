@@ -92,7 +92,7 @@ VESA_DEBUG		opt_vesa.h
 # AGP debugging support
 AGP_DEBUG		opt_agp.h
 
-KGI_NOSPLASH		opt_kgi.h
+KGI_BOOTLOADER_SPLASH	opt_kgi.h
 CONFIG_FB_ATY_GX	opt_kgi.h
 CONFIG_FB_ATY_CT	opt_kgi.h
 
