@@ -7,7 +7,7 @@ makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
 
 # KGI (Kernel Graphic Interface)
 options	KGI_COMPAT		# Enables KGI compatibility.
-options	KGI_DBG_LEVEL=4		# KGI debug output level.
+options	KGI_DBG_LEVEL=8		# KGI debug output level.
 
 # Disable the VGAPCI driver from loading.
 options	KGI_DISABLE_VGAPCI	
@@ -18,9 +18,9 @@ options	KGI_DISABLE_VGAPCI
 # Graphics console setup:
 # Define one of the following modes for the console display resolution:
 #options 	KGC_RENDER_1280x1024
-options 	KGC_RENDER_1024x768 
+#options 	KGC_RENDER_1024x768 
 #options 	KGC_RENDER_800x600 
-#options 	KGC_RENDER_640x480 
+options 	KGC_RENDER_640x480 
 #options 	KGC_RENDER_640x400 
 #options 	KGC_RENDER_320x240 
 #options 	KGC_RENDER_320x200 
@@ -62,4 +62,5 @@ nodevice	splash
 
 # FreeBSD's VESA system.
 options 	VESA
+options		VESA_DEBUG=255
 options 	X86BIOS # Required for VESA.	
