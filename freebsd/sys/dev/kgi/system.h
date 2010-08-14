@@ -109,7 +109,12 @@ extern void kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size);
 #include <sys/bus.h>
 #include <dev/kgi/io.h>
 #include <dev/kgi/pci.h>
-#include <dev/kgi/i386-compiler.h>
+/*
+ * Formally i386-compiler.h
+ * For the time being a generic name will be used between i386 and amd64
+ * instead.
+ */
+#include <dev/kgi/x86-compiler.h>
 
 #endif /* KGI_SYS_NEED_IO */
 

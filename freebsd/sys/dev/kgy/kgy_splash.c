@@ -49,7 +49,7 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/kgy/kgy.h>
 
-#if defined(__i386__) && !defined(KGI_NOSPLASH)
+#if defined(__i386__) || defined(__amd64__) && !defined(KGI_NOSPLASH)
 
 #define outb_p(data,port) outb(port, data)
 #define inb_p(port) inb(port)
@@ -254,7 +254,7 @@ hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 	set_col();
 }
 
-#endif /* __i386__ && !KGI_NOSPLASH */
+#endif /* __i386__ || __amd64__ && !KGI_NOSPLASH */
 
 #define ORIG_VIDEO_COLS (adp->va_info.vi_width)
 #define ORIG_VIDEO_LINES (adp->va_info.vi_height)
@@ -263,7 +263,7 @@ void
 kgy_splash(video_adapter_t *adp)
 {
 
-#if defined(__i386__) && !defined(KGI_NOSPLASH)
+#if defined(__i386__) || defined(__amd64__) && !defined(KGI_NOSPLASH)
 
 	show_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
 		ORIG_VIDEO_LINES);
@@ -272,7 +272,7 @@ kgy_splash(video_adapter_t *adp)
 	hide_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
 		ORIG_VIDEO_LINES);
 
-#endif /* __i386__ && !KGI_NOSPLASH */
+#endif /* __i386__ || __amd64__&& !KGI_NOSPLASH */
 
 	return;
 }

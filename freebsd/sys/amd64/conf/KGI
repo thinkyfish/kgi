@@ -1,0 +1,65 @@
+include	GENERIC
+ident	KGI
+
+# See sys/dev/kgi/i386-compiler.h for the reason behind using -fgnu89-inline
+makeoptions CWARNFLAGS+= -fgnu89-inline 
+makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
+
+# KGI (Kernel Graphic Interface)
+options	KGI_COMPAT		# Enables KGI compatibility.
+options	KGI_DBG_LEVEL=4		# KGI debug output level.
+
+# Disable the VGAPCI driver from loading.
+options	KGI_DISABLE_VGAPCI	
+
+# Text based splash screen at loader.
+#options KGI_NOSPLASH
+
+# Graphics console setup:
+# Define one of the following modes for the console display resolution:
+#options 	KGC_RENDER_1280x1024
+options 	KGC_RENDER_1024x768 
+#options 	KGC_RENDER_800x600 
+#options 	KGC_RENDER_640x480 
+#options 	KGC_RENDER_640x400 
+#options 	KGC_RENDER_320x240 
+#options 	KGC_RENDER_320x200 
+
+# Define a colour mode (bpp);
+#options	KGC_RENDER_16BITS	# Use 16bit mode.
+
+# Enable console background - currently 8bit only:
+#options	KGC_RENDER_BACKGROUND
+
+# The default font to be used by the KGI console. See dev/kgc/kgc_gfbdflt.c
+# Currently nothing else other than kgc_bold8x16 is in the kernel.
+options	KGC_DEFAULT_FONT=kgc_bold8x16
+
+# KGI core.
+device	kgi	# Kernel Graphic Interface core system (includes KII)
+
+# KGI KIP (Kernel Input Parser)
+# It works on top of kbd in RAW mode. Scancodes are translated by
+# kip maps.
+device	kip	# Default KIP.
+
+# Input and graphic user interfaces (e.g /dev/graphic and /dev/event)
+device	kgu	# KGI graphic user interface.
+device	kiu	# KGI input user interface.
+device	kgc	# Kernel graphic console.
+device	kgy	# KGI VESA compatible display.
+device	kgim	# KGI module driver interface.
+
+# Experimental FreeBSD adapter implementation on top of KGI.
+#device		kga		# FreeBSD compatible adapter (broken)
+
+# Syscons emulation.
+device	sce
+
+# Disable syscons and splash
+nodevice	sc
+nodevice	splash
+
+# FreeBSD's VESA system.
+options 	VESA
+options 	X86BIOS # Required for VESA.	

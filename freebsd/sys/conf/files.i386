@@ -210,7 +210,7 @@ dev/kgy/kgy_disp.c		optional kgy kgi
 dev/kgy/kgy_mode.c		optional kgy kgi
 dev/kgy/kgy_text16.c		optional kgy kgi
 dev/kgy/kgy_splash.c		optional kgy kgi
-dev/kgim/kgim.c		optional kgim kgi
+dev/kgim/kgim.c			optional kgim kgi
 dev/le/if_le_isa.c		optional le isa
 dev/lindev/full.c		optional lindev
 dev/lindev/lindev.c		optional lindev
