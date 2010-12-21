@@ -134,7 +134,8 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 	/* Allocate a new vm area */
 	vma = kgi_pager_vma_allocate(foff, size, prot);
 
-	/* Map the area to the resource.
+	/* 
+	 * Map the area to the resource.
 	 * graph_mmap should check the protection.
 	 */
 	err = graph_mmap(dev, vma);

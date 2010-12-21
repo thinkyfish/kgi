@@ -24,8 +24,8 @@
 /*
  * KGI manager OS kernel independent stuff
  */
-#ifndef _kgi_kgires_h
-#define _kgi_kgires_h
+#ifndef _KGI_KGIRES_H_
+#define _KGI_KGIRES_H_
 
 typedef enum {
 	/*  may be mapped by applications (others) */ 
@@ -314,6 +314,6 @@ struct kgi_tlut_s {
  */
 #define kgi_resource_t void
 
-#endif /* ! _KERNEL */
+#endif /* _KERNEL */
 
-#endif /* _kgi_kgires_h */
+#endif /* _KGI_KGIRES_H_ */

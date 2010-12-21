@@ -24,8 +24,8 @@
  * KGI console implementation specific definitions
  */
 
-#ifndef _kgc_render_h
-#define	_kgc_render_h
+#ifndef _KGC_RENDER_H_
+#define	_KGC_RENDER_H_
 
 #define KGI_RF_NO_HARDSCROLL	0x00000001
 #define KGI_RF_TILE_Y		0x00000002
@@ -86,4 +86,4 @@ extern kgi_error_t kgc_render_unregister(render_driver_t *driver);
 extern void *kgc_render_meta(render_t r);
 extern kgi_console_t *kgc_render_cons(render_t r);
 
-#endif	/* !_kgc_render_h */
+#endif	/* _KGC_RENDER_H_ */

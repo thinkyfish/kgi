@@ -1,22 +1,25 @@
 About:
- * This release is based on FreeBSD-9.CURRENT.
- * Currently i386 is the only supported platform.
- * KGI makes use of FreeBSD's VGA VESA system for mode setting and the graphics
-   console. No other drivers are included.
-
+ * This release is intended for FreeBSD-9 CURRENT on amd64 & i386 platforms
+   utilizing FreeBSD's VGA/VESA system. 
+ 
 Prerequisites:
  * Knowledge of using svn(or cvs/csup) to checkout a FreeBSD source tree.
  * Kernel configuration.
  * Building and installing FreeBSD custom kernels.
- * VESA must be >= 2.0 see "vidcontrol -i mode"
-   Make sure to load vesa.ko before executing the above. 
+ * VESA must be >= 2.0, load vesa.ko and execute  "vidcontrol -i mode" to get a
+   list of supported modes.
  
 Installation:
- * Copy your KGI checkout over a working copy of your FreeBSD src tree.
+ * Copy this KGI checkout over a working copy of your FreeBSD src tree.
  * You can use the included KGI kernel config for building a KGI kernel.
    The included KGI kernel config disables & enables some FreeBSD devices &
-   options. Read sys/i386/conf/KGI for more information.
- * Recommend using INSTKERNNAME=kernel.KGI or similar when installing kernel.
+   options. Read sys/{amd64|i386}/conf/KGI for more information.
+ * Recommend using INSTKERNNAME=kernel.KGI or similar when installing kernel to
+   avoid clobbering a working system.
+
+Status:
+ * No support for text mode 16.
+ * No support for anything other then VGA/VESA. 
 
 GGI:
  * Setup headers:

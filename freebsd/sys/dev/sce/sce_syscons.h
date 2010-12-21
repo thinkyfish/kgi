@@ -40,6 +40,8 @@
 #include <sys/lock.h>
 #include <sys/mutex.h>
 
+#define SC_NO_SYSMOUSE
+
 #ifndef MAXCONS
 #define MAXCONS	24
 #endif
@@ -68,4 +70,4 @@ extern int sce_sysmouse_init(void);
 extern int sce_sysmouse_ioctl(struct tty *tp, u_long cmd, caddr_t data, 
 		struct thread *td);
 
-#endif /* !_DEV_SYSCONS_SYSCONS_H_ */
+#endif /* _DEV_SYSCONS_SYSCONS_H_ */

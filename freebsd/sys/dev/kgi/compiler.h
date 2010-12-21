@@ -23,12 +23,7 @@
 /*
  * KGI compiler dependent stuff
  */
-#ifndef	_kgi_compiler_h
-#define	_kgi_compiler_h
+#ifndef	_KGI_COMPILER_H_
+#define	_KGI_COMPILER_H_
 
-#ifdef	__STRICT_ANSI__
-#	define	inline
-#	define	signed
 #endif
-
-#endif	/* #ifndef _kgi_compiler_h	*/

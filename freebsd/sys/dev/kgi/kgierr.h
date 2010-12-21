@@ -25,8 +25,8 @@
  * KGI error codes
  */
 
-#ifndef	_kgi_kgierr_h
-#define	_kgi_kgierr_h
+#ifndef	_KGI_KGIERR_H_
+#define	_KGI_KGIERR_H_
 
 #define KGI_EAGAIN	EAGAIN
 #define KGI_EPROTO	ENOTSUP
@@ -65,4 +65,4 @@ enum __kgi_error {
 
 #define	KGI_ERRNO(system, code)	((KGI_##system) | (KGI_##code))
 
-#endif	/* _kgi_kgierr_h */
+#endif	/* _KGI_KGIERR_H_ */

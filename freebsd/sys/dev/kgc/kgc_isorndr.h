@@ -25,8 +25,8 @@
  * KGI ISO font implementation
  */
 
-#ifndef _kgc_isorndr_h
-#define	_kgc_isorndr_h
+#ifndef _KGC_ISORNDR_H_
+#define	_KGC_ISORNDR_H_
 
 /* console fonts
  *
@@ -69,4 +69,4 @@ typedef struct {
 
 extern kgi_console_font_t *	default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
 
-#endif	/* #ifndef _kgc_isorndr_h */
+#endif	/* _KGC_ISORNDR_H_ */

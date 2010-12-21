@@ -135,7 +135,7 @@ struct vm_object {
 		/*
 		 * KGI pager
 		 *
-		 *      kgip_pglist - list of allocated pages.
+		 *	kgip_pglist - list of allocated pages.
 		 */
 		struct {
 			TAILQ_HEAD(, vm_page) kgip_pglist;
@@ -152,7 +152,7 @@ struct vm_object {
 			int swp_bcount;
 		} swp;
 	} un_pager;
-	struct uidinfo *uip;
+	struct ucred *cred;
 	vm_ooffset_t charge;
 };
 

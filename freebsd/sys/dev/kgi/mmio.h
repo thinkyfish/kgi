@@ -25,8 +25,8 @@
  * /dev/graphic mmio OS dependent definitions
  */
 
-#ifndef _kgi_mmio_h
-#define	_kgi_mmio_h
+#ifndef _KGI_MMIO_H_
+#define	_KGI_MMIO_H_
 
 /*
  * MMIO mappings
@@ -58,4 +58,4 @@ typedef struct {
 extern int graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 			   graph_mapping_t **map);
 
-#endif /* #ifndef _kgi_mmio_h */
+#endif /* _KGI_MMIO_H_ */

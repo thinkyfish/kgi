@@ -25,8 +25,8 @@
  * A generic debugging framework.
  */
 
-#ifndef	__kgi_kgidbg_h
-#define	__kgi_kgidbg_h
+#ifndef	_KGI_KGIDBG_H_
+#define	_KGI_KGIDBG_H_
 
 /*
  * kernel debugging macros
@@ -193,7 +193,7 @@
 #	define	APP_TRACE(level, x)	
 #endif
 
-#endif	/* #ifdef __APPLICATION__ */
-#endif	/* #ifdef _KERNEL */
+#endif	/* __APPLICATION__ */
+#endif	/* _KERNEL */
 
-#endif /* _kgi_kgidbg_h */
+#endif /* _KGI_KGIDBG_H_ */

@@ -24,8 +24,8 @@
  * KGI console implementation specific definitions
  */
 
-#ifndef _kgc_console_h
-#define	_kgc_console_h
+#ifndef _KGC_CONSOLE_H_
+#define	_KGC_CONSOLE_H_
 
 /* extern struct tasklet_struct keyboard_tasklet, console_tasklet; */
 
@@ -186,4 +186,4 @@ extern kgi_s_t kgc_unmap_kgi(kgi_device_t *dev);
 extern void kgc_map_kii(kii_device_t *dev);
 extern kii_s_t kgc_unmap_kii(kii_device_t *dev);
 
-#endif	/* !_kgc_console_h */
+#endif	/* _KGC_CONSOLE_H_ */

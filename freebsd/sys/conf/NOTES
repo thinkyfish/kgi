@@ -1573,6 +1573,8 @@ options 	ISP_TARGET_MODE=1
 #		initiator=2
 #		both=3			(not supported currently)
 #
+#	ISP_INTERNAL_TARGET		(trivial internal disk target, for testing)
+#
 options 	ISP_DEFAULT_ROLES=2
 
 # Options used in dev/sym/ (Symbios SCSI driver).
@@ -2172,7 +2174,7 @@ device		fatm			#Fore PCA200E
 device		hatm			#Fore/Marconi HE155/622
 device		patm			#IDT77252 cards (ProATM and IDT)
 device		utopia			#ATM PHY driver
-#options 	NATM			#native ATM
+options 	NATM			#native ATM
 
 options 	LIBMBPOOL		#needed by patm, iatm
 
@@ -2609,6 +2611,8 @@ device		uhci
 device		ohci
 # EHCI controller
 device		ehci
+# XHCI controller
+device		xhci
 # SL811 Controller
 #device		slhci
 # General USB code (mandatory for USB)

@@ -25,8 +25,8 @@
  * KGI manager OS kernel independent stuff
  */
 
-#ifndef _kgi_kgidpy_h
-#define _kgi_kgidpy_h
+#ifndef _KGI_KGIDPY_H_
+#define _KGI_KGIDPY_H_
 
 #ifdef _KERNEL
 
@@ -135,4 +135,4 @@ extern kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd,
 
 #endif /* _KERNEL */
 
-#endif /* _kgi_kgidpy_h */
+#endif /* _KGI_KGIDPY_H_ */

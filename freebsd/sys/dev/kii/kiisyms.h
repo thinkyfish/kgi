@@ -24,8 +24,8 @@
  * KII keysym definitions.
  */
 
-#ifndef	_kii_kiisyms_h
-#define	_kii_kiisyms_h
+#ifndef	_KII_KIISYMS_H_
+#define	_KII_KIISYMS_H_
 
 #define	KII_MAX_NR_SHIFT	16
 
@@ -565,4 +565,4 @@ enum __kii_keytypes {
 
 extern char *keysyms_pretty_print(int sym);
 
-#endif /* ifdef _kii_kiisyms_h */
+#endif /* _KII_KIISYMS_H_ */

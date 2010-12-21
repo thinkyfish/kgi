@@ -425,10 +425,10 @@ kip_kbd_register(keyboard_t *kbd, int index)
 
 			/* 
 			 * XXX
-			 * Register the keyboard to a focus. If the kbd unit 
-			 * doesn't match the current focus, then we assume that
-			 * the kbd is a slave of kbdmux & needs to be assigned
-			 * to the existing focus.
+			 * Register the keyboard to a focus. 
+			 * If the kbd unit doesn't match the current focus, the
+			 * we assume that the kbd is a slave of kbdmux & needs 
+			 * to be assigned to the existing focus.
 			 */
 			if (kbd->kb_unit != kbdriver_nr) {
 				kii_error = kii_register_input(kbd->kb_unit, 

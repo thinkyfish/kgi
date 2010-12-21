@@ -24,8 +24,8 @@
  * KII command definitions
  */
 
-#ifndef _kii_command_h
-#define	_kii_command_h
+#ifndef _KII_COMMAND_H_
+#define	_KII_COMMAND_H_
 
 /*
  * Null command data. No input, no output.
@@ -140,4 +140,4 @@ typedef enum {
 #define	KIIC_READ(cmd)		((cmd) & IOC_OUT)
 #define	KIIC_WRITE(cmd)		((cmd) & IOC_IN)
 
-#endif /* #ifndef _kii_command_h */
+#endif /* _KII_COMMAND_H_ */

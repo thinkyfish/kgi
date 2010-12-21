@@ -25,8 +25,8 @@
  * KGI manager OS kernel independent stuff
  */
 
-#ifndef _kgi_kgimod_h
-#define _kgi_kgimod_h
+#ifndef _KGI_KGIMOD_H_
+#define _KGI_KGIMOD_H_
 
 /* 
  * Attributes
@@ -202,4 +202,4 @@ typedef struct {
 	kgi_image_mode_t	img[1];	   /* image(s)			*/
 } kgi_mode_t;
 
-#endif /* _kgi_kgimod_h */
+#endif /* _KGI_KGIMOD_H_ */

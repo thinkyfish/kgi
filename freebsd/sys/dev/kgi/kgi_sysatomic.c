@@ -44,6 +44,7 @@ kgi_test_and_set_bit32(__kgi_u32_t b, volatile void *p)
 	__kgi_u32_t r = *(volatile __kgi_u32_t *)p & m;
 	*(volatile __kgi_u32_t *)p |= m;
 	splx(s);
+	
 	return (r);
 }
 
@@ -74,13 +75,14 @@ kgi_find_first_zero_bit(volatile void *p, int max)
     int b;
 
     for (b = 0; b < max; b += 32) {
-	if (((volatile int *)p)[b >> 5] != ~0) {
-	    for (;;) {
-		if ((((volatile int *)p)[b >> 5] & (1 << (b & 0x1f))) == 0)
-		    return (b);
-		b++;
-	    }
+	  if (((volatile int *)p)[b >> 5] != ~0) {
+		for (;;) {
+		  if ((((volatile int *)p)[b >> 5] & (1 << (b & 0x1f))) == 0)
+			return (b);
+		  b++;
+		}
+	  }
 	}
-    }
+    
     return (max);
 }

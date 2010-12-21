@@ -197,11 +197,13 @@ event2char(kii_device_t *dev, kii_event_t *ev)
 	int s;
 
 	cons = (kgi_console_t *)dev->priv.priv_ptr;
+#ifndef SC_NO_SYSMOUSE
 	/* Forward to sysmouse pointer events. */
  	if ((1 << ev->any.type) & KII_EM_POINTER) {
  		sce_sysmouse_event(ev);
  		return (-1);
  	}
+#endif
 	
 	if (((1 << ev->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT)) ||
 		(ev->key.sym == K_VOID)) {

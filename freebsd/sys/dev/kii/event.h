@@ -24,8 +24,8 @@
  * /dev/event resource mapper definition
  */
 
-#ifndef _kii_event_h
-#define	_kii_event_h
+#ifndef _KII_EVENT_H_
+#define	_KII_EVENT_H_
 
 #define	EVENT_MAJOR	61
 #define	EVENT_NAME	"event"
@@ -68,4 +68,4 @@ struct event_file_s {
 	} queue;
 };
 
-#endif /* #ifndef _kii_event_h */
+#endif /* _KII_EVENT_H_ */

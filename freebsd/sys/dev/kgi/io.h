@@ -24,8 +24,8 @@
  * Hardware I/O layer definiton.
  */
 
-#ifndef _kgi_io_h
-#define _kgi_io_h
+#ifndef _KGI_IO_H_
+#define _KGI_IO_H_
 
 /*
  * Explanations on I/O regions can be found in the system layer 
@@ -260,4 +260,4 @@ extern void irq_free_line(irq_line_t *irq);
 #undef	__KGI_SYS_IO_HAS_MEM
 #undef	__KGI_SYS_IO_HAS_IRQ
 
-#endif /* #ifdef _kgi_io_h */
+#endif /* _KGI_IO_H_ */

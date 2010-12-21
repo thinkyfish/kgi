@@ -24,10 +24,10 @@
  * FreeBSD KII kbd driver header
  */
 
-#ifndef _DEV_KGI_KIP_H
-#define _DEV_KGI_KIP_H
+#ifndef _DEV_KGI_KIP_H_
+#define _DEV_KGI_KIP_H_
 
 /* Enable KII registration of a freshly registered kbd. */
 void kip_kbd_register(keyboard_t *kbd, int index);
 
-#endif /* !_DEV_KGI_KIP_H */
+#endif 

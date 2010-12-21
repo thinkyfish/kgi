@@ -25,8 +25,8 @@
  * KGI command definitions
  */
 
-#ifndef _kgi_command_h
-#define	_kgi_command_h
+#ifndef _KGI_COMMAND_H_
+#define	_KGI_COMMAND_H_
 
 /*
  * null command data. No input, no output.
@@ -401,4 +401,4 @@ typedef enum {
 #define	KGIC_READ(cmd)		((cmd) & IOC_OUT)
 #define	KGIC_WRITE(cmd)		((cmd) & IOC_IN)
 
-#endif	/* #ifndef _kgi_command_h */
+#endif	/* _KGI_COMMAND_H_ */

@@ -24,8 +24,8 @@
  * KGI system layer defintion
  */
 
-#ifndef	_kgi_system_h
-#define	_kgi_system_h
+#ifndef	_KGI_SYSTEM_H_
+#define	_KGI_SYSTEM_H_
 
 #define EXPORT_SYMBOL(symbol)
 
@@ -68,7 +68,8 @@ typedef void *wait_queue_head_t;
 #ifdef KGI_SYS_NEED_USER
 
 extern __kgi_u32_t kgi_copy_to_user(void *to, const void *from, __kgi_u32_t n);
-extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from, __kgi_u32_t n);
+extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from, 
+	__kgi_u32_t n);
 
 #define put_user(x,ptr) kgi_copy_to_user(&x, ptr, sizeof(*ptr))
 #define get_user(x,ptr) kgi_copy_from_user(&x, ptr, sizeof(*ptr))
@@ -109,12 +110,6 @@ extern void kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size);
 #include <sys/bus.h>
 #include <dev/kgi/io.h>
 #include <dev/kgi/pci.h>
-/*
- * Formally i386-compiler.h
- * For the time being a generic name will be used between i386 and amd64
- * instead.
- */
-#include <dev/kgi/x86-compiler.h>
 
 #endif /* KGI_SYS_NEED_IO */
 
@@ -184,5 +179,5 @@ extern kgi_mutex_t kgi_lock;
 
 #endif /* KGI_SYS_NEED_MUTEX */
 
-#endif	/* #ifdef _kgi_system_h */
+#endif	/* _KGI_SYSTEM_H_ */
 

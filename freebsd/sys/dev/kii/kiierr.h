@@ -25,8 +25,8 @@
  * KII error codes.
  */
 
-#ifndef	_kiierr_h
-#define	_kiierr_h
+#ifndef	_KIIERR_H_
+#define	_KIIERR_H_
 
 #define KII_EAGAIN	EAGAIN
 #define KII_EPROTO	ENOTSUP
@@ -60,4 +60,4 @@ enum __kii_error {
 
 #define	KII_ERRNO(system, code)	((KII_##system) | (KII_##code))
 
-#endif /* #ifndef _kiierr_h */
+#endif /* _KIIERR_H_ */

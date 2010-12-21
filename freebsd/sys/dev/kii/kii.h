@@ -26,8 +26,8 @@
  * KII manager interface definitions.
  */
 
-#ifndef _KII_KII_H
-#define _KII_KII_H
+#ifndef _KII_KII_H_
+#define _KII_KII_H_
 
 #include <dev/kgi/system.h>
 
@@ -481,8 +481,8 @@ extern kii_unicode_t keymap_combine_dead(kii_keymap_t *k,
 extern kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
 		kii_unicode_t sym);
 
-#endif /* #ifdef _KERNEL */
+#endif /* _KERNEL */
 
 #include <dev/kii/kiicmd.h>
 
-#endif /* #ifdef _KII_KII_H */
+#endif /* _KII_KII_H_ */

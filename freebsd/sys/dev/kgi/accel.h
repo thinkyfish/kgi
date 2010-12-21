@@ -25,8 +25,8 @@
  * /dev/graphic accel OS dependent definitions
  */
 
-#ifndef _kgi_accel_h
-#define	_kgi_accel_h
+#ifndef _KGI_ACCEL_H_
+#define	_KGI_ACCEL_H_
 
 typedef struct
 {
@@ -58,4 +58,4 @@ typedef struct {
 extern int graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 		graph_mapping_t **the_map);
 
-#endif /* #ifndef _kgi_accel_h */
+#endif /* _KGI_ACCEL_H_ */

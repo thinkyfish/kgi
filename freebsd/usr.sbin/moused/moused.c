@@ -1037,7 +1037,7 @@ moused(void)
 
 	if ((rodent.cfd = open("/dev/consolectl", O_RDWR, 0)) == -1) {
 		if ((rodent.cfd = open("/dev/consolectl1", O_RDWR, 0)) == -1)
-			logerrx(1, "cannot open any /dev/consolectl");
+			logerr(1, "cannot open any /dev/consolectl");
 	}
 
     if (!nodaemon && !background) {

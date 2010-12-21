@@ -24,8 +24,8 @@
  * KGI kernel module library definitions
  */
 
-#ifndef _kgi_modulelib_h
-#define _kgi_modulelib_h
+#ifndef _KGI_MODULELIB_H_
+#define _KGI_MODULELIB_H_
 
 /*
  * debugging framework overrides
@@ -69,4 +69,4 @@ extern void kgim_display_done(kgim_display_t *dpy);
 
 #define	KGIM_ABS(x)	(((x) < 0) ? -(x) : (x))
 
-#endif /* #ifdef _kgi_modulelib_h */
+#endif /* _KGI_MODULELIB_H_ */

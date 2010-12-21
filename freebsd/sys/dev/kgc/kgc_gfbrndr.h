@@ -24,8 +24,8 @@
  * KGI BSD font implementation
  */
 
-#ifndef _kgc_gfbrndr_h
-#define	_kgc_gfbrndr_h
+#ifndef _KGC_GFBRNDR_H_
+#define	_KGC_GFBRNDR_H_
 
 typedef struct {
 	kgi_s_t width;
@@ -37,4 +37,4 @@ extern kgc_gfb_font_t kgc_bold8x16;
 
 extern void gfbrndr_configure(kgi_console_t *cons);
 
-#endif	/* #ifndef _kgc_gfbrndr_h */
+#endif

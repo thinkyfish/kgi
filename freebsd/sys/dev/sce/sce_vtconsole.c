@@ -148,11 +148,13 @@ static void
 sce_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 {
 
+#ifndef SC_NO_SYSMOUSE
 	/* Forward to sysmouse pointer events */
  	if ((1 << e->any.type) & KII_EM_POINTER) {
  		sce_sysmouse_event(e);
  		return;
  	}
+#endif
 #ifdef KGC_TERM_XTERM
 	xterm_handle_kii_event(dev, e);
 #else
@@ -353,8 +355,10 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 {
 	int error;
 
+#ifndef SC_NO_SYSMOUSE
 	/* mouse ioctl routines. */
  	error = sce_sysmouse_ioctl(tp, cmd, data, td);
+#endif
  	if (error != ENOIOCTL)
  		return (error);
 
@@ -471,7 +475,8 @@ scevt_mod_event(module_t mod, int type, void *data)
 				tp = sce_create_tty(unit);
 				sce_init(tp);
 			}
-			dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 0600, "scevt");
+			dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 
+					0600, "scevt");
 			scevt_init = SCEVT_WARM;
 #ifndef SC_NO_SYSMOUSE
 			sce_mouse_init();

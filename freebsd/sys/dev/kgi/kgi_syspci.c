@@ -141,7 +141,7 @@ pcicfg_add_device(device_t dev)
 
 	pcidev = pcicfg_dev2cfg(dev);
 
-	/* Check if pci device already in the list. */
+	/* Check if pci device is already in the list. */
 	LIST_FOREACH(p, &pcicfg_head, entries) {
 		if (p->pcidev == pcidev)
 			return (KGI_EOK);
@@ -365,7 +365,7 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 #define VADDR_OFFSET (vaddr & 0xFF)
 
 __kgi_u8_t  
-pcicfg_in8 (const pcicfg_vaddr_t vaddr)
+pcicfg_in8(const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
 
@@ -401,7 +401,7 @@ pcicfg_in32(const pcicfg_vaddr_t vaddr)
 }
 
 void 
-pcicfg_out8 (const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
+pcicfg_out8(const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
 
@@ -578,7 +578,7 @@ io_free_region(io_region_t *r)
 io_vaddr_t 
 io_alloc_region(io_region_t *r)
 {
-	/*	AFAIK nothing appropriate under Linux yet. */
+	/* AFAIK nothing appropriate under Linux yet. */
 	return (0);
 }
 

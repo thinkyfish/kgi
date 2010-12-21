@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef _kgc_backgnd_h
-#define	_kgc_backgnd_h
+#ifndef _KGC_BACKGND_H_
+#define	_KGC_BACKGND_H_
 
 #define BACKGND_IMAGE	"splash_image_data"
 
@@ -84,4 +84,4 @@ extern int	backgnd_draw(kgi_u_t devid, unsigned char *mem, kgi_u16_t *pal);
 #define BACKGND_INIT	0
 #define BACKGND_TERM	1
 
-#endif /* !_kgc_backgnd_h */
+#endif /* _KGC_BACKGND_H_ */

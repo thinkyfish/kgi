@@ -25,8 +25,8 @@
  * KGI data type definitions
  */
 
-#ifndef	_kgi_types_h
-#define	_kgi_types_h
+#ifndef	_KGI_TYPES_H_
+#define	_KGI_TYPES_H_
 
 /* XXX to deleted */
 #ifdef	__STRICT_ANSI__
@@ -138,4 +138,4 @@ typedef union
 	typedef __kgi_bus_addr_t	prefix ## _bus_addr_t;	\
 	typedef __kgi_size_t		prefix ## _size_t;
 
-#endif	/* #ifdef _kgi_types_h */
+#endif	/* _KGI_TYPES_H_ */

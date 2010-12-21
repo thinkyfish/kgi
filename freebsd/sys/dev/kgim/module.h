@@ -25,8 +25,8 @@
  * KGI kernel module internal interface definitions.
  */
 
-#ifndef _kgi_module_h
-#define _kgi_module_h
+#ifndef _KGI_MODULE_H_
+#define _KGI_MODULE_H_
 
 #define __KGI_STRINGIFY_(s) #s
 #define __KGI_STRINGIFY(s) __KGI_STRINGIFY_(s)
@@ -586,4 +586,4 @@ struct kgim_meta_s {
 
 #include <dev/kgim/modulelib.h>
 
-#endif /* #ifdef _kgi_module_h */
+#endif /* _KGI_MODULE_H_ */

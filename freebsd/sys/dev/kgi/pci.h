@@ -22,8 +22,8 @@
  * within the United States, $35 abroad.
  */
 
-#ifndef _kgi_pci_pci_h
-#define _kgi_pci_pci_h
+#ifndef _KGI_PCI_PCI_H_
+#define _KGI_PCI_PCI_H_
 
 #define PCI_ANY_ID (~0)
 
@@ -979,4 +979,4 @@
 #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
 #define PCI_FUNC(devfn)		((devfn) & 0x07)
 
-#endif /* _kgi_pci_pci_h */
+#endif /* _KGI_PCI_PCI_H_ */

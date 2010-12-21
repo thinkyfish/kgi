@@ -25,8 +25,8 @@
  * KGI manager OS kernel independent stuff
  */
 
-#ifndef _kgi_kgityp_h
-#define _kgi_kgityp_h
+#ifndef _KGI_KGITYP_H_
+#define _KGI_KGITYP_H_
 
 #define	KB	*1024
 #define	MB	*(1024*1024)
@@ -111,4 +111,4 @@ typedef enum {
 
 typedef struct kgi_resource_s kgi_resource_t;
 
-#endif /* _kgi_kgityp_h */
+#endif /* _KGI_KGITYP_H_ */

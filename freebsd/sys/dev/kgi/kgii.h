@@ -25,8 +25,8 @@
  * KGI manager OS kernel independent foo.
  */
 
-#ifndef _kgi_kgii_h
-#define _kgi_kgii_h
+#ifndef _KGI_KGII_H_
+#define _KGI_KGII_H_
 
 /*
  * KGI/KII limits. 
@@ -65,4 +65,4 @@ extern unsigned char graphic_map[CONFIG_KGII_MAX_NR_FOCUSES][CONFIG_KGII_MAX_NR_
 extern unsigned char focus_map[CONFIG_KGII_MAX_NR_DEVICES];
 extern unsigned char display_map[CONFIG_KGII_MAX_NR_DEVICES];
 
-#endif	/* _kgi_kgii_h */
+#endif	/* _KGI_KGII_H_ */

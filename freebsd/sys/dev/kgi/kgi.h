@@ -25,8 +25,8 @@
  * KGI manager OS kernel independent stuff
  */
 
-#ifndef _kgi_kgi_h
-#define _kgi_kgi_h
+#ifndef _KGI_KGI_H_
+#define _KGI_KGI_H_
 
 /*
  * kgi.h is now just a set of includes. Each of them
@@ -46,4 +46,4 @@ KGI_SYS_DECLARE_INTEGRAL_TYPES(kgi)
 #include <dev/kgi/kgidpy.h>
 #include <dev/kgi/kgicmd.h>
 
-#endif	/* #ifndef _kgi_kgi_h */
+#endif

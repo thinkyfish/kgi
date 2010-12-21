@@ -24,8 +24,8 @@
  * KGI scroll generic implementation
  */
 
-#ifndef _kgc_scroller_h
-#define	_kgc_scroller_h
+#ifndef _KGC_SCROLLER_H_
+#define	_KGC_SCROLLER_H_
 
 typedef struct scroller		*scroller_t;
 typedef struct scroller_driver	scroller_driver_t;
@@ -87,4 +87,4 @@ extern kgi_console_t *kgc_scroller_cons(scroller_t s);
 /* XXX FIXME */
 extern void textscroller_configure(kgi_console_t *cons);
 
-#endif	/* !_kgc_scroller_h */
+#endif	/* _KGC_SCROLLER_H_ */

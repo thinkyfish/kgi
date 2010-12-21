@@ -24,8 +24,8 @@
  * KGI vidsw interface display driver.
  */
 
-#ifndef _kgi_kgy_h
-#define _kgi_kgy_h
+#ifndef _KGI_KGY_H_
+#define _KGI_KGY_H_
 
 #define BIT_REVERSE(byte)		\
 	((((byte) & 0x01) << 7) |	\
@@ -96,4 +96,4 @@ extern void dpysw_show_font(kgi_text16_t *text16, kgi_u_t page);
 extern void dpysw_put_text16(kgi_text16_t *text16, kgi_u_t offset,
 		const kgi_u16_t *text, kgi_u_t count);
 
-#endif /* _kgi_kgy_h */
+#endif /* _KGI_KGY_H_ */

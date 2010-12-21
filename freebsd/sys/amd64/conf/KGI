@@ -1,8 +1,6 @@
 include	GENERIC
 ident	KGI
 
-# See sys/dev/kgi/i386-compiler.h for the reason behind using -fgnu89-inline
-makeoptions CWARNFLAGS+= -fgnu89-inline 
 makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
 
 # KGI (Kernel Graphic Interface)

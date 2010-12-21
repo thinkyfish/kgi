@@ -24,8 +24,8 @@
  * XTERM console parser state
  */
 
-#ifndef	_KGI_XTERM_H
-#define	_KGI_XTERM_H
+#ifndef	_KGI_XTERM_H_
+#define	_KGI_XTERM_H_
 
 #define	XTERM_MAX_NPAR	16
 
@@ -100,4 +100,4 @@ extern void xterm_do_reset(kgi_console_t *cons, int do_reset);
 extern void xterm_handle_kii_event(kii_device_t *dev, kii_event_t *ev);
 extern int xterm_do_write(kgi_console_t *cons, const char *buf, int count);
 
-#endif	/* #ifdef _KGI_XTERM_H */
+#endif	/* _KGI_XTERM_H_ */

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef _kgi_modulecmd_h
-#define	_kgi_modulecmd_h
+#ifndef _KGI_MODULECMD_H_
+#define	_KGI_MODULECMD_H_
 
 struct kgic_img_buffer_param_t {
 	kgi_u_t		index;		/* index of buffer		*/
@@ -46,4 +46,4 @@ struct kgic_img_buffer_result_t {
 	kgi_u_t	cpm[__KGI_MAX_NR_ATTRIBUTES];	/* common pixel masks	*/
 };
 
-#endif /* #ifdef _kgi_modulecmd_h */
+#endif 

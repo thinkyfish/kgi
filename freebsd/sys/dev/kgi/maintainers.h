@@ -2,8 +2,8 @@
  * Maintainer definitions.
  */
 
-#ifndef	_kgi_maintainers_h
-#define	_kgi_maintainers_h
+#ifndef	_KGI_MAINTAINERS_H_
+#define	_KGI_MAINTAINERS_H_
 
 #define	The_GGI_Project	"The GGI Project <ggi-develop@lists.sourceforge.net>"
 #define	The_KGI_Project	"The KGI Project <kgi-develop@lists.sourceforge.net>"
@@ -17,4 +17,4 @@
 #define Filip_Spacek    "Filip Spacek <fspacek_at_student.math.uwaterloo.ca>"
 #define Nicholas_Souchu "Nicholas Souchu <kgi-develop@lists.sourceforge.net>"
 
-#endif	/* _kgi_maintainers_h */
+#endif

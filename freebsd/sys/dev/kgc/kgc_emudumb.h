@@ -24,8 +24,8 @@
  * DUMB console parser state
  */
 
-#ifndef	_KGI_DUMB_H
-#define	_KGI_DUMB_H
+#ifndef	_KGI_DUMB_H_
+#define	_KGI_DUMB_H_
 
 typedef struct{
 	kgi_console_t cons;
@@ -35,4 +35,4 @@ extern void dumb_do_reset(kgi_console_t *cons, kgi_u_t do_reset);
 extern void dumb_handle_kii_event(kii_device_t *dev, kii_event_t *ev);
 extern int dumb_do_write(kgi_console_t *cons, char *buf, int count);
 
-#endif	/* #ifdef _KGI_DUMB_H */
+#endif

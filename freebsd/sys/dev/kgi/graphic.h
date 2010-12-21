@@ -23,8 +23,8 @@
 /*
  * /dev/graphic resource mapper definition.
  */
-#ifndef _kgi_graphic_h
-#define	_kgi_graphic_h
+#ifndef _KGI_GRAPHIC_H_
+#define	_KGI_GRAPHIC_H_
 
 #define	GRAPH_MAJOR	60
 #define	GRAPH_NAME	"graphic"
@@ -102,4 +102,4 @@ extern void graph_delete_mapping(graph_mapping_t *map);
 extern void graph_device_map(kgi_device_t *dev);
 extern kgi_s_t graph_device_unmap(kgi_device_t *dev);
 
-#endif	/* #ifndef _kgi_graphic_h */
+#endif	/* _KGI_GRAPHIC_H_ */

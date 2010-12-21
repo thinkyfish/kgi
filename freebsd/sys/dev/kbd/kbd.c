@@ -226,7 +226,7 @@ kbd_register(keyboard_t *kbd)
 				strcpy(ki.kb_name, kbd->kb_name);
 				ki.kb_unit = kbd->kb_unit;
 
-				kbdd_ioctl(mux, KBADDKBD, (caddr_t) &ki);
+				(void)kbdd_ioctl(mux, KBADDKBD, (caddr_t) &ki);
 			}
 
 			goto found;
@@ -243,7 +243,7 @@ kbd_register(keyboard_t *kbd)
 				strcpy(ki.kb_name, kbd->kb_name);
 				ki.kb_unit = kbd->kb_unit;
 
-				kbdd_ioctl(mux, KBADDKBD, (caddr_t) &ki);
+				(void)kbdd_ioctl(mux, KBADDKBD, (caddr_t) &ki);
 			}
 
 			goto found;
@@ -1154,7 +1154,7 @@ genkbd_diag(keyboard_t *kbd, int level)
 		(s) |= l ## DOWN;				\
 		(s) ^= l ## ED;					\
 		i = (s) & LOCK_MASK;				\
-		kbdd_ioctl((k), KDSETLED, (caddr_t)&i);		\
+		(void)kbdd_ioctl((k), KDSETLED, (caddr_t)&i);	\
 	}
 
 static u_int
@@ -1314,7 +1314,7 @@ genkbd_keyaction(keyboard_t *kbd, int keycode, int up, int *shiftstate,
 #else
 			state &= ~CLKED;
 			i = state & LOCK_MASK;
-			kbdd_ioctl(kbd, KDSETLED, (caddr_t)&i);
+			(void)kbdd_ioctl(kbd, KDSETLED, (caddr_t)&i);
 #endif
 			break;
 		case SLK:
@@ -1350,7 +1350,7 @@ genkbd_keyaction(keyboard_t *kbd, int keycode, int up, int *shiftstate,
 #else
 				state |= CLKED;
 				i = state & LOCK_MASK;
-				kbdd_ioctl(kbd, KDSETLED, (caddr_t)&i);
+				(void)kbdd_ioctl(kbd, KDSETLED, (caddr_t)&i);
 #endif
 				break;
 			case SLK:

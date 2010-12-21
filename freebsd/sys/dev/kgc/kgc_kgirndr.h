@@ -25,8 +25,8 @@
  * KGI rendering
  */
 
-#ifndef _kgc_kgirndr_h
-#define	_kgc_kgirndr_h
+#ifndef _KGC_KGIRNDR_H_
+#define	_KGC_KGIRNDR_H_
 
 #define __KGC_KGIRNDR_DATA		\
 	kgi_device_t		kgi;	\
@@ -53,4 +53,4 @@ extern void kgirndr_hide_gadgets(render_t r);
 extern void kgirndr_undo_gadgets(render_t r);
 extern void kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset);
 
-#endif	/*  _kgc_kgirndr_h */
+#endif	/* _KGC_KGIRNDR_H_ */

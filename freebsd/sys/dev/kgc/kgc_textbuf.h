@@ -24,8 +24,8 @@
 /*
  * KGI text buffer implementation
  */
-#ifndef _kgc_textbuf_h
-#define _kgc_textbuf_h
+#ifndef _KGC_TEXTBUF_H_
+#define _KGC_TEXTBUF_H_
 
 typedef struct {
 	kgi_u16_t	*buf;	/* background/scrollback buffer	*/
@@ -40,4 +40,4 @@ typedef struct {
 extern void tb_set(kgc_textbuf_t *tb, kgi_u_t src, kgi_u_t val, kgi_u_t cnt);
 extern void tb_move(kgc_textbuf_t *tb, kgi_u_t dst, kgi_u_t src, kgi_u_t cnt);
 
-#endif /* _kgc_textbuf_h */
+#endif 
