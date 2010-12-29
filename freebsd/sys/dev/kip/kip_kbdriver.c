@@ -425,16 +425,16 @@ kip_kbd_register(keyboard_t *kbd, int index)
 
 			/* 
 			 * XXX
-			 * Register the keyboard to a focus. 
-			 * If the kbd unit doesn't match the current focus, the
-			 * we assume that the kbd is a slave of kbdmux & needs 
-			 * to be assigned to the existing focus.
+			 * Register the keyboard to a focus. If the kbd unit 
+			 * doesn't match the current focus, then we assume that
+			 * the kbd is a slave of kbdmux & needs to be assigned
+			 * to the existing focus.
 			 */
 			if (kbd->kb_unit != kbdriver_nr) {
 				kii_error = kii_register_input(kbd->kb_unit, 
-					&sc->kii_input, 1);
+					&sc->kii_input, 0);
 				KGI_DEBUG(2, "KII device %d, keyboard %s%d " 
-					 "registered on focus %d with "
+					 "registered on exiting focus %d with "
 			 		 "error %d",
 				    	 index, kbd->kb_name, kbd->kb_unit, 
 					 kbd->kb_unit, kii_error);
@@ -442,7 +442,7 @@ kip_kbd_register(keyboard_t *kbd, int index)
 				kii_error = kii_register_input(kbdriver_nr, 
 					&sc->kii_input, 0);
 				KGI_DEBUG(2, "KII device %d, keyboard %s%d "
-					"registered on existing focus %d with "
+					"registered on focus %d with "
 					"error %d",
 				    	index, kbd->kb_name, kbd->kb_unit,
 					kbdriver_nr, kii_error); 
