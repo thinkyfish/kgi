@@ -1,8 +1,6 @@
 include	GENERIC
 ident	KGI
 
-makeoptions CWARNFLAGS+= -fno-inline-functions-called-once
-
 # KGI (Kernel Graphic Interface)
 options	KGI_COMPAT		# Enables KGI compatibility.
 options	KGI_DBG_LEVEL=8		# KGI debug output level.
