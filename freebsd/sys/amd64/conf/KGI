@@ -59,4 +59,3 @@ nodevice	splash
 # FreeBSD's VESA system.
 options 	VESA
 options		VESA_DEBUG=255
-options 	X86BIOS # Required for VESA.	
