@@ -245,8 +245,6 @@ static int
 vga_pci_enable_busmaster(device_t dev, device_t child)
 {
 
-	device_printf(dev, "child %s requested pci_enable_busmaster\n",
-	    device_get_nameunit(child));
 	return (pci_enable_busmaster(dev));
 }
 
@@ -254,8 +252,6 @@ static int
 vga_pci_disable_busmaster(device_t dev, device_t child)
 {
 
-	device_printf(dev, "child %s requested pci_disable_busmaster\n",
-	    device_get_nameunit(child));
 	return (pci_disable_busmaster(dev));
 }
 
