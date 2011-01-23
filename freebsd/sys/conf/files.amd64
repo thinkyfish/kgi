@@ -212,7 +212,6 @@ dev/kgy/kgy_splash.c            optional 	kgy kgi
 dev/kgim/kgim.c		        optional 	kgim kgi
 dev/lindev/full.c		optional	lindev
 dev/lindev/lindev.c		optional	lindev
-dev/mem/memutil.c		optional	mem
 dev/nfe/if_nfe.c		optional	nfe pci
 dev/nve/if_nve.c		optional	nve pci
 dev/nvram/nvram.c		optional	nvram isa
