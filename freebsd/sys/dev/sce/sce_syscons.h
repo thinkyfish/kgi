@@ -43,12 +43,10 @@
 #define SC_NO_SYSMOUSE
 
 #ifndef MAXCONS
-#define MAXCONS	24
+#define MAXCONS	16
 #endif
 
 #define PCBURST 128
-#define SCEVT_COLD 0
-#define SCEVT_WARM 1
 
 typedef struct {
 	union {	/* keep it first */

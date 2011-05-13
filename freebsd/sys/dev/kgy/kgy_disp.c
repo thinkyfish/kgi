@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -72,14 +72,14 @@ vesa_unload_ioctl(void)
 	return (0);
 }
 
-static kgi_error_t 
+static kgi_error_t
 dpysw_display_command(kgi_display_t *dpy, kgi_u_t cmd, void *data)
 {
 
 	return (EINVAL);
 }
 
-static void 
+static void
 dpysw_inc_refcount(kgi_display_t *dpy)
 {
 
@@ -89,7 +89,7 @@ dpysw_inc_refcount(kgi_display_t *dpy)
 	return;
 }
 
-static void 
+static void
 dpysw_dec_refcount(kgi_display_t *dpy)
 {
 
@@ -112,48 +112,52 @@ static void dpysw_ptr_set_shape(kgi_marker_t *m, kgi_u_t x, kgi_u_t y)
 }
 #endif
 
-static void 
+static void
 dpysw_ptr_show(kgi_marker_t *m, kgi_u_t x, kgi_u_t y)
 {
-	dpysw_display_t *sc = (dpysw_display_t *)m->meta;
+	dpysw_display_t *sc;
 	int error;
 
+	sc = (dpysw_display_t *)m->meta;
 	error = (*vidsw[sc->adp->va_index]->set_hw_cursor)
 		(sc->adp, (int)x, (int)y);
-	
+
 	return;
 }
 
-static void 
+static void
 dpysw_ptr_hide(kgi_marker_t *m)
 {
-	dpysw_display_t *sc = (dpysw_display_t *)m->meta;
+	dpysw_display_t *sc;
 	int error;
 
+	sc = (dpysw_display_t *)m->meta;
 	error = (*vidsw[sc->adp->va_index]->set_hw_cursor)
 		(sc->adp, -1, -1);
 
 	return;
 }
 
-static void 
+static void
 dpysw_ptr_read(kgi_marker_t *m, kgi_u_t *x, kgi_u_t *y)
 {
-	dpysw_display_t *sc = (dpysw_display_t *)m->meta;
+	dpysw_display_t *sc;
 	int error;
 
+	sc = (dpysw_display_t *)m->meta;
 	error = (*vidsw[sc->adp->va_index]->read_hw_cursor)
 		(sc->adp, (int *)x, (int *)y);
 
 	return;
 }
 
-static void 
+static void
 dpysw_set_offset(kgi_mmio_region_t *r, kgi_size_t offset)
 {
-	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
+	dpysw_display_t *sc;
 	int error;
 
+	sc = (dpysw_display_t *)r->meta;
 	error = (*vidsw[sc->adp->va_index]->set_win_org)
 		(sc->adp, (off_t) offset);
 
@@ -161,26 +165,27 @@ dpysw_set_offset(kgi_mmio_region_t *r, kgi_size_t offset)
 		r->win.phys = sc->adp->va_info.vi_window;
 		r->offset = offset;
 	}
-	
+
 	return;
 }
 
-static void 
+static void
 dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 		kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
-	int error;
-	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
+	int error, i;
+	dpysw_display_t *sc;
 	kgi_u8_t clut[256 * 3];
-	int i;
 
+	KGI_ASSERT(index == 0);
 	KGI_ASSERT(table == 0);
 	KGI_ASSERT(count == 256);
-	KGI_ASSERT(index == 0);
-	
+
 	/* All colors must change at once. */
-	if (!(am & KGI_AM_COLOR1) || !(am & KGI_AM_COLOR2) ||
-	    !(am & KGI_AM_COLOR3) || count != 256 || index != 0)
+	if ((am & KGI_AM_COLOR1) == 0 ||
+	    (am & KGI_AM_COLOR2) == 0 ||
+	    (am & KGI_AM_COLOR3) == 0 ||
+	    count != 256 || index != 0)
 		return;
 
 	/* XXX stupid convertion. */
@@ -190,35 +195,40 @@ dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 		clut[i + 2] = data[i + 2] >> 8;
 	}
 
+	sc = (dpysw_display_t *)r->meta;
 	error = (*vidsw[sc->adp->va_index]->load_palette)
 		(sc->adp, clut);
-	
+
 	return;
 }
 
-static void 
-dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t 
+static void
+dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t
 		count, kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
 	int error;
-	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
+	dpysw_display_t *sc;
 
 	KGI_ASSERT(table == 0);
 	KGI_ASSERT(count == 256);
 	KGI_ASSERT(index == 0);
-	
-	/* All colors must change at once .*/
-	if (!(am & KGI_AM_COLOR1) || !(am & KGI_AM_COLOR2) ||
-	    !(am & KGI_AM_COLOR3) || count != 256 || index != 0)
+
+	/* All colors must change at once. */
+	if ((am & KGI_AM_COLOR1) == 0 ||
+	    (am & KGI_AM_COLOR2) == 0 ||
+	    (am & KGI_AM_COLOR3) == 0 ||
+	    count != 256 || index != 0)
 		return;
 
+
+	sc = (dpysw_display_t *)r->meta;
 	error = (*vidsw[sc->adp->va_index]->save_palette)
 		(sc->adp, (u_char *)data);
-	
+
 	return;
 }
 
-static int 
+static int
 dpysw_configure(int flags)
 {
 	int i;
@@ -232,9 +242,9 @@ dpysw_configure(int flags)
 	kgi_text16_t *text16;
 	dpysw_display_t *sc = &dpysw_sc;
 
-	/* 
+	/*
 	 * XXX find a VGA or VESA adapter. Should work with any other
-	 * kind of adapter. 
+	 * kind of adapter.
 	 */
 	for (i = 0; (adp = vid_get_adapter(i)) != NULL; ++i) {
 		/* Remember if we find VGA, then continue for VESA. */
@@ -259,10 +269,10 @@ dpysw_configure(int flags)
 	sc->adp = adp;
 	dpy = &sc->dpy;
 
-        dpy->revision = KGI_DISPLAY_REVISION;
+	dpy->revision = KGI_DISPLAY_REVISION;
 	snprintf(dpy->vendor, KGI_MAX_VENDOR_STRING, "KGI FreeBSD");
 	snprintf(dpy->model, KGI_MAX_VENDOR_STRING, "dpysw");
-	
+
 	dpy->flags = 0;
 	dpy->mode_size = sizeof(vidsw_mode_t);
 
@@ -304,7 +314,7 @@ dpysw_configure(int flags)
 
 	fb->meta 		= dpy;
 	fb->type 		= KGI_RT_MMIO_FRAME_BUFFER;
-	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS 
+	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS
 				  | KGI_PF_DRV_RWS;
 	fb->name 		= "Frame buffer";
 	fb->access 		= 8 + 16 + 32 + 64;
@@ -316,10 +326,10 @@ dpysw_configure(int flags)
 	fb->size 		= (kgi_size_t)adp->va_mem_size;
 	fb->offset 		= 0;
 	fb->SetOffset 		= dpysw_set_offset;
-		
+
 	/* Initialize ilut struct. */
 	ilut = &sc->ilut;
-	
+
 	ilut->meta 		= dpy;
 	ilut->type 		= KGI_RT_ILUT_CONTROL;
 	ilut->prot 		= KGI_PF_DRV_RWS;
@@ -328,10 +338,10 @@ dpysw_configure(int flags)
 	ilut->Get 		= dpysw_get_ilut;
 	ilut->entries		= 256;
 	ilut->tables		= 1;
-		
+
 	/* Initialize marker struct. */
 	ptr = &sc->ptr;
-	
+
 	ptr->meta 		= dpy;
 	ptr->type 		= KGI_RT_POINTER_CONTROL;
 	ptr->prot 		= KGI_PF_DRV_RWS;
@@ -345,7 +355,7 @@ dpysw_configure(int flags)
 	ptr->Read 		= dpysw_ptr_read;
 
 	text16 = &sc->text16;
-	
+
 	/* text16 control. */
 	text16->meta		= dpy;
 	text16->meta_io		= NULL;
@@ -353,7 +363,7 @@ dpysw_configure(int flags)
 	text16->prot		= KGI_PF_DRV_RWS;
 	text16->name		= "Text16 control";
 	text16->PutText16	= dpysw_put_text16;
-	
+
 	/* Initialize KGI mode from current mode. */
 	vi = &sc->adp->va_info;
 	if (vi->vi_flags & V_INFO_GRAPHICS) {
@@ -394,12 +404,12 @@ dpysw_configure(int flags)
 
 		if (vi->vi_flags & V_INFO_COLOR) {
 			mode->img[0].fam = KGI_AM_TEXT;
-			
+
 			mode->img[0].bpfa[0] = 4;	/* BG color. */
 			mode->img[0].bpfa[1] = 4;	/* FG color. */
 			mode->img[0].bpfa[2] = 8;	/* Texture.  */
 			mode->img[0].bpfa[3] = 0;
-			
+
 			/* XXX change mode. */
 		} else {
 			mode->img[0].fam = KGI_AM_TEXT | KGI_AM_BLINK;
@@ -421,7 +431,7 @@ dpysw_configure(int flags)
 		text16->cell.y		= vi->vi_cheight;
 		text16->font.x		= vi->vi_cwidth;
 		text16->font.y		= vi->vi_cheight;
-		
+
 		/* Per image resource. */
 		mode->resource[0] = (kgi_resource_t *) &sc->fb;
 		mode->resource[1] = (kgi_resource_t *) &sc->text16;
@@ -439,7 +449,7 @@ dpysw_configure(int flags)
 	return (0);
 }
 
-static int 
+static int
 dpysw_load(void)
 {
 	int error = 0;
@@ -452,15 +462,15 @@ dpysw_load(void)
 	error = dpysw_configure(0);
 	splx(s);
 
-	return error;
+	return (error);
 }
 
-static int 
+static int
 dpysw_unload(void)
 {
 	int s;
 
-	if (!registered)
+	if (registered == 0)
 		return (0);
 
 	s = spltty();
@@ -470,14 +480,15 @@ dpysw_unload(void)
 	return (0);
 }
 
-static int 
+static int
 dpysw_mod_event(module_t mod, int type, void *data)
 {
+
 	switch (type) {
 	case MOD_LOAD:
-		return dpysw_load();
+		return (dpysw_load());
 	case MOD_UNLOAD:
-		return dpysw_unload();
+		return (dpysw_unload());
 	default:
 		break;
 	}

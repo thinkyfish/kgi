@@ -161,6 +161,8 @@ contrib/dev/acpica/debugger/dbexec.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbfileio.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbhistry.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbinput.c	optional acpi acpi_debug
+contrib/dev/acpica/debugger/dbmethod.c	optional acpi acpi_debug
+contrib/dev/acpica/debugger/dbnames.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbstats.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbutils.c	optional acpi acpi_debug
 contrib/dev/acpica/debugger/dbxface.c	optional acpi acpi_debug
@@ -173,6 +175,8 @@ contrib/dev/acpica/disassembler/dmresrcl.c	optional acpi acpi_debug
 contrib/dev/acpica/disassembler/dmresrcs.c	optional acpi acpi_debug
 contrib/dev/acpica/disassembler/dmutils.c	optional acpi acpi_debug
 contrib/dev/acpica/disassembler/dmwalk.c	optional acpi acpi_debug
+contrib/dev/acpica/dispatcher/dsargs.c		optional acpi
+contrib/dev/acpica/dispatcher/dscontrol.c	optional acpi
 contrib/dev/acpica/dispatcher/dsfield.c		optional acpi
 contrib/dev/acpica/dispatcher/dsinit.c		optional acpi
 contrib/dev/acpica/dispatcher/dsmethod.c	optional acpi
@@ -182,9 +186,11 @@ contrib/dev/acpica/dispatcher/dsopcode.c	optional acpi
 contrib/dev/acpica/dispatcher/dsutils.c		optional acpi
 contrib/dev/acpica/dispatcher/dswexec.c		optional acpi
 contrib/dev/acpica/dispatcher/dswload.c		optional acpi
+contrib/dev/acpica/dispatcher/dswload2.c	optional acpi
 contrib/dev/acpica/dispatcher/dswscope.c	optional acpi
 contrib/dev/acpica/dispatcher/dswstate.c	optional acpi
 contrib/dev/acpica/events/evevent.c		optional acpi
+contrib/dev/acpica/events/evglock.c		optional acpi
 contrib/dev/acpica/events/evgpe.c		optional acpi
 contrib/dev/acpica/events/evgpeblk.c		optional acpi
 contrib/dev/acpica/events/evgpeinit.c		optional acpi
@@ -278,6 +284,7 @@ contrib/dev/acpica/utilities/utalloc.c		optional acpi
 contrib/dev/acpica/utilities/utcache.c		optional acpi
 contrib/dev/acpica/utilities/utcopy.c		optional acpi
 contrib/dev/acpica/utilities/utdebug.c		optional acpi
+contrib/dev/acpica/utilities/utdecode.c		optional acpi
 contrib/dev/acpica/utilities/utdelete.c		optional acpi
 contrib/dev/acpica/utilities/uteval.c		optional acpi
 contrib/dev/acpica/utilities/utglobal.c		optional acpi
@@ -486,7 +493,7 @@ dev/advansys/adwcam.c		optional adw
 dev/advansys/adwlib.c		optional adw
 dev/advansys/adwmcode.c		optional adw
 dev/ae/if_ae.c			optional ae pci
-dev/age/if_age.c		optional age pci inet
+dev/age/if_age.c		optional age pci
 dev/agp/agp.c			optional agp pci
 dev/agp/agp_if.m			optional agp pci
 dev/aha/aha.c			optional aha
@@ -508,8 +515,8 @@ dev/aic7xxx/aic7xxx.c		optional ahc
 dev/aic7xxx/aic7xxx_93cx6.c	optional ahc
 dev/aic7xxx/aic7xxx_osm.c	optional ahc
 dev/aic7xxx/aic7xxx_pci.c	optional ahc pci
-dev/alc/if_alc.c		optional alc pci inet
-dev/ale/if_ale.c		optional ale pci inet
+dev/alc/if_alc.c		optional alc pci
+dev/ale/if_ale.c		optional ale pci
 dev/amd/amd.c			optional amd
 dev/amr/amr.c			optional amr
 dev/amr/amr_cam.c		optional amrp amr
@@ -564,9 +571,23 @@ dev/ata/atapi-fd.c		optional atapifd
 dev/ata/atapi-tape.c		optional atapist
 dev/ata/atapi-cam.c		optional atapicam
 #
+dev/ath/if_ath_pci.c		optional ath_pci pci \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+#
+dev/ath/if_ath_ahb.c		optional ath_ahb \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+#
 dev/ath/if_ath.c		optional ath \
 	compile-with "${NORMAL_C} -I$S/dev/ath"
-dev/ath/if_ath_pci.c		optional ath pci \
+dev/ath/if_ath_debug.c		optional ath \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+dev/ath/if_ath_keycache.c	optional ath \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+dev/ath/if_ath_tx.c		optional ath \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+dev/ath/if_ath_tx_ht.c		optional ath \
+	compile-with "${NORMAL_C} -I$S/dev/ath"
+dev/ath/if_ath_sysctl.c		optional ath \
 	compile-with "${NORMAL_C} -I$S/dev/ath"
 dev/ath/ah_osdep.c		optional ath \
 	compile-with "${NORMAL_C} -I$S/dev/ath"
@@ -736,6 +757,14 @@ dev/ath/ath_hal/ar5416/ar5416_reset.c \
 dev/ath/ath_hal/ar5416/ar5416_xmit.c \
 	optional ath_hal | ath_ar5416 | ath_ar9160 | ath_ar9280 | ath_ar9285 \
 	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+# ar9130 (depends upon ar5416) - also requires AH_SUPPORT_AR9130
+dev/ath/ath_hal/ar9001/ar9130_attach.c optional ath_hal | ath_ar9130 \
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9001/ar9130_phy.c optional ath_hal | ath_ar9130 \
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9001/ar9130_eeprom.c optional ath_hal | ath_ar9130 \
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+
 # ar9160 (depends on ar5416)
 dev/ath/ath_hal/ar9001/ar9160_attach.c optional ath_hal | ath_ar9160 \
 	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
@@ -743,10 +772,19 @@ dev/ath/ath_hal/ar9001/ar9160_attach.c optional ath_hal | ath_ar9160 \
 dev/ath/ath_hal/ar9002/ar9280_attach.c optional ath_hal | ath_ar9280 | \
 	ath_ar9285 \ 
 	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9002/ar9280_olc.c optional ath_hal | ath_ar9280 | \
+	ath_ar9285 \ 
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
 # ar9285 (depends on ar5416 and ar9280)
 dev/ath/ath_hal/ar9002/ar9285_attach.c optional ath_hal | ath_ar9285 \ 
 	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
 dev/ath/ath_hal/ar9002/ar9285_reset.c optional ath_hal | ath_ar9285 \ 
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9002/ar9285_cal.c optional ath_hal | ath_ar9285 \ 
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9002/ar9285_phy.c optional ath_hal | ath_ar9285 \ 
+	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
+dev/ath/ath_hal/ar9002/ar9285_diversity.c optional ath_hal | ath_ar9285 \ 
 	compile-with "${NORMAL_C} -I$S/dev/ath -I$S/dev/ath/ath_hal"
 # rf backends
 dev/ath/ath_hal/ar5212/ar2316.c	optional ath_rf2316 \
@@ -798,6 +836,8 @@ dev/bwi/bwirf.c			optional bwi
 dev/bwi/if_bwi.c		optional bwi
 dev/bwi/if_bwi_pci.c		optional bwi pci
 dev/bwn/if_bwn.c		optional bwn siba_bwn
+dev/bxe/if_bxe.c		optional bxe
+dev/bxe/bxe_link.c		optional bxe
 dev/cardbus/cardbus.c		optional cardbus
 dev/cardbus/cardbus_cis.c	optional cardbus
 dev/cardbus/cardbus_device.c	optional cardbus
@@ -841,6 +881,12 @@ dev/cxgb/sys/uipc_mvec.c	optional cxgb pci \
 	compile-with "${NORMAL_C} -I$S/dev/cxgb"
 dev/cxgb/cxgb_t3fw.c		optional cxgb cxgb_t3fw \
 	compile-with "${NORMAL_C} -I$S/dev/cxgb"
+dev/cxgbe/t4_main.c		optional cxgbe pci \
+	compile-with "${NORMAL_C} -I$S/dev/cxgbe"
+dev/cxgbe/t4_sge.c		optional cxgbe pci \
+	compile-with "${NORMAL_C} -I$S/dev/cxgbe"
+dev/cxgbe/common/t4_hw.c	optional cxgbe pci \
+	compile-with "${NORMAL_C} -I$S/dev/cxgbe"
 dev/cy/cy.c			optional cy
 dev/cy/cy_isa.c			optional cy isa
 dev/cy/cy_pci.c			optional cy pci
@@ -935,11 +981,11 @@ dev/ed/if_ed_pccard.c		optional ed pccard
 dev/ed/if_ed_pci.c		optional ed pci
 dev/eisa/eisa_if.m		standard
 dev/eisa/eisaconf.c		optional eisa
-dev/e1000/if_em.c		optional em inet \
+dev/e1000/if_em.c		optional em \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
-dev/e1000/if_lem.c		optional em inet \
+dev/e1000/if_lem.c		optional em \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
-dev/e1000/if_igb.c		optional igb inet \
+dev/e1000/if_igb.c		optional igb \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
 dev/e1000/e1000_80003es2lan.c	optional em | igb \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
@@ -954,7 +1000,7 @@ dev/e1000/e1000_82543.c		optional em | igb \
 dev/e1000/e1000_82571.c		optional em | igb \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
 dev/e1000/e1000_82575.c		optional em | igb \
-	 compile-with "${NORMAL_C} -I$S/dev/igb"
+	compile-with "${NORMAL_C} -I$S/dev/e1000"
 dev/e1000/e1000_ich8lan.c	optional em | igb \
 	compile-with "${NORMAL_C} -I$S/dev/e1000"
 dev/e1000/e1000_api.c		optional em | igb \
@@ -1008,7 +1054,7 @@ dev/firewire/sbp.c		optional sbp
 dev/firewire/sbp_targ.c		optional sbp_targ
 dev/flash/at45d.c		optional at45d
 dev/flash/mx25l.c		optional mx25l
-dev/fxp/if_fxp.c		optional fxp inet
+dev/fxp/if_fxp.c		optional fxp
 dev/gem/if_gem.c		optional gem
 dev/gem/if_gem_pci.c		optional gem pci
 dev/gem/if_gem_sbus.c		optional gem sbus
@@ -1175,8 +1221,8 @@ iwn1000fw.fwo			optional iwn1000fw | iwnfw		\
 	no-implicit-rule						\
 	clean		"iwn1000fw.fwo"
 iwn1000.fw			optional iwn1000fw | iwnfw		\
-	dependency	"$S/contrib/dev/iwn/iwlwifi-1000-128.50.3.1.fw.uu" \
-	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-1000-128.50.3.1.fw.uu" \
+	dependency	"$S/contrib/dev/iwn/iwlwifi-1000-39.31.5.1.fw.uu" \
+	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-1000-39.31.5.1.fw.uu" \
 	no-obj no-implicit-rule						\
 	clean		"iwn1000.fw"
 iwn4965fw.c			optional iwn4965fw | iwnfw		\
@@ -1203,8 +1249,8 @@ iwn5000fw.fwo		optional iwn5000fw | iwnfw			\
 	no-implicit-rule						\
 	clean		"iwn5000fw.fwo"
 iwn5000.fw			optional iwn5000fw | iwnfw		\
-	dependency	"$S/contrib/dev/iwn/iwlwifi-5000-8.24.2.12.fw.uu" \
-	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-5000-8.24.2.12.fw.uu"	\
+	dependency	"$S/contrib/dev/iwn/iwlwifi-5000-8.83.5.1.fw.uu" \
+	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-5000-8.83.5.1.fw.uu"	\
 	no-obj no-implicit-rule						\
 	clean		"iwn5000.fw"
 iwn5150fw.c			optional iwn5150fw | iwnfw		\
@@ -1235,6 +1281,34 @@ iwn6000.fw			optional iwn6000fw | iwnfw		\
 	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-6000-9.221.4.1.fw.uu" \
 	no-obj no-implicit-rule						\
 	clean		"iwn6000.fw"
+iwn6000g2afw.c			optional iwn6000g2afw | iwnfw		\
+	compile-with	"${AWK} -f $S/tools/fw_stub.awk iwn6000g2a.fw:iwn6000g2afw -miwn6000g2afw -c${.TARGET}" \
+	no-implicit-rule before-depend local				\
+	clean		"iwn6000g2afw.c"
+iwn6000g2afw.fwo		optional iwn6000g2afw | iwnfw		\
+	dependency	"iwn6000g2a.fw"					\
+	compile-with	"${LD} -b binary -d -warn-common -r -d -o ${.TARGET} iwn6000g2a.fw" \
+	no-implicit-rule						\
+	clean		"iwn6000g2afw.fwo"
+iwn6000g2a.fw			optional iwn6000g2afw | iwnfw		\
+	dependency	"$S/contrib/dev/iwn/iwlwifi-6000g2a-17.168.5.2.fw.uu" \
+	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-6000g2a-17.168.5.2.fw.uu" \
+	no-obj no-implicit-rule						\
+	clean		"iwn6000g2a.fw"
+iwn6000g2bfw.c			optional iwn6000g2bfw | iwnfw		\
+	compile-with	"${AWK} -f $S/tools/fw_stub.awk iwn6000g2b.fw:iwn6000g2bfw -miwn6000g2bfw -c${.TARGET}" \
+	no-implicit-rule before-depend local				\
+	clean		"iwn6000g2bfw.c"
+iwn6000g2bfw.fwo		optional iwn6000g2bfw | iwnfw		\
+	dependency	"iwn6000g2b.fw"					\
+	compile-with	"${LD} -b binary -d -warn-common -r -d -o ${.TARGET} iwn6000g2b.fw" \
+	no-implicit-rule						\
+	clean		"iwn6000g2bfw.fwo"
+iwn6000g2b.fw			optional iwn6000g2bfw | iwnfw		\
+	dependency	"$S/contrib/dev/iwn/iwlwifi-6000g2b-17.168.5.2.fw.uu" \
+	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-6000g2b-17.168.5.2.fw.uu" \
+	no-obj no-implicit-rule						\
+	clean		"iwn6000g2b.fw"
 iwn6050fw.c			optional iwn6050fw | iwnfw		\
 	compile-with	"${AWK} -f $S/tools/fw_stub.awk iwn6050.fw:iwn6050fw -miwn6050fw -c${.TARGET}" \
 	no-implicit-rule before-depend local				\
@@ -1245,10 +1319,10 @@ iwn6050fw.fwo			optional iwn6050fw | iwnfw		\
 	no-implicit-rule						\
 	clean		"iwn6050fw.fwo"
 iwn6050.fw			optional iwn6050fw | iwnfw		\
-	dependency	"$S/contrib/dev/iwn/iwlwifi-6050-9.201.4.1.fw.uu" \
-	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-6050-9.201.4.1.fw.uu" \
+	dependency	"$S/contrib/dev/iwn/iwlwifi-6050-41.28.5.1.fw.uu" \
+	compile-with	"uudecode -o ${.TARGET} $S/contrib/dev/iwn/iwlwifi-6050-41.28.5.1.fw.uu" \
 	no-obj no-implicit-rule						\
-	clean		"iwn6000.fw"
+	clean		"iwn6050.fw"
 dev/ixgb/if_ixgb.c		optional ixgb
 dev/ixgb/ixgb_ee.c		optional ixgb
 dev/ixgb/ixgb_hw.c		optional ixgb
@@ -1270,7 +1344,7 @@ dev/ixgbe/ixgbe_82598.c		optional ixgbe inet \
 	compile-with "${NORMAL_C} -I$S/dev/ixgbe"
 dev/ixgbe/ixgbe_82599.c		optional ixgbe inet \
 	compile-with "${NORMAL_C} -I$S/dev/ixgbe"
-dev/jme/if_jme.c		optional jme pci inet
+dev/jme/if_jme.c		optional jme pci
 dev/joy/joy.c			optional joy
 dev/joy/joy_isa.c		optional joy isa
 dev/joy/joy_pccard.c		optional joy pccard
@@ -1395,7 +1469,7 @@ dev/mpt/mpt_debug.c		optional mpt
 dev/mpt/mpt_pci.c		optional mpt pci
 dev/mpt/mpt_raid.c		optional mpt
 dev/mpt/mpt_user.c		optional mpt
-dev/msk/if_msk.c		optional msk inet
+dev/msk/if_msk.c		optional msk
 dev/mvs/mvs.c			optional mvs
 dev/mvs/mvs_if.m		optional mvs
 dev/mvs/mvs_pci.c		optional mvs pci
@@ -1613,7 +1687,7 @@ dev/siba/siba_bwn.c		optional siba_bwn pci
 dev/siba/siba_core.c		optional siba_bwn pci
 dev/siis/siis.c			optional siis pci
 dev/sis/if_sis.c		optional sis pci
-dev/sk/if_sk.c			optional sk pci inet
+dev/sk/if_sk.c			optional sk pci
 dev/smbus/smb.c			optional smb
 dev/smbus/smbconf.c		optional smbus
 dev/smbus/smbus.c		optional smbus
@@ -1762,7 +1836,7 @@ dev/twa/tw_osl_freebsd.c	optional twa \
 dev/twe/twe.c			optional twe
 dev/twe/twe_freebsd.c		optional twe
 dev/tx/if_tx.c			optional tx
-dev/txp/if_txp.c		optional txp inet
+dev/txp/if_txp.c		optional txp
 dev/uart/uart_bus_acpi.c	optional uart acpi
 #dev/uart/uart_bus_cbus.c	optional uart cbus
 dev/uart/uart_bus_ebus.c	optional uart ebus
@@ -1843,10 +1917,11 @@ dev/usb/net/if_cdce.c		optional cdce
 dev/usb/net/if_cue.c		optional cue
 dev/usb/net/if_ipheth.c		optional ipheth
 dev/usb/net/if_kue.c		optional kue
+dev/usb/net/if_mos.c		optional mos
 dev/usb/net/if_rue.c		optional rue
 dev/usb/net/if_udav.c		optional udav
-dev/usb/net/usb_ethernet.c	optional aue | axe | cdce | cue | kue | rue | \
-					 udav
+dev/usb/net/usb_ethernet.c	optional aue | axe | cdce | cue | kue | mos | \
+					 rue | udav
 dev/usb/net/uhso.c		optional uhso
 #
 # USB WLAN drivers
@@ -1895,7 +1970,7 @@ dev/usb/serial/uvisor.c		optional uvisor
 dev/usb/serial/uvscom.c		optional uvscom
 dev/usb/serial/usb_serial.c 	optional ucom | u3g | uark | ubsa | ubser | \
 					 uchcom | ucycom | ufoma | uftdi | \
-					 ugensa | uipaq | ulpt | umct | \
+					 ugensa | uipaq | umct | \
 					 umodem | umoscom | uplcom | uslcom | \
 					 uvisor | uvscom
 #
@@ -1935,6 +2010,24 @@ dev/vte/if_vte.c		optional vte pci
 dev/vx/if_vx.c			optional vx
 dev/vx/if_vx_eisa.c		optional vx eisa
 dev/vx/if_vx_pci.c		optional vx pci
+dev/vxge/vxge.c				optional vxge
+dev/vxge/vxgehal/vxgehal-ifmsg.c	optional vxge
+dev/vxge/vxgehal/vxgehal-mrpcim.c	optional vxge
+dev/vxge/vxgehal/vxge-queue.c		optional vxge
+dev/vxge/vxgehal/vxgehal-ring.c		optional vxge
+dev/vxge/vxgehal/vxgehal-swapper.c	optional vxge
+dev/vxge/vxgehal/vxgehal-mgmt.c		optional vxge
+dev/vxge/vxgehal/vxgehal-srpcim.c	optional vxge
+dev/vxge/vxgehal/vxgehal-config.c	optional vxge
+dev/vxge/vxgehal/vxgehal-blockpool.c	optional vxge
+dev/vxge/vxgehal/vxgehal-doorbells.c	optional vxge
+dev/vxge/vxgehal/vxgehal-mgmtaux.c	optional vxge
+dev/vxge/vxgehal/vxgehal-device.c	optional vxge
+dev/vxge/vxgehal/vxgehal-mm.c		optional vxge
+dev/vxge/vxgehal/vxgehal-driver.c	optional vxge
+dev/vxge/vxgehal/vxgehal-virtualpath.c	optional vxge
+dev/vxge/vxgehal/vxgehal-channel.c	optional vxge
+dev/vxge/vxgehal/vxgehal-fifo.c		optional vxge
 dev/watchdog/watchdog.c		standard
 dev/wb/if_wb.c			optional wb pci
 dev/wds/wd7000.c		optional wds isa
@@ -1942,6 +2035,7 @@ dev/wi/if_wi.c			optional wi
 dev/wi/if_wi_pccard.c		optional wi pccard
 dev/wi/if_wi_pci.c		optional wi pci
 dev/wl/if_wl.c			optional wl isa
+dev/wpi/if_wpi.c		optional wpi pci
 wpifw.c			optional wpifw					\
 	compile-with	"${AWK} -f $S/tools/fw_stub.awk wpi.fw:wpifw:153229 -mwpi -c${.TARGET}" \
 	no-implicit-rule before-depend local				\
@@ -2074,6 +2168,7 @@ geom/eli/g_eli_crypto.c		optional geom_eli
 geom/eli/g_eli_ctl.c		optional geom_eli
 geom/eli/g_eli_integrity.c	optional geom_eli
 geom/eli/g_eli_key.c		optional geom_eli
+geom/eli/g_eli_key_cache.c	optional geom_eli
 geom/eli/g_eli_privacy.c	optional geom_eli
 geom/eli/pkcs5v2.c		optional geom_eli
 geom/gate/g_gate.c		optional geom_gate
@@ -2089,6 +2184,7 @@ geom/geom_event.c		standard
 geom/geom_fox.c			optional geom_fox
 geom/geom_io.c			standard
 geom/geom_kern.c		standard
+geom/geom_map.c			optional geom_map
 geom/geom_mbr.c			optional geom_mbr
 geom/geom_mbr_enc.c		optional geom_mbr
 geom/geom_pc98.c		optional geom_pc98
@@ -2125,6 +2221,19 @@ geom/part/g_part_gpt.c		optional geom_part_gpt
 geom/part/g_part_mbr.c		optional geom_part_mbr
 geom/part/g_part_pc98.c		optional geom_part_pc98
 geom/part/g_part_vtoc8.c	optional geom_part_vtoc8
+geom/raid/g_raid.c		optional geom_raid
+geom/raid/g_raid_ctl.c		optional geom_raid
+geom/raid/g_raid_md_if.m	optional geom_raid
+geom/raid/g_raid_tr_if.m	optional geom_raid
+geom/raid/md_intel.c		optional geom_raid
+geom/raid/md_jmicron.c		optional geom_raid
+geom/raid/md_nvidia.c		optional geom_raid
+geom/raid/md_promise.c		optional geom_raid
+geom/raid/md_sii.c		optional geom_raid
+geom/raid/tr_concat.c		optional geom_raid
+geom/raid/tr_raid0.c		optional geom_raid
+geom/raid/tr_raid1.c		optional geom_raid
+geom/raid/tr_raid1e.c		optional geom_raid
 geom/raid3/g_raid3.c		optional geom_raid3
 geom/raid3/g_raid3_ctl.c	optional geom_raid3
 geom/shsec/g_shsec.c		optional geom_shsec
@@ -2207,6 +2316,7 @@ kern/kern_linker.c		standard
 kern/kern_lock.c		standard
 kern/kern_lockf.c		standard
 kern/kern_lockstat.c		optional kdtrace_hooks
+kern/kern_loginclass.c		standard
 kern/kern_malloc.c		standard
 kern/kern_mbuf.c		standard
 kern/kern_mib.c			standard
@@ -2221,6 +2331,8 @@ kern/kern_poll.c		optional device_polling
 kern/kern_priv.c		standard
 kern/kern_proc.c		standard
 kern/kern_prot.c		standard
+kern/kern_racct.c		standard
+kern/kern_rctl.c		standard
 kern/kern_resource.c		standard
 kern/kern_rmlock.c		standard
 kern/kern_rwlock.c		standard
@@ -2293,6 +2405,7 @@ kern/subr_turnstile.c		standard
 kern/subr_uio.c			standard
 kern/subr_unit.c		standard
 kern/subr_witness.c		optional witness
+kern/sys_capability.c		standard
 kern/sys_generic.c		standard
 kern/sys_pipe.c			standard
 kern/sys_process.c		standard
@@ -2444,7 +2557,7 @@ net/bpf_jitter.c		optional bpf_jitter
 net/bpf_filter.c		optional bpf | netgraph_bpf
 net/bpf_zerocopy.c		optional bpf
 net/bridgestp.c			optional bridge | if_bridge
-net/flowtable.c			optional flowtable inet
+net/flowtable.c			optional flowtable inet | flowtable inet6
 net/ieee8023ad_lacp.c		optional lagg
 net/if.c			standard
 net/if_arcsubr.c		optional arcnet
@@ -2532,6 +2645,7 @@ net80211/ieee80211_superg.c	optional wlan ieee80211_support_superg
 net80211/ieee80211_tdma.c	optional wlan ieee80211_support_tdma
 net80211/ieee80211_wds.c	optional wlan
 net80211/ieee80211_xauth.c	optional wlan wlan_xauth
+net80211/ieee80211_alq.c	optional wlan ieee80211_alq
 netatalk/aarp.c			optional netatalk
 netatalk/at_control.c		optional netatalk
 netatalk/at_proto.c		optional netatalk
@@ -2574,6 +2688,7 @@ netgraph/bluetooth/socket/ng_btsocket_l2cap_raw.c optional netgraph_bluetooth_so
 netgraph/bluetooth/socket/ng_btsocket_rfcomm.c optional netgraph_bluetooth_socket
 netgraph/bluetooth/socket/ng_btsocket_sco.c optional netgraph_bluetooth_socket
 netgraph/netflow/netflow.c	optional netgraph_netflow
+netgraph/netflow/netflow_v9.c	optional netgraph_netflow
 netgraph/netflow/ng_netflow.c	optional netgraph_netflow
 netgraph/ng_UI.c		optional netgraph_UI
 netgraph/ng_async.c		optional netgraph_async
@@ -2634,8 +2749,8 @@ netinet/in_gif.c		optional gif inet | netgraph_gif inet
 netinet/ip_gre.c		optional gre inet
 netinet/ip_id.c			optional inet
 netinet/in_mcast.c		optional inet
-netinet/in_pcb.c		optional inet
-netinet/in_proto.c		optional inet \
+netinet/in_pcb.c		optional inet | inet6
+netinet/in_proto.c		optional inet | inet6 \
 	compile-with "${NORMAL_C} -I$S/contrib/pf"
 netinet/in_rmx.c		optional inet
 netinet/ip_divert.c		optional inet ipdivert ipfirewall
@@ -2659,43 +2774,44 @@ netinet/ipfw/ip_fw_pfil.c	optional inet ipfirewall
 netinet/ipfw/ip_fw_sockopt.c	optional inet ipfirewall
 netinet/ipfw/ip_fw_table.c	optional inet ipfirewall
 netinet/ipfw/ip_fw_nat.c	optional inet ipfirewall_nat
-netinet/ip_icmp.c		optional inet
+netinet/ip_icmp.c		optional inet | inet6
 netinet/ip_input.c		optional inet
 netinet/ip_ipsec.c		optional inet ipsec
-netinet/ip_mroute.c		optional mrouting inet | mrouting inet6
+netinet/ip_mroute.c		optional mrouting inet
 netinet/ip_options.c		optional inet
 netinet/ip_output.c		optional inet
-netinet/raw_ip.c		optional inet
-netinet/cc/cc.c			optional inet
-netinet/cc/cc_newreno.c		optional inet
-netinet/sctp_asconf.c		optional inet sctp
-netinet/sctp_auth.c		optional inet sctp
-netinet/sctp_bsd_addr.c		optional inet sctp
-netinet/sctp_cc_functions.c	optional inet sctp
-netinet/sctp_crc32.c		optional inet sctp
-netinet/sctp_indata.c		optional inet sctp
-netinet/sctp_input.c		optional inet sctp
-netinet/sctp_output.c		optional inet sctp
-netinet/sctp_pcb.c		optional inet sctp
-netinet/sctp_peeloff.c		optional inet sctp
-netinet/sctp_sysctl.c		optional inet sctp
-netinet/sctp_timer.c		optional inet sctp
-netinet/sctp_usrreq.c		optional inet sctp
-netinet/sctputil.c		optional inet sctp
+netinet/raw_ip.c		optional inet | inet6
+netinet/cc/cc.c			optional inet | inet6
+netinet/cc/cc_newreno.c		optional inet | inet6
+netinet/sctp_asconf.c		optional inet sctp | inet6 sctp
+netinet/sctp_auth.c		optional inet sctp | inet6 sctp
+netinet/sctp_bsd_addr.c		optional inet sctp | inet6 sctp
+netinet/sctp_cc_functions.c	optional inet sctp | inet6 sctp
+netinet/sctp_crc32.c		optional inet sctp | inet6 sctp
+netinet/sctp_indata.c		optional inet sctp | inet6 sctp
+netinet/sctp_input.c		optional inet sctp | inet6 sctp
+netinet/sctp_output.c		optional inet sctp | inet6 sctp
+netinet/sctp_pcb.c		optional inet sctp | inet6 sctp
+netinet/sctp_peeloff.c		optional inet sctp | inet6 sctp
+netinet/sctp_ss_functions.c	optional inet sctp | inet6 sctp
+netinet/sctp_sysctl.c		optional inet sctp | inet6 sctp
+netinet/sctp_timer.c		optional inet sctp | inet6 sctp
+netinet/sctp_usrreq.c		optional inet sctp | inet6 sctp
+netinet/sctputil.c		optional inet sctp | inet6 sctp
 netinet/tcp_debug.c		optional tcpdebug
-netinet/tcp_hostcache.c		optional inet
-netinet/tcp_input.c		optional inet
-netinet/tcp_lro.c		optional inet
-netinet/tcp_output.c		optional inet
-netinet/tcp_offload.c		optional inet
-netinet/tcp_reass.c		optional inet
-netinet/tcp_sack.c		optional inet
-netinet/tcp_subr.c		optional inet
-netinet/tcp_syncache.c		optional inet
-netinet/tcp_timer.c		optional inet
-netinet/tcp_timewait.c		optional inet
-netinet/tcp_usrreq.c		optional inet
-netinet/udp_usrreq.c		optional inet
+netinet/tcp_hostcache.c		optional inet | inet6
+netinet/tcp_input.c		optional inet | inet6
+netinet/tcp_lro.c		optional inet | inet6
+netinet/tcp_output.c		optional inet | inet6
+netinet/tcp_offload.c		optional inet | inet6
+netinet/tcp_reass.c		optional inet | inet6
+netinet/tcp_sack.c		optional inet | inet6
+netinet/tcp_subr.c		optional inet | inet6
+netinet/tcp_syncache.c		optional inet | inet6
+netinet/tcp_timer.c		optional inet | inet6
+netinet/tcp_timewait.c		optional inet | inet6
+netinet/tcp_usrreq.c		optional inet | inet6
+netinet/udp_usrreq.c		optional inet | inet6
 netinet/libalias/alias.c	optional libalias inet | netgraph_nat inet
 netinet/libalias/alias_db.c	optional libalias inet | netgraph_nat inet
 netinet/libalias/alias_mod.c	optional libalias | netgraph_nat
@@ -2773,12 +2889,12 @@ netsmb/smb_smb.c		optional netsmb
 netsmb/smb_subr.c		optional netsmb
 netsmb/smb_trantcp.c		optional netsmb
 netsmb/smb_usr.c		optional netsmb
+nfs/bootp_subr.c		optional bootp nfsclient | bootp nfscl
+nfs/krpc_subr.c			optional bootp nfsclient | bootp nfscl
 nfs/nfs_common.c		optional nfsclient | nfsserver
+nfs/nfs_diskless.c		optional nfsclient nfs_root | nfscl nfs_root
 nfs/nfs_lock.c			optional nfsclient | nfscl | nfslockd | nfsd
-nfsclient/bootp_subr.c		optional bootp nfsclient
-nfsclient/krpc_subr.c		optional bootp nfsclient
 nfsclient/nfs_bio.c		optional nfsclient
-nfsclient/nfs_diskless.c	optional nfsclient nfs_root
 nfsclient/nfs_node.c		optional nfsclient
 nfsclient/nfs_krpc.c		optional nfsclient
 nfsclient/nfs_subs.c		optional nfsclient
@@ -2797,6 +2913,281 @@ nlm/nlm_prot_server.c		optional nfslockd | nfsd
 nlm/nlm_prot_svc.c		optional nfslockd | nfsd
 nlm/nlm_prot_xdr.c		optional nfslockd | nfsd
 nlm/sm_inter_xdr.c		optional nfslockd | nfsd
+
+# OpenFabrics Enterprise Distribution (Infiniband)
+ofed/include/linux/linux_compat.c		optional ofed		\
+	no-depend compile-with "${OFED_C}"
+ofed/include/linux/linux_idr.c			optional ofed		\
+	no-depend compile-with "${OFED_C}"
+ofed/include/linux/linux_radix.c		optional ofed		\
+	no-depend compile-with "${OFED_C}"
+ofed/drivers/infiniband/core/addr.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"	
+ofed/drivers/infiniband/core/agent.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/cache.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+# XXX Mad.c must be ordered before cm.c for sysinit sets to occur in
+# the correct order.
+ofed/drivers/infiniband/core/mad.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/cm.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/cma.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/device.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/fmr_pool.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/iwcm.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/local_sa.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/mad_rmpp.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/multicast.c	optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/notice.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/packer.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/sa_query.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/smi.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/sysfs.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/ucm.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/ucma.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/ud_header.c	optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/umem.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/user_mad.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/uverbs_cmd.c	optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/uverbs_main.c	optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/uverbs_marshall.c	optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+ofed/drivers/infiniband/core/verbs.c		optional ofed		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/core/"
+
+ofed/drivers/infiniband/ulp/ipoib/ipoib_cm.c	optional ipoib		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+#ofed/drivers/infiniband/ulp/ipoib/ipoib_fs.c	optional ipoib		\
+#	no-depend							\
+#	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+ofed/drivers/infiniband/ulp/ipoib/ipoib_ib.c	optional ipoib		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+ofed/drivers/infiniband/ulp/ipoib/ipoib_main.c	optional ipoib		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+ofed/drivers/infiniband/ulp/ipoib/ipoib_multicast.c	optional ipoib	\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+ofed/drivers/infiniband/ulp/ipoib/ipoib_verbs.c	optional ipoib		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+#ofed/drivers/infiniband/ulp/ipoib/ipoib_vlan.c	optional ipoib		\
+#	no-depend							\
+#	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/ipoib/"
+
+ofed/drivers/infiniband/ulp/sdp/sdp_bcopy.c	optional sdp		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/sdp/"
+ofed/drivers/infiniband/ulp/sdp/sdp_main.c	optional sdp		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/sdp/"
+ofed/drivers/infiniband/ulp/sdp/sdp_rx.c	optional sdp		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/sdp/"
+ofed/drivers/infiniband/ulp/sdp/sdp_cma.c	optional sdp		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/sdp/"
+ofed/drivers/infiniband/ulp/sdp/sdp_tx.c	optional sdp		\
+	no-depend							\
+	compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/ulp/sdp/"
+
+ofed/drivers/infiniband/hw/mlx4/ah.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/cq.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/doorbell.c	optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/mad.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/main.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/mr.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/qp.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/srq.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+ofed/drivers/infiniband/hw/mlx4/wc.c		optional mlx4ib		\
+	no-depend obj-prefix "mlx4ib_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/infiniband/hw/mlx4/"
+
+ofed/drivers/net/mlx4/alloc.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/catas.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/cmd.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/cq.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/eq.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/fw.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/icm.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/intf.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/main.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/mcg.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/mr.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/pd.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/port.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/profile.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/qp.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/reset.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/sense.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/srq.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/xrcd.c			optional mlx4ib | mlxen	\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+
+ofed/drivers/net/mlx4/en_cq.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_frag.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_main.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_netdev.c		optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_port.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_resources.c		optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_rx.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+ofed/drivers/net/mlx4/en_tx.c			optional mlxen		\
+	no-depend obj-prefix "mlx4_"					\
+	compile-with "${OFED_C_NOIMP} -I$S/ofed/drivers/net/mlx4/"
+
+ofed/drivers/infiniband/hw/mthca/mthca_allocator.c	optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_av.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_catas.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_cmd.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_cq.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_eq.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_mad.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_main.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_mcg.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_memfree.c	optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_mr.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_pd.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_profile.c	optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_provider.c	optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_qp.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_reset.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_srq.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+ofed/drivers/infiniband/hw/mthca/mthca_uar.c		optional mthca	\
+	no-depend compile-with "${OFED_C} -I$S/ofed/drivers/infiniband/mthca/"
+
 # crypto support
 opencrypto/cast.c		optional crypto | ipsec
 opencrypto/criov.c		optional crypto
@@ -2857,7 +3248,7 @@ security/mac/mac_atalk.c	optional mac netatalk
 security/mac/mac_audit.c	optional mac audit
 security/mac/mac_cred.c		optional mac
 security/mac/mac_framework.c	optional mac
-security/mac/mac_inet.c		optional mac inet
+security/mac/mac_inet.c		optional mac inet | mac inet6
 security/mac/mac_inet6.c	optional mac inet6
 security/mac/mac_label.c	optional mac
 security/mac/mac_net.c		optional mac

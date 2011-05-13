@@ -163,6 +163,7 @@ options 	GEOM_PART_MBR		# MBR partitioning
 options 	GEOM_PART_PC98		# PC-9800 disk partitioning
 options 	GEOM_PART_VTOC8		# SMI VTOC8 disk label
 options 	GEOM_PC98		# NEC PC9800 partitioning
+options 	GEOM_RAID		# Soft RAID functionality.
 options 	GEOM_RAID3		# RAID3 functionality.
 options 	GEOM_SHSEC		# Shared secret.
 options 	GEOM_STRIPE		# Disk striping.
@@ -963,7 +964,6 @@ options 	DUMMYNET
 # zero_copy(9) for more details.
 options 	ZERO_COPY_SOCKETS
 
-
 #####################################################################
 # FILESYSTEM OPTIONS
 
@@ -1010,6 +1010,7 @@ options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	PSEUDOFS_TRACE		#Debugging support for PSEUDOFS
 options 	SMBFS			#SMB/CIFS filesystem
+options 	TMPFS			#Efficient memory filesystem
 options 	UDF			#Universal Disk Format
 options 	UNIONFS			#Union filesystem
 # The xFS_ROOT options REQUIRE the associated ``options xFS''
@@ -1156,6 +1157,9 @@ options 	MAC_PORTACL
 options 	MAC_SEEOTHERUIDS
 options 	MAC_STUB
 options 	MAC_TEST
+
+# Support for Capsicum
+options 	CAPABILITIES
 
 
 #####################################################################
@@ -1752,7 +1756,7 @@ hint.ata.1.irq="15"
 
 options 	ATA_STATIC_ID
 #options 	ATA_REQUEST_TIMEOUT=10
-#options 	ATA_CAM
+options 	ATA_CAM
 
 #
 # Standard floppy disk controllers and floppy tapes, supports
@@ -1897,11 +1901,15 @@ device		xmphy		# XaQti XMAC II
 #	BCM570x family of controllers, including the 3Com 3c996-T,
 #	the Netgear GA302T, the SysKonnect SK-9D21 and SK-9D41, and
 #	the embedded gigE NICs on Dell PowerEdge 2550 servers.
+# bxe:	Broadcom NetXtreme II (BCM57710/57711/57711E) PCIe 10b Ethernet
+#       adapters.
 # bwi:	Broadcom BCM430* and BCM431* family of wireless adapters.
 # bwn:	Broadcom BCM43xx family of wireless adapters.
 # cas:	Sun Cassini/Cassini+ and National Semiconductor DP83065 Saturn
 # cm:	Arcnet SMC COM90c26 / SMC COM90c56
 #	(and SMC COM90c66 in '56 compatibility mode) adapters.
+# cxgbe: Support for PCI express 10Gb/1Gb adapters based on the Chelsio T4
+#       (Terminator 4) ASIC.
 # dc:   Support for PCI fast ethernet adapters based on the DEC/Intel 21143
 #       and various workalikes including:
 #       the ADMtek AL981 Comet and AN985 Centaur, the ASIX Electronics
@@ -1932,6 +1940,8 @@ device		xmphy		# XaQti XMAC II
 # lge:	Support for PCI gigabit ethernet adapters based on the Level 1
 #	LXT1001 NetCellerator chipset. This includes the D-Link DGE-500SX,
 #	SMC TigerCard 1000 (SMC9462SX), and some Addtron cards.
+# malo: Marvell Libertas wireless NICs.
+# mwl:  Marvell 88W8363 802.11n wireless NICs.
 # msk:	Support for gigabit ethernet adapters based on the Marvell/SysKonnect
 #	Yukon II Gigabit controllers, including 88E8021, 88E8022, 88E8061,
 #	88E8062, 88E8035, 88E8036, 88E8038, 88E8050, 88E8052, 88E8053,
@@ -2073,6 +2083,8 @@ device		wb		# Winbond W89C840F
 device		xl		# 3Com 3c90x (``Boomerang'', ``Cyclone'')
 
 # PCI Ethernet NICs.
+device		bxe		# Broadcom BCM57710/BCM57711/BCM57711E 10Gb Ethernet
+device		cxgbe		# Chelsio T4 10GbE PCIe adapter
 device		de		# DEC/Intel DC21x4x (``Tulip'')
 device		em		# Intel Pro/1000 Gigabit Ethernet
 device		igb		# Intel Pro/1000 PCIE Gigabit Ethernet
@@ -2084,6 +2096,7 @@ device		nxge		# Neterion Xframe 10GbE Server/Storage Adapter
 device		ti		# Alteon Networks Tigon I/II gigabit Ethernet
 device		txp		# 3Com 3cR990 (``Typhoon'')
 device		vx		# 3Com 3c590, 3c595 (``Vortex'')
+device		vxge		# Exar/Neterion XFrame 3100 10GbE
 
 # PCI FDDI NICs.
 device		fpa
@@ -2120,6 +2133,8 @@ options	   	AH_RXCFG_SDMAMW_4BYTES
 device		ath_rate_sample	# SampleRate tx rate control for ath
 device		bwi		# Broadcom BCM430* BCM431*
 device		bwn		# Broadcom BCM43xx
+device		malo		# Marvell Libertas wireless NICs.
+device		mwl		# Marvell 88W8363 802.11n wireless NICs.
 device		ral		# Ralink Technology RT2500 wireless NICs.
 
 # Use "private" jumbo buffers allocated exclusively for the ti(4) driver.
@@ -2701,6 +2716,9 @@ device		rue
 # Davicom DM9601E USB to fast ethernet. Supports the Corega FEther USB-TXC.
 device		udav
 #
+# Moschip MCS7730/MCS7840 USB to fast ethernet. Supports the Sitecom LN030.
+device		mos
+#
 # HSxPA devices from Option N.V
 device		uhso
 
@@ -2713,8 +2731,14 @@ device		run
 # Atheros AR5523 wireless driver
 device		uath
 #
+# Conexant/Intersil PrismGT wireless driver
+device		upgt
+#
 # Ralink Technology RT2500USB wireless driver
 device		ural
+#
+# Realtek RTL8187B/L wireless driver
+device		urtw
 #
 # ZyDas ZD1211/ZD1211B wireless driver
 device		zyd

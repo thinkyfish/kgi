@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,10 +53,10 @@ static int vt_dont_switch = 0;	/* XXX should be in vt.c */
  * Kernel input actions.
  */
 
-static void 
+static void
 make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration)
 {
-	
+
 	KGI_DEBUG(5, "make_sound(%p, %i, %i)", f, frequency, duration);
 	sysbeep(frequency, duration);
 }
@@ -66,7 +66,7 @@ make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration)
  * that may have to be done in response to a handled event, but may take
  * a reasonably long time.
  */
-void 
+void
 kii_bottomhalf(void)
 {
 	kii_u_t i;
@@ -82,7 +82,7 @@ kii_bottomhalf(void)
 		if (vt_dont_switch)
 			goto ignore;
 
-		/* 
+		/*
 		 * If the focus has no dev or what we have differs from what
 		 * we want (console vs graphic), then force switch.
 		 */
@@ -90,28 +90,28 @@ kii_bottomhalf(void)
 			goto apply;
 
 		if (!((f->flags & KII_FF_PROCESS_BH) &&
-		      KII_VALID_DEVICE_ID(f->want_console) &&
-		      (f->want_console != f->focus->id)))
+			KII_VALID_DEVICE_ID(f->want_console) &&
+			(f->want_console != f->focus->id)))
 			goto ignore;
 
-	apply:	
+	apply:
 		if (KII_VALID_CONSOLE_ID(f->want_console))
 			dev = f->console_map[f->want_console];
 		else {
-			dev = f->graphic_map[f->want_console 
+			dev = f->graphic_map[f->want_console
 				- KII_MAX_NR_CONSOLES];
-		}	
+		}
 		/*
 		 * Only check for kiidevice not wanting to introduce
 		 * on kgidevice. If the kgi device doesn't exist
 		 * unmap will fail anyway.
 		 */
 		if (kiidevice[dev] == NULL) {
-			/* 
+			/*
 			 * Converted from a KGI_ERROR to KGI_DEBUG
 			 * to avoid verbosity with syscons.
 			 */
-			KGI_DEBUG(13, "Invalid device %i (console %i)", 
+			KGI_DEBUG(13, "Invalid device %i (console %i)",
 				  dev, f->want_console);
 			f->want_console = KII_INVALID_CONSOLE;
 			continue;
@@ -130,8 +130,8 @@ kii_bottomhalf(void)
 			KGI_INTERNAL_ERROR;
 		}
 
-		/* 
-		 * Don't bother about KGI device, allow usage of /dev/event 
+		/*
+		 * Don't bother about KGI device, allow usage of /dev/event
 		 * alone.
 		 */
 		kgi_unmap_device(dev);
@@ -141,8 +141,8 @@ kii_bottomhalf(void)
 			f->want_console = KII_INVALID_CONSOLE;
 		case KII_EAGAIN:
 			KGI_DEBUG(2, "Could not unmap kgi device %i", dev);
-			/* 
-			 * Map at least the input to let a chance to blind 
+			/*
+			 * Map at least the input to let a chance to blind
 			 * commands.
 			 */
 			kii_map_device(f->curr_console);
@@ -165,20 +165,20 @@ kii_bottomhalf(void)
 	}
 }
 
-static void 
+static void
 do_bottomhalf(void)
 {
-	
+
 	/* Wakeup the KGI daemon to process the event. */
 	kgi_wakeup(&kgiproc);
 }
 
-static void 
+static void
 do_special(kii_focus_t *f, kii_event_t *event)
 {
 	u_int curdev;
 
-	if (event->any.type != KII_EV_KEY_PRESS) 
+	if (event->any.type != KII_EV_KEY_PRESS)
 		return;
 
 	KGI_DEBUG(10, "Doing special key sym=%.4x code=%d effect=%d",
@@ -199,7 +199,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	case K_CAPS:
 		f->flags ^= KII_FF_CAPS_SHIFT;
 		return;
-	case K_BOOT:		
+	case K_BOOT:
 		if ((curdev = kgi_current_devid(0)) != -1) {
 			kgi_unmap_device(curdev);
 		}
@@ -229,10 +229,10 @@ do_special(kii_focus_t *f, kii_event_t *event)
 			(KII_VALID_DEVICE_ID(f->graphic_map[search]) &&
 				kiidevice[f->graphic_map[search]]))) {
 
-			if (--search <  0) 
-				search = KII_MAX_NR_CONSOLES - 1;			
+			if (--search <  0)
+				search = KII_MAX_NR_CONSOLES - 1;
 		}
-		if ((search != start) && 
+		if ((search != start) &&
 			!KII_VALID_CONSOLE_ID(f->want_console)) {
 			f->want_console = search;
 			f->flags |= KII_FF_PROCESS_BH;
@@ -248,7 +248,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		} else {
 			KGI_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
 			search = ((start = f->curr_console) <
-				KII_MAX_NR_DEVICES - 1) 
+				KII_MAX_NR_DEVICES - 1)
 				? f->curr_console + 1 : 0;
 		}
 
@@ -258,7 +258,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 			(KII_VALID_DEVICE_ID(f->graphic_map[search]) &&
 				kiidevice[f->graphic_map[search]]))) {
 
-			if (++search >= KII_MAX_NR_CONSOLES) 
+			if (++search >= KII_MAX_NR_CONSOLES)
 				search = 0;
 		}
 
@@ -275,7 +275,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		if (f->focus && ((pid_t) f->focus->spawnpid.priv_u)) {
 
 #ifdef notavail	/* XXX */
-			if (kill_proc(((pid_t) f->focus->spawnpid.priv_u), 
+			if (kill_proc(((pid_t) f->focus->spawnpid.priv_u),
 				f->focus->spawnsig.priv_u, 1)) {
 				f->focus->spawnpid.priv_u = 0;
 			}
@@ -293,8 +293,8 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	case K_SYSTEM_REQUEST:
 
 		f->flags |= KII_FF_SYSTEM_REQUEST;
-		
-		if ((curdev = kgi_current_devid(0)) != -1) 
+
+		if ((curdev = kgi_current_devid(0)) != -1)
 			kgi_unmap_device(curdev);
 
 		kgi_map_device(0);
@@ -316,22 +316,22 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	/* NOT REACHED */
 }
 
-void 
+void
 kii_action(kii_focus_t *f, kii_event_t *event)
 {
 	kii_u_t sym = event->key.sym;
 
-	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
-		return;	
+	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE))
+		return;
 
-	KGI_DEBUG(10, "Key %s, code 0x%.2x, sym %.2x", 
+	KGI_DEBUG(10, "Key %s, code 0x%.2x, sym %.2x",
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
 	switch (event->key.sym & K_TYPE_MASK) {
 	case K_TYPE_SPECIAL:
 		if (sym < K_LAST_SPECIAL)
-			do_special(f, event); 
+			do_special(f, event);
 		return;
 	case K_TYPE_CONSOLE:
 		sym -= K_FIRST_CONSOLE;

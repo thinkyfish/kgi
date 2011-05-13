@@ -48,13 +48,13 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/mutex.h>
 #include <sys/sysproto.h>
 #include <sys/filedesc.h>
 #include <sys/priv.h>
 #include <sys/proc.h>
+#include <sys/racct.h>
 #include <sys/resource.h>
 #include <sys/resourcevar.h>
 #include <sys/vnode.h>
@@ -66,7 +66,6 @@ __FBSDID("$FreeBSD$");
 #include <sys/stat.h>
 #include <sys/sysent.h>
 #include <sys/vmmeter.h>
-#include <sys/sysctl.h>
 
 #include <security/mac/mac_framework.h>
 
@@ -80,7 +79,6 @@ __FBSDID("$FreeBSD$");
 #include <vm/vm_pageout.h>
 #include <vm/vm_extern.h>
 #include <vm/vm_page.h>
-#include <vm/vm_kern.h>
 
 #ifdef HWPMC_HOOKS
 #include <sys/pmckern.h>
@@ -91,30 +89,6 @@ struct sbrk_args {
 	int incr;
 };
 #endif
-
-static int max_proc_mmap;
-SYSCTL_INT(_vm, OID_AUTO, max_proc_mmap, CTLFLAG_RW, &max_proc_mmap, 0,
-    "Maximum number of memory-mapped files per process");
-
-/*
- * Set the maximum number of vm_map_entry structures per process.  Roughly
- * speaking vm_map_entry structures are tiny, so allowing them to eat 1/100
- * of our KVM malloc space still results in generous limits.  We want a
- * default that is good enough to prevent the kernel running out of resources
- * if attacked from compromised user account but generous enough such that
- * multi-threaded processes are not unduly inconvenienced.
- */
-static void vmmapentry_rsrc_init(void *);
-SYSINIT(vmmersrc, SI_SUB_KVM_RSRC, SI_ORDER_FIRST, vmmapentry_rsrc_init,
-    NULL);
-
-static void
-vmmapentry_rsrc_init(dummy)
-        void *dummy;
-{
-    max_proc_mmap = vm_kmem_size / sizeof(struct vm_map_entry);
-    max_proc_mmap /= 100;
-}
 
 static int vm_mmap_vnode(struct thread *, vm_size_t, vm_prot_t, vm_prot_t *,
     int *, struct vnode *, vm_ooffset_t *, vm_object_t *);
@@ -380,18 +354,6 @@ mmap(td, uap)
 		handle_type = OBJT_VNODE;
 	}
 map:
-
-	/*
-	 * Do not allow more then a certain number of vm_map_entry structures
-	 * per process.  Scale with the number of rforks sharing the map
-	 * to make the limit reasonable for threads.
-	 */
-	if (max_proc_mmap &&
-	    vms->vm_map.nentries >= max_proc_mmap * vms->vm_refcnt) {
-		error = ENOMEM;
-		goto done;
-	}
-
 	td->td_fpop = fp;
 	error = vm_mmap(&vms->vm_map, &addr, size, prot, maxprot,
 	    flags, handle_type, handle, pos);
@@ -1033,6 +995,7 @@ mlock(td, uap)
 	struct proc *proc;
 	vm_offset_t addr, end, last, start;
 	vm_size_t npages, size;
+	unsigned long nsize;
 	int error;
 
 	error = priv_check(td, PRIV_VM_MLOCK);
@@ -1050,17 +1013,28 @@ mlock(td, uap)
 		return (ENOMEM);
 	proc = td->td_proc;
 	PROC_LOCK(proc);
-	if (ptoa(npages +
-	    pmap_wired_count(vm_map_pmap(&proc->p_vmspace->vm_map))) >
-	    lim_cur(proc, RLIMIT_MEMLOCK)) {
+	nsize = ptoa(npages +
+	    pmap_wired_count(vm_map_pmap(&proc->p_vmspace->vm_map)));
+	if (nsize > lim_cur(proc, RLIMIT_MEMLOCK)) {
 		PROC_UNLOCK(proc);
 		return (ENOMEM);
 	}
 	PROC_UNLOCK(proc);
 	if (npages + cnt.v_wire_count > vm_page_max_wired)
 		return (EAGAIN);
+	PROC_LOCK(proc);
+	error = racct_set(proc, RACCT_MEMLOCK, nsize);
+	PROC_UNLOCK(proc);
+	if (error != 0)
+		return (ENOMEM);
 	error = vm_map_wire(&proc->p_vmspace->vm_map, start, end,
 	    VM_MAP_WIRE_USER | VM_MAP_WIRE_NOHOLES);
+	if (error != KERN_SUCCESS) {
+		PROC_LOCK(proc);
+		racct_set(proc, RACCT_MEMLOCK,
+		    ptoa(pmap_wired_count(vm_map_pmap(&proc->p_vmspace->vm_map))));
+		PROC_UNLOCK(proc);
+	}
 	return (error == KERN_SUCCESS ? 0 : ENOMEM);
 }
 
@@ -1103,6 +1077,11 @@ mlockall(td, uap)
 	if (error)
 		return (error);
 #endif
+	PROC_LOCK(td->td_proc);
+	error = racct_set(td->td_proc, RACCT_MEMLOCK, map->size);
+	PROC_UNLOCK(td->td_proc);
+	if (error != 0)
+		return (ENOMEM);
 
 	if (uap->how & MCL_FUTURE) {
 		vm_map_lock(map);
@@ -1121,6 +1100,12 @@ mlockall(td, uap)
 		error = vm_map_wire(map, vm_map_min(map), vm_map_max(map),
 		    VM_MAP_WIRE_USER|VM_MAP_WIRE_HOLESOK);
 		error = (error == KERN_SUCCESS ? 0 : EAGAIN);
+	}
+	if (error != KERN_SUCCESS) {
+		PROC_LOCK(td->td_proc);
+		racct_set(td->td_proc, RACCT_MEMLOCK,
+		    ptoa(pmap_wired_count(vm_map_pmap(&td->td_proc->p_vmspace->vm_map))));
+		PROC_UNLOCK(td->td_proc);
 	}
 
 	return (error);
@@ -1156,6 +1141,11 @@ munlockall(td, uap)
 	/* Forcibly unwire all pages. */
 	error = vm_map_unwire(map, vm_map_min(map), vm_map_max(map),
 	    VM_MAP_WIRE_USER|VM_MAP_WIRE_HOLESOK);
+	if (error == KERN_SUCCESS) {
+		PROC_LOCK(td->td_proc);
+		racct_set(td->td_proc, RACCT_MEMLOCK, 0);
+		PROC_UNLOCK(td->td_proc);
+	}
 
 	return (error);
 }
@@ -1190,6 +1180,11 @@ munlock(td, uap)
 		return (EINVAL);
 	error = vm_map_unwire(&td->td_proc->p_vmspace->vm_map, start, end,
 	    VM_MAP_WIRE_USER | VM_MAP_WIRE_NOHOLES);
+	if (error == KERN_SUCCESS) {
+		PROC_LOCK(td->td_proc);
+		racct_sub(td->td_proc, RACCT_MEMLOCK, ptoa(end - start));
+		PROC_UNLOCK(td->td_proc);
+	}
 	return (error == KERN_SUCCESS ? 0 : ENOMEM);
 }
 
@@ -1429,6 +1424,11 @@ vm_mmap(vm_map_t map, vm_offset_t *addr, vm_size_t size, vm_prot_t prot,
 	    lim_cur(td->td_proc, RLIMIT_VMEM)) {
 		PROC_UNLOCK(td->td_proc);
 		return(ENOMEM);
+	}
+	if (racct_set(td->td_proc, RACCT_VMEM,
+	    td->td_proc->p_vmspace->vm_map.size + size)) {
+		PROC_UNLOCK(td->td_proc);
+		return (ENOMEM);
 	}
 	PROC_UNLOCK(td->td_proc);
 

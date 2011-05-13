@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,8 +55,8 @@ __FBSDID("$FreeBSD$");
 #define inb_p(port) inb(port)
 
 /*
- * This a Quick&Dirty(TM) Hack to be able to slowdown the printk 
- * to follow the early kernel boot messages in case there are 
+ * This a Quick&Dirty(TM) Hack to be able to slowdown the printk
+ * to follow the early kernel boot messages in case there are
  * kernel-Ooops's before we have scrollback.
  */
 static kgi_u32_t msg[] = {
@@ -112,7 +112,7 @@ static kgi_u32_t msg[] = {
 	0x55555545, 0x44544544, 0x55444454, 0x44444454, 0x44422424
 };
 
-static kgi_rgb_color_t msg_col[8] = 
+static kgi_rgb_color_t msg_col[8] =
 {
 	{ 0, 0,  0}, { 0, 0, 13}, { 0, 0, 26}, { 0, 0, 38},
 	{ 0, 0, 51}, { 0, 0, 63}, {24, 0, 24}, {63, 63, 0}
@@ -126,7 +126,7 @@ static kgi_rgb_color_t def_col[8] =
 
 static kgi_rgb_color_t curr_col[8] = { };
 
-static void 
+static void
 set_col(void)
 {
 	int i;
@@ -142,7 +142,7 @@ set_col(void)
 		outb_p(curr_col[i].b, 0x3C9);
 	}
 
-	if (inb_p(0x3DA) & 8) 
+	if (inb_p(0x3DA) & 8)
 		while (inb_p(0x3DA) & 8)
 			;
 
@@ -150,7 +150,7 @@ set_col(void)
 		;
 }
 
-static void 
+static void
 show_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 {
 	int line = 0, firstrow = (sizex - 80) / 2, i;
@@ -189,22 +189,22 @@ show_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 			curr_col[reg].b = msg_col[reg].b * i / 100;
 		}
 
-		curr_col[7].r = 
+		curr_col[7].r =
 			(msg_col[7].r - def_col[7].r) * i / 100 + def_col[7].r;
-		curr_col[7].g = 
+		curr_col[7].g =
 			(msg_col[7].g - def_col[7].g) * i / 100 + def_col[7].g;
-		curr_col[7].b = 
+		curr_col[7].b =
 			(msg_col[7].b - def_col[7].b) * i / 100 + def_col[7].b;
 
 		set_col();
 	}
 
 	for (i = 0; i < 100; i++) {
-		curr_col[6].r = 
+		curr_col[6].r =
 			(63 - msg_col[6].r) * i / 100 + msg_col[6].r;
-		curr_col[6].g = 
+		curr_col[6].g =
 			(63 - msg_col[6].g) * i / 100 + msg_col[6].g;
-		curr_col[6].b = 
+		curr_col[6].b =
 			(0 - msg_col[6].b) * i / 100 + msg_col[6].b;
 		set_col();
 	}
@@ -217,7 +217,7 @@ show_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 	}
 }
 
-static void 
+static void
 hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 {
 	int i;
@@ -231,11 +231,11 @@ hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 			curr_col[reg].b = msg_col[reg].b * i / 100;
 		}
 
-		curr_col[7].r = 
+		curr_col[7].r =
 			(msg_col[7].r-def_col[7].r) * i / 100 + def_col[7].r;
-		curr_col[7].g = 
+		curr_col[7].g =
 			(msg_col[7].g-def_col[7].g) * i / 100 + def_col[7].g;
-		curr_col[7].b = 
+		curr_col[7].b =
 			(msg_col[7].b-def_col[7].b) * i / 100 + def_col[7].b;
 
 		set_col();
@@ -248,7 +248,7 @@ hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 		fb++;
 	}
 
-	for (i = 0; i < 8; i++) 
+	for (i = 0; i < 8; i++)
 		curr_col[i] = def_col[i];
 
 	set_col();
@@ -259,17 +259,17 @@ hide_msg(kgi_u16_t *fb, kgi_u_t sizex, kgi_u_t sizey)
 #define ORIG_VIDEO_COLS (adp->va_info.vi_width)
 #define ORIG_VIDEO_LINES (adp->va_info.vi_height)
 
-void 
+void
 kgy_splash(video_adapter_t *adp)
 {
 
 #if (defined(__amd64__) || defined(__i386__)) && defined(KGI_BOOTLOADER_SPLASH)
 
-	show_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
+	show_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS,
 		ORIG_VIDEO_LINES);
 	kgi_udelay(1000000);
 
-	hide_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS, 
+	hide_msg((kgi_u16_t *)adp->va_window, ORIG_VIDEO_COLS,
 		ORIG_VIDEO_LINES);
 
 #endif /* __amd64__ || __i386__ && KGI_BOOTLOADER_SPLASH */

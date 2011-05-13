@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -48,7 +48,7 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/kgy/kgy.h>
 
-/* 
+/*
  * This is the mode_info used for the console,
  * it is statically allocated to avoid malloc at init.
  */
@@ -60,12 +60,13 @@ static video_info_t console_info;
 	img[0].frames, img[0].fam, img[0].bpfa[0], img[0].bpfa[1],	\
 	img[0].bpfa[2], img[0].bpfa[3])
 
-void dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
+void
+dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 	void *dev_mode)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)dpy;
 	video_info_t *next;
-	video_info_t *previous; 
+	video_info_t *previous;
 	kgi_mmio_region_t *fb;
 	kgi_text16_t *text16;
 	int error;
@@ -78,14 +79,14 @@ void dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 
 	/* Set video mode from previously checked mode. */
 	error = (*vidsw[sc->adp->va_index]->set_mode)(sc->adp, next->vi_mode);
-	
+
 	if (error != 0) {
 		KGI_DEBUG(1, "Could not set mode (mode=%d, err=%d).",
 			  next->vi_mode, error);
 		goto error;
 	}
 
-	/* 
+	/*
 	 * Set the framebuffer characteristics accordingly to the new mode set.
 	 */
 	fb = &sc->fb;
@@ -114,7 +115,8 @@ void dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 	return;
 }
 
-void dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
+void
+dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 	void *dev_mode)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)dpy;
@@ -127,14 +129,14 @@ void dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 
 	/* Restore previous mode. */
 	error = (*vidsw[sc->adp->va_index]->set_mode)(sc->adp, next->vi_mode);
-	
+
 	if (error != 0) {
 		KGI_DEBUG(1, "Could not restore mode (mode=%d,err=%d).",
 			 next->vi_mode, error);
 		goto error;
 	}
 
-	/* 
+	/*
 	 * Set the framebuffer characteristics accordingly to the new mode set.
 	 */
 	fb = &sc->fb;
@@ -168,7 +170,7 @@ void dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
  * Use the VESA system to find a video mode that matches the supplied
  * parameters. Any missing parameter will be filled by VESA.
  */
-static int 
+static int
 dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 {
 	int error, flags;
@@ -183,11 +185,11 @@ dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 
 		/* Remove VESA flags. */
 		mode_info->vi_flags &= ~(V_INFO_COLOR | V_INFO_GRAPHICS
-                                        | V_INFO_LINEAR | V_INFO_VESA);
+				| V_INFO_LINEAR | V_INFO_VESA);
 
-		error = (*vidsw[sc->adp->va_index]->query_mode)(sc->adp, 
+		error = (*vidsw[sc->adp->va_index]->query_mode)(sc->adp,
 				mode_info);
-		
+
 		if (error) {
 			KGI_DEBUG(8, "VGA query returned %d.", error);
 			/* Restore flags. */
@@ -207,7 +209,7 @@ dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 
 int
 dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
-	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
+	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode,
 	const kgi_resource_t **r, kgi_u_t rsize)
 {
 #define	DEFAULT(x)	if (! (x)) { x = sc->mode.x; }
@@ -229,9 +231,9 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 	}
 
 	/* For unsupported image flags, bail out. */
-	if (img[0].flags & (KGI_IF_VIRTUAL | KGI_IF_VISIBLE | 
+	if (img[0].flags & (KGI_IF_VIRTUAL | KGI_IF_VISIBLE |
 		KGI_IF_TILE_X | KGI_IF_STEREO)) {
-			KGI_DEBUG(1, "Image flags %.8x not supported.", 
+			KGI_DEBUG(1, "Image flags %.8x not supported.",
 				img[0].flags);
 			return (KGI_ERRNO(CHIPSET, INVAL));
 	}
@@ -252,9 +254,9 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			img[0].fam  = sc->mode.img[0].fam;
 			img[0].cam  = sc->mode.img[0].cam;
 			memcpy(img[0].bpfa, sc->mode.img[0].bpfa,
-			       sizeof(img[0].bpfa));
+				sizeof(img[0].bpfa));
 			memcpy(img[0].bpca, sc->mode.img[0].bpca,
-			       sizeof(img[0].bpca));
+				sizeof(img[0].bpca));
 		}
 		/* Fall through. */
 	case KGI_TC_CHECK:
@@ -266,15 +268,15 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			KGI_DEBUG(2, "Checking a textmode...");
 
 			/* Common attributes are not possible. */
-			if (img[0].cam) {				
+			if (img[0].cam) {
 				KGI_DEBUG(1, "Common attributes %.8x not "
 					"supported.", img[0].cam);
 				return (KGI_ERRNO(CHIPSET, INVAL));
 			}
-			
+
 			bpp = 0;
-		
-			/* 
+
+			/*
 			 * If any of the sizes is null, set default image sizes.
 			 */
 			if ((img[0].size.x == 0 ) || (img[0].size.y == 0)) {
@@ -298,26 +300,26 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			KGI_NOTICE("text16 set up: size %ix%i, virt %ix%i",
 		 		  text16->size.x, text16->size.y,
 				  text16->virt.x, text16->virt.y);
-	
+
 			/* Per image resource. */
 			img[0].resource[0] = (kgi_resource_t *) &sc->text16;
 
 		} else {
 			KGI_DEBUG(2, "Checking a graphics mode...");
-			
+
 			/* Not a textmode. */
 			bpf = kgi_attr_bits(img[0].bpfa);
 			bpc = kgi_attr_bits(img[0].bpca);
 			bpp = (bpc + bpf * img[0].frames);
-			
+
 			KGI_DEBUG(2, "bpf = %i, bpc = %i, bpp = %i",
 				 bpf, bpc, bpp);
-			
-			/* 
-			 * Try VESA linear framebuffered mode first, then VGA 
+
+			/*
+			 * Try VESA linear framebuffered mode first, then VGA
 			 * standard modes.
 			 */
-			mode_info->vi_flags = V_INFO_COLOR | V_INFO_GRAPHICS 
+			mode_info->vi_flags = V_INFO_COLOR | V_INFO_GRAPHICS
 					| V_INFO_LINEAR | V_INFO_VESA;
 
 			/* Check if common attributes are supported. */
@@ -330,7 +332,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			img[0].resource[0] = (kgi_resource_t *) &sc->ilut;
 			img[0].resource[1] = (kgi_resource_t *) &sc->ptr;
 		}
-		
+
 //		if (img[0].fam &(KGI_AM_COLORS | KGI_AM_COLOR_INDEX))
 //			mode_info->vi_flags |= V_INFO_COLOR;
 
@@ -340,7 +342,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			  mode_info->vi_flags);
 
 		mode_info->vi_depth = bpp;
-		
+
 		/* First, try to set the visible size. */
 		mode_info->vi_width = img[0].size.x;
 		mode_info->vi_height = img[0].size.y;
@@ -350,15 +352,16 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			  mode_info->vi_width, mode_info->vi_height,
 			  mode_info->vi_depth);
 
-		if (dpysw_try_mode(sc, mode_info)) {		
+		if (dpysw_try_mode(sc, mode_info)) {
 			/* Try to set the virtual size otherwise. */
 			mode_info->vi_width = img[0].virt.x;
 			mode_info->vi_height = img[0].virt.y;
 
-			KGI_DEBUG(2, "dpysw: Virtual: width = %i, height = %i, "				  "depth = %i ",
+			KGI_DEBUG(2, "dpysw: Virtual: width = %i, height = %i, "
+				"depth = %i ",
 				  mode_info->vi_width, mode_info->vi_height,
 				  mode_info->vi_depth);
-			
+
 			if (dpysw_try_mode(sc, mode_info)) {
 				KGI_DEBUG(5, "Mode failed.");
 				return (KGI_ERRNO(CHIPSET, INVAL));
@@ -373,7 +376,7 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		if ((rsize > 0) && r != NULL)
 			r[0] = (kgi_resource_t *)&sc->fb;
 
-		break;		
+		break;
 	default:
 		KGI_INTERNAL_ERROR;
 		return (KGI_ERRNO(CHIPSET, UNKNOWN));

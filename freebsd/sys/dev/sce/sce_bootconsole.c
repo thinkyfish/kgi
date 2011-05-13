@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -95,9 +95,9 @@ static struct consdev sce_cndev = {
 };
 
 /*
- * This is a printk() implementation based on the scroll->* functions. 
+ * This is a printk() implementation based on the scroll->* functions.
  */
-static void 
+static void
 console_printk(char *b, unsigned count)
 {
 	kgi_console_t *cons;
@@ -106,7 +106,7 @@ console_printk(char *b, unsigned count)
 
 	cons = (kgi_console_t *)&scecons;
 
-	if (printing || cons == NULL) 
+	if (printing || cons == NULL)
 		return;
 
 	printing = 1;
@@ -118,9 +118,9 @@ console_printk(char *b, unsigned count)
 		c = *(b++);
 
 		/* Is it a printable character? */
-		if (c >= 32) {			
+		if (c >= 32) {
 			 /* Have kernel/boot console messages stand out. */
-			attr |= KGI_CA_BOLD;	
+			attr |= KGI_CA_BOLD;
 			SCROLLER_SET(cons->scroller, attr, 0);
 			SCROLLER_UPDATE_ATTR(cons->scroller);
 
@@ -163,22 +163,22 @@ console_printk(char *b, unsigned count)
 		}
 	}
 
-	if (cons->flags & KGI_CF_NEED_WRAP) 
+	if (cons->flags & KGI_CF_NEED_WRAP)
 		SCROLLER_MODIFIED_WRAP(cons->scroller);
-	else 
+	else
 		SCROLLER_MODIFIED_MARK(cons->scroller);
-	
+
 	SCROLLER_SYNC(cons->scroller);
 	printing = 0;
 }
 
-static void 
+static void
 do_reset(kgi_console_t *cons)
 {
 	scroller_t scroll;
-	
-	scroll = (scroller_t)cons->scroller;	
-	cons->kii.event_mask = KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT | 
+
+	scroll = (scroller_t)cons->scroller;
+	cons->kii.event_mask = KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT |
 			KII_EM_POINTER;
 
 	SCROLLER_RESET(scroll);
@@ -190,7 +190,7 @@ do_reset(kgi_console_t *cons)
 	SCROLLER_SYNC(scroll);
 }
 
-static int 
+static int
 event2char(kii_device_t *dev, kii_event_t *ev)
 {
 	kgi_console_t *cons;
@@ -204,7 +204,7 @@ event2char(kii_device_t *dev, kii_event_t *ev)
  		return (-1);
  	}
 #endif
-	
+
 	if (((1 << ev->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_REPEAT)) ||
 		(ev->key.sym == K_VOID)) {
 		return (-1);
@@ -236,7 +236,7 @@ event2char(kii_device_t *dev, kii_event_t *ev)
 	return (-1);
 }
 
-static void 
+static void
 sce_handle_kii_event(kii_device_t *dev, kii_event_t *ev)
 {
 	int discard;
@@ -251,7 +251,7 @@ static void
 sce_cnprobe(struct consdev *cp)
 {
 
-	cp->cn_pri = CN_INTERNAL;	
+	cp->cn_pri = CN_INTERNAL;
 	strcpy(cp->cn_name, "ttyv0");
 }
 
@@ -266,7 +266,7 @@ sce_cninit(struct consdev *cp)
 
 	memset(cons, 0, sizeof(*cons));
 
-	/* 
+	/*
 	 * Use backdoors at early initializations.
 	 */
 	textscroller_configure(cons);
@@ -281,23 +281,23 @@ sce_cninit(struct consdev *cp)
 
 	cons->meta_console = (void *)cp;
 
-	/* 
+	/*
 	 * Init the renderer for the KGI device registered to device 0
 	 */
-	if (RENDER_INIT((render_t)cons->render, 0))   
+	if (RENDER_INIT((render_t)cons->render, 0))
 		panic("Could not init renderer!");
 
-	if (kii_register_device(&(cons->kii), 0))  
+	if (kii_register_device(&(cons->kii), 0))
 		panic("Could not register input!");
 
-	if (SCROLLER_INIT((scroller_t)cons->scroller, sce_buf)) 
+	if (SCROLLER_INIT((scroller_t)cons->scroller, sce_buf))
 		panic("Could not reset scroller state!");
 
 	cons->refcnt++;
 
 	kii_map_device(cons->kii.id);
-	
-	do_reset(cons);	
+
+	do_reset(cons);
 }
 
 /*
@@ -358,11 +358,11 @@ SYSINIT(sce, SI_SUB_KGI, SI_ORDER_ANY, scecn_init, NULL);
 static int
 scecn_mod_event(module_t mod, int type, void *data)
 {
- 
+
  	switch (type) {
  	case MOD_LOAD:
- 		memset(sce_consoles, 0, sizeof(sce_consoles));	
- 		sce_cnprobe(&sce_cndev);	
+ 		memset(sce_consoles, 0, sizeof(sce_consoles));
+ 		sce_cnprobe(&sce_cndev);
  		sce_cninit(&sce_cndev);
  		cnadd(&sce_cndev);
  		break;
@@ -371,7 +371,7 @@ scecn_mod_event(module_t mod, int type, void *data)
  	default:
  		break;
  	}
- 
+
  	return (0);
 }
 

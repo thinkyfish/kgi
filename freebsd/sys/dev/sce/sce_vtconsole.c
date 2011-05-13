@@ -1,7 +1,6 @@
 /*-
  * Copyright (c) 1995-2000 Steffen Seeger
  * Copyright (c) 2003 Nicholas Souchu
- * Copyright (c) 2009 Alastair Hogge
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -9,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,14 +24,14 @@
  /*
   * KGI console driver.
   */
-  
+
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
 #include "opt_kgi.h"
 
-/* 
- * XXX FIXME 
+/*
+ * XXX FIXME
  * I think this FIXME may be referring to the use of compile time terminal
  * emulator selection?
  */
@@ -86,7 +85,6 @@ __FBSDID("$FreeBSD$");
 #include "render_if.h"
 
 static int first_minor_allocated = 0;
-static int scevt_init = SCEVT_COLD;
 sce_console *sce_consoles[CONFIG_KGII_MAX_NR_CONSOLES];
 
 /* Prototypes */
@@ -100,12 +98,12 @@ static inline int sce_ttytounit(struct tty *tp);
 /* TTY */
 static tsw_ioctl_t		sce_tswioctl;
 static tsw_open_t		sce_tswopen;
-static tsw_outwakeup_t	sce_tswoutwakeup;
+static tsw_outwakeup_t		sce_tswoutwakeup;
 
 static struct ttydevsw scevt_ttydevsw = {
 	.tsw_ioctl		= sce_tswioctl,
 	.tsw_open		= sce_tswopen,
-	.tsw_outwakeup	= sce_tswoutwakeup
+	.tsw_outwakeup		= sce_tswoutwakeup
 };
 
 static d_ioctl_t scevt_ioctl;
@@ -122,7 +120,7 @@ static struct cdevsw scevt_devsw = {
  * This should handle assignment of registered terminal emulators later.
  * For now we only enter the neccessary fields for the dumb or xterm parser.
  */
-static void 
+static void
 assign_parser(kgi_console_t *cons, int do_reset)
 {
 
@@ -144,7 +142,7 @@ assign_parser(kgi_console_t *cons, int do_reset)
 #endif
 }
 
-static void 
+static void
 sce_handle_kii_event(kii_device_t *dev, kii_event_t *e)
 {
 
@@ -170,7 +168,7 @@ sce_handle_kii_event(kii_device_t *dev, kii_event_t *e)
  */
 static int
 sce_init(struct tty *tp)
-{	
+{
 	kgi_u_t unit;
 	kgi_console_t *cons;
 	kgi_error_t err;
@@ -195,8 +193,8 @@ sce_init(struct tty *tp)
 		/* If the minor is null, the console was not initialized. */
 		if (unit == 0)
 			first_minor_allocated = 1;
-	}	
-	
+	}
+
 	cons->kii.tty = tp;
 	cons->kii.flags |= KII_DF_CONSOLE;
 	cons->kii.priv.priv_ptr = cons;
@@ -208,7 +206,8 @@ sce_init(struct tty *tp)
 	if (sce_consoles[unit] == NULL) {
 		err = kii_register_device(&(cons->kii), unit);
 		if (err != KII_EOK) {
-			KGI_ERROR("Failed: Could not register input on %d %d", unit, err);
+			KGI_ERROR("Failed: Could not register input on %d %d",
+				unit, err);
 			goto fail_reg_device;
 		}
 
@@ -217,13 +216,14 @@ sce_init(struct tty *tp)
 		 * registered to our display.
 		 */
 		cons->render = kgc_render_alloc(unit, NULL);
-		if (cons->render == NULL) {			
-			KGI_ERROR("Failed: Could not allocate render device %d", unit);
+		if (cons->render == NULL) {
+			KGI_ERROR("Failed: Could not allocate render device %d",
+				unit);
 			goto fail_render_alloc;
 		}
 
 		((render_t) cons->render)->cons = cons;	/* XXX */
-		if (RENDER_INIT((render_t)cons->render, 0)) {			
+		if (RENDER_INIT((render_t)cons->render, 0)) {
 			KGI_ERROR("Failed: Could not initialize renderer!");
 			goto fail_render_init;
 		}
@@ -233,12 +233,13 @@ sce_init(struct tty *tp)
 		 * registered to our display.
 		 */
 		cons->scroller = kgc_scroller_alloc(unit, NULL);
-		if (cons->scroller == NULL) {			
-			KGI_ERROR("Failed: Could not allocate scroller device %d", unit);
+		if (cons->scroller == NULL) {
+			KGI_ERROR("Failed: Could not allocate "
+				  "scroller device %d",	unit);
 			goto fail_scroller_alloc;
 		}
 
-		((render_t)cons->scroller)->cons = cons; /* XXX */		
+		((render_t)cons->scroller)->cons = cons; /* XXX */
 		if (SCROLLER_INIT((scroller_t)cons->scroller, NULL)) {
 			KGI_ERROR("Failed: Could not reset console");
 			goto fail_scroller_init;
@@ -272,8 +273,8 @@ sce_init(struct tty *tp)
 		sce_consoles[unit] = NULL;
 		first_minor_allocated = 0;
 	}
-	
-	return (ENXIO);	
+
+	return (ENXIO);
 }
 
 /*
@@ -283,7 +284,7 @@ static int
 sce_close(int unit)
 {
 	kgi_console_t *cons;
-	
+
 	cons = (kgi_console_t *)sce_consoles[unit];
 
 	unit = sce_ttytounit(cons->kii.tty);
@@ -291,7 +292,7 @@ sce_close(int unit)
 		KGI_ERROR("Bad console %i", unit);
 		return (EINVAL);
 	}
-	
+
 	if (cons && (unit || first_minor_allocated)) {
 		KGI_DEBUG(2, "Freeing console %i", unit);
 
@@ -320,7 +321,7 @@ sce_close(int unit)
 /*
  * Get unit number of TTY device.
  */
-static inline int 
+static inline int
 sce_ttytounit(struct tty *tp)
 {
 
@@ -335,18 +336,18 @@ sce_create_tty(int unit)
 {
 	struct tty *tp;
 	struct sce_ttysoftc *sc; /* Used to store device unit. */
-	
+
 	/* Allocate ttysoftc. */
 	sc = malloc(sizeof(sce_ttysoftc), M_DEVBUF, M_WAITOK);
-	sc->unit = unit;	
-	
+	sc->unit = unit;
+
 	/* Allocate TTY & store device number. */
 	KGI_DEBUG(5, "Allocating TTY %i", unit);
 	tp = tty_alloc(&scevt_ttydevsw, sc);
-	
+
 	/* Create TTY device node. */
 	tty_makedev(tp, NULL, "v%r", unit);
-	
+
 	return (tp);
 }
 
@@ -358,13 +359,13 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 #ifndef SC_NO_SYSMOUSE
 	/* mouse ioctl routines. */
  	error = sce_sysmouse_ioctl(tp, cmd, data, td);
-#endif
  	if (error != ENOIOCTL)
  		return (error);
+#endif
 
 	switch (cmd) {
 		/* Translate from KII to KBD format. */
-	case GIO_KEYMAP: /* Get keyboard translation table. */					 
+	case GIO_KEYMAP: /* Get keyboard translation table. */
 	case PIO_KEYMAP: /* Set keyboard translation table. */
 	case GIO_KEYMAPENT:	/* Get keyboard translation table entry. */
 	case PIO_KEYMAPENT:	/* Set keyboard translation table entry. */
@@ -381,8 +382,8 @@ sce_tswioctl(struct tty *tp, u_long cmd, caddr_t data, struct thread *td)
 	return (ENOIOCTL);
 }
 
-/* 
- * TTY open routine. 
+/*
+ * TTY open routine.
  */
 static int
 sce_tswopen(struct tty *tp)
@@ -391,7 +392,7 @@ sce_tswopen(struct tty *tp)
 	kgi_ucoord_t px, sz;
 	kgi_console_t *cons;
 
-	/* 
+	/*
 	 * Set the window dimensions of the TTY if they're not already set.
 	 */
 	unit = sce_ttytounit(tp);
@@ -404,11 +405,11 @@ sce_tswopen(struct tty *tp)
 		SCROLLER_GET(cons->scroller, &sz, 0, 0, 0, 0, 0, 0);
 		RENDER_GET(cons->render, &px, 0, 0);
 
-		KGI_DEBUG(9, "Terminal dimensions: %ux%u (%urows by %ucolums)", 
+		KGI_DEBUG(9, "Terminal dimensions: %ux%u (%urows by %ucolumns)",
 			  px.x, px.y, sz.x, sz.y);
 
 		tp->t_winsize.ws_col = sz.x;
-		tp->t_winsize.ws_xpixel = px.x;	
+		tp->t_winsize.ws_xpixel = px.x;
 		tp->t_winsize.ws_row = sz.y;
 		tp->t_winsize.ws_ypixel = px.y;
 	}
@@ -419,7 +420,7 @@ sce_tswopen(struct tty *tp)
 /*
  * Receive data from the TTY system and pass it to the KGC terminal layer.
  */
-static void 
+static void
 sce_tswoutwakeup(struct tty *tp)
 {
  	int unit;
@@ -433,17 +434,17 @@ sce_tswoutwakeup(struct tty *tp)
 		return;
 
  	kiidev_sync(&(cons->kii), KII_SYNC_LED_FLAGS);
-	
+
 	KGI_DEBUG(11, "Receiving data from TTY %d", unit);
 
 	for (;;) {
 		/* Fill the buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
-		KGI_DEBUG(11, "%d bytes in TTY %d's buffer.", len, unit);
+		KGI_DEBUG(11, "%d bytes in TTY %z's buffer.", len, unit);
 		if (len == 0)
 			break;
 		cons->DoWrite(cons, buf, len);
-	}	
+	}
 }
 
 static int
@@ -466,32 +467,26 @@ scevt_mod_event(module_t mod, int type, void *data)
 
 	switch (type) {
 	case MOD_LOAD:
-		/* 
-		 * XXX 
+		/*
+		 * XXX
 		 * MAXCONS used here should be auto at kbd plug?
 		 */
-		if (scevt_init == SCEVT_COLD ) {
-			for (unit = 0; unit < MAXCONS; unit++) {
-				tp = sce_create_tty(unit);
-				sce_init(tp);
-			}
-			dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL, 
-					0600, "scevt");
-			scevt_init = SCEVT_WARM;
+		for (unit = 0; unit < MAXCONS; unit++) {
+			tp = sce_create_tty(unit);
+			sce_init(tp);
+		}
+		dev = make_dev(&scevt_devsw, 0, UID_ROOT, GID_WHEEL,
+				0600, "scevt");
 #ifndef SC_NO_SYSMOUSE
 			sce_mouse_init();
 			sce_sysmouse_init();
-#endif	
-		}		
+#endif
 		return (0);
 	case MOD_UNLOAD:
-		if (scevt_init == SCEVT_WARM) {
-			for (unit = 0; unit < MAXCONS; unit++) {
-				err = sce_close(unit);
-				if (err != KGI_EOK)
-					KGI_ERROR("Failed to remove console %d", unit);
-			}
-			scevt_init = SCEVT_COLD;
+		for (unit = 0; unit < MAXCONS; unit++) {
+			err = sce_close(unit);
+			if (err != KGI_EOK)
+				KGI_ERROR("Failed to remove console %d", unit);
 		}
 		return (ENXIO);
 	default:

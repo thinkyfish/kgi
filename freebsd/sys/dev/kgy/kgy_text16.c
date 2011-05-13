@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,7 +49,8 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/kgy/kgy.h>
 
-void dpysw_load_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size,
+void
+dpysw_load_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size,
 		kgi_u_t width, kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
@@ -58,11 +59,12 @@ void dpysw_load_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size,
 	error = (*vidsw[sc->adp->va_index]->load_font)
 		(sc->adp, (int)page, (int)size, (int)width, (u_char *)data,
 		(int)ch, (int)count);
-	
+
 	return;
 }
 
-void dpysw_save_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size, kgi_u_t width,
+void
+dpysw_save_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size, kgi_u_t width,
 		kgi_u8_t *data, kgi_u_t ch, kgi_s_t count)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
@@ -71,11 +73,11 @@ void dpysw_save_font(kgi_text16_t *r, kgi_u_t page, kgi_u_t size, kgi_u_t width,
 	error = (*vidsw[sc->adp->va_index]->save_font)
 		(sc->adp, (int)page, (int)size, (int)width, (u_char *)data,
 		(int)ch, (int)count);
-	
+
 	return;
 }
 
-void 
+void
 dpysw_show_font(kgi_text16_t *r, kgi_u_t page)
 {
 	dpysw_display_t *sc = (dpysw_display_t *)r->meta;
@@ -83,11 +85,11 @@ dpysw_show_font(kgi_text16_t *r, kgi_u_t page)
 
 	error = (*vidsw[sc->adp->va_index]->show_font)
 		(sc->adp, (int)page);
-	
+
 	return;
 }
 
-void 
+void
 dpysw_put_text16(kgi_text16_t *text16, kgi_u_t offset, const kgi_u16_t *text,
 	  kgi_u_t count)
 {
