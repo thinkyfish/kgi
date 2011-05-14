@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -59,7 +59,7 @@ __FBSDID("$FreeBSD$");
 #include "render_if.h"
 
 /* For now don't use background in high or true colour modes. */
-#ifdef KGC_RENDER_16BITS 
+#ifdef KGC_RENDER_16BITS
 #undef KGC_RENDER_BACKGROUND
 #endif
 
@@ -85,13 +85,13 @@ typedef struct {
 
 static int
 gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
-	     int size, int bpp, int bit_ltor, int byte_ltor, unsigned char *bgnd)
+	    int size, int bpp, int bit_ltor, int byte_ltor, unsigned char *bgnd)
 {
 	int i, j, k, num_shifts;
 	kgi_u32_t _p, val, mask[32];
 
 	if (bpp < 1)
-		return(-1);
+		return (-1);
 
 	  /*
 	   * If we don't display bits right-to-left (little-bitian?),
@@ -103,7 +103,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 			_p <<= 1;
 			_p |= (p & 0x00000001);
 		}
-	} else 
+	} else
 		_p = p;
 
 	val = 0;
@@ -152,7 +152,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 			if (_p & 0x00002000) mask[3] |= (0xff << 8);
 			if (_p & 0x00004000) mask[3] |= (0xff << 16);
 			if (_p & 0x00008000) mask[3] |= (0xff << 24);
-		}	
+		}
 		if (size > 2) {
 			mask[4] = 0;
 			if (_p & 0x00010000) mask[4] |= (0xff);
@@ -269,7 +269,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 		*((kgi_u32_t *)(fb) + off + i) = (val & mask[i]) | ((bgnd) ?
 			(*((kgi_u32_t *)(bgnd) + off + i) & ~mask[i]) : 0);
 	}
-	return(0);
+	return (0);
 }
 
 #define PIX2POS(pixel) (pixel & 0xFF)
@@ -277,7 +277,7 @@ gfbrndr_putp(kgi_virt_addr_t fb, kgi_u32_t off, kgi_u32_t p, kgi_u32_t a,
 
 static int
 gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
-	      kgi_u_t offset, kgi_u_t count)
+		kgi_u_t offset, kgi_u_t count)
 {
 	gfbrndr_meta *render;
 	kgi_u32_t poff;
@@ -291,17 +291,17 @@ gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 
 	/* Iterate on the string */
 	for (n = 0; n < count; n++) {
-		/* 
+		/*
 		 * Get the start of the array of pixels rows for this
 		 * character...
 		 */
-		pixel = 
+		pixel =
 		&render->font->data[PIX2POS(text[n]) * render->font->height];
 
 		/* Calculate the new cursor position... */
 		row = (offset + n) / render->width;
 		col = (offset + n) % render->width;
-		
+
 		/* Iterate over all the pixel rows for this character... */
 		for (i = 0; i < render->font->height; i++) {
 			/* Get the address of the character's pixel-row... */
@@ -309,19 +309,19 @@ gfbrndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
 				  render->mode.img[0].size.x) +
 				  (col * render->font->width)) *
 				  (render->depth / 8) / sizeof(kgi_u32_t));
-			
+
 			/* Now display the current pixel row... */
 			gfbrndr_putp(render->fb->win.virt, poff, pixel[i],
 					PIX2ATTR(text[n]), sizeof(kgi_u8_t),
 					render->depth, 1, 0, render->bgnd);
 		}
 	}
-	return(0);
+	return (0);
 }
 
 static void 
 gfbrndr_get(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
-			     kgi_u_t *flags)
+	    kgi_u_t *flags)
 {
 	gfbrndr_meta *render;
 
@@ -346,7 +346,7 @@ gfbrndr_get(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 	}
 }
 
-static void 
+static void
 gfbrndr_set(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 {
 	gfbrndr_meta *render;
@@ -365,7 +365,7 @@ gfbrndr_ctop(render_t r, kgi_isochar_t sym)
 }
 
 #ifdef KGC_RENDER_BACKGROUND
-static void 
+static void
 gfbrndr_bgnd_draw(render_t r)
 {
 	gfbrndr_meta *render;
@@ -373,7 +373,7 @@ gfbrndr_bgnd_draw(render_t r)
 	render = kgc_render_meta(r);
 
 	/* If focused draw/redraw the background */
-	if (render->kgi.flags & KGI_DF_FOCUSED) {		
+	if (render->kgi.flags & KGI_DF_FOCUSED) {
 		/*
 		 * Only update the screen if focused. Avoid palette
 		 * setting but get it in the render.
@@ -381,23 +381,23 @@ gfbrndr_bgnd_draw(render_t r)
 		backgnd_draw(r->devid, render->bgnd, render->palette);
 
 		/*
-		 * XXX 
+		 * XXX
 		 * Force 7 as light gray, consequently your
 		 * image shall not contain any 7 or it will be
 		 * light gray!!
 		 */
 		render->palette[7 * 3] = render->palette[7 * 3 + 1] =
 			render->palette[7 * 3 + 2] = 66 * 0xFF / 100 << 8;
-		
+
 		/* Apply the modified palette */
 		if (render->ilut->Set)
-			render->ilut->Set(render->ilut, 0, 0, 256, KGI_AM_COLORS,
-					  render->palette);
+			render->ilut->Set(render->ilut, 0, 0, 256,
+					  KGI_AM_COLORS, render->palette);
 
 	}
 }
 
-static int 
+static int
 gfbrndr_callback(render_t r, int action, void *arg)
 {
 	gfbrndr_meta *render;
@@ -410,27 +410,27 @@ gfbrndr_callback(render_t r, int action, void *arg)
 	case BACKGND_INIT:
 		/* If no background is allocated for this render, do it. */
 		if (render->bgnd == NULL) {
-			size = 
-			render->mode.img[0].size.x * render->mode.img[0].size.y *
-			((kgi_attr_bits(render->mode.img[0].bpfa) + 1) / 8);
-		
+			size =
+			render->mode.img[0].size.x * render->mode.img[0].size.y
+			* ((kgi_attr_bits(render->mode.img[0].bpfa) + 1) / 8);
+
 			if ((render->bgnd = kgi_kmalloc(size)) == NULL)
 				return (ENOMEM);
-		
+
 			bzero(render->bgnd, size);
 		}
-	
+
 		/* Draw in the allocated background buffer */
 		gfbrndr_bgnd_draw(r);
 
-		/* 
+		/*
 		 * XXX FIXME
 		 * memcpy(render->fb->win.virt, render->bgnd, size);
 		 */
 		break;
 	case BACKGND_TERM:
 		/* XXX Blank the screen? */
-		
+
 		/* Release the background buffer */
 		if (render->bgnd) {
 			kgi_kfree(render->bgnd);
@@ -445,7 +445,7 @@ gfbrndr_callback(render_t r, int action, void *arg)
 }
 #endif
 
-static void 
+static void
 gfbrndr_unmap(render_t r)
 {
 	kgirndr_meta *render;
@@ -454,22 +454,22 @@ gfbrndr_unmap(render_t r)
 	render->flags &= ~KGI_RF_NEEDS_UPDATE;
 }
 
-static void 
+static void
 gfbrndr_map(render_t r)
 {
 	gfbrndr_meta *render;
 
 	render = kgc_render_meta(r);
 	/* Draw/redraw the background */
-#ifdef KGC_RENDER_BACKGROUND	
+#ifdef KGC_RENDER_BACKGROUND
 	gfbrndr_bgnd_draw(r);
 #endif
 
 	/* Tell the scroller to update the screen */
 	render->flags |= KGI_RF_NEEDS_UPDATE;
-}	
+}
 
-static void 
+static void
 gfbrndr_hide_gadgets(render_t r)
 {
 	gfbrndr_meta *render;
@@ -494,8 +494,8 @@ gfbrndr_hide_gadgets(render_t r)
 
 		/* Iterate over the columns of this row */
 		for (j = 0; j < render->font->width; j += render->depth / 8) {
-			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j; 
-			for (k = 0; k < render->depth / 8; k++) 
+			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j;
+			for (k = 0; k < render->depth / 8; k++)
 				addr[k] = *saved++;
 		}
 	}
@@ -503,7 +503,7 @@ gfbrndr_hide_gadgets(render_t r)
 	r->cons->flags &= ~KGI_CF_CURSOR_SHOWN;
 }
 
-static void 
+static void
 gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 {
 	gfbrndr_meta *render;
@@ -517,7 +517,7 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 	    (r->cons->flags & KGI_CF_CURSOR_SHOWN) ||
 	    !(render->kgi.flags & KGI_DF_FOCUSED))
 		return;
-	
+
 	gfbrndr_hide_gadgets(r);
 
 	render->cursor.x = x;
@@ -534,7 +534,7 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 
 		/* Iterate over the columns of this row */
 		for (j = 0; j < render->font->width; j+=render->depth / 8) {
-			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j; 
+			addr = (kgi_u8_t *)(render->fb->win.virt) + poff + j;
 			for (k = 0; k < render->depth / 8; k++) {
 				*save++ = addr[k];
 				addr[k] = 7;
@@ -546,13 +546,13 @@ gfbrndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 }
 
 /*
- * Some common screen display resolutions. 
+ * Some common screen display resolutions.
  */
 const kgi_u16_t modes[][2] =
 {
 
 #ifdef KGC_RENDER_1280x1024
-	{ 1280, 1024 }, 
+	{ 1280, 1024 },
 #endif
 #ifdef KGC_RENDER_1024x768
 	{ 1024, 768 },
@@ -575,7 +575,7 @@ const kgi_u16_t modes[][2] =
 	{ 0, 0 }
 };
 
-static void 
+static void
 gfbrndr_handle_event(kgi_device_t *device, kgi_event_t *event)
 {
 	kgi_console_t *cons;
@@ -586,8 +586,8 @@ gfbrndr_handle_event(kgi_device_t *device, kgi_event_t *event)
 
 	switch (event->notice.command) {
 	case KGI_EVENT_NOTICE_NEW_DISPLAY:
-		/* 
-		 * Redo common initialization, especially concerning KGI 
+		/*
+		 * Redo common initialization, especially concerning KGI
 		 * resources
 		 */
 		kgirndr_init(r);
@@ -622,7 +622,7 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	render->mode.img[0].bpfa[0] = 8;
 	render->mode.img[0].bpfa[1] = 0;
 #endif
-	
+
 	render->kgi.mode = &(render->mode);
 	render->kgi.flags |= KGI_DF_CONSOLE;
 	render->kgi.priv.priv_ptr = kgc_render_cons(r);
@@ -632,9 +632,9 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	render->kgi.HandleEvent = gfbrndr_handle_event;
 
 	for (i = 0; modes[i][0] && modes[i][1]; i++) {
-		render->mode.img[0].size.x = 
+		render->mode.img[0].size.x =
 			render->mode.img[0].virt.x = modes[i][0];
-		render->mode.img[0].size.y = 
+		render->mode.img[0].size.y =
 			render->mode.img[0].virt.y = modes[i][1];
 
 		error = kgi_register_device(&(render->kgi), r->devid);
@@ -671,7 +671,7 @@ gfbrndr_init(render_t r, kgi_u_t devid)
 	return (KGI_EOK);
 }
 
-static void 
+static void
 gfbrndr_done(render_t r)
 {
 	gfbrndr_meta *render;

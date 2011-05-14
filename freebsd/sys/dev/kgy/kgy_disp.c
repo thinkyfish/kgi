@@ -365,16 +365,19 @@ dpysw_configure(int flags)
 	text16->PutText16	= dpysw_put_text16;
 
 	/* Initialize KGI mode from current mode. */
+	KGI_DEBUG(7, "Initializing mode");
 	vi = &sc->adp->va_info;
 	if (vi->vi_flags & V_INFO_GRAPHICS) {
 		switch (vi->vi_mem_model) {
 		case V_INFO_MM_PACKED:
+			KGI_DEBUG(7, "Found packed memory model");
 			mode->img[0].fam = KGI_AM_I;
 			mode->img[0].cam = KGI_AM_COLOR_INDEX;
 			mode->img[0].bpfa[0] = vi->vi_depth;
 			mode->img[0].bpfa[1] = 0;
 			break;
 		case V_INFO_MM_DIRECT:
+			KGI_DEBUG(7, "Found direct memory model");
 			mode->img[0].fam = KGI_AM_RGB;
 			mode->img[0].cam = KGI_AM_COLORS;
 			mode->img[0].bpfa[0] = vi->vi_pixel_fsizes[0];

@@ -168,7 +168,7 @@ dpysw_unset_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 
 /*
  * Use the VESA system to find a video mode that matches the supplied
- * parameters. Any missing parameter will be filled by VESA.
+ * parameters. Any missing parameter will be filled in by VESA.
  */
 static int
 dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
@@ -333,8 +333,8 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			img[0].resource[1] = (kgi_resource_t *) &sc->ptr;
 		}
 
-//		if (img[0].fam &(KGI_AM_COLORS | KGI_AM_COLOR_INDEX))
-//			mode_info->vi_flags |= V_INFO_COLOR;
+		if (img[0].fam &(KGI_AM_COLORS | KGI_AM_COLOR_INDEX))
+			mode_info->vi_flags |= V_INFO_COLOR;
 
 		KGI_DEBUG(2, "dpysw: querying for cwidth = %i, cheight = %i, "
 			  "flags = 0x%x, ",
