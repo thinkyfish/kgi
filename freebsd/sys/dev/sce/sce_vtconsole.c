@@ -440,7 +440,7 @@ sce_tswoutwakeup(struct tty *tp)
 	for (;;) {
 		/* Fill the buffer. */
 		len = ttydisc_getc(tp, buf, sizeof(buf));
-		KGI_DEBUG(11, "%d bytes in TTY %z's buffer.", len, unit);
+		KGI_DEBUG(11, "%z bytes in TTY %d's buffer.", len, unit);
 		if (len == 0)
 			break;
 		cons->DoWrite(cons, buf, len);
