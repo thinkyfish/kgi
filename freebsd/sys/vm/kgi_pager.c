@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -95,10 +95,11 @@ kgi_pager_init(void)
 	mtx_init(&kgi_pager_mtx, "kgi_pager list", NULL, MTX_DEF);
 	fakepg_zone = uma_zcreate("KGIP fakepg", sizeof(struct vm_page),
 				  NULL, NULL, NULL, NULL, UMA_ALIGN_PTR,
-				  UMA_ZONE_NOFREE|UMA_ZONE_VM);
+				  UMA_ZONE_NOFREE | UMA_ZONE_VM);
 	vma_zone = uma_zcreate("KGIP vma", sizeof(struct vm_area_struct),
-			       NULL, NULL, NULL, NULL, UMA_ALIGN_PTR,
-			       UMA_ZONE_NOFREE|UMA_ZONE_VM);
+				NULL, NULL, NULL, NULL, UMA_ALIGN_PTR,
+				UMA_ZONE_NOFREE | UMA_ZONE_VM);
+
 	return;
 }
 
@@ -134,13 +135,12 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 	/* Allocate a new vm area */
 	vma = kgi_pager_vma_allocate(foff, size, prot);
 
-	/* 
+	/*
 	 * Map the area to the resource.
 	 * graph_mmap should check the protection.
+	 * XXX handle error
 	 */
 	err = graph_mmap(dev, vma);
-
-	/* XXX handle error */
 
 	/*
 	 * Lock to prevent object creation race condition.
@@ -169,25 +169,27 @@ kgi_pager_alloc(void *handle, vm_ooffset_t size, vm_prot_t prot,
 	sx_xunlock(&kgi_pager_sx);
 	mtx_unlock(&Giant);
 	dev_relthread(dev, ref);
+
 	return (object);
 }
 
-/* 
+/*
  * The object shall be locked.
  */
 static void
 kgi_pager_dealloc(vm_object_t object)
 {
-	vm_area_t vma = (vm_area_t)object->handle;
+	vm_area_t vma;
 	vm_page_t m;
 
 	mtx_lock(&kgi_pager_mtx);
 	TAILQ_REMOVE(&kgi_pager_object_list, object, pager_object_list);
 	mtx_unlock(&kgi_pager_mtx);
 
-	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) 
-		!= 0) {
-		TAILQ_REMOVE(&vma->vm_object->un_pager.kgip.kgip_pglist, m, 
+	vma = (vm_area_t)object->handle;
+	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) !=
+	    0) {
+		TAILQ_REMOVE(&vma->vm_object->un_pager.kgip.kgip_pglist, m,
 			pageq);
 		kgi_pager_putfake(m);
 	}
@@ -195,8 +197,8 @@ kgi_pager_dealloc(vm_object_t object)
 	kgi_pager_deallocate_vma(vma);
 }
 
-
-/* KGI pager manages its own pages since the swapper is not supposed
+/*
+ * KGI pager manages its own pages since the swapper is not supposed
  * to see them. The pages are listed in their object and also pointed
  * by the buffers that use them in the sublayers of KGI. This why
  * the new allocated page is passed to the nopage hook of KGI.
@@ -236,7 +238,7 @@ kgi_pager_getpages(vm_object_t object, vm_page_t *m, int count, int reqpage)
 	VM_OBJECT_LOCK(object);
 	TAILQ_INSERT_TAIL(&object->un_pager.kgip.kgip_pglist, page, pageq);
 	vm_page_lock_queues();
-	for (i = 0; i < count; i++) 
+	for (i = 0; i < count; i++)
 		vm_page_free(m[i]);
 
 	vm_page_unlock_queues();
@@ -250,6 +252,7 @@ static void
 kgi_pager_putpages(vm_object_t object, vm_page_t *m, int count,
 		   boolean_t sync, int *rtvals)
 {
+
 	panic("kgi_pager_putpage called");
 }
 
@@ -257,23 +260,26 @@ static boolean_t
 kgi_pager_haspage(vm_object_t object, vm_pindex_t pindex,
 		  int *before, int *after)
 {
+
 	if (before != NULL)
 		*before = 0;
+
 	if (after != NULL)
 		*after = 0;
+
 	return (TRUE);
 }
 
 struct pagerops kgipagerops = {
-	.pgo_init 		= kgi_pager_init,
-	.pgo_alloc 		= kgi_pager_alloc,
+	.pgo_init 	= kgi_pager_init,
+	.pgo_alloc 	= kgi_pager_alloc,
 	.pgo_dealloc 	= kgi_pager_dealloc,
 	.pgo_getpages 	= kgi_pager_getpages,
 	.pgo_putpages 	= kgi_pager_putpages,
 	.pgo_haspage 	= kgi_pager_haspage
 };
 
-static vm_area_t 
+static vm_area_t
 kgi_pager_vma_allocate(vm_ooffset_t foff, vm_ooffset_t size, vm_prot_t prot)
 {
 	vm_area_t vma;
@@ -293,7 +299,7 @@ kgi_pager_vma_allocate(vm_ooffset_t foff, vm_ooffset_t size, vm_prot_t prot)
 void
 kgi_pager_remove(vm_area_t vma, vm_page_t m)
 {
-	
+
 	VM_OBJECT_LOCK(vma->vm_object);
 	vm_page_lock_queues();
 
@@ -316,8 +322,8 @@ kgi_pager_remove_all(vm_area_t vma)
 	vm_page_t m;
 	int num = 0;
 
-	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) 
-		!= 0) {
+	while ((m = TAILQ_FIRST(&vma->vm_object->un_pager.kgip.kgip_pglist)) !=
+	    0) {
 		kgi_pager_remove(vma, m);
 		num ++;
 	}
@@ -328,6 +334,7 @@ kgi_pager_remove_all(vm_area_t vma)
 static void
 kgi_pager_deallocate_vma(vm_area_t vma)
 {
+
 	/* Free the vma */
 	uma_zfree(vma_zone, vma);
 }
@@ -339,7 +346,7 @@ kgi_pager_getfake(void)
 
 	m = uma_zalloc(fakepg_zone, M_WAITOK);
 
-	/* 
+	/*
 	 * Compared to the device pager, KGI pages have a PV entry
 	 * thus PG_FICTITIOUS is not used.
 	 */

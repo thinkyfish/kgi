@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ struct graph_mapping_s {
 };
 
 /*
- * A device represents the actual device.
+ * struct representing the actual device.
  */
 struct graph_device_s {
 	kgi_device_t	kgi;
@@ -102,4 +102,4 @@ extern void graph_delete_mapping(graph_mapping_t *map);
 extern void graph_device_map(kgi_device_t *dev);
 extern kgi_s_t graph_device_unmap(kgi_device_t *dev);
 
-#endif	/* _KGI_GRAPHIC_H_ */
+#endif	/* !_KGI_GRAPHIC_H_ */

@@ -182,10 +182,8 @@ dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 	KGI_ASSERT(count == 256);
 
 	/* All colors must change at once. */
-	if ((am & KGI_AM_COLOR1) == 0 ||
-	    (am & KGI_AM_COLOR2) == 0 ||
-	    (am & KGI_AM_COLOR3) == 0 ||
-	    count != 256 || index != 0)
+	if ((am & KGI_AM_COLOR1) == 0 || (am & KGI_AM_COLOR2) == 0 ||
+	    (am & KGI_AM_COLOR3) == 0 || count != 256 || index != 0)
 		return;
 
 	/* XXX stupid convertion. */
@@ -203,8 +201,8 @@ dpysw_set_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
 }
 
 static void
-dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t
-		count, kgi_attribute_mask_t am, const kgi_u16_t *data)
+dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t count,
+		kgi_attribute_mask_t am, const kgi_u16_t *data)
 {
 	int error;
 	dpysw_display_t *sc;
@@ -214,10 +212,8 @@ dpysw_get_ilut(kgi_clut_t *r, kgi_u_t table, kgi_u_t index, kgi_u_t
 	KGI_ASSERT(index == 0);
 
 	/* All colors must change at once. */
-	if ((am & KGI_AM_COLOR1) == 0 ||
-	    (am & KGI_AM_COLOR2) == 0 ||
-	    (am & KGI_AM_COLOR3) == 0 ||
-	    count != 256 || index != 0)
+	if ((am & KGI_AM_COLOR1) == 0 || (am & KGI_AM_COLOR2) == 0 ||
+	    (am & KGI_AM_COLOR3) == 0 || count != 256 || index != 0)
 		return;
 
 
@@ -314,8 +310,8 @@ dpysw_configure(int flags)
 
 	fb->meta 		= dpy;
 	fb->type 		= KGI_RT_MMIO_FRAME_BUFFER;
-	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS
-				  | KGI_PF_DRV_RWS;
+	fb->prot 		= KGI_PF_APP_RWS | KGI_PF_LIB_RWS |
+				  KGI_PF_DRV_RWS;
 	fb->name 		= "Frame buffer";
 	fb->access 		= 8 + 16 + 32 + 64;
 	fb->align 		= 8 + 16;
@@ -382,24 +378,23 @@ dpysw_configure(int flags)
 			mode->img[0].cam = KGI_AM_COLORS;
 			mode->img[0].bpfa[0] = vi->vi_pixel_fsizes[0];
 			mode->img[0].bpfa[1] = vi->vi_pixel_fsizes[1];
-
 			mode->img[0].bpfa[2] = vi->vi_pixel_fsizes[2];
 			mode->img[0].bpfa[3] = 0;
 			break;
-		case V_INFO_MM_PLANAR:		/* XXX reject planar modes. */
+		case V_INFO_MM_PLANAR: /* XXX reject planar modes. */
 		default:
 			return (ENODEV);
 			/* NOT REACHED. */
 		}
 
-		ptr->shapes 	= 1;
-		ptr->size.x 	= 64;
-		ptr->size.y 	= 64;
+		ptr->shapes = 1;
+		ptr->size.x = 64;
+		ptr->size.y = 64;
 
 		/* Per image resource. */
-		mode->resource[0] = (kgi_resource_t *) &sc->fb;
-		mode->resource[1] = (kgi_resource_t *) &sc->ilut;
-		mode->resource[2] = (kgi_resource_t *) &sc->ptr;
+		mode->resource[0] = (kgi_resource_t *)&sc->fb;
+		mode->resource[1] = (kgi_resource_t *)&sc->ilut;
+		mode->resource[2] = (kgi_resource_t *)&sc->ptr;
 
 	} else {
 		if (vi->vi_mem_model != V_INFO_MM_TEXT)
@@ -407,7 +402,6 @@ dpysw_configure(int flags)
 
 		if (vi->vi_flags & V_INFO_COLOR) {
 			mode->img[0].fam = KGI_AM_TEXT;
-
 			mode->img[0].bpfa[0] = 4;	/* BG color. */
 			mode->img[0].bpfa[1] = 4;	/* FG color. */
 			mode->img[0].bpfa[2] = 8;	/* Texture.  */
@@ -416,7 +410,6 @@ dpysw_configure(int flags)
 			/* XXX change mode. */
 		} else {
 			mode->img[0].fam = KGI_AM_TEXT | KGI_AM_BLINK;
-
 			mode->img[0].bpfa[0] = 3;	/* Index.    */
 			mode->img[0].bpfa[1] = 4;	/* FG color. */
 			mode->img[0].bpfa[2] = 8;	/* Texture.  */
@@ -436,8 +429,8 @@ dpysw_configure(int flags)
 		text16->font.y		= vi->vi_cheight;
 
 		/* Per image resource. */
-		mode->resource[0] = (kgi_resource_t *) &sc->fb;
-		mode->resource[1] = (kgi_resource_t *) &sc->text16;
+		mode->resource[0] = (kgi_resource_t *)&sc->fb;
+		mode->resource[1] = (kgi_resource_t *)&sc->text16;
 	}
 
 	if (kgi_register_display(dpy, 0)) {

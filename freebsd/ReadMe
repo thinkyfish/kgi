@@ -1,38 +1,32 @@
 About:
- * This release is intended for FreeBSD-9 CURRENT on amd64 & i386 platforms
-   utilizing FreeBSD's VGA/VESA system. 
+	* FreeBSD referance implentation for KGI.
  
 Prerequisites:
- * Knowledge of using svn(or cvs/csup) to checkout a FreeBSD source tree.
- * Kernel configuration.
- * Building and installing FreeBSD custom kernels.
- * VESA must be >= 2.0, load vesa.ko and execute  "vidcontrol -i mode" to get a
-   list of supported modes.
+	* Knowledge of checking out a FreeBSD source tree.
+	* Kernel configuration, building & installation.
+	* VESA must be >= 2.0:
  
 Installation:
- * Copy this KGI checkout over a working copy of your FreeBSD src tree.
- * You can use the included KGI kernel config for building a KGI kernel.
-   The included KGI kernel config disables & enables some FreeBSD devices &
-   options. Read sys/{amd64|i386}/conf/KGI for more information.
- * Recommend using INSTKERNNAME=kernel.KGI or similar when installing kernel to
-   avoid clobbering a working system.
+	* Copy this KGI checkout over a working copy of your FreeBSD src tree.
+	  $ cp -R $kgi_checkout $freebsd_checkout
+	* Review sys/{amd64|i386}/conf/KGI for kernel options.
 
 Status:
- * No support for text mode 16.
- * No support for anything other then VGA/VESA. 
+	* Platforms: amd64 & i386
+	* Graphics console making use of FreeBSD VGA/VESA system.
 
 GGI:
- * Setup headers:
-	# ln -s /usr/src/sys/dev/kii /usr/include/dev
-	# ln -s /usr/src/sys/dev/kgi /usr/include/dev
- * Build GGI with ./configure --enable-kii --enable-kgi --disable-accel
-   --with-extra-includes=/usr/include/dev
- * Setup environment:
-   $ export GGI_DEBUG=4
-   $ export GGI_DEFMODE=S800x600V800x600F1[C16]
-   $ export GGI_DISPLAY=kgi:-device=/dev/graphic:-no3d:
-   $ export GII_INPUT=kii:
+	* Setup headers:
+	  # ln -s /usr/src/sys/dev/kii /usr/include/dev
+	  # ln -s /usr/src/sys/dev/kgi /usr/include/dev
+	* Build GGI with ./configure --enable-kii --enable-kgi --disable-accel
+	  --with-extra-includes=/usr/include/dev
+	* Setup environment:
+	  $ export GGI_DEBUG=4
+	  $ export GGI_DEFMODE=S800x600V800x600F1[C16]
+	  $ export GGI_DISPLAY=kgi:-device=/dev/graphic:-no3d:
+	  $ export GII_INPUT=kii:
 
 Contact:
- * http://lists.sourceforge.net/lists/listinfo/kgi-develop
- * #ggi@irc.freenode.net
+	* http://lists.sourceforge.net/lists/listinfo/kgi-develop
+	* #ggi@irc.freenode.net

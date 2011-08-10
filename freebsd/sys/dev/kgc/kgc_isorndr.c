@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -77,10 +77,10 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 	if (row == 0xF0) /* Display directly. */
 		return (cell);
 
-	if ((sym & 0xFFFF0000) || cellinfo == NULL) 
+	if ((sym & 0xFFFF0000) || cellinfo == NULL)
 		return (font->info->default_pos);
 
-	if (test_bit(row, font->info->map_direct)) 
+	if (test_bit(row, font->info->map_direct))
 		return (((kgi_u8_t *) cellinfo) [cell]);
 
 	if (sym > cellinfo->sym)
@@ -89,28 +89,29 @@ isorndr_ctop(render_t r, kgi_isochar_t sym)
 	h = cellinfo->pos;
 	cellinfo++;
 
-	if (sym < cellinfo->sym) 
+	if (sym < cellinfo->sym)
 		return (font->info->default_pos);
 
 	if (cellinfo->sym == sym)
 		return (cellinfo->pos);
 
-	do { /* Search matching cell. */
-		if (cellinfo[h].sym == sym) 
+	/* Search matching cell. */
+	do {
+		if (cellinfo[h].sym == sym)
 			return (cellinfo[h].pos);
 
 		m = (--h + l) >> 1;
 
-		if (sym > cellinfo[m].sym) 
+		if (sym > cellinfo[m].sym)
 			l = m;
-		else  
+		else
 			h = m;
-	} while (l < h); 
+	} while (l < h);
 
 	return (font->info->default_pos); /* No position defined. */
 }
 
-static kgi_isochar_t 
+static kgi_isochar_t
 isorndr_ptoc(render_t r, kgi_u_t pos)
 {
 	isorndr_meta *isorndr;
@@ -119,24 +120,25 @@ isorndr_ptoc(render_t r, kgi_u_t pos)
 	isorndr = kgc_render_meta(r);
 	font = isorndr->font;
 
-	return (font->info->inversemap[(pos < font->info->positions) ? pos : 0]);
+	return (font->info->inversemap[(pos < font->info->positions)
+		? pos : 0]);
 }
 
-static void 
+static void
 isorndr_putcs(render_t r, kgc_textbuf_t *tb, kgi_u_t start,
-			  kgi_u_t offset, kgi_u_t count)
+		kgi_u_t offset, kgi_u_t count)
 {
 	isorndr_meta *render;
 
 	render = kgc_render_meta(r);
 
 	if (render->text16) {
-		(render->text16->PutText16)(render->text16, offset, 
-				tb->buf + start, count);
+		(render->text16->PutText16)(render->text16, offset,
+			tb->buf + start, count);
 	}
 }
 
-static void 
+static void
 isorndr_get_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 {
 	isorndr_meta *render;
@@ -149,7 +151,7 @@ isorndr_get_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt)
 	virt->y = render->text16->size.y;
 }
 
-static void 
+static void
 isorndr_set_sizes(render_t r, kgi_ucoord_t *size, kgi_ucoord_t *virt,
 		  kgi_u8_t depth)
 {
@@ -170,14 +172,15 @@ isorndr_default_font(render_t r)
 {
 	isorndr_meta *render;
 	kgi_u_t i;
- 
+
 	render = kgc_render_meta(r);
 
 	KGI_DEBUG(3, "searching font for height %i", render->text16->font.y);
-	for (i = 0; default_font[i] && 
-		(default_font[i]->size.y > render->text16->font.y); i++) 
+	for (i = 0; default_font[i] &&
+		(default_font[i]->size.y > render->text16->font.y); i++)
 		;
 	KGI_DEBUG(3, "found font %i (%p)", i, default_font[i]);
+
 	return (default_font[i]);
 }
 
@@ -189,7 +192,7 @@ isorndr_init(render_t r)
 	render = kgc_render_meta(r);
 	/* Common initialization, especially concerning resources */
 	kgirndr_init(r);
-	
+
 	render->font = isorndr_default_font(r);
 
 	return (KGI_EOK);

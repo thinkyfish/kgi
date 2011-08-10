@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,21 +58,20 @@ struct render {
  * At the declaration, propose the backdoor for early initialization,
  * when malloc is not yet ready.
  */
-#define DECLARE_RENDER(name,driver,meta_type)					\
-	static meta_type console_meta;						\
-	static struct render console_render;					\
-	static struct kobj_ops render_ops;					\
-	void name##_configure(kgi_console_t *cons)				\
-	{									\
-		kobj_class_compile_static((kobj_class_t)&driver, &render_ops);	\
-		kobj_init((kobj_t)&console_render, (kobj_class_t)&driver);	\
-		console_render.meta = &console_meta;				\
-		console_render.cons = cons;					\
-		if (cons)							\
-			cons->render = &console_render;				\
-		kgc_render_register(&driver, 0, 1);				\
-		kgc_render_register(&driver, 2, 1);				\
-		kgc_render_alloc(0, &console_render);				\
+#define DECLARE_RENDER(name,driver,meta_type)				       \
+	static meta_type console_meta;					       \
+	static struct render console_render;				       \
+	static struct kobj_ops render_ops;				       \
+	void name##_configure(kgi_console_t *cons) {			       \
+		kobj_class_compile_static((kobj_class_t)&driver, &render_ops); \
+		kobj_init((kobj_t)&console_render, (kobj_class_t)&driver);     \
+		console_render.meta = &console_meta;			       \
+		console_render.cons = cons;				       \
+		if (cons)						       \
+			cons->render = &console_render;			       \
+		kgc_render_register(&driver, 0, 1);			       \
+		kgc_render_register(&driver, 2, 1);			       \
+		kgc_render_alloc(0, &console_render);			       \
 	}
 
 /* Register the render from first to last consoles. */
@@ -81,7 +80,7 @@ extern render_t kgc_get_render(kgi_u_t devid);
 extern render_t kgc_render_alloc(kgi_u_t devid, render_t r);
 extern void kgc_render_release(kgi_u_t devid);
 extern kgi_error_t kgc_render_register(render_driver_t *render, kgi_u_t display,
-				       kgi_u8_t already_allocated);
+					kgi_u8_t already_allocated);
 extern kgi_error_t kgc_render_unregister(render_driver_t *driver);
 extern void *kgc_render_meta(render_t r);
 extern kgi_console_t *kgc_render_cons(render_t r);

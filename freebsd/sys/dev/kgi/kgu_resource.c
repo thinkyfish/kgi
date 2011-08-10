@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/kgi/graphic.h>
 
-int 
+int
 graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 {
 	const kgic_resource_request_t *in = data;
@@ -49,15 +49,15 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		kgi_text16_t		text16;
 	} *r;
 
-	if (!(file->flags & GRAPH_FF_CLIENT_IDENTIFIED)) {
+	if ((file->flags & GRAPH_FF_CLIENT_IDENTIFIED) == 0) {
 		KGI_ERROR("cmd = %.8x, but client has not yet identified", cmd);
 		return (KGI_EPROTO);
 	}
 
 	/* check that the resource id is ok */
-	if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE)?
-		__KGI_MAX_NR_IMAGE_RESOURCES:
-		__KGI_MAX_NR_RESOURCES) <= in->resource) {
+	if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE) ?
+	    __KGI_MAX_NR_IMAGE_RESOURCES :
+	    __KGI_MAX_NR_RESOURCES) <= in->resource) {
 		KGI_ERROR("invalid resource ID");
 		return (KGI_EINVAL);
 	}
@@ -73,10 +73,11 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	/* get the mode resource or image resource */
 	r = (in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE) ?
 	    (void*)file->device->kgi.mode->resource[in->resource] :
-	    (void*)file->device->kgi.mode->img[in->image].resource[in->resource];
+	    (void*)file->device->kgi.mode->img[in->image].
+		resource[in->resource];
 
 	if (r == NULL) {
-		KGI_ERROR("no %s resource %d", 
+		KGI_ERROR("no %s resource %d",
 			in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE ?
 			"mode" : "image", in->resource);
 		return (KGI_EINVAL);
@@ -85,16 +86,16 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	switch(cmd) {
 	case KGIC_RESOURCE_CLUT_GET_INFO: {
 		kgic_clut_get_info_result_t *out = data;
-		
+
 		if ((r->common.type != KGI_RT_ILUT_CONTROL) &&
 			(r->common.type != KGI_RT_ALUT_CONTROL))
 			return (KGI_EINVAL);
-		
+
 		out->tables = r->clut.tables;
 		out->entries = r->clut.entries;
-				
+
 		return (KGI_EOK);
-	}	
+	}
 	case KGIC_RESOURCE_CLUT_SELECT: {
 		kgic_clut_select_request_t *in = data;
 
@@ -103,25 +104,25 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return KGI_EINVAL;
 
 		if (r->clut.Select) {
-			(r->clut.Select)(&r->clut, in->lut);		
+			(r->clut.Select)(&r->clut, in->lut);
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
 	}
 	case KGIC_RESOURCE_CLUT_SET: {
 		kgic_clut_set_request_t *in = data;
-		
+
 		if ((r->common.type != KGI_RT_ILUT_CONTROL) &&
 			(r->common.type != KGI_RT_ALUT_CONTROL))
 			return (KGI_EINVAL);
-		
+
 		if (r->clut.Set) {
 			kgi_u_t attrs;
 			kgi_attribute_mask_t tam;
 
 			if (in->idx >= r->clut.entries)
 				return (KGI_EINVAL);
-				
+
 			/* clamp the count */
 			if (in->cnt + in->idx > r->clut.entries)
 				in->cnt -= in->cnt + in->idx - r->clut.entries;
@@ -129,16 +130,16 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			/* count the number of attrs passed in for each entry */
 			for (attrs = 0, tam = in->am; tam; tam >>= 1)
 				attrs += (tam & 1) ? 1 : 0;
-			
+
 			if (attrs == 0)
 				return (KGI_EOK);
-				
-			(r->clut.Set)(&r->clut, in->lut, in->idx, in->cnt, 
+
+			(r->clut.Set)(&r->clut, in->lut, in->idx, in->cnt,
 				in->am, (kgi_u16_t*)in->data);
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}	
+	}
 	case KGIC_RESOURCE_TLUT_SELECT: {
 		kgic_tlut_select_request_t *in = data;
 
@@ -163,7 +164,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}	
+	}
 	case KGIC_RESOURCE_MARKER_SET_MODE:
 	{
 		kgic_marker_set_mode_request_t *in = data;
@@ -177,7 +178,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}	
+	}
 	case KGIC_RESOURCE_MARKER_SELECT:
 	{
 		kgic_marker_select_request_t *in = data;
@@ -194,16 +195,16 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 	}
 	case KGIC_RESOURCE_MARKER_SET_SHAPE:
 	{
-	  /* kgic_marker_set_shape_request_t *in = data; */
+		/* kgic_marker_set_shape_request_t *in = data; */
 		if ((r->common.type != KGI_RT_CURSOR_CONTROL) &&
 		    (r->common.type != KGI_RT_POINTER_CONTROL))
 			return (KGI_EINVAL);
-		
-/*		if (r->marker.SetShape) {
-		
-			COPY_DATA(in->data, 
+#if 0
+		if (r->marker.SetShape) {
+			COPY_DATA(in->data,
 			io_result = (r->marker.SetShape)(&r->marker, in->shape,
-				in->hot_x, in->hot_y, data, */
+				in->hot_x, in->hot_y, data,
+#endif
 		return (KGI_EINVAL);
 	}
 	case KGIC_RESOURCE_MARKER_SHOW:
@@ -219,7 +220,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}	
+	}
 	case KGIC_RESOURCE_MARKER_HIDE:
 	{
 		if ((r->common.type != KGI_RT_CURSOR_CONTROL) &&
@@ -231,7 +232,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}	
+	}
 	case KGIC_RESOURCE_MARKER_UNDO:
 	{
 		if ((r->common.type != KGI_RT_CURSOR_CONTROL) &&
@@ -243,7 +244,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return (KGI_EOK);
 		}
 		return (KGI_EINVAL);
-	}		
+	}
 	/* this should probably be moved to KGI_MAPPER_RESOURCE_INFO */
 	case KGIC_RESOURCE_MARKER_INFO:
 	{
@@ -256,7 +257,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		out->modes  = r->marker.modes;
 		out->shapes = r->marker.shapes;
 		out->size   = r->marker.size;
-		
+
 		return (KGI_EOK);
 	}
 
@@ -269,15 +270,14 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 			return KGI_EINVAL;
 
 		if (r->text16.PutText16) {
-
-			(r->text16.PutText16)(&r->text16, in->offset, 
+			(r->text16.PutText16)(&r->text16, in->offset,
 				(kgi_u16_t*)in->data, in->cnt);
-			return KGI_EOK;
+			return (KGI_EOK);
 		}
-		return KGI_EINVAL;
-	}		
+		return (KGI_EINVAL);
+	}
 #endif
-/* this should probably be moved to KGI_MAPPER_RESOURCE_INFO */
+	/* this should probably be moved to KGI_MAPPER_RESOURCE_INFO */
 	case KGIC_RESOURCE_TEXT16_INFO:
 	{
 		kgic_text16_info_result_t *out = data;
@@ -289,7 +289,7 @@ graph_resource_command(graph_file_t *file, unsigned int cmd, void *data)
 		out->virt = r->text16.virt;
 		out->cell = r->text16.cell;
 		out->font = r->text16.font;
-			
+
 		return (KGI_EOK);
 	}
 	default:

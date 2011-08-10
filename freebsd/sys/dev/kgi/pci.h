@@ -5,8 +5,8 @@
  * Copyright 1994, Drew Eckhardt
  * Copyright 1997, Martin Mares <mj@atrey.karlin.mff.cuni.cz>
  *
- * For more information, please consult 
- * 
+ * For more information, please consult
+ *
  * PCI BIOS Specification Revision
  * PCI Local Bus Specification
  * PCI System Design Guide
@@ -15,15 +15,15 @@
  * M/S HF3-15A
  * 5200 N.E. Elam Young Parkway
  * Hillsboro, Oregon 97124-6497
- * +1 (503) 696-2000 
+ * +1 (503) 696-2000
  * +1 (800) 433-5177
- * 
- * Manuals are $25 each or $50 for all three, plus $7 shipping 
+ *
+ * Manuals are $25 each or $50 for all three, plus $7 shipping
  * within the United States, $35 abroad.
  */
 
-#ifndef _KGI_PCI_PCI_H_
-#define _KGI_PCI_PCI_H_
+#ifndef _KGI_PCI_H_
+#define _KGI_PCI_H_
 
 #define PCI_ANY_ID (~0)
 
@@ -52,7 +52,7 @@
 #define  PCI_STATUS_FAST_BACK	0x80	/* Accept fast-back to back */
 #define  PCI_STATUS_PARITY	0x100	/* Detected parity error */
 #define  PCI_STATUS_DEVSEL_MASK	0x600	/* DEVSEL timing */
-#define  PCI_STATUS_DEVSEL_FAST	0x000	
+#define  PCI_STATUS_DEVSEL_FAST	0x000
 #define  PCI_STATUS_DEVSEL_MEDIUM 0x200
 #define  PCI_STATUS_DEVSEL_SLOW 0x400
 #define  PCI_STATUS_SIG_TARGET_ABORT 0x800 /* Set on target abort */
@@ -979,4 +979,4 @@
 #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
 #define PCI_FUNC(devfn)		((devfn) & 0x07)
 
-#endif /* _KGI_PCI_PCI_H_ */
+#endif /* !_KGI_PCI_H_ */

@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,68 +27,71 @@
 #define KGI_SYS_NEED_IO
 #include <dev/kgi/x86-compiler.h>
 
-__inline __kgi_u8_t 
-io_in8(const io_vaddr_t addr) 
+__inline __kgi_u8_t
+io_in8(const io_vaddr_t addr)
 {
 	__kgi_u8_t  val;
 	__asm__ __volatile__ ("inb %w1,%0" : "=a" (val) : "Nd" (addr));
+
 	return (val);
 }
 
-__inline __kgi_u16_t 
+__inline __kgi_u16_t
 io_in16(const io_vaddr_t addr)
 {
 	__kgi_u16_t val;
 	__asm__ __volatile__ ("inw %w1,%0" : "=a" (val) : "Nd" (addr));
+
 	return (val);
 }
 
-__inline __kgi_u32_t 
+__inline __kgi_u32_t
 io_in32(const io_vaddr_t addr)
 {
 	__kgi_u32_t val;
 	__asm__ __volatile__ ("inl %w1,%0" : "=a" (val) : "Nd" (addr));
+
 	return (val);
 }
 
-__inline void 
+__inline void
 io_out8(const __kgi_u8_t val, const io_vaddr_t addr)
 {
 
 	__asm__ __volatile__ ("outb %b0,%w1" : : "a" (val), "Nd" (addr));
 }
 
-__inline void 
+__inline void
 io_out16(const __kgi_u16_t val, const io_vaddr_t addr)
 {
 
 	__asm__ __volatile__ ("outw %w0,%w1" : : "a" (val), "Nd" (addr));
 }
 
-__inline void 
+__inline void
 io_out32(const __kgi_u32_t val, io_vaddr_t addr)
 {
 
 	__asm__ __volatile__ ("outl %0,%w1" : : "a" (val), "Nd" (addr));
 }
 
-__inline void 
+__inline void
 io_ins8(const io_vaddr_t addr, void *buf, __kgi_size_t cnt)
 {
 
-	__asm__ __volatile__ ("cld ; rep ; insb" 
+	__asm__ __volatile__ ("cld ; rep ; insb"
 		: "=D" (buf), "=c" (cnt) : "d" (addr), "0" (buf), "1" (cnt));
 }
 
-__inline void 
+__inline void
 io_ins16(const io_vaddr_t addr, void *buf, __kgi_size_t cnt)
 {
 
-	__asm__ __volatile__ ("cld ; rep ; insw" 
+	__asm__ __volatile__ ("cld ; rep ; insw"
 		: "=D" (buf), "=c" (cnt) : "d" (addr), "0" (buf), "1" (cnt));
 }
 
-__inline void 
+__inline void
 io_ins32(const io_vaddr_t addr, void *buf, __kgi_size_t cnt)
 {
 
@@ -96,7 +99,7 @@ io_ins32(const io_vaddr_t addr, void *buf, __kgi_size_t cnt)
 		: "=D" (buf), "=c" (cnt) : "d" (addr), "0" (buf), "1" (cnt));
 }
 
-__inline void 
+__inline void
 io_outs8(const io_vaddr_t addr, const void *buf, __kgi_size_t cnt)
 {
 
@@ -104,7 +107,7 @@ io_outs8(const io_vaddr_t addr, const void *buf, __kgi_size_t cnt)
 		: "=S" (buf), "=c" (cnt) : "d" (addr), "0" (buf), "1" (cnt));
 }
 
-__inline void 
+__inline void
 io_outs16(const io_vaddr_t addr, const void *buf, __kgi_size_t cnt)
 {
 
@@ -112,7 +115,7 @@ io_outs16(const io_vaddr_t addr, const void *buf, __kgi_size_t cnt)
 		: "=S" (buf), "=c" (cnt) : "d" (addr), "0" (buf), "1" (cnt));
 }
 
-__inline void 
+__inline void
 io_outs32(const io_vaddr_t addr, const void *buf, __kgi_size_t cnt)
 {
 

@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -62,14 +62,14 @@ static dpy_null_display_t dpy_data[CONFIG_KGI_DISPLAYS];
 static int dpy_index = 0;
 
 /* text16 operations */
-static void 
+static void
 dpy_null_show(kgi_marker_t *marker, kgi_u_t x, kgi_u_t y)
 {
 
 	KGI_ASSERT(marker);
 }
 
-static void 
+static void
 dpy_null_hide(kgi_marker_t *marker)
 {
 
@@ -78,13 +78,13 @@ dpy_null_hide(kgi_marker_t *marker)
 
 #define	dpy_null_undo	dpy_null_hide
 
-static void dpy_null_put_text16(kgi_text16_t *text16,
-	kgi_u_t offset, const kgi_u16_t *text, kgi_u_t count)
+static void
+dpy_null_put_text16(kgi_text16_t *text16, kgi_u_t offset, const kgi_u16_t *text,
+	kgi_u_t count)
 {
-
 }
 
-static void 
+static void
 dpy_null_inc_refcount(kgi_display_t *dpy)
 {
 
@@ -92,7 +92,7 @@ dpy_null_inc_refcount(kgi_display_t *dpy)
 	KGI_DEBUG(2, "dpy_null display refcount increment.");
 }
 
-static void 
+static void
 dpy_null_dec_refcount(kgi_display_t *dpy)
 {
 
@@ -100,14 +100,16 @@ dpy_null_dec_refcount(kgi_display_t *dpy)
 	KGI_DEBUG(2, "dpy_null display refcount decrement.");
 }
 
-static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
-	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
-	const kgi_resource_t **r, kgi_u_t rsize)
+static int
+dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
+		    kgi_image_mode_t *img, kgi_u_t images, void *dev_mode,
+		    const kgi_resource_t **r, kgi_u_t rsize)
 {
-#define	DEFAULT(x)	if (! (x)) { x = dpy_null->mode.x; }
+
+#define	DEFAULT(x)	if (!(x)) { x = dpy_null->mode.x; }
 #define	MATCH(x)	((x) == dpy_null->mode.x)
-	dpy_null_display_t *dpy_null = (dpy_null_display_t *) dpy;
-	dpy_null_mode_t *devmode = (dpy_null_mode_t *) dev_mode;
+	dpy_null_display_t *dpy_null;
+	dpy_null_mode_t *devmode;
 
 	if (images != 1) {
 		KGI_DEBUG(2, "%i image layers are not supported.", images);
@@ -124,7 +126,8 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		DEFAULT(img[0].tluts);
 		DEFAULT(img[0].iluts);
 		DEFAULT(img[0].aluts);
-		if (!img[0].fam) {
+		dpy_null = (dpy_null_display_t *)dpy;
+		if (img[0].fam == 0) {
 			img[0].fam  = dpy_null->mode.img[0].fam;
 			img[0].cam  = dpy_null->mode.img[0].cam;
 			memcpy(img[0].bpfa, dpy_null->mode.img[0].bpfa,
@@ -134,14 +137,14 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 		}
 		/* fall through */
 	case KGI_TC_CHECK:
-		if (!(MATCH(img[0].virt.x) && MATCH(img[0].virt.y) &&
+		if ((MATCH(img[0].virt.x) && MATCH(img[0].virt.y) &&
 			MATCH(img[0].size.x) && MATCH(img[0].size.y) &&
 			MATCH(img[0].frames) && MATCH(img[0].tluts) &&
-			MATCH(img[0].iluts) && MATCH(img[0].aluts))) {
+			MATCH(img[0].iluts) && MATCH(img[0].aluts)) == 0) {
 			KGI_DEBUG(2, "image mode does not match boot mode.");
 			return (-EINVAL);
 		}
-		if (!MATCH(img[0].fam) || !MATCH(img[0].cam) ||
+		if (MATCH(img[0].fam) == 0 || MATCH(img[0].cam) == 0 ||
 			strncmp(img[0].bpfa, dpy_null->mode.img[0].bpfa,
 				__KGI_MAX_NR_ATTRIBUTES) ||
 			strncmp(img[0].bpca, dpy_null->mode.img[0].bpca,
@@ -149,7 +152,7 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			KGI_DEBUG(2, "attributes do not match boot mode.");
 			return (-EINVAL);
 		}
-
+		devmode = (dpy_null_mode_t *)dev_mode;
 		devmode->dpm.dots.x = 8 * img[0].size.x;
 		devmode->dpm.dots.y = 12 * img[0].size.y;
 		devmode->dpm.dam    = img[0].fam;
@@ -204,9 +207,9 @@ static int dpy_null_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 #undef	DEFAULT
 }
 
-static void 
-dpy_null_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img,
-	kgi_u_t images, void *dev_mode)
+static void
+dpy_null_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
+		  void *dev_mode)
 {
 
 	KGI_ASSERT(dpy);
@@ -227,7 +230,7 @@ dpy_null_alloc(kgi_u_t size_x, kgi_u_t size_y)
 
 	/* Allocate null displays statically for early initialization */
 	dpy_null = &dpy_data[dpy_index];
-	dpy_index ++;
+	dpy_index++;
 
 	memset(dpy_null, 0, sizeof(*dpy_null));
 
@@ -250,7 +253,7 @@ dpy_null_alloc(kgi_u_t size_x, kgi_u_t size_y)
 	dpy_null->dpy.focus = NULL;
 
 	/* initialize mode struct */
-	dpy_null->mode.revision	 = KGI_MODE_REVISION;
+	dpy_null->mode.revision	= KGI_MODE_REVISION;
 	dpy_null->mode.images     = 1;
 	dpy_null->mode.img[0].out = NULL;
 	dpy_null->mode.img[0].flags = 0;
@@ -268,15 +271,17 @@ dpy_null_alloc(kgi_u_t size_x, kgi_u_t size_y)
 	return ((kgi_display_t *) dpy_null);
 }
 
-int 
+int
 dpy_null_init(int display, int max_display)
 {
+	kgi_display_t *dpy;
+
 	/*
 	 * We fill up with null-displays. This allows for true multihead
 	 * with X.
 	 */
 	while (display < max_display) {
-		kgi_display_t *dpy = dpy_null_alloc(80, 25);
+		dpy = dpy_null_alloc(80, 25);
 		if (dpy == NULL)
 			return (display);
 		if (kgi_register_display(dpy, display)) {

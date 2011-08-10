@@ -69,12 +69,11 @@ make_sound(kii_focus_t *f, kii_u_t frequency, kii_u_t duration)
 void
 kii_bottomhalf(void)
 {
+	kii_s_t dev;
 	kii_u_t i;
+	kii_focus_t *f;
 
 	for (i = 0; i < KII_MAX_NR_FOCUSES; i++) {
-		kii_s_t dev;
-		kii_focus_t *f;
-
 		f = kiifocus[i];
 		if (f == NULL)
 			continue;
@@ -89,9 +88,9 @@ kii_bottomhalf(void)
 		if (f->focus == NULL)
 			goto apply;
 
-		if (!((f->flags & KII_FF_PROCESS_BH) &&
-			KII_VALID_DEVICE_ID(f->want_console) &&
-			(f->want_console != f->focus->id)))
+		if (((f->flags & KII_FF_PROCESS_BH) &&
+		    KII_VALID_DEVICE_ID(f->want_console) &&
+		    (f->want_console != f->focus->id)) == 0)
 			goto ignore;
 
 	apply:
@@ -122,6 +121,7 @@ kii_bottomhalf(void)
 		switch (kii_unmap_device(dev)) {
 		case KII_EINVAL:
 			f->want_console = KII_INVALID_CONSOLE;
+			/* Fall thru. */
 		case KII_EAGAIN:
 			continue;
 		case KII_EOK:
@@ -139,6 +139,7 @@ kii_bottomhalf(void)
 		switch (kgi_unmap_device(dev)) {
 		case KII_EINVAL:
 			f->want_console = KII_INVALID_CONSOLE;
+			/* Fall thru. */
 		case KII_EAGAIN:
 			KGI_DEBUG(2, "Could not unmap kgi device %i", dev);
 			/*
@@ -185,13 +186,13 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		  event->key.sym, event->key.code, event->key.effect);
 
 	switch(event->key.sym) {
-	case K_VOID:
+	case K_VOID: /* Fall thru. */
 	case K_ENTER:
 		return;
 	case K_CONS:
-		if (!KII_VALID_CONSOLE_ID(f->want_console) &&
-			KII_VALID_CONSOLE_ID(f->last_console)) {
-			f->want_console = f->last_console;
+		if (KII_VALID_CONSOLE_ID(f->want_console) &&
+		    KII_VALID_CONSOLE_ID(f->last_console) == 0) {
+		    f->want_console = f->last_console;
 			f->flags |= KII_FF_PROCESS_BH;
 			do_bottomhalf();
 		}
@@ -200,9 +201,10 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		f->flags ^= KII_FF_CAPS_SHIFT;
 		return;
 	case K_BOOT:
-		if ((curdev = kgi_current_devid(0)) != -1) {
+		curdev = kgi_current_devid(0);
+		if (curdev != -1)
 			kgi_unmap_device(curdev);
-		}
+
 		kgi_map_device(0);
 		shutdown_nice(0);
 
@@ -216,24 +218,23 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	case K_DECRCONSOLE: {
 		register kii_s_t start, search;
 
-		if (!KII_VALID_CONSOLE_ID(f->curr_console)) {
+		if (KII_VALID_CONSOLE_ID(f->curr_console) == 0)
 			search = (start = KII_MAX_NR_CONSOLES - 1) - 1;
-		} else {
-			search = ((start = f->curr_console) > 0)
-				? f->curr_console - 1 : KII_MAX_NR_CONSOLES - 1;
+		else {
+			search = ((start = f->curr_console) > 0) ?
+				f->curr_console - 1 : KII_MAX_NR_CONSOLES - 1;
 		}
 
-		while ((search != start) && !(
-			(KII_VALID_DEVICE_ID(f->console_map[search]) &&
-				kiidevice[f->console_map[search]]) ||
-			(KII_VALID_DEVICE_ID(f->graphic_map[search]) &&
-				kiidevice[f->graphic_map[search]]))) {
-
+		while ((search != start) &&
+		    ((KII_VALID_DEVICE_ID(f->console_map[search]) &&
+		    kiidevice[f->console_map[search]]) ||
+		    (KII_VALID_DEVICE_ID(f->graphic_map[search]) &&
+		    kiidevice[f->graphic_map[search]])) == 0) {
 			if (--search <  0)
 				search = KII_MAX_NR_CONSOLES - 1;
 		}
 		if ((search != start) &&
-			!KII_VALID_CONSOLE_ID(f->want_console)) {
+		    KII_VALID_CONSOLE_ID(f->want_console) == 0) {
 			f->want_console = search;
 			f->flags |= KII_FF_PROCESS_BH;
 			do_bottomhalf();
@@ -243,13 +244,12 @@ do_special(kii_focus_t *f, kii_event_t *event)
 	case K_INCRCONSOLE: {
 		register kii_s_t start, search;
 
-		if (!KII_VALID_CONSOLE_ID(f->curr_console)) {
+		if (KII_VALID_CONSOLE_ID(f->curr_console) == 0) {
 			search = (start = 0) + 1;
 		} else {
 			KGI_ASSERT(KII_VALID_CONSOLE_ID(f->curr_console));
 			search = ((start = f->curr_console) <
-				KII_MAX_NR_DEVICES - 1)
-				? f->curr_console + 1 : 0;
+			    KII_MAX_NR_DEVICES - 1) ? f->curr_console + 1 : 0;
 		}
 
 		while ((search != start) && !(
@@ -263,7 +263,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		}
 
 		if ((search != start) &&
-			!KII_VALID_CONSOLE_ID(f->want_console)) {
+		    KII_VALID_CONSOLE_ID(f->want_console) == 0) {
 			f->want_console = search;
 			f->flags |= KII_FF_PROCESS_BH;
 			do_bottomhalf();
@@ -291,10 +291,10 @@ do_special(kii_focus_t *f, kii_event_t *event)
 		}
 		return;
 	case K_SYSTEM_REQUEST:
-
 		f->flags |= KII_FF_SYSTEM_REQUEST;
 
-		if ((curdev = kgi_current_devid(0)) != -1)
+		curdev = kgi_current_devid(0);
+		if (curdev != -1)
 			kgi_unmap_device(curdev);
 
 		kgi_map_device(0);
@@ -319,7 +319,7 @@ do_special(kii_focus_t *f, kii_event_t *event)
 void
 kii_action(kii_focus_t *f, kii_event_t *event)
 {
-	kii_u_t sym = event->key.sym;
+	kii_u_t sym;
 
 	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE))
 		return;
@@ -328,6 +328,7 @@ kii_action(kii_focus_t *f, kii_event_t *event)
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
+	sym = event->key.sym;
 	switch (event->key.sym & K_TYPE_MASK) {
 	case K_TYPE_SPECIAL:
 		if (sym < K_LAST_SPECIAL)
@@ -343,7 +344,6 @@ kii_action(kii_focus_t *f, kii_event_t *event)
 					do_bottomhalf();
 				} else {
 					make_sound(f, 444, 250);
-					/* BEEP! */
 				}
 			} else {
 				f->want_console = sym;

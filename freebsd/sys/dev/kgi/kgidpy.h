@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ typedef kgi_error_t kgi_display_check_mode_fn(kgi_display_t *dpy,
 typedef	void kgi_display_set_mode_fn(kgi_display_t *dpy,
 		kgi_image_mode_t *img, kgi_u_t images, void *dev_mode);
 
-typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy, kgi_u_t cmd, 
+typedef kgi_error_t kgi_display_command_fn(kgi_display_t *dpy, kgi_u_t cmd,
 		void *data);
 
 struct kgi_display_s {
@@ -67,7 +67,7 @@ struct kgi_display_s {
 	kgi_display_set_mode_fn		*SetMode;
 	kgi_display_set_mode_fn		*UnsetMode;
 	kgi_display_command_fn		*Command;
-	struct kgi_device_s	*focus;	/* current focus	*/
+	struct kgi_device_s		*focus;	/* current focus	*/
 };
 
 /*
@@ -130,9 +130,9 @@ extern kgi_u_t kgi_current_devid(kgi_u_t dpy_id);
 extern void kgidev_show_gadgets(kgi_device_t *dev);
 extern void kgidev_undo_gadgets(kgi_device_t *dev);
 
-extern kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, 
+extern kgi_error_t kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd,
 		void *data);
 
-#endif /* _KERNEL */
+#endif /* !_KERNEL */
 
-#endif /* _KGI_KGIDPY_H_ */
+#endif /* !_KGI_KGIDPY_H_ */

@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -136,7 +136,7 @@ char *type_shift_normal_str[] = {
 	KS_NORMAL_ALTGR,
 	KS_NORMAL_SHIFTL,
 	KS_NORMAL_SHIFTR,
-	KS_NORMAL_CTRLL,	
+	KS_NORMAL_CTRLL,
 	KS_NORMAL_CTRLR,
 	NULL
 };
@@ -173,7 +173,7 @@ keysyms_pretty_print(int sym)
 	if ((sym >= K_FIRST_FUNCTION) && (sym < K_LAST_FUNCTION))
 		return (type_function_str[sym - K_FIRST_FUNCTION]);
 	else if ((sym >= K_FIRST_SPECIAL) && (sym < K_LAST_SPECIAL))
-		return (type_special_str[sym - K_FIRST_SPECIAL]);		
+		return (type_special_str[sym - K_FIRST_SPECIAL]);
 	else if ((sym >= K_FIRST_NUMPAD) && (sym < K_LAST_NUMPAD))
 		return (type_numpad_str[sym - K_FIRST_NUMPAD]);
 	else if ((sym >= K_FIRST_NORMAL) && (sym < K_LAST_NORMAL))

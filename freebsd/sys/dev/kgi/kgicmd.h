@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -98,7 +98,7 @@ KGIC_UNION(mapper, get_image_mode);
 	kgi_u_t image, resource;
 
 /*
- * set image in kgic_mapper_resource_info_request_t to this get mode 
+ * set image in kgic_mapper_resource_info_request_t to this get mode
  * resource info.  0 to __KGI_MAX_NR_IMAGE_RESOURCES will get per image
  * resource info.
  */
@@ -132,17 +132,17 @@ typedef struct {
 
 KGIC_UNION(mapper, resource_info);
 
-typedef struct {	
+typedef struct {
 	kgi_resource_type_t type;
 	__KGIC_RESOURCE_REQUEST_COMMON
-	union {	
-		struct {		
+	union {
+		struct {
 			kgi_u_t buffers;
 			kgi_u_t max_order;
 			kgi_u_t min_order;
 			kgi_u_t priority;
 		} accel;
-	} private;	
+	} private;
 } kgic_mapper_mmap_setup_request_t;
 
 typedef kgic_null_result_t kgic_mapper_mmap_setup_result_t;
@@ -168,7 +168,7 @@ typedef struct {
 KGIC_UNION(mapper, get_unit);
 
 typedef struct {
-	__KGIC_RESOURCE_REQUEST_COMMON;	
+	__KGIC_RESOURCE_REQUEST_COMMON;
 } kgic_resource_request_t;
 
 
@@ -239,8 +239,10 @@ KGIC_UNION(tlut, select);
 typedef struct {
 	__KGIC_RESOURCE_REQUEST_COMMON;
 	kgi_u16_t	lut;		/* image and lut number	*/
-	kgi_u16_t	idx, cnt;	/* first entry to set	*/
-	kgi_u16_t	dx, dy;		/* bitmap size		*/
+	kgi_u16_t	idx;		/* first entry to set	*/
+	kgi_u16_t	cnt;
+	kgi_u16_t	dx;		/* bitmap size		*/
+	kgi_u16_t	dy;
 	kgi_size_t	size;		/* size of the data buffer */
 	kgi_u8_t	*data;
 } kgic_tlut_set_request_t;
@@ -253,20 +255,20 @@ KGIC_UNION(tlut, set);
  * marker commands
  */
 typedef struct {
-	__KGIC_RESOURCE_REQUEST_COMMON;	
+	__KGIC_RESOURCE_REQUEST_COMMON;
 } kgic_marker_info_request_t;
 
 typedef struct {
 	kgi_marker_mode_t 	modes;
 	kgi_u8_t 		shapes;
-	kgi_u8_coord_t 		size;	
+	kgi_u8_coord_t 		size;
 } kgic_marker_info_result_t;
 
 KGIC_UNION(marker, info);
 
 typedef struct {
 	__KGIC_RESOURCE_REQUEST_COMMON;
-	kgi_marker_mode_t mode;	
+	kgi_marker_mode_t mode;
 } kgic_marker_set_mode_request_t;
 
 typedef kgic_null_result_t kgic_marker_set_mode_result_t;
@@ -284,10 +286,11 @@ KGIC_UNION(marker, select);
 
 typedef struct {
 	__KGIC_RESOURCE_REQUEST_COMMON;
-	kgi_u_t shape;
-	kgi_u_t hot_x, hot_y;
-	void *data;
-	kgi_rgb_color_t *color;	
+	kgi_u_t		shape;
+	kgi_u_t 	hot_x;
+	kgi_u_t		hot_y;
+	void 		*data;
+	kgi_rgb_color_t *color;
 } kgic_marker_set_shape_request_t;
 
 typedef kgic_null_result_t kgic_marker_set_shape_result_t;
@@ -296,10 +299,11 @@ KGIC_UNION(marker, set_shape);
 
 typedef struct {
 	__KGIC_RESOURCE_REQUEST_COMMON;
-	kgi_u_t x,y;	
+	kgi_u_t x;
+	kgi_u_t y;
 } kgic_marker_show_request_t;
 
-typedef kgic_null_result_t  kgic_marker_show_result_t;
+typedef kgic_null_result_t kgic_marker_show_result_t;
 
 KGIC_UNION(marker, show);
 
@@ -314,16 +318,16 @@ typedef struct {
 	kgi_ucoord_t size;
 	kgi_ucoord_t virt;
 	kgi_ucoord_t cell;
-	kgi_ucoord_t font;		     
+	kgi_ucoord_t font;
 } kgic_text16_info_result_t;
 
 KGIC_UNION(text16, info);
 
 typedef struct {
 	__KGIC_RESOURCE_REQUEST_COMMON;
-	kgi_u_t offset;
-	kgi_u16_t *text;
-	kgi_u_t cnt;	
+	kgi_u_t 	offset;
+	kgi_u16_t 	*text;
+	kgi_u_t 	cnt;
 } kgic_text16_put_text16_request_t;
 
 typedef kgic_null_result_t kgic_text16_put_text16_result_t;
@@ -346,14 +350,17 @@ KGIC_UNION(text16, put_text16);
 	KGIC_##type##_##command = _IO(KGIC_##type##_COMMAND >> 8, code)
 
 #define KGIC_IOR(type, command, callback, code) \
-	KGIC_##type##_##command = _IOR(KGIC_##type##_COMMAND >> 8, code, kgic_##callback##_result_t)
+	KGIC_##type##_##command = _IOR(KGIC_##type##_COMMAND >> 8, \
+		code, kgic_##callback##_result_t)
 
 #define KGIC_IOW(type, command, callback, code) \
-	KGIC_##type##_##command = _IOW(KGIC_##type##_COMMAND >> 8, code, kgic_##callback##_request_t)
+	KGIC_##type##_##command = _IOW(KGIC_##type##_COMMAND >> 8, \
+		code, kgic_##callback##_request_t)
 
 #define KGIC_IOWR(type, command, callback, code) \
-	KGIC_##type##_##command = _IOWR(KGIC_##type##_COMMAND >> 8, code, kgic_##callback##_union_t)
-	
+	KGIC_##type##_##command = _IOWR(KGIC_##type##_COMMAND >> 8, \
+		code, kgic_##callback##_union_t)
+
 
 typedef enum {
 	KGIC_MAPPER_COMMAND	= 0x00000000,	/* ext. mapper commands	*/
@@ -401,4 +408,4 @@ typedef enum {
 #define	KGIC_READ(cmd)		((cmd) & IOC_OUT)
 #define	KGIC_WRITE(cmd)		((cmd) & IOC_IN)
 
-#endif	/* _KGI_COMMAND_H_ */
+#endif	/* !_KGI_COMMAND_H_ */

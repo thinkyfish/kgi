@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -90,7 +90,7 @@ typedef struct kgi_console_s kgi_console_t;
 #define MAX_IO_BUF_SIZE			32
 
 struct kgi_console_s {
-	kgi_u_t	refcnt;
+	kgi_u_t		refcnt;
 	kii_device_t	kii;
 	int (*DoWrite)(kgi_console_t *, const char *, int);
 	void *meta_console;
@@ -98,9 +98,9 @@ struct kgi_console_s {
 #define EMPTY 0x0
 #define FULL 0x1
 #define HAS_DATA 0x2
-	int status;
-	int head, tail, size;
-	int buffer[MAX_IO_BUF_SIZE];
+	int 		status;
+	int 		head, tail, size;
+	int 		buffer[MAX_IO_BUF_SIZE];
 	kgi_console_flags_t flags;
 	kgi_console_mode_t  mode;
 	/*
@@ -130,13 +130,6 @@ enum kgi_console_color_e {
 	KGI_CC_YELLOW,
 	KGI_CC_WHITE
 };
-
-/* Pixel colour depths. */
-#define EIGHTBIT_COLOUR		8
-#define HIGHCOLOUR_15BIT	15
-#define HIGHCOLOUR_16BIT	16
-#define TRUECOLOUR_24BIT	24
-#define DEEPCOLOUR_32BIT	48
 
 /* ASCII control code definitions */
 #define	ASCII_NUL	0	/* null (end of string) */

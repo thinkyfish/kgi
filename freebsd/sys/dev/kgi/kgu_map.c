@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,7 +46,7 @@ __FBSDID("$FreeBSD$");
 /*
  * XXX Mapping stuff should be rewritten with queue macros
  */
-void 
+void
 graph_add_mapping(graph_file_t *file, graph_mapping_t *map)
 {
 	unsigned int i;
@@ -57,7 +57,7 @@ graph_add_mapping(graph_file_t *file, graph_mapping_t *map)
 	KGI_ASSERT(map->resource);
 
 	for (i = 0; i < __KGI_MAX_NR_RESOURCES; i++) {
-		if (file->device->kgi.mode->resource[i] == map->resource) 
+		if (file->device->kgi.mode->resource[i] == map->resource)
 			break;
 	}
 	KGI_ASSERT(i < __KGI_MAX_NR_RESOURCES);
@@ -85,7 +85,7 @@ graph_add_mapping(graph_file_t *file, graph_mapping_t *map)
 	KGI_DEBUG(1, "added mapping %p", map);
 }
 
-void 
+void
 graph_delete_mapping(graph_mapping_t *map)
 {
 	graph_mapping_t *prev;
@@ -98,7 +98,7 @@ graph_delete_mapping(graph_mapping_t *map)
 
 	/* delete mapping from mappings-for-same-file list */
 	prev = map->next;
-	while (prev->next != map) 
+	while (prev->next != map)
 		prev = prev->next;
 
 	if (map->file->mappings == map)
@@ -108,12 +108,12 @@ graph_delete_mapping(graph_mapping_t *map)
 
 	/* delete from mappings-for-same-region list */
 	prev = map->other;
-	while (prev->other != map) 
+	while (prev->other != map)
 		prev = prev->other;
 
 	i = 0;
 	while ((i < __KGI_MAX_NR_RESOURCES) &&
-		(map->device->kgi.mode->resource[i] != map->resource)) {
+	    (map->device->kgi.mode->resource[i] != map->resource)) {
 		i++;
 	}
 	KGI_ASSERT(i < __KGI_MAX_NR_RESOURCES);
@@ -132,12 +132,13 @@ graph_delete_mapping(graph_mapping_t *map)
  * Prevent access to all the VM pages associated to the object of this map.
  * The map here is just used to obtain the object.
  */
-void 
+void
 graph_unmap_map(graph_mapping_t *map)
 {
-	vm_area_t vma = map->vma;
+	vm_area_t vma;
 
-	if (!vma->vm_ops || !vma->vm_ops->unmap) 
+	vma = map->vma;
+	if (vma->vm_ops == NULL || vma->vm_ops->unmap == NULL)
 		panic("Don't know how to unmap!!");
 
 	KGI_DEBUG(3, "Unmapping map %p", map);
@@ -153,16 +154,15 @@ graph_unmap_map(graph_mapping_t *map)
  * window is moved, any process that was previously pointing to
  * the window should pagefault again to update its VM
  */
-void 
+void
 graph_unmap_resource(graph_mapping_t *map)
 {
+	graph_mapping_t *first;
 
-	graph_mapping_t *first = map;
-
+	first = map;
 	do {
 		KGI_ASSERT(map->resource == first->resource);
-
-		/* 
+		/*
 		 * The VM pages are deleted but the map is not
 		 * deleted
 		 */

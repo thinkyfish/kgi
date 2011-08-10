@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,9 +58,9 @@ typedef struct {
  * allocated to devices.
  */
 static driver_register_t kgc_render_drivers[KGI_MAX_NR_DISPLAYS];
-static render_alloc_t  kgc_renders[KGI_MAX_NR_DEVICES];
+static render_alloc_t kgc_renders[KGI_MAX_NR_DEVICES];
 
-void 
+void
 kgc_render_init(void)
 {
 
@@ -72,18 +72,18 @@ kgc_render_init(void)
  * Allocate a new render instance. The driver (render class) has already been
  * registered to the display.
  * The render instance is assigned to the given KII consoles.
- * If the render is statically allocated, then let the caller allocate the render
- * meta.
+ * If the render is statically allocated, then let the caller allocate the
+ * render meta.
  */
-render_t 
+render_t
 kgc_render_alloc(kgi_u_t devid, render_t static_render)
 {
 	render_t r;
 	kgi_u_t display;
 
 	/*
-	 * One can't allocated the console 0 'cause reserved to
-	 * boot messages and is allocated statically.
+	 * console 0 must not be allocated because its use it
+	 * rservered for kernel messages and is allocated statically.
 	 */
 	if (!KII_VALID_CONSOLE_ID(devid))
 		return (NULL);
@@ -94,7 +94,6 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 	}
 
 	display = display_map[devid];
-
 	if (kgc_render_drivers[display].drv == NULL) {
 		KGI_ERROR("No render class registered to display %d", display);
 		return (NULL);
@@ -104,16 +103,16 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 		r = (render_t)kobj_create(
 				(kobj_class_t)kgc_render_drivers[display].drv,
 			 	M_KGI, M_WAITOK);
-	} else 
+	} else
 		r = static_render;
-	
+
 	if (r == 0) {
 		KGI_ERROR("Could not create render %d", devid);
 		return (NULL);
 	}
 
 	if (static_render == 0) {
-		r->meta = kgi_kmalloc(kgc_render_drivers[display].drv->size); 
+		r->meta = kgi_kmalloc(kgc_render_drivers[display].drv->size);
 		if (r->meta == NULL)
 			KGI_ERROR("Could not allocate render meta %d", devid);
 	}
@@ -125,7 +124,7 @@ kgc_render_alloc(kgi_u_t devid, render_t static_render)
 	return (r);
 }
 
-void 
+void
 kgc_render_release(kgi_u_t devid)
 {
 
@@ -146,7 +145,7 @@ kgc_render_release(kgi_u_t devid)
 	kgc_renders[devid].static_alloc = 0;
 }
 
-kgi_error_t 
+kgi_error_t
 kgc_render_register(render_driver_t *driver, kgi_u_t display,
 		kgi_u8_t already_allocated)
 {
@@ -163,7 +162,7 @@ kgc_render_register(render_driver_t *driver, kgi_u_t display,
 	if (already_allocated == 0) {
 		/* Compile the render class */
 		kobj_class_compile((kobj_class_t)driver);
-	} else 
+	} else
 		kgc_render_drivers[display].static_alloc = 1;
 
 
@@ -173,7 +172,7 @@ kgc_render_register(render_driver_t *driver, kgi_u_t display,
 	return (KGI_EOK);
 }
 
-kgi_error_t 
+kgi_error_t
 kgc_render_unregister(render_driver_t *driver)
 {
 	kgi_u_t i, display = -1;
@@ -186,8 +185,8 @@ kgc_render_unregister(render_driver_t *driver)
 		if (kgc_render_drivers[display_map[i]].drv == driver) {
 			display = display_map[i];
 			if (kgc_renders[i].r) {
-				KGI_ERROR("At least a render still allocated " 				   	
-"to device %d", i);
+				KGI_ERROR("At least a render still allocated "
+					"to device %d", i);
 				return (KGI_EINVAL);
 			}
 		}
@@ -205,7 +204,7 @@ kgc_render_unregister(render_driver_t *driver)
 	return (KGI_EOK);
 }
 
-render_t 
+render_t
 kgc_get_render(kgi_u_t devid)
 {
 

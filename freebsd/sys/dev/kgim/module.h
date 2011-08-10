@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,8 +25,8 @@
  * KGI kernel module internal interface definitions.
  */
 
-#ifndef _KGI_MODULE_H_
-#define _KGI_MODULE_H_
+#ifndef _KGIM_MODULE_H_
+#define _KGIM_MODULE_H_
 
 #define __KGI_STRINGIFY_(s) #s
 #define __KGI_STRINGIFY(s) __KGI_STRINGIFY_(s)
@@ -79,7 +79,6 @@ typedef enum {
 	KGIM_SUBSYSTEM_chipset,
 	KGIM_SUBSYSTEM_ramdac,
 	KGIM_SUBSYSTEM_clock,
-
 	KGIM_LAST_SUBSYSTEM,
 	__KGIM_MAX_NR_SUBSYSTEMS = 8
 } kgim_subsystem_type_t;
@@ -128,27 +127,24 @@ typedef enum {
 	KGIM_MF_RIGHT_EYE	= 0x00000001,	/* stereo right screen	*/
 	KGIM_MF_LEFT_EYE	= 0x00000002,	/* stereo left screen	*/
 	KGIM_MF_STEREO		= 0x00000003,	/* is stereo?		*/
-
 	KGIM_MF_POWERSAVE	= 0x00000004,	/* can do powersaving	*/
 	KGIM_MF_PROPSIZE	= 0x00000008 	/* size depends on mode */
 } kgim_monitor_flags_t;
 
 typedef enum {
 	KGIM_MT_SIGNAL_MASK	= 0x40000000,	/* video signal type	*/
-		KGIM_MT_DIGITAL	= 0x00000000,	/* digital input	*/
-		KGIM_MT_ANALOG	= 0x40000000,	/* analog input		*/
-
+	KGIM_MT_DIGITAL		= 0x00000000,	/* digital input	*/
+	KGIM_MT_ANALOG		= 0x40000000,	/* analog input		*/
 	KGIM_MT_COLORSPACE_MASK	= 0x1F000000,	/* color spaces		*/
-		KGIM_MT_MONO	= 0x00000000,	/* monochrome input	*/
-		KGIM_MT_RGB	= 0x00000000,	/* RGB input signal	*/
-		KGIM_MT_YUV	= 0x01000000,	/* YUV input signal	*/
-
+	KGIM_MT_MONO		= 0x00000000,	/* monochrome input	*/
+	KGIM_MT_RGB		= 0x00000000,	/* RGB input signal	*/
+	KGIM_MT_YUV		= 0x01000000,	/* YUV input signal	*/
 	KGIM_MT_TECHNOLOGY_MASK	= 0x000000FF,	/* display technology	*/
-		KGIM_MT_CRT	= 0x00000000,	/* Cathod Ray Tube	*/
-		KGIM_MT_LCD	= 0x00000001,	/* Liquid Crystal	*/
-		KGIM_MT_TFT	= 0x00000002,	/* Thin Film Transistor */
-		KGIM_MT_DSTN	= 0x00000003,	/* Double S.T. Nematic?	*/
-		KGIM_MT_PLASMA	= 0x00000004	/* Plasma		*/
+	KGIM_MT_CRT		= 0x00000000,	/* Cathod Ray Tube	*/
+	KGIM_MT_LCD		= 0x00000001,	/* Liquid Crystal	*/
+	KGIM_MT_TFT		= 0x00000002,	/* Thin Film Transistor */
+	KGIM_MT_DSTN		= 0x00000003,	/* Double S.T. Nematic?	*/
+	KGIM_MT_PLASMA		= 0x00000004	/* Plasma		*/
 } kgim_monitor_type_t;
 
 typedef enum {
@@ -160,19 +156,16 @@ typedef enum {
 	KGIM_ST_SYNC_COMPOSITE	= 0x0020,	/* digital composite	*/
 	KGIM_ST_SYNC_TYPEMASK	= 0x003F,
 	KGIM_ST_SYNC_NORMAL	= KGIM_ST_SYNC_SERRATE | KGIM_ST_SYNC_SEPARATE,
-
 	KGIM_ST_SYNC_PEDESTRAL	= 0x0020,	/* need blank pedestral	*/
 	KGIM_ST_SYNC_0700_0300	= 0x0000,	/* <white>_<sync> level	*/
 	KGIM_ST_SYNC_0714_0286	= 0x0040,
 	KGIM_ST_SYNC_0100_0400	= 0x0080,
 	KGIM_ST_SYNC_UNKNOWNLEVEL = 0x00C0,	/* not defined by VESA!	*/
 	KGIM_ST_SYNC_SIGNALLEVEL = 0x00C0,	/* mask for signal level*/
-
 	KGIM_ST_SYNC_STANDBY	= 0x0100,	/* standby mode allowed	*/
 	KGIM_ST_SYNC_SUSPEND	= 0x0200,	/* suspend mode allowed */
 	KGIM_ST_SYNC_OFF	= 0x0400,	/* switch off allowed	*/
 	KGIM_ST_SYNC_VESA_DPMS	= 0x0700,	/* has (full) VESA-DPMS	*/
-
 	KGIM_ST_SYNC_SSYNC_RIGHT = 0x0000,	/* right image on SSYNC	*/
 	KGIM_ST_SYNC_SSYNC_LEFT	= 0x1000,	/* left image on SSYNC	*/
 	KGIM_ST_SYNC_MULTISYNC	= 0x2000	/* multisync monitor	*/
@@ -184,16 +177,15 @@ typedef enum {
 typedef struct {
 	__KGIM_SUBSYSTEM
 
-	kgi_ucoord_t	maxdots;		/* maximum resolution	*/
-	kgi_ucoord_t	size;			/* physical size in mm	*/
+	kgi_ucoord_t		maxdots;	/* maximum resolution	*/
+	kgi_ucoord_t		size;		/* physical size in mm	*/
 	kgim_monitor_type_t	type;		/* display type		*/
 	kgim_sync_type_t	sync;		/* type of syncing	*/
-	kgi_urange_t	dclk;			/* bandwidth		*/
+	kgi_urange_t		dclk;		/* bandwidth		*/
 	kgi_urange_t	hfreq[KGIM_MONITOR_MAX_HFREQ];	/* horiz. freq.	*/
 	kgi_urange_t	vfreq[KGIM_MONITOR_MAX_VFREQ];	/* vert. freq.	*/
-
-	kgi_color_t	white;			/* white point		*/
-	kgi_u_t		gamma;			/* gamma value		*/
+	kgi_color_t		white;			/* white point	*/
+	kgi_u_t			gamma;			/* gamma value	*/
 } kgim_monitor_t;
 
 /*
@@ -220,7 +212,8 @@ typedef struct {
 	kgi_dot_port_mode_t	in;	/* input port		*/
 	kgi_ucoord_t		size;	/* physical size in mm	*/
 	kgim_monitor_mode_flags_t flags;/* special info		*/
-	kgim_monitor_timing_t	x,y;	/* timing values	*/
+	kgim_monitor_timing_t	x;	/* timing values	*/
+	kgim_monitor_timing_t	y;	/* timing values        */
 	kgim_sync_type_t	sync;	/* sync operation mode	*/
 } kgim_monitor_mode_t;
 
@@ -282,21 +275,19 @@ typedef struct {
 #define	KGIM_CHIPSET_REVISION	1
 
 typedef struct {
-    char *		DevName;
-
-    kgi_u8_t		BitTimeout;	/* usec */
-    kgi_u8_t		ByteTimeout;	/* usec */
-    kgi_u8_t		AcknTimeout;    /* usec */
-    kgi_u8_t 		StartTimeout;	/* usec */
-
-    kgi_u_t		SlaveAddr;
-    void	       *pI2CBus;
+	char *		DevName;
+	kgi_u8_t	BitTimeout;	/* usec */
+	kgi_u8_t	ByteTimeout;	/* usec */
+	kgi_u8_t	AcknTimeout;    /* usec */
+	kgi_u8_t 	StartTimeout;	/* usec */
+	kgi_u_t		SlaveAddr;
+	void	       *pI2CBus;
 } I2CDevRec;
 
 typedef struct {
-	kgi_error_t	(*WriteRead)(I2CDevRec *, kgi_u8_t*, kgi_u_t, 
+	kgi_error_t	(*WriteRead)(I2CDevRec *, kgi_u8_t*, kgi_u_t,
 				kgi_u8_t *, kgi_u_t);
-	
+
 	kgi_error_t	(*PutByte)(I2CDevRec *, kgi_u8_t);
 	kgi_error_t	(*GetByte)(I2CDevRec *, kgi_u8_t* , kgi_u8_t);
 	kgi_error_t	(*Address)(I2CDevRec *, kgi_u_t);
@@ -312,27 +303,23 @@ typedef struct {
 	kgi_u8_t	AcknTimeout;
 	kgi_u8_t	StartTimeout;
 	kgi_u8_t	RiseFallTime;
-	void 		* chipset_io;
-} kgim_i2c_io_t ; 
+	void  		*chipset_io;
+} kgim_i2c_io_t ;
 
 typedef struct {
 	pcicfg_vaddr_t		pcidev;
-
 	kgim_io_out8_fn		*DacOut8;
 	kgim_io_in8_fn		*DacIn8;
 	kgim_io_outs8_fn	*DacOuts8;
 	kgim_io_ins8_fn		*DacIns8;
-
 	kgim_io_out8_fn		*ClkOut8;
 	kgim_io_in8_fn		*ClkIn8;
-
 	kgim_io_init_fn		*DDCInit;
 	kgim_io_init_fn		*DDCDone;
 	kgim_io_set8_fn		*DDCSetSCL;
 	kgim_io_get8_fn		*DDCGetSDA;
 	kgim_io_set8_fn		*DDCSetVSYNC;
 	kgim_io_get8_fn		*DDCGetVSYNC;
-	
 	kgim_i2c_io_t		DDC2_io;
 } kgim_chipset_io_t;
 
@@ -352,18 +339,15 @@ typedef enum {
 
 typedef struct {
 	__KGIM_SUBSYSTEM
-
 	kgi_ucoord_t	maxdots;		/* maximum resolution	*/
 	kgi_u_t		memory;			/* (total) memory 	*/
 	kgi_urange_t	dclk;			/* DCLK range		*/
-
 	kgi_u32_t	vendor_id;		/* (PCI) vendor ID	*/
  	kgi_u32_t	device_id;		/* (PCI) device ID	*/
 } kgim_chipset_t;
 
 typedef struct {
 	__KGIM_SUBSYSTEM_MODE
-
 	const kgim_monitor_mode_t	*crt;
 } kgim_chipset_mode_t;
 
@@ -394,13 +378,16 @@ typedef struct {
 } kgim_options_chipset_t;
 
 typedef struct {
-	kgi_u_t	lclk_min, lclk_max;
-	kgi_u_t	dclk_min, dclk_max;
+	kgi_u_t	lclk_min;
+	kgi_u_t lclk_max;
+	kgi_u_t	dclk_min;
+	kgi_u_t dclk_max;
 } kgim_options_ramdac_t;
 
 typedef struct {
 	kgi_u_t	fref;
-	kgi_u_t	fvco_min, fvco_max;
+	kgi_u_t	fvco_min;
+	kgi_u_t fvco_max;
 } kgim_options_clock_t;
 
 #define KGIM_OPTIONS_MAX_TIMINGS	8
@@ -410,13 +397,12 @@ struct kgim_options_monitor_s;
 typedef struct kgim_options_monitor_s kgim_options_monitor_t;
 
 typedef kgi_error_t kgim_monitor_init_module_fn
-     (kgim_monitor_t *monitor, const kgim_options_monitor_t *options);
+	(kgim_monitor_t *monitor, const kgim_options_monitor_t *options);
 
 struct kgim_options_monitor_s {
 	kgi_u_t			timings;
 	kgim_monitor_timing_t	x[KGIM_OPTIONS_MAX_TIMINGS];
 	kgim_monitor_timing_t	y[KGIM_OPTIONS_MAX_TIMINGS];
-	
 	kgi_u_t			num_hfreq;
 	kgi_urange_t		hfreq[KGIM_OPTIONS_MAX_RANGES];
 	kgi_u_t			num_vfreq;
@@ -424,12 +410,9 @@ struct kgim_options_monitor_s {
 	kgi_u_t			num_dclk;
 	kgi_urange_t		dclk[KGIM_OPTIONS_MAX_RANGES];
 	kgi_u_t			ddc;
-
 	kgim_sync_type_t	sync;
 	kgim_monitor_type_t	type;
-	
 	kgi_ucoord_t		size;
-
 	kgim_monitor_init_module_fn *init_module;
 };
 
@@ -451,7 +434,6 @@ typedef struct kgim_meta_s kgim_meta_t;
 
 typedef struct {
 	kgi_display_t		kgi;
-
 	kgim_options_t		options;
 	kgim_options_misc_t	options_misc;
 	kgim_options_pci_t	options_pci;
@@ -459,7 +441,6 @@ typedef struct {
 	kgim_options_ramdac_t	options_ramdac;
 	kgim_options_clock_t	options_clock;
 	kgim_options_monitor_t	options_monitor;
-
 	struct {
 		const kgim_meta_t	*meta_lang;
 		void			*meta_io;
@@ -480,7 +461,6 @@ typedef kgi_error_t kgim_meta_init_module_fn (void *meta, void *meta_io,
 #define	KGIM_META_INIT_MODULE_FN(meta)					\
 	kgi_error_t meta##_init_module(meta##_t *, meta##_io_t *,	\
 		const kgim_options_t *);
-
 
 typedef void kgim_meta_done_module_fn(void *meta, void *meta_io,
 		const kgim_options_t *options);
@@ -553,8 +533,7 @@ typedef kgi_resource_t *kgim_meta_image_resource_fn(void *meta, void *meta_mode,
 #define	KGIM_META_IMAGE_RESOURCE_FN(meta)				\
 	kgi_resource_t *meta##_image_resource(meta##_t *, meta##_mode_t *,\
 		kgi_image_mode_t *, kgi_u_t, kgi_u_t);
-		
-		
+
 /*
  * IRQ handlers are not really part of a meta-language (yet).
  * However, use this macro to get a consistent prototype definition.
@@ -575,15 +554,13 @@ struct kgim_meta_s {
 	kgim_meta_mode_enter_fn		*ModeEnter;
 	kgim_meta_mode_leave_fn		*ModeLeave;
 	kgim_meta_image_resource_fn	*ImageResource;
-
 	kgi_size_t			data_size;
 	kgi_size_t			io_size;
 	kgi_size_t			mode_size;
 };
 
-#define	KGIM_META(meta) \
-	extern const kgim_meta_t meta##_meta;
+#define	KGIM_META(meta) extern const kgim_meta_t meta##_meta;
 
 #include <dev/kgim/modulelib.h>
 
-#endif /* _KGI_MODULE_H_ */
+#endif /* !_KGIM_MODULE_H_ */

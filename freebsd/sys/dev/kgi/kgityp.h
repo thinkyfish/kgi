@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,8 +29,8 @@
 #define _KGI_KGITYP_H_
 
 #define	KB	*1024
-#define	MB	*(1024*1024)
-#define	GB	*(1024*1024*1024)
+#define	MB	*(1024 * 1024)
+#define	GB	*(1024 * 1024 * 1024)
 
 /*
  * ISO 10646 defines symbol codes as 32 bit unsigned int organized into
@@ -43,36 +43,47 @@
 #define	KGI_ISOCHAR_ROW(isochar)	(((isochar) >>  8) & 0xFF)
 #define	KGI_ISOCHAR_CELL(isochar)	((isochar) & 0xFF)
 
-typedef struct { 
-	kgi_u8_t major, minor, patch, extra; 
+typedef struct {
+	kgi_u8_t major;
+	kgi_u8_t minor;
+	kgi_u8_t patch;
+	kgi_u8_t extra;
 } kgi_version_t;
 
-typedef struct { 
-	kgi_s_t x, y; 
+typedef struct {
+	kgi_s_t x;
+	kgi_s_t y;
 } kgi_scoord_t;
 
-typedef struct { 
-	kgi_u_t x, y; 
+typedef struct {
+	kgi_u_t x;
+	kgi_u_t y;
 } kgi_ucoord_t;
 
-typedef struct { 
-	kgi_u8_t x, y; 
+typedef struct {
+	kgi_u8_t x;
+	kgi_u8_t y;
 } kgi_u8_coord_t;
 
-typedef struct { 
-	kgi_s_t min, max; 
+typedef struct {
+	kgi_s_t min;
+	kgi_s_t max;
 } kgi_srange_t;
 
-typedef struct { 
-	kgi_u_t min, max; 
+typedef struct {
+	kgi_u_t min;
+	kgi_u_t max;
 } kgi_urange_t;
 
-typedef struct { 
-	kgi_u_t mul, div; 
+typedef struct {
+	kgi_u_t mul;
+	kgi_u_t div;
 } kgi_ratio_t;
 
-typedef struct { 
-	kgi_u16_t r, g, b; 
+typedef struct {
+	kgi_u16_t r;
+	kgi_u16_t g;
+	kgi_u16_t b;
 } kgi_rgb_color_t;
 
 typedef union {
@@ -111,4 +122,4 @@ typedef enum {
 
 typedef struct kgi_resource_s kgi_resource_t;
 
-#endif /* _KGI_KGITYP_H_ */
+#endif /* !_KGI_KGITYP_H_ */

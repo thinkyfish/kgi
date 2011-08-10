@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -56,16 +56,18 @@ typedef enum {
 } event_file_flags_t;
 
 struct event_file_s {
-	event_file_t	*next;
-	unsigned long refcnt;
+	event_file_t		*next;
+	unsigned long 		refcnt;
 	event_file_flags_t	flags;
-	kii_u_t		device_id;
-	kii_u_t		previous;
-	event_device_t	*device;
+	kii_u_t			device_id;
+	kii_u_t			previous;
+	event_device_t 		*device;
 	struct	{
-		kii_u_t		head, tail, size;
+		kii_u_t		head;
+		kii_u_t		tail;
+		kii_u_t		size;
 		kii_u8_t	*buffer;
 	} queue;
 };
 
-#endif /* _KII_EVENT_H_ */
+#endif /* !_KII_EVENT_H_ */

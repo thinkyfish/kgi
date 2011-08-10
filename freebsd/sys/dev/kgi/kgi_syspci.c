@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -64,7 +64,7 @@ struct pcicfg_resource {
 		mem_region_t mem;
 		irq_line_t irq;
 	} region;
-	
+
 	LIST_ENTRY(pcicfg_resource) entries;
 };
 
@@ -96,10 +96,10 @@ pcicfg_lookup_device(pcicfg_vaddr_t pcidev)
 	return (NULL);
 }
 
-/* 
+/*
  * lookup the first matching pcicfg device_t
  */
-device_t 
+device_t
 pcicfg_get_device(pcicfg_vaddr_t pcidev)
 {
 	struct pcicfg_dev *p;
@@ -111,23 +111,23 @@ pcicfg_get_device(pcicfg_vaddr_t pcidev)
 	return (NULL);
 }
 
-pcicfg_vaddr_t 
+pcicfg_vaddr_t
 pcicfg_dev2cfg(device_t dev)
 {
-	u_int32_t bus, slot, func;
+	uint32_t bus, slot, func;
 
 	bus = pci_get_bus(dev);
 	slot = pci_get_slot(dev);
 	func = pci_get_function(dev);
 
-	return (PCICFG_VADDR(bus, slot, func)); 
+	return (PCICFG_VADDR(bus, slot, func));
 }
 
-/* 
- * XXX 
- * not SMP safe 
+/*
+ * XXX
+ * not SMP safe
  */
-int 
+int
 pcicfg_add_device(device_t dev)
 {
 	struct pcicfg_dev *p;
@@ -166,11 +166,11 @@ pcicfg_add_device(device_t dev)
 	return (KGI_EOK);
 }
 
-/* 
- * XXX 
+/*
+ * XXX
  * not SMP safe
  */
-int 
+int
 pcicfg_remove_device(device_t dev)
 {
 	struct pcicfg_dev *p;
@@ -181,9 +181,9 @@ pcicfg_remove_device(device_t dev)
 
 	/* Scan the list of pci configs. */
 	LIST_FOREACH(p, &pcicfg_head, entries) {
-                if (p->dev == dev) {
+		if (p->dev == dev) {
 			/* Delete the list of resources for this device. */
-			while (!LIST_EMPTY(&p->resources)) {
+			while (LIST_EMPTY(&p->resources) == 0) {
 				r = LIST_FIRST(&p->resources);
 				LIST_REMOVE(r, entries);
 
@@ -200,10 +200,10 @@ pcicfg_remove_device(device_t dev)
 	return (KGI_EINVAL);
 }
 
-/* 
+/*
  * claim the device so that no other driver will get it
  */
-void 
+void
 pcicfg_claim_device(pcicfg_vaddr_t addr)
 {
 	struct pcicfg_dev *p;
@@ -213,10 +213,10 @@ pcicfg_claim_device(pcicfg_vaddr_t addr)
 		p->flags |= PCICFG_CLAIMED;
 }
 
-/* 
+/*
  * free the device so that other driver will get it
  */
-void 
+void
 pcicfg_free_device(pcicfg_vaddr_t addr)
 {
 	struct pcicfg_dev *p;
@@ -229,7 +229,7 @@ pcicfg_free_device(pcicfg_vaddr_t addr)
 /*
  * Find the PCI device/subsystem in the list of registered devices.
  *
- * The PCI cfg space is actually the list of devices found by the pci bus. 
+ * The PCI cfg space is actually the list of devices found by the pci bus.
  *
  * A PCI device must have been previously scanned and found by the pci
  * bus (see board_probe()) for being found here.
@@ -237,13 +237,13 @@ pcicfg_free_device(pcicfg_vaddr_t addr)
  * Actually, if a driver is going there, there's a lot of chance something
  * will be found.
  */
-int 
+int
 pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 {
 	struct pcicfg_dev *p;
 	const __kgi_u32_t *check;
 	__kgi_u32_t signature;
-	u_int16_t vendor, device;
+	uint16_t vendor, device;
 
 	KGI_DEBUG(4, "scanning device in pcicfg space:");
 
@@ -262,14 +262,14 @@ pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 
 		/* Scan all signatures for the given dev */
 		check = signatures;
-		while (*check && (*check != signature)) 
+		while (*check && (*check != signature))
 			check++;
 
 		/* Finally, the first dev after "after" is returned */
 		if (*check && (*check == signature)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KGI_DEBUG(4, "found device %.8x at %.8x", 
+			KGI_DEBUG(4, "found device %.8x at %.8x",
 				  signature, *addr);
 			return (0);
 		}
@@ -279,14 +279,14 @@ pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	return (KGI_EINVAL);
 }
 
-int 
+int
 pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 {
 	struct pcicfg_dev *p;
 	const __kgi_u32_t *check;
 	__kgi_u32_t signature;
-	u_int16_t subvendor, subdevice;
-	u_int16_t vendor, device;
+	uint16_t subvendor, subdevice;
+	uint16_t vendor, device;
 
 	KGI_DEBUG(4, "scanning subsystem in pcicfg space:");
 
@@ -304,17 +304,17 @@ pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 
 		signature = PCICFG_SIGNATURE(subvendor, subdevice);
 
-		KGI_DEBUG(4, "scanning device %x %x, subsystem %x %x\n", 
+		KGI_DEBUG(4, "scanning device %x %x, subsystem %x %x\n",
 			vendor, device, subvendor, subdevice);
 
 		check = signatures;
-		while (*check && (*check != signature)) 
+		while (*check && (*check != signature))
 			check++;
 
 		if (*check && (*check == signature)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KGI_DEBUG(4, "found device %.8x at %.8x", 
+			KGI_DEBUG(4, "found device %.8x at %.8x",
 				  signature, *addr);
 			return (KGI_EOK);
 		}
@@ -324,12 +324,12 @@ pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 	return (KGI_ENODEV);
 }
 
-int 
+int
 pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 {
 	struct pcicfg_dev *p;
 	const __kgi_u32_t *check;
-	u_int16_t class;
+	uint16_t class;
 
 	KGI_DEBUG(4, "scanning class in pcicfg space:");
 
@@ -343,13 +343,13 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 		KGI_DEBUG(4, "scanning device with class %.8x", class);
 
 		check = signatures;
-		while (*check && (*check != class)) 
+		while (*check && (*check != class))
 			check++;
 
 		if (*check && (*check == class)) {
 			*addr = pcicfg_dev2cfg(p->dev);
 
-			KGI_DEBUG(4, "found device of class %.8x at %.8x", 
+			KGI_DEBUG(4, "found device of class %.8x at %.8x",
 				  class, *addr);
 
 			return (KGI_EOK);
@@ -364,7 +364,7 @@ pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures)
 #define VADDR_BASE (vaddr & ~0xFF)
 #define VADDR_OFFSET (vaddr & 0xFF)
 
-__kgi_u8_t  
+__kgi_u8_t
 pcicfg_in8(const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -376,7 +376,7 @@ pcicfg_in8(const pcicfg_vaddr_t vaddr)
 	return (pci_read_config(dev, VADDR_OFFSET, 1));
 }
 
-__kgi_u16_t 
+__kgi_u16_t
 pcicfg_in16(const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -388,7 +388,7 @@ pcicfg_in16(const pcicfg_vaddr_t vaddr)
 	return (pci_read_config(dev, VADDR_OFFSET, 2));
 }
 
-__kgi_u32_t 
+__kgi_u32_t
 pcicfg_in32(const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -400,7 +400,7 @@ pcicfg_in32(const pcicfg_vaddr_t vaddr)
 	return (pci_read_config(dev, VADDR_OFFSET, 4));
 }
 
-void 
+void
 pcicfg_out8(const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -414,7 +414,7 @@ pcicfg_out8(const __kgi_u8_t val, const pcicfg_vaddr_t vaddr)
 	return;
 }
 
-void 
+void
 pcicfg_out16(const __kgi_u16_t val, const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -428,7 +428,7 @@ pcicfg_out16(const __kgi_u16_t val, const pcicfg_vaddr_t vaddr)
 	return;
 }
 
-void 
+void
 pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr)
 {
 	device_t dev;
@@ -443,11 +443,11 @@ pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr)
 /*
  * io I/O space
  */
-__kgi_error_t 
+__kgi_error_t
 io_check_region(io_region_t *r)
 {
 	struct pcicfg_dev *p;
-	struct resource *res = NULL;
+	struct resource *res;
 	int rid = r->rid;
 
 	p = pcicfg_lookup_device(r->device);
@@ -457,10 +457,10 @@ io_check_region(io_region_t *r)
 		goto error;
 
 	/* Try to allocate the resource */
-	if (!(res = bus_alloc_resource(p->dev, SYS_RES_IOPORT, &rid,
-				       r->base_io, r->base_io + (r->size -1),
-				       r->size, RF_ACTIVE | RF_SHAREABLE))) {
-
+	res = bus_alloc_resource(p->dev, SYS_RES_IOPORT, &rid, r->base_io,
+				 r->base_io + (r->size -1), r->size,
+				 RF_ACTIVE | RF_SHAREABLE);
+	if (res == NULL) {
 		/* Try to set the resource before allocation */
 		bus_set_resource(p->dev, SYS_RES_IOPORT, rid, r->base_io,
 				 r->size);
@@ -470,29 +470,29 @@ io_check_region(io_region_t *r)
 					 r->size, RF_ACTIVE | RF_SHAREABLE);
 	}
 
-	/* Resource allocation succeeded, release then report ok */
+	/* Resource allocation succeeded, release then report OK */
 	if (res) {
 		bus_release_resource(p->dev, SYS_RES_IOPORT, rid, res);
 
-		KGI_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): ok",
-			  r->name, r->base_io, r->size);
+		KGI_DEBUG(2, "io_check_region('%s', base 0x%x,"
+			  "size %zd): OK", r->name, r->base_io, r->size);
 
 		return (KGI_EOK);
 	}
 
 error:
-	KGI_DEBUG(2, "io_check_region('%s', base 0x%x, size %i): "
+	KGI_DEBUG(2, "io_check_region('%s', base 0x%x, size %zd): "
 		  "failed", r->name, r->base_io, r->size);
 	return (KGI_ENODEV);
 }
 
-io_vaddr_t 
+io_vaddr_t
 io_claim_region(io_region_t *r)
 {
 	struct pcicfg_dev *p;
 	device_t dev;
-	struct pcicfg_resource *pcicfg_res = NULL;
-	struct resource *res = NULL;
+	struct pcicfg_resource *pcicfg_res;
+	struct resource *res;
 	int rid = r->rid;
 
 	p = pcicfg_lookup_device(r->device);
@@ -508,9 +508,10 @@ io_claim_region(io_region_t *r)
 
 	KGI_ASSERT(r->base_virt == 0); /* claim of claimed region? */
 
-	if (!(res = bus_alloc_resource(dev, SYS_RES_IOPORT, &rid,
-				       r->base_io, r->base_io + (r->size -1),
-				       r->size, RF_ACTIVE | RF_SHAREABLE)))
+	res = bus_alloc_resource(dev, SYS_RES_IOPORT, &rid, r->base_io,
+				 r->base_io + (r->size -1), r->size,
+				 RF_ACTIVE | RF_SHAREABLE);
+	if (res == NULL)
 		goto error;
 
 	r->base_virt = r->base_phys = r->base_bus = r->base_io;
@@ -536,17 +537,18 @@ error:
 	return (0);
 }
 
-io_vaddr_t 
+io_vaddr_t
 io_free_region(io_region_t *r)
 {
 	struct pcicfg_dev *p;
-	struct pcicfg_resource *pcicfg_res = NULL;
+	struct pcicfg_resource *pcicfg_res;
 	int error;
 
 	p = pcicfg_lookup_device(r->device);
 	if (p == NULL)
 		return (KGI_EINVAL);
 
+	pcicfg_res = NULL;
 	LIST_FOREACH(pcicfg_res, &p->resources, entries) {
 		if ((pcicfg_res->type == SYS_RES_IOPORT) &&
 		    (pcicfg_res->region.io.base_virt == r->base_virt) &&
@@ -561,13 +563,13 @@ io_free_region(io_region_t *r)
 			  " base_phys %.4x, base_bus %.4x)", r->name,
 			  r->base_io, r->base_virt, r->base_phys,
 			  r->base_bus);
-		
+
 		error = bus_release_resource(p->dev, SYS_RES_IOPORT,
-					     pcicfg_res->rid, pcicfg_res->res);
-		
+				pcicfg_res->rid, pcicfg_res->res);
+
 		LIST_REMOVE(pcicfg_res, entries);
 		kgi_kfree(pcicfg_res);
-		
+
 		r->base_virt = 0;
 		r->base_phys = r->base_bus = 0;
 	}
@@ -575,9 +577,10 @@ io_free_region(io_region_t *r)
 	return (0);
 }
 
-io_vaddr_t 
+io_vaddr_t
 io_alloc_region(io_region_t *r)
 {
+
 	/* AFAIK nothing appropriate under Linux yet. */
 	return (0);
 }
@@ -585,11 +588,11 @@ io_alloc_region(io_region_t *r)
 /*
  * memory I/O space
  */
-__kgi_error_t 
+__kgi_error_t
 mem_check_region(mem_region_t *r)
 {
 	struct pcicfg_dev *p;
-	struct resource *res = NULL;
+	struct resource *res;
 	int rid = r->rid;
 
 	p = pcicfg_lookup_device(r->device);
@@ -598,9 +601,10 @@ mem_check_region(mem_region_t *r)
 		goto error;
 
 	/* Try to allocate the resource */
-	if (!(res = bus_alloc_resource(p->dev, SYS_RES_MEMORY, &rid,
-				       r->base_io, r->base_io + (r->size -1),
-				       r->size, RF_ACTIVE | RF_SHAREABLE))) {
+	res = bus_alloc_resource(p->dev, SYS_RES_MEMORY, &rid, r->base_io,
+				 r->base_io + (r->size -1), r->size,
+				 RF_ACTIVE | RF_SHAREABLE);
+	if (res == NULL) {
 		/* Try to set the resource before allocation */
 		bus_set_resource(p->dev, SYS_RES_MEMORY, rid, r->base_io,
 				 r->size);
@@ -610,51 +614,53 @@ mem_check_region(mem_region_t *r)
 					 r->size, RF_ACTIVE | RF_SHAREABLE);
 	}
 
-	/* Resource allocation succeeded, release then report ok */
+	/* Resource allocation succeeded, release then report OK */
 	if (res) {
 		bus_release_resource(p->dev, SYS_RES_MEMORY, rid, res);
 
-		KGI_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): ok",
+		KGI_DEBUG(2, "mem_check_region('%s', base 0x%lx, size %zd): OK",
 			  r->name, r->base_io, r->size);
 
 		return (KGI_EOK);
 	}
 
 error:
-	KGI_DEBUG(2, "mem_check_region('%s', base 0x%x, size %i): "
-		  "failed", r->name, r->base_io, r->size);
+	KGI_DEBUG(2, "mem_check_region('%s', base 0x%lx, size %zd): failed ",
+		  r->name, r->base_io, r->size);
+
 	return (KGI_ENODEV);
 }
 
-mem_vaddr_t 
+mem_vaddr_t
 mem_claim_region(mem_region_t *r)
 {
 	struct pcicfg_dev *p;
 	device_t dev;
-	struct pcicfg_resource *pcicfg_res = NULL;
-	struct resource *res = NULL;
-	int rid = r->rid;
+	struct pcicfg_resource *pcicfg_res;
+	struct resource *res;
+	int rid;
 
 	p = pcicfg_lookup_device(r->device);
 	dev = pcicfg_get_device(r->device);
-
-	pcicfg_res = (struct pcicfg_resource *)kgi_kmalloc(sizeof(struct
-		pcicfg_resource));
+	pcicfg_res = (struct pcicfg_resource *)
+			kgi_kmalloc(sizeof(struct pcicfg_resource));
 
 	if (p == NULL || dev == NULL || pcicfg_res == NULL)
 		goto error;
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
 
-	if (!(res = bus_alloc_resource(dev, SYS_RES_MEMORY, &rid,
-				       r->base_io, r->base_io + (r->size -1),
-				       r->size, RF_ACTIVE | RF_SHAREABLE)))
+	res = bus_alloc_resource(dev, SYS_RES_MEMORY, &rid, r->base_io,
+				 r->base_io + (r->size -1), r->size,
+				 RF_ACTIVE | RF_SHAREABLE);
+	if (res == NULL)
 		goto error;
 
-	r->base_phys = (mem_paddr_t) r->base_io;
-	r->base_bus  = (mem_baddr_t) r->base_io;
-	r->base_virt = (mem_vaddr_t) rman_get_virtual(res);
+	r->base_phys = (mem_paddr_t)r->base_io;
+	r->base_bus  = (mem_baddr_t)r->base_io;
+	r->base_virt = (mem_vaddr_t)rman_get_virtual(res);
 
+	rid = r->rid;
 	pcicfg_res->type = SYS_RES_MEMORY;
 	pcicfg_res->rid = rid;
 	pcicfg_res->res = res;
@@ -663,31 +669,33 @@ mem_claim_region(mem_region_t *r)
 	LIST_INSERT_HEAD(&p->resources, pcicfg_res, entries);
 
 	KGI_DEBUG(2, "mem_claim_region('%s', base_io %p, base_virt %p, "
-		"base_phys %p, base_bus %p): success", r->name, 
-		(void *) r->base_io, (void *) r->base_virt, 
-		(void *) r->base_phys, (void *) r->base_bus);
+		"base_phys %p, base_bus %p): success", r->name,
+		(void *)r->base_io, (void *)r->base_virt,
+		(void *)r->base_phys, (void *)r->base_bus);
 
 	return (r->base_virt);
 
 error:
-	KGI_DEBUG(2, "mem_claim_region('%s', base_io 0x%x, size %i): failed",
+	KGI_DEBUG(2, "mem_claim_region('%s', base_io 0x%lx, size %zd): failed",
 		  r->name, r->base_io, r->size);
 	if (pcicfg_res)
 		kgi_kfree(pcicfg_res);
+
 	return ((mem_vaddr_t)NULL);
 }
 
-mem_vaddr_t 
+mem_vaddr_t
 mem_free_region(mem_region_t *r)
 {
 	struct pcicfg_dev *p;
-	struct pcicfg_resource *pcicfg_res = NULL;
+	struct pcicfg_resource *pcicfg_res;
 	int error;
 
 	p = pcicfg_lookup_device(r->device);
 	if (p == NULL)
 		return ((mem_vaddr_t)NULL);
 
+	pcicfg_res = NULL;
 	LIST_FOREACH(pcicfg_res, &p->resources, entries) {
 		if ((pcicfg_res->type == SYS_RES_MEMORY) &&
 		    (pcicfg_res->region.mem.base_virt == r->base_virt) &&
@@ -699,26 +707,27 @@ mem_free_region(mem_region_t *r)
 	if (pcicfg_res) {
 		KGI_DEBUG(2, "mem_free_region %s, base_io %p, base_virt %p, "
 			  "base_phys %p, base_bus %p", r->name,
-			  (void *) r->base_io, (void *) r->base_virt,
-			  (void *) r->base_phys, (void *) r->base_bus);
-	
+			  (void *)r->base_io, (void *)r->base_virt,
+			  (void *)r->base_phys, (void *)r->base_bus);
+
 		error = bus_release_resource(p->dev, SYS_RES_MEMORY,
-					     pcicfg_res->rid, pcicfg_res->res);
-		
+				pcicfg_res->rid, pcicfg_res->res);
+
 		LIST_REMOVE(pcicfg_res, entries);
 		kgi_kfree(pcicfg_res);
-		
+
 		r->base_bus  = (mem_baddr_t)NULL;
 		r->base_phys = (mem_paddr_t)NULL;
 		r->base_virt = (mem_vaddr_t)NULL;
 	}
-		
+
 	return ((mem_vaddr_t)NULL);
 }
 
-mem_vaddr_t 
+mem_vaddr_t
 mem_alloc_region(mem_region_t *r)
 {
+
 	/*
 	 * AFAIK there is know resource management for memory regions
 	 * in Linux yet. We just report it failed.
@@ -729,49 +738,54 @@ mem_alloc_region(mem_region_t *r)
 /*
  * irq handling
  */
-static void 
+static void
 irq_handler(void *priv)
 {
-	register irq_line_t *irq = (irq_line_t *) priv;
+	register irq_line_t *irq;
 
-	if (irq->High) 
+	irq = (irq_line_t *) priv;
+	if (irq->High)
 		irq->High(irq->meta, irq->meta_io, NULL);
 
 	return;
 }
 
-__kgi_error_t 
+__kgi_error_t
 irq_claim_line(irq_line_t *irq)
 {
 	struct pcicfg_dev *p;
 	device_t dev;
-	struct pcicfg_resource *pcicfg_res = NULL;
-	struct resource *res = NULL;
-	int rid = irq->line;
-	unsigned int flags = RF_ACTIVE;
+	struct pcicfg_resource *pcicfg_res;
+	struct resource *res;
+	int rid;
+	unsigned int flags;
 	int error;
 
-	p = pcicfg_lookup_device(irq->device);
 	dev = pcicfg_get_device(irq->device);
-
+	p = pcicfg_lookup_device(irq->device);
 	pcicfg_res = (struct pcicfg_resource *)kgi_kmalloc(sizeof(struct
 		pcicfg_resource));
+	res = NULL;
 
 	if (p == NULL || dev == NULL || pcicfg_res == NULL)
 		goto error;
 
 	memset(pcicfg_res, 0, sizeof(*pcicfg_res));
 
-	if (irq->flags & IF_SHARED_IRQ) 
+	flags = RF_ACTIVE;
+	if (irq->flags & IF_SHARED_IRQ)
 		flags |= RF_SHAREABLE;
 
-	if (!(res = bus_alloc_resource(dev, SYS_RES_IRQ, &rid, 0, ~0, 1, flags)))
+	res = bus_alloc_resource(dev, SYS_RES_IRQ, &rid, 0, ~0, 1, flags);
+	if (res == NULL)
 		goto error;
 
-	if ((error = bus_setup_intr(p->dev, res, INTR_TYPE_MISC,
-			NULL, irq_handler, p, &pcicfg_res->intrhand)))
+	error = bus_setup_intr(p->dev, res, INTR_TYPE_MISC, NULL, irq_handler,
+			    p, &pcicfg_res->intrhand);
+	if (error)
 		goto error;
 
+	rid = irq->line;
 	pcicfg_res->type = SYS_RES_IRQ;
 	pcicfg_res->rid = rid;
 	pcicfg_res->res = res;
@@ -791,14 +805,15 @@ error:
 		bus_release_resource(p->dev, SYS_RES_IRQ, 0, res);
 	if (pcicfg_res)
 		kgi_kfree(pcicfg_res);
+
 	return (KGI_EINVAL);
 }
 
-void 
+void
 irq_free_line(irq_line_t *irq)
 {
 	struct pcicfg_dev *p;
-	struct pcicfg_resource *pcicfg_res = NULL;
+	struct pcicfg_resource *pcicfg_res;
 
 	p = pcicfg_lookup_device(irq->device);
 
@@ -810,13 +825,13 @@ irq_free_line(irq_line_t *irq)
 	}
 
 	if (pcicfg_res) {
-		KGI_DEBUG(2, "irq_free_line('%s', line %i)", 
+		KGI_DEBUG(2, "irq_free_line('%s', line %i)",
 			irq->name, irq->line);
 
 		bus_teardown_intr(p->dev, pcicfg_res->res,
-			pcicfg_res->intrhand);
+				  pcicfg_res->intrhand);
 		bus_release_resource(p->dev, SYS_RES_IRQ, 0, pcicfg_res->res);
-		
+
 		LIST_REMOVE(pcicfg_res, entries);
 		kgi_kfree(pcicfg_res);
 	}

@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -77,7 +77,7 @@
 #define	KGI_TRACE(level, x)	\
 		if (level <= KGI_DBG_LEVEL) { x; } else do {} while (0)
 #else
-#define	KGI_TRACE(level, x)	
+#define	KGI_TRACE(level, x)
 #endif
 
 #ifndef PANIC
@@ -88,7 +88,7 @@
 #	define	__krn_notice	printf
 #	define	__krn_debug	log
 
-#else	/* #ifdef _KERNEL */
+#else /* !_KERNEL */
 
 /*
  * library debugging macros
@@ -137,10 +137,10 @@
 #	define	LIB_TRACE(level, x)	\
 		if (level <= KGI_DBG_LEVEL) { x; } else do {} while (0)
 #else
-#	define	LIB_TRACE(level, x)	
+#	define	LIB_TRACE(level, x)
 #endif
 
-#endif	/* #ifdef __LIBRARY__ */
+#endif /* !__LIBRARY__ */
 
 /*
  * application debugging macros
@@ -190,10 +190,10 @@
 #	define	APP_TRACE(level, x)	\
 		if (level <= KGI_DBG_LEVEL) { x; } else do {} while (0)
 #else
-#	define	APP_TRACE(level, x)	
+#	define	APP_TRACE(level, x)
 #endif
 
-#endif	/* __APPLICATION__ */
-#endif	/* _KERNEL */
+#endif /* !__APPLICATION__ */
+#endif /* !_KERNEL */
 
-#endif /* _KGI_KGIDBG_H_ */
+#endif /* !_KGI_KGIDBG_H_ */

@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,12 +27,6 @@
 
 #ifndef	_KGI_TYPES_H_
 #define	_KGI_TYPES_H_
-
-/* XXX to deleted */
-#ifdef	__STRICT_ANSI__
-#	define	signed
-#	define	const
-#endif
 
 typedef	int8_t		__kgi_s8_t;
 typedef	uint8_t		__kgi_u8_t;
@@ -62,16 +56,16 @@ typedef vm_paddr_t	__kgi_bus_addr_t;
 typedef ssize_t		__kgi_size_t;
 
 /*
- * byte order conversions
+ * Byte order conversions
  *
- * For 8bit (byte) types, byteorder conversion doesn't make sense,
- * so only for 16,32 and 64 bit types conversion is defined.
+ * Byte order conversion doesn't make sense for 8 bit types, so
+ * only 16, 32 & 64 bit type conversions are defined.
  */
 
 #define	HOST_BE		0
 #define	HOST_LE		1
 
-/* 
+/*
  * XXX as this is i386/types.h, i386 optimized (inline) functions should
  * XXX go here.
  */
@@ -138,4 +132,4 @@ typedef union
 	typedef __kgi_bus_addr_t	prefix ## _bus_addr_t;	\
 	typedef __kgi_size_t		prefix ## _size_t;
 
-#endif	/* _KGI_TYPES_H_ */
+#endif /* !_KGI_TYPES_H_ */

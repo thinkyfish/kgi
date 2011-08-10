@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,7 +51,7 @@ __FBSDID("$FreeBSD$");
  * Keymap lookup stuff.
  */
 
-void 
+void
 keymap_reset(kii_keymap_t *k)
 {
 	kii_u_t i;
@@ -75,7 +75,7 @@ keymap_reset(kii_keymap_t *k)
 	}
 }
 
-kii_s_t 
+kii_s_t
 keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		kii_unicode_t sym)
 {
@@ -94,7 +94,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		return( KII_EOK);
 	}
 
-	if ((sym == K_VOID) && (k->keymap[shift] == NULL)) 
+	if ((sym == K_VOID) && (k->keymap[shift] == NULL))
 		return (KII_EOK);
 
 	size = sizeof(kii_keymap_t) + k->fn_buf_size;
@@ -106,7 +106,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 	size += sizeof(void *) * (k->fn_str_size + k->keymap_size);
 	size += sizeof(kii_dead_combination_t) * k->combine_size;
 	size += sizeof(kii_unicode_t) * (k->keymax-k->keymin+1);
-	if (KII_MAX_KEYMAP_MEMORY < size) 
+	if (KII_MAX_KEYMAP_MEMORY < size)
 		return (KII_ENOMEM);
 
 	if (k->keymap == default_kii_keymap.keymap) {
@@ -118,14 +118,14 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		}
 		memcpy(newarr, k->keymap, size);
 		k->keymap = newarr;
-		KGI_DEBUG(2, "allocated new keymap array (%i slots)", 
+		KGI_DEBUG(2, "allocated new keymap array (%i slots)",
 			k->keymap_size);
 	}
 	size = k->keymax - k->keymin + 1;
-	if ((newmap = kgi_kmalloc(sizeof(kii_unicode_t) * size)) == NULL) 
+	if ((newmap = kgi_kmalloc(sizeof(kii_unicode_t) * size)) == NULL)
 		return (KII_ENOMEM);
 
-	KGI_DEBUG(2, "%s keymap %i", 
+	KGI_DEBUG(2, "%s keymap %i",
 		default_kii_keymap.keymap[shift] ? "reallocated" : "allocated",
 		shift);
 	i = size;
@@ -134,7 +134,7 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 			newmap[i] = default_kii_keymap.keymap[shift][i];
 		}
 	} else {
-		while (i--) 
+		while (i--)
 			newmap[i] = K_VOID;
 	}
 	newmap[key] = sym;
@@ -143,8 +143,8 @@ keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 	return (KII_EOK);
 }
 
-kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
-	  kii_unicode_t sym)
+kii_s_t
+keymap_set_default_keysym(kii_u_t shift, kii_u_t key, kii_unicode_t sym)
 {
 	kii_keymap_t *k = &default_kii_keymap;
 	kii_unicode_t *newmap;
@@ -158,48 +158,50 @@ kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
 		k->keymap[shift][key] = sym;
 		return (KII_EOK);
 	}
-	
-	if (sym == K_VOID) 
+
+	if (sym == K_VOID)
 		return (KII_EOK);
 
-	newmap = kgi_kmalloc((k->keymax - k->keymin + 1) 
+	newmap = kgi_kmalloc((k->keymax - k->keymin + 1)
 			* sizeof(kii_unicode_t));
-	if (newmap == NULL) 
+
+	if (newmap == NULL)
 		return (KII_ENOMEM);
-	
-	for (i = k->keymax - k->keymin; i; i--) 
+
+	for (i = k->keymax - k->keymin; i; i--)
 		newmap[i] = K_VOID;
-	
+
 	newmap[key] = sym;
 	k->keymap[shift] = newmap;
+
 	return (KII_EOK);
 }
 
-kii_unicode_t 
+kii_unicode_t
 keymap_get_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key)
 {
 	kii_unicode_t *map, sym;
 
-	if ((key < k->keymin) || (k->keymax < key)) 
+	if ((key < k->keymin) || (k->keymax < key))
 		return (K_VOID);
 
 	key -= k->keymin;
 	map = (shift < k->keymap_size) ? k->keymap[shift] : NULL;
 	sym = map ? map[key] : K_VOID;
 
-	if ((k->keymap[0][key] & K_TYPE_MASK) == K_TYPE_SHIFT) 
+	if ((k->keymap[0][key] & K_TYPE_MASK) == K_TYPE_SHIFT)
 		sym = k->keymap[0][key];
 
 	return (sym);
 }
 
-kii_unicode_t 
+kii_unicode_t
 keymap_combine_dead(kii_keymap_t *k, kii_unicode_t diacr, kii_unicode_t base)
 {
 	kii_u_t i;
 
 	for (i = 0; i < k->combine_size; i++) {
-		if ((k->combine[i].diacr == diacr) && 
+		if ((k->combine[i].diacr == diacr) &&
 			(k->combine[i].base == base)) {
 			return (k->combine[i].combined);
 		}
@@ -220,7 +222,7 @@ keymap_get_fnstring(kii_keymap_t *k, kii_u_t key)
 	return ((key < k->fn_str_size) ? k->fn_str[key] : NULL);
 }
 
-kii_s_t 
+kii_s_t
 keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, const kii_ascii_t *s)
 {
 
@@ -228,7 +230,9 @@ keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, const kii_ascii_t *s)
 	return (KII_EINVAL);
 }
 
-struct __kii_keymap_translation_t { kii_unicode_t val1, val2, xor; };
+struct __kii_keymap_translation_t {
+	kii_unicode_t val1, val2, xor;
+};
 
 static const struct __kii_keymap_translation_t keymap_range_translation[] = {
 	{ 0x0041, 0x005a,  0x0020 }, { 0x0061, 0x007a,  0x0020 },
@@ -300,7 +304,7 @@ static const struct __kii_keymap_translation_t keymap_pair_translation[] = {
 	{ 0x2112, 0x2113,  0x0001 }, { 0x2130, 0x212f,  0x001f }
 };
 
-kii_unicode_t 
+kii_unicode_t
 keymap_toggled_case(kii_unicode_t sym)
 {
 	kii_u_t i, size;
@@ -309,7 +313,7 @@ keymap_toggled_case(kii_unicode_t sym)
 		sizeof(keymap_pair_translation[0]);
 
 	for (i = 0; i < size; i++) {
-		if ((keymap_pair_translation[i].val1 == sym) || 
+		if ((keymap_pair_translation[i].val1 == sym) ||
 			(keymap_pair_translation[i].val2 == sym)) {
 			return (sym ^ keymap_pair_translation[i].xor);
 		}
@@ -327,9 +331,9 @@ keymap_toggled_case(kii_unicode_t sym)
 
 	if ((0x24b6 <= sym) && (sym <= 0x24cf))
 		return (sym + 26);
-	
-	if ((0x24d0 <= sym) && (sym <= 0x24e9)) 
+
+	if ((0x24d0 <= sym) && (sym <= 0x24e9))
 		return (sym - 26);
-	
+
 	return (sym);
 }

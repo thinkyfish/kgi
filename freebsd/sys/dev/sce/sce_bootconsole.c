@@ -218,7 +218,6 @@ event2char(kii_device_t *dev, kii_event_t *ev)
 		switch (ev->key.sym) {
 		case K_ENTER:
 			return ('\n');
-			break;
 		case K_SCROLLFORW:
 			SCROLLER_FORWARD(cons->scroller, 0);
 			SCROLLER_SYNC(cons->scroller);
@@ -230,6 +229,8 @@ event2char(kii_device_t *dev, kii_event_t *ev)
 		default:
 			break;
 		}
+	default:
+		break;
 	}
 	splx(s);
 

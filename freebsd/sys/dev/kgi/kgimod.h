@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,9 @@
 #ifndef _KGI_KGIMOD_H_
 #define _KGI_KGIMOD_H_
 
-/* 
+/*
  * Attributes
- * NOTE	Attribute ordering __must__ not be changed! 
+ * NOTE	Attribute ordering __must__ not be changed!
  */
 typedef enum {
 	KGI_A_COLOR1,		/* intensity of color channel 1	*/
@@ -68,32 +68,37 @@ typedef enum {
 #undef __KGI_AM
 #define	KGI_ATTRIBUTE_MASK(attr)	(1 << (attr))
 
-#define	KGI_AM_TEXT	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX | KGI_AM_FOREGROUND_INDEX | KGI_AM_TEXTURE_INDEX)
+#define	KGI_AM_TEXT	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX | \
+			 KGI_AM_FOREGROUND_INDEX | KGI_AM_TEXTURE_INDEX)
 #define	KGI_AM_I	(kgi_attribute_mask_t)(KGI_AM_COLOR_INDEX)
 #define	KGI_AM_RGB	(kgi_attribute_mask_t)(KGI_AM_COLORS)
-#define	KGI_AM_RGBI	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_COLOR_INDEX)
-#define	KGI_AM_RGBA	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_ALPHA)
-#define	KGI_AM_RGBX	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_APPLICATION)
-#define	KGI_AM_RGBP	(kgi_attribute_mask_t)(KGI_AM_COLORS | KGI_AM_PRIVATE)
+#define	KGI_AM_RGBI	(kgi_attribute_mask_t)(KGI_AM_COLORS | 	\
+			 KGI_AM_COLOR_INDEX)
+#define	KGI_AM_RGBA	(kgi_attribute_mask_t)(KGI_AM_COLORS |	\
+			 KGI_AM_ALPHA)
+#define	KGI_AM_RGBX	(kgi_attribute_mask_t)(KGI_AM_COLORS | 	\
+			 KGI_AM_APPLICATION)
+#define	KGI_AM_RGBP	(kgi_attribute_mask_t)(KGI_AM_COLORS | 	\
+			 KGI_AM_PRIVATE)
 
 /* attribute strings */
-#define	KGI_AS_8888	((const kgi_u8_t[]) { 8,8,8,8,0 })
-#define	KGI_AS_4444	((const kgi_u8_t[]) { 4,4,4,4,0 })
-#define	KGI_AS_5551	((const kgi_u8_t[]) { 5,5,5,1,0 })
-#define	KGI_AS_2321	((const kgi_u8_t[]) { 2,3,2,1,0 })
-#define	KGI_AS_4642	((const kgi_u8_t[]) { 4,6,4,3,0 })
-#define	KGI_AS_AAA2	((const kgi_u8_t[]) { 10,10,10,2,0 })
-#define	KGI_AS_332	((const kgi_u8_t[]) { 3,3,2,0 })
-#define	KGI_AS_565	((const kgi_u8_t[]) { 5,6,5,0 })
-#define	KGI_AS_448	((const kgi_u8_t[]) { 4,4,8,0 })
-#define	KGI_AS_664	((const kgi_u8_t[]) { 6,6,4,0 })
-#define	KGI_AS_888	((const kgi_u8_t[]) { 8,8,8,0 })
-#define	KGI_AS_ACA	((const kgi_u8_t[]) { 10,12,10,0 })
-#define	KGI_AS_88	((const kgi_u8_t[]) { 8,8,0 })
-#define	KGI_AS_8	((const kgi_u8_t[]) { 8,0 })
-#define	KGI_AS_4	((const kgi_u8_t[]) { 4,0 })
-#define	KGI_AS_2	((const kgi_u8_t[]) { 2,0 })
-#define	KGI_AS_1	((const kgi_u8_t[]) { 1,0 })
+#define	KGI_AS_8888	((const kgi_u8_t[]) { 8, 8, 8, 8, 0 })
+#define	KGI_AS_4444	((const kgi_u8_t[]) { 4, 4, 4, 4, 0 })
+#define	KGI_AS_5551	((const kgi_u8_t[]) { 5, 5, 5, 1, 0 })
+#define	KGI_AS_2321	((const kgi_u8_t[]) { 2, 3, 2, 1, 0 })
+#define	KGI_AS_4642	((const kgi_u8_t[]) { 4, 6, 4, 3, 0 })
+#define	KGI_AS_AAA2	((const kgi_u8_t[]) { 10, 10, 10, 2, 0 })
+#define	KGI_AS_332	((const kgi_u8_t[]) { 3, 3, 2, 0 })
+#define	KGI_AS_565	((const kgi_u8_t[]) { 5, 6, 5, 0 })
+#define	KGI_AS_448	((const kgi_u8_t[]) { 4, 4, 8, 0 })
+#define	KGI_AS_664	((const kgi_u8_t[]) { 6, 6, 4, 0 })
+#define	KGI_AS_888	((const kgi_u8_t[]) { 8, 8, 8, 0 })
+#define	KGI_AS_ACA	((const kgi_u8_t[]) { 10, 12, 10, 0 })
+#define	KGI_AS_88	((const kgi_u8_t[]) { 8, 8, 0 })
+#define	KGI_AS_8	((const kgi_u8_t[]) { 8, 0 })
+#define	KGI_AS_4	((const kgi_u8_t[]) { 4, 0 })
+#define	KGI_AS_2	((const kgi_u8_t[]) { 2, 0 })
+#define	KGI_AS_1	((const kgi_u8_t[]) { 1, 0 })
 
 /*
  * timing/modes
@@ -171,17 +176,18 @@ typedef enum {
 } kgi_image_flags_t;
 
 typedef struct {
-	kgi_dot_port_mode_t *out;
-	kgi_image_flags_t flags;
-	kgi_ucoord_t	virt;
-	kgi_ucoord_t	size;
-	kgi_u8_t	frames;
-	kgi_u8_t	tluts;
-	kgi_u8_t	iluts;
-	kgi_u8_t	aluts;
+	kgi_dot_port_mode_t 	*out;
+	kgi_image_flags_t 	flags;
+	kgi_ucoord_t		virt;
+	kgi_ucoord_t		size;
+	kgi_u8_t		frames;
+	kgi_u8_t		tluts;
+	kgi_u8_t		iluts;
+	kgi_u8_t		aluts;
 	kgi_attribute_mask_t	ilutm;
 	kgi_attribute_mask_t	alutm;
-	kgi_attribute_mask_t	fam, cam; /* frame, common attribute mask     */
+	kgi_attribute_mask_t	fam; 	/* frame attribute mask		*/
+	kgi_attribute_mask_t	cam; 	/* common attribute mask     	*/
 	kgi_u8_t	bpfa[__KGI_MAX_NR_ATTRIBUTES];/* bits per frame attr  */
 	kgi_u8_t	bpca[__KGI_MAX_NR_ATTRIBUTES];/* bits per common attr */
 	kgi_resource_t	*resource[__KGI_MAX_NR_IMAGE_RESOURCES];
@@ -202,4 +208,4 @@ typedef struct {
 	kgi_image_mode_t	img[1];	   /* image(s)			*/
 } kgi_mode_t;
 
-#endif /* _KGI_KGIMOD_H_ */
+#endif /* !_KGI_KGIMOD_H_ */

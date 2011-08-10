@@ -111,7 +111,7 @@ dpysw_set_mode(kgi_display_t *dpy, kgi_image_mode_t *img, kgi_u_t images,
 	}
 	fb->offset = 0;
 
- error:
+error:
 	return;
 }
 
@@ -184,8 +184,7 @@ dpysw_try_mode(dpysw_display_t *sc, video_info_t *mode_info)
 		flags = mode_info->vi_flags;
 
 		/* Remove VESA flags. */
-		mode_info->vi_flags &= ~(V_INFO_COLOR | V_INFO_GRAPHICS
-				| V_INFO_LINEAR | V_INFO_VESA);
+		mode_info->vi_flags &= ~(V_INFO_LINEAR | V_INFO_VESA);
 
 		error = (*vidsw[sc->adp->va_index]->query_mode)(sc->adp,
 				mode_info);
@@ -319,8 +318,8 @@ dpysw_check_mode(kgi_display_t *dpy, kgi_timing_command_t cmd,
 			 * Try VESA linear framebuffered mode first, then VGA
 			 * standard modes.
 			 */
-			mode_info->vi_flags = V_INFO_COLOR | V_INFO_GRAPHICS
-					| V_INFO_LINEAR | V_INFO_VESA;
+			mode_info->vi_flags |= V_INFO_GRAPHICS | V_INFO_LINEAR |
+					    V_INFO_VESA;
 
 			/* Check if common attributes are supported. */
 			if (img[0].cam) {

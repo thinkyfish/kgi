@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,60 +43,62 @@ __FBSDID("$FreeBSD$");
 /*
  * command resource
  */
-int 
+int
 graph_command(graph_file_t *file, unsigned int cmd, void *data,
-		struct thread *td)
+    struct thread *td)
 {
+
 	if (cmd == KGIC_MAPPER_IDENTIFY) {
 			/*
 			 * For now only force client identification and
 			 * identify myself (no compatibility checks).
 			 */
-			kgic_mapper_identify_result_t *out = data;
+			kgic_mapper_identify_result_t *map_id= data;
 
 			if (file->flags & GRAPH_FF_CLIENT_IDENTIFIED)
 				return (KGI_EPROTO);
 
 			file->flags |= GRAPH_FF_CLIENT_IDENTIFIED;
 
-			memset(out->mapper, 0, sizeof(out->mapper));
-			strncpy(out->mapper, GRAPH_NAME, sizeof(out->mapper));
-			out->mapper_version.major = 0;
-			out->mapper_version.minor = 9;
-			out->mapper_version.patch = 0;
-			out->mapper_version.extra = 0;
-			out->resources = __KGI_MAX_NR_RESOURCES;
-			/* 
-			 * XXX 
-			 * #warning tell client if it is session leader or not.
+			memset(map_id->mapper, 0, sizeof(map_id->mapper));
+			strncpy(map_id->mapper, GRAPH_NAME,
+				sizeof(map_id->mapper));
+			map_id->mapper_version.major = 0;
+			map_id->mapper_version.minor = 9;
+			map_id->mapper_version.patch = 0;
+			map_id->mapper_version.extra = 0;
+			map_id->resources = __KGI_MAX_NR_RESOURCES;
+			/*
+			 * XXX
+			 * warning tell client if it is session leader or not.
 			 */
 
 			return (KGI_EOK);
 	}
 
 	/* all commands below require identification */
-	if (!(file->flags & GRAPH_FF_CLIENT_IDENTIFIED)) {
+	if ((file->flags & GRAPH_FF_CLIENT_IDENTIFIED) == 0) {
 		KGI_ERROR("cmd = %.8x, but client has not yet identified", cmd);
 		return (KGI_EPROTO);
 	}
+
 	switch (cmd) {
 	case KGIC_MAPPER_SET_IMAGES: {
-		/* 
+		/*
 		 * Only the session leader may set the number of
 		 * images as long as device isn't registered.
 		 */
-		kgic_mapper_set_images_request_t *in = data;
+		kgic_mapper_set_images_request_t *map_set = data;
 		kgi_size_t size;
-		
-		if (!(file->flags & GRAPH_FF_SESSION_LEADER) ||
-			KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
-			KGI_ERROR(
-				(file->flags & GRAPH_FF_SESSION_LEADER)
-				? "mode already checked"
-				: "client is not session leader");
+
+		if ((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
+			KGI_ERROR((file->flags & GRAPH_FF_SESSION_LEADER) ?
+			    "mode already checked" :
+			    "client is not session leader");
 			return (KGI_EPROTO);
 		}
-		/* XXX #warning what about resources still mapped?! */
+		/* XXX warning what about resources still mapped?! */
 		if (file->device->kgi.mode) {
 			kgi_kfree(file->device->kgi.mode->dev_mode);
 			file->device->kgi.mode->dev_mode = NULL;
@@ -104,13 +106,13 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 			file->device->kgi.mode = NULL;
 		}
 
-		if ((in->images < 1) ||
-			(GRAPH_MAX_NR_IMAGES < in->images)) {
+		if ((map_set->images < 1) ||
+			(GRAPH_MAX_NR_IMAGES < map_set->images)) {
 			KGI_ERROR("no mem");
 			return (KGI_ENOMEM);
 		}
-		size = sizeof(kgi_mode_t) + 
-			sizeof(kgi_image_mode_t) * (in->images - 1);
+		size = sizeof(kgi_mode_t) + sizeof(kgi_image_mode_t) *
+			(map_set->images - 1);
 		file->device->kgi.mode = kgi_kmalloc(size);
 		if (file->device->kgi.mode == NULL) {
 			KGI_ERROR("no mem");
@@ -118,49 +120,50 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 		}
 		memset(file->device->kgi.mode, 0, size);
 		file->device->kgi.mode->revision = KGI_MODE_REVISION;
-		file->device->kgi.mode->images = in->images;
+		file->device->kgi.mode->images = map_set->images;
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_GET_IMAGES: {
-		kgic_mapper_get_images_result_t *out = data;
+		kgic_mapper_get_images_result_t *map_get = data;
 
-		out->images = file->device->kgi.mode 
-			? file->device->kgi.mode->images : 0;
+		map_get->images = file->device->kgi.mode ?
+			file->device->kgi.mode->images : 0;
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_SET_IMAGE_MODE: {
-		kgic_mapper_set_image_mode_request_t *in = data;
+		kgic_mapper_set_image_mode_request_t *map_set_mode = data;
 
-		if ((!(file->flags & GRAPH_FF_SESSION_LEADER)) ||
-			KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
-			KGI_ERROR(
-				(file->flags & GRAPH_FF_SESSION_LEADER)
-				? "mode already checked"
-				: "client is not session leader");
+		if (((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			KGI_VALID_DEVICE_ID(file->device->kgi.id)) == 0) {
+			KGI_ERROR((file->flags & GRAPH_FF_SESSION_LEADER) ?
+			    "mode already checked" :
+			    "client is not session leader");
 			return (KGI_EPROTO);
 		}
 
-		if (file->device->kgi.mode->images <= in->image) 
+		if (file->device->kgi.mode->images <= map_set_mode->image)
 			return (KGI_EINVAL);
 
-		file->device->kgi.mode->img[in->image] = in->mode;
+		file->device->kgi.mode->img[map_set_mode->image] =
+			map_set_mode->mode;
 
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_GET_IMAGE_MODE: {
-		kgic_mapper_get_image_mode_request_t local = 
+		kgic_mapper_get_image_mode_request_t local =
 			*(kgic_mapper_get_image_mode_request_t *)data;
-		kgic_mapper_get_image_mode_request_t *in = &local;
-		kgic_mapper_get_image_mode_result_t *out = data;
+		kgic_mapper_get_image_mode_request_t *map_get_mode = &local;
+		kgic_mapper_get_image_mode_result_t *map_get_res= data;
 
 		if (file->device->kgi.mode == NULL) {
 			KGI_ERROR("number of images not yet set");
 			return (KGI_EPROTO);
 		}
-		if (file->device->kgi.mode->images <= in->image) 
+		if (file->device->kgi.mode->images <= map_get_mode->image)
 			return (KGI_EINVAL);
 
-		out->mode = file->device->kgi.mode->img[in->image];
+		map_get_res->mode =
+		    file->device->kgi.mode->img[map_get_mode->image];
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_MODE_CHECK: {
@@ -168,22 +171,21 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 		kgi_u_t i;
 #endif
 		kgi_error_t err;
-		if (!(file->flags & GRAPH_FF_SESSION_LEADER) ||
-			(file->device->kgi.mode == NULL)) {
-			KGI_ERROR(
-				(file->flags & GRAPH_FF_SESSION_LEADER)
-				? "number of images not yet set"
-				: "client is not session leader");
+		if ((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			(file->device->kgi.mode == NULL) == 0) {
+			KGI_ERROR((file->flags & GRAPH_FF_SESSION_LEADER) ?
+			    "number of images not yet set" :
+			    "client is not session leader");
 			return (KGI_EPROTO);
 		}
-		KGI_ASSERT(!KGI_VALID_DEVICE_ID(file->device->kgi.id));
-		KGI_ASSERT(!KGI_VALID_DISPLAY_ID(file->device->kgi.dpy_id));
+		KGI_ASSERT(KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0);
+		KGI_ASSERT(KGI_VALID_DISPLAY_ID(file->device->kgi.dpy_id) == 0);
 
 		file->device->kgi.MapDevice   = graph_device_map;
 		file->device->kgi.UnmapDevice = graph_device_unmap;
 		file->device->kgi.HandleEvent = NULL;
 
-		err = kgi_register_device(&(file->device->kgi), 
+		err = kgi_register_device(&(file->device->kgi),
 		file->device_id);
 		if (KGI_EOK != err) {
 			KGI_ERROR("Failed to register device (%i)", err);
@@ -195,7 +197,7 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 			const kgi_resource_t *r =
 				file->device->kgi.mode->resource[i];
 
-			if (r == NULL) 
+			if (r == NULL)
 				break;
 
 			KGI_DEBUG(1, "resource %i (%s) has type %.8x",
@@ -207,12 +209,12 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 	}
 	case KGIC_MAPPER_MODE_SET: {
 		kgi_device_t *prev;
-		if (!(file->flags & GRAPH_FF_SESSION_LEADER) ||
-			!KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
-				KGI_ERROR(
-					(file->flags & GRAPH_FF_SESSION_LEADER) ?
-					"mode not yet checke.d" :
-					"client is not session leader.");
+		if ((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
+				KGI_ERROR((file->flags &
+				    GRAPH_FF_SESSION_LEADER) ?
+				    "mode not yet checke.d" :
+				    "client is not session leader.");
 				return (KGI_EPROTO);
 		}
 		prev = kgi_current_focus(file->device->kgi.dpy_id);
@@ -232,24 +234,24 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_MODE_UNSET: {
-		if (!(file->flags & GRAPH_FF_SESSION_LEADER) ||
-			!KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
-				KGI_ERROR(
-					(file->flags & GRAPH_FF_SESSION_LEADER) ?
-					"mode not yet checked" :
-					"client is not session leader");
+		if ((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
+				KGI_ERROR((file->flags &
+				    GRAPH_FF_SESSION_LEADER) ?
+				    "mode not yet checked" :
+				    "client is not session leader");
 				return (KGI_EPROTO);
 		}
 		kgi_unmap_device(file->device->kgi.id);
 		return (KGI_EOK);
 	}
 	case KGIC_MAPPER_MODE_DONE: {
-		if (!(file->flags & GRAPH_FF_SESSION_LEADER) ||
-			!KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
-				KGI_ERROR(
-					(file->flags & GRAPH_FF_SESSION_LEADER) ?
-					"mode not yet checked" :
-					"client is not session leader");
+		if ((file->flags & GRAPH_FF_SESSION_LEADER) ||
+			KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
+				KGI_ERROR((file->flags &
+				    GRAPH_FF_SESSION_LEADER) ?
+				    "mode not yet checked" :
+				    "client is not session leader");
 				return (KGI_EPROTO);
 		}
 		if (file->device->kgi.flags & KGI_DF_FOCUSED) {
@@ -261,7 +263,7 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 			return (KGI_EOK);
 		}
 	case KGIC_MAPPER_RESOURCE_INFO: {
-		kgic_mapper_resource_info_request_t local = 
+		kgic_mapper_resource_info_request_t local =
 			*(kgic_mapper_resource_info_request_t *)data;
 		kgic_mapper_resource_info_request_t *in = &local;
 		kgic_mapper_resource_info_result_t *out = data;
@@ -272,29 +274,29 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 			kgi_shmem_t		shmem;
 		} *r;
 
-		if (!KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
+		if (KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
 			KGI_ERROR("mode not yet checked");
 			return (KGI_EAGAIN);
 		}
-		if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE)?
-			__KGI_MAX_NR_IMAGE_RESOURCES:
-			__KGI_MAX_NR_RESOURCES) <= in->resource) {
+		if (((in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE) ?
+		    __KGI_MAX_NR_IMAGE_RESOURCES :
+		    __KGI_MAX_NR_RESOURCES) <= in->resource) {
 			KGI_ERROR("invalid resource ID %d", in->resource);
 			return (KGI_EINVAL);
 		}
 		if ((in->image < 0) ||
 			(file->device->kgi.mode->images <= in->image)) {
-			if (in->image!=KGIC_MAPPER_NON_IMAGE_RESOURCE) {
-				KGI_ERROR("invalid image %d (%i)", 
-					in->image, in->image);
+			if (in->image != KGIC_MAPPER_NON_IMAGE_RESOURCE) {
+				KGI_ERROR("invalid image %d (%i)", in->image,
+				    in->image);
 				return (KGI_EINVAL);
 			}
 		}
 
-		r = (in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE) 
-			? (void*)file->device->kgi.mode->resource[in->resource]
-			: (void*)file->device->kgi.mode->img[in->image]
-			  .resource[in->resource];
+		r = (in->image == KGIC_MAPPER_NON_IMAGE_RESOURCE) ?
+		    (void*)file->device->kgi.mode->resource[in->resource] :
+		    (void*)file->device->kgi.mode->
+		    img[in->image].resource[in->resource];
 
 		if (r) {
 			memset(out, 0, sizeof(*out));
@@ -328,15 +330,15 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 
 		KGI_DEBUG(1, "mmap setup.");
 
-		if (! KGI_VALID_DEVICE_ID(file->device->kgi.id)) {
+		if (KGI_VALID_DEVICE_ID(file->device->kgi.id) == 0) {
 			KGI_ERROR("mode not yet checked.");
 			return (KGI_EAGAIN);
 		}
 		if (file->mmap_setup.resource &&
 			(file->mmap_setup.pid != td->td_proc->p_pid ||
 			 file->mmap_setup.gid != td->td_proc->p_pgrp->pg_id)) {
-				KGI_ERROR("only initiator can change mmap"
-						" setup.");
+				KGI_ERROR("only initiator can change mmap "
+				    "setup.");
 			return (KGI_EPERM);
 		}
 
@@ -349,12 +351,12 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 				KGI_ERROR("invalid resource ID.");
 				return (KGI_EINVAL);
 			}
-		if (!file->device->kgi.mode->resource[in->resource]) {
+		if (file->device->kgi.mode->resource[in->resource] == NULL) {
 			KGI_ERROR("no such resource %i", in->resource);
 			return (KGI_ENXIO);
 		}
 
-		file->mmap_setup.resource = 
+		file->mmap_setup.resource =
 			file->device->kgi.mode->resource[in->resource];
 		} else {
 			if (in->image > file->device->kgi.mode->images) {
@@ -365,14 +367,14 @@ graph_command(graph_file_t *file, unsigned int cmd, void *data,
 				KGI_ERROR("invalid resource ID.");
 				return (KGI_EINVAL);
 			}
-			if (!file->device->kgi.mode->
-				img[in->image].resource[in->resource]) { 
+			if (file->device->kgi.mode->
+			    img[in->image].resource[in->resource] == NULL) {
 					KGI_ERROR("no such resource %i",
-					 in->resource);
+					    in->resource);
 				return (KGI_ENXIO);
 			}
 
-			file->mmap_setup.resource = 
+			file->mmap_setup.resource =
 				file->device->kgi.mode->resource[in->resource];
 		}
 

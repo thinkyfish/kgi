@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
 #define _KGI_KGIRES_H_
 
 typedef enum {
-	/*  may be mapped by applications (others) */ 
+	/*  may be mapped by applications (others) */
 	KGI_PF_APP_R		= 0x00000001,	/* read access allowed	*/
 	KGI_PF_APP_W		= 0x00000002,	/* write access allowed	*/
 	KGI_PF_APP_S		= 0x00000004,	/* may be shared	*/
@@ -64,23 +64,23 @@ typedef enum {
 
 typedef enum {
 	KGI_RT_MMIO	= 0x00000000,
-		KGI_RT_MMIO_FRAME_BUFFER,	/* linear frame buffer	*/
-		KGI_RT_MMIO_LOCAL_BUFFER,	/* linear local buffer	*/
-		KGI_RT_MMIO_PRIVATE,		/* private MMIO region	*/
+	KGI_RT_MMIO_FRAME_BUFFER,	/* linear frame buffer	*/
+	KGI_RT_MMIO_LOCAL_BUFFER,	/* linear local buffer	*/
+	KGI_RT_MMIO_PRIVATE,		/* private MMIO region	*/
 
 	KGI_RT_SHMEM	= 0x20000000,
-		KGI_RT_SHARED_MEMORY,
+	KGI_RT_SHARED_MEMORY,
 
 	KGI_RT_ACCEL	= 0x40000000,
-		KGI_RT_ACCELERATOR,
+	KGI_RT_ACCELERATOR,
 
 	KGI_RT_COMMAND	= 0x60000000,
-		KGI_RT_CURSOR_CONTROL,
-		KGI_RT_POINTER_CONTROL,
-		KGI_RT_ILUT_CONTROL,
-		KGI_RT_ALUT_CONTROL,
-		KGI_RT_TLUT_CONTROL,
-		KGI_RT_TEXT16_CONTROL,
+	KGI_RT_CURSOR_CONTROL,
+	KGI_RT_POINTER_CONTROL,
+	KGI_RT_ILUT_CONTROL,
+	KGI_RT_ALUT_CONTROL,
+	KGI_RT_TLUT_CONTROL,
+	KGI_RT_TEXT16_CONTROL,
 
 	KGI_RT_MASK	= 0x70000000,	/* WARNING: offset encoding depends! */
 
@@ -209,7 +209,7 @@ typedef struct kgi_accel_s {
 typedef struct kgi_shmem_context_s kgi_shmem_context_t;
 typedef struct kgi_shmem_s kgi_shmem_t;
 
-typedef kgi_error_t kgi_shmem_context_init_fn(kgi_shmem_t *shmem, 
+typedef kgi_error_t kgi_shmem_context_init_fn(kgi_shmem_t *shmem,
 		kgi_shmem_context_t *ctx, kgi_size_t size);
 
 typedef void kgi_shmem_context_fn(kgi_shmem_t *shmem, kgi_shmem_context_t *ctx);
@@ -316,4 +316,4 @@ struct kgi_tlut_s {
 
 #endif /* _KERNEL */
 
-#endif /* _KGI_KGIRES_H_ */
+#endif /* !_KGI_KGIRES_H_ */

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1998-2000 Steffen Seeger
- * Copyright (c) 2004 Nicholas Souchu 
+ * Copyright (c) 2004 Nicholas Souchu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,9 +33,7 @@ typedef struct
 	__KGI_ACCEL_BUFFER
 
 	/* Below, fields hidden to the graphic drivers */
-
 	TAILQ_HEAD(, vm_page) memq;	/* list of resident pages */
-
 } graph_accel_buffer_t;
 
 /*
@@ -58,4 +56,4 @@ typedef struct {
 extern int graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 		graph_mapping_t **the_map);
 
-#endif /* _KGI_ACCEL_H_ */
+#endif /* !_KGI_ACCEL_H_ */

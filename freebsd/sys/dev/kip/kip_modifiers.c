@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ __FBSDID("$FreeBSD$");
 #include <dev/kgi/kgi.h>
 #include <dev/kii/kii.h>
 
-static void 
+static void
 do_modifier(kii_focus_t *f, kii_event_t *event)
 {
 	register kii_unicode_t ksym = event->key.sym;
@@ -64,7 +64,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 		KGI_DEBUG(10, "sticky modifer key.");
 
 		if (event->key.type == KII_EV_KEY_PRESS) {
-			f->sticky ^= 1 << (ksym - K_FIRST_STICKY);	
+			f->sticky ^= 1 << (ksym - K_FIRST_STICKY);
 		}
 	}
 
@@ -104,7 +104,7 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 
 	f->effect = f->normal ^ f->locked ^ f->sticky;
 
-	if ((event->any.type == KII_EV_KEY_RELEASE) && (f->effect != effect) && 
+	if ((event->any.type == KII_EV_KEY_RELEASE) && (f->effect != effect) &&
 		(f->npadch != K_VOID)) {
 		kii_event_t npadch;
 		struct timeval tv;
@@ -117,18 +117,18 @@ do_modifier(kii_focus_t *f, kii_event_t *event)
 		npadch.key.sym  = f->npadch;
 		npadch.key.effect = f->effect;
 		npadch.key.normal = f->normal;
-		npadch.key.locked = f->locked; 
+		npadch.key.locked = f->locked;
 		npadch.key.sticky = f->sticky;
 
 		if (event->any.dontdispatch == 0)
 			kii_put_event(f, &npadch);
 	}
 
-	KGI_DEBUG(10, "new modifers: %.2x %.2x %.2x %.2x", f->effect, 
+	KGI_DEBUG(10, "new modifers: %.2x %.2x %.2x %.2x", f->effect,
 		f->normal, f->locked, f->sticky);
 }
 
-static void 
+static void
 do_ascii(kii_focus_t *f, kii_event_t *event)
 {
 	kii_s_t base = 10, value = event->key.sym - K_FIRST_ASCII;
@@ -153,7 +153,7 @@ static kii_unicode_t kii_dead_key[K_LAST_DEAD - K_FIRST_DEAD] = {
 	0x002c	/* , cedilla	*/
 };
 
-static void 
+static void
 do_dead(kii_focus_t *f, kii_event_t *event)
 {
 	kii_unicode_t dead = kii_dead_key[event->key.sym - K_FIRST_DEAD];
@@ -162,15 +162,15 @@ do_dead(kii_focus_t *f, kii_event_t *event)
 	f->dead = (f->dead == event->key.sym) ? K_VOID : dead;
 }
 
-static void 
+static void
 do_action(kii_focus_t *f, kii_event_t *event)
 {
 	kii_u_t sym = event->key.sym;
 
-	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE)) 
+	if ((1 << event->any.type) & ~(KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE))
 		return;
 
-	KGI_DEBUG(10, "key %s, code 0x%.2x, sym %.2x", 
+	KGI_DEBUG(10, "key %s, code 0x%.2x, sym %.2x",
 		(event->key.type == KII_EV_KEY_PRESS) ? "down" : "up",
 		event->key.code, event->key.sym);
 
@@ -182,17 +182,17 @@ do_action(kii_focus_t *f, kii_event_t *event)
 		return;
 #endif /* CONFIG_KDB */
 	case K_TYPE_SHIFT:
-		if (sym < K_LAST_SHIFT) 
+		if (sym < K_LAST_SHIFT)
 			do_modifier(f, event);
 		return;
 	case K_TYPE_ASCII:
-		if ((sym < K_LAST_ASCII) 
+		if ((sym < K_LAST_ASCII)
 			&& (event->key.type == KII_EV_KEY_PRESS))
 			do_ascii(f, event);
 		return;
 	case K_TYPE_DEAD:
-		if ((sym < K_LAST_DEAD) 
-			&& (event->key.type == KII_EV_KEY_PRESS 
+		if ((sym < K_LAST_DEAD)
+			&& (event->key.type == KII_EV_KEY_PRESS
 			||  event->key.type == KII_EV_KEY_REPEAT)) {
 			do_dead(f, event);
 		}
@@ -200,16 +200,16 @@ do_action(kii_focus_t *f, kii_event_t *event)
 	}
 }
 
-void 
+void
 kii_handle_input(kii_event_t *event)
 {
 	kii_focus_t *f;
 	kii_u_t mask;
 	char *sym_string;
 
-	mask = 1 << event->any.type;	
+	mask = 1 << event->any.type;
 	sym_string = NULL;
-		
+
 	KGI_ASSERT(KII_VALID_FOCUS_ID(event->any.focus));
 
 	f = kiifocus[event->any.focus];
@@ -256,7 +256,7 @@ kii_handle_input(kii_event_t *event)
 			case K_TYPE_SPECIAL:	/* Fall thru. */
 			case K_TYPE_NUMPAD: 	/* Fall thru. */
 			case K_TYPE_CONSOLE:	/* Fall thru. */
-			case K_TYPE_CURSOR: 	/* Fall thru. */		
+			case K_TYPE_CURSOR: 	/* Fall thru. */
 			case K_TYPE_SHIFT: 	/* Fall thru. */
 			case K_TYPE_META: 	/* Fall thru. */
 				break;

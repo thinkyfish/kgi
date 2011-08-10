@@ -1,6 +1,6 @@
 /*-
- * Copyright (c) 1995-2000 Steffen Seeger 
- * Copyright (c) 1995-1997 Andreas Beck	
+ * Copyright (c) 1995-2000 Steffen Seeger
+ * Copyright (c) 1995-1997 Andreas Beck
  * Copyright (c) 2001 Nicholas Souchu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,7 @@
 #define KGI_SYS_NEED_MALLOC
 #include <dev/kgim/module.h>
 
-kgi_u_t 
+kgi_u_t
 kgim_attr_bits(const kgi_u8_t *bpa)
 {
 	kgi_u_t bits = 0;
@@ -55,7 +55,7 @@ kgim_attr_bits(const kgi_u8_t *bpa)
 
 #include <machine/stdarg.h>
 
-void 
+void
 kgim_ansi_debug(int level, const char *fmt, ...)
 {
 	char buf[__KGIM_BUF_SIZE];
@@ -67,7 +67,7 @@ kgim_ansi_debug(int level, const char *fmt, ...)
 	printf("<%i>%s\n", level, buf);
 }
 
-void 
+void
 kgim_ansi_error(const char *fmt, ...)
 {
 	char buf[__KGIM_BUF_SIZE];
@@ -79,7 +79,7 @@ kgim_ansi_error(const char *fmt, ...)
 	printf("%s\n", buf);
 }
 
-void 
+void
 kgim_gnu_debug(const char *file, int line, const char *func, int level,
 	const char *fmt, ...)
 {
@@ -92,8 +92,8 @@ kgim_gnu_debug(const char *file, int line, const char *func, int level,
 	printf("<%i>%s:%s:%i:D:%s\n", level, file, func, line, buf);
 }
 
-void 
-kgim_gnu_error(const char *file, int line, const char *func, 
+void
+kgim_gnu_error(const char *file, int line, const char *func,
 	const char *fmt, ...)
 {
 	char buf[__KGIM_BUF_SIZE];
@@ -105,7 +105,7 @@ kgim_gnu_error(const char *file, int line, const char *func,
 	printf(KERN_ERR "%s:%s:%i:E:%s\n", file, func, line, buf);
 }
 
-void 
+void
 kgim_notice(const char *fmt, ...)
 {
 	char buf[__KGIM_BUF_SIZE];
@@ -120,28 +120,28 @@ kgim_notice(const char *fmt, ...)
 /*
  * memset(), memcpy(), memcmp() and strcpy()
  */
-void 
+void
 kgim_memset(void *p, kgi_u8_t val, kgi_size_t size)
 {
 
 	memset(p, val, size);
 }
 
-void 
+void
 kgim_memcpy(void *dst, const void *src, kgi_size_t size)
 {
 
 	memcpy(dst, src, size);
 }
 
-kgi_s_t 
+kgi_s_t
 kgim_memcmp(const void *s1, const void *s2, kgi_size_t size)
 {
 
 	return (memcmp(s1, s2, size));
 }
 
-kgi_s_t 
+kgi_s_t
 kgim_strcmp(const kgi_u8_t *s1, const kgi_u8_t *s2)
 {
 
@@ -167,7 +167,7 @@ kgim_strncpy(kgi_u8_t *dst, const kgi_u8_t *src, kgi_size_t size)
  */
 #define	KGIM_ALIGN(x)	(((x) + 7) & ~7)
 
-static kgi_error_t 
+static kgi_error_t
 kgim_display_command(kgi_display_t *kgi_dpy, kgi_u_t cmd, void *data)
 {
 	/*
@@ -179,14 +179,14 @@ kgim_display_command(kgi_display_t *kgi_dpy, kgi_u_t cmd, void *data)
 	return (-KGI_ERRNO(DRIVER, INVAL));
 }
 
-static kgi_error_t 
+static kgi_error_t
 kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
-	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode, 
+	kgi_image_mode_t *img, kgi_u_t images, void *dev_mode,
 	const kgi_resource_t **r, kgi_u_t rsize)
 {
 	kgi_s_t cnt;
-	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
-	kgim_display_mode_t *dpy_mode = dev_mode;
+	kgim_display_t *dpy;
+	kgim_display_mode_t *dpy_mode;
 
 	kgim_monitor_mode_t	*monitor_mode;
 	kgim_ramdac_mode_t	*dac_mode;
@@ -200,6 +200,8 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 		return (-KGI_ERRNO(DRIVER, NOSUP));
 	}
 
+	dpy = (kgim_display_t *)kgi_dpy;
+	dpy_mode = dev_mode;
 	if (cmd == KGI_TC_PROPOSE) {
 		kgi_u_t i;
 
@@ -265,13 +267,13 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 
 #define	SUBSYSTEM_CHECK_MODE(sys)					\
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
-		error = (meta && meta->ModeCheck)			\
-			? meta->ModeCheck(				\
+		error = (meta && meta->ModeCheck) ?			\
+			meta->ModeCheck(				\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_data,\
 				dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_io,\
 				dpy_mode->subsystem_mode[KGIM_SUBSYSTEM_##sys],\
-				cmd, img, images)			\
-			: KGI_EOK;					\
+				cmd, img, images) :			\
+			KGI_EOK;					\
 		KGI_DEBUG(2, "system %i, io %p, mode %p, cmd %i, return %.8x", \
 			KGIM_SUBSYSTEM_##sys, 				\
 			dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_io,	\
@@ -311,13 +313,21 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 
 		switch (error) {
 		case KGI_TC_LOWER:
-			KGI_DEBUG(2, "KGI_TC_LOWER:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_LOWER:");
+			cmd = error;
+			continue;
 		case KGI_TC_RAISE:
-			KGI_DEBUG(2, "KGI_TC_RAISE:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_RAISE:");
+			cmd = error;
+			continue;
 		case KGI_TC_CHECK:
-			KGI_DEBUG(2, "KGI_TC_CHECK:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_CHECK:");
+			cmd = error;
+			continue;
 		case KGI_TC_READY:
-			KGI_DEBUG(2, "KGI_TC_READY:"); cmd = error; continue;
+			KGI_DEBUG(2, "KGI_TC_READY:");
+			cmd = error;
+			continue;
 		default:
 			KGI_ERROR("Unknown command %.8x from monitor", error);
 			return (error);
@@ -353,10 +363,9 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			meta_data = dpy->subsystem[subsys].meta_data;
 			meta_mode = dpy_mode->subsystem_mode[subsys];
 
-			resource = (meta && meta->ModeResource)
-				? meta->ModeResource(meta_data, meta_mode,
-					img, images, subsys_index)
-				: NULL;
+			resource = (meta && meta->ModeResource) ?
+				meta->ModeResource(meta_data, meta_mode,
+				img, images, subsys_index) : NULL;
 
 			if (resource) {
 				KGI_DEBUG(2, "resource %i: %s io %p meta %p",
@@ -391,15 +400,14 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 			meta_data = dpy->subsystem[subsys].meta_data;
 			meta_mode = dpy_mode->subsystem_mode[subsys];
 
-			resource = (meta && meta->ImageResource)
-				? meta->ImageResource(meta_data, meta_mode,
-					img, 0, subsys_index)
-				: NULL;
+			resource = (meta && meta->ImageResource) ?
+				meta->ImageResource(meta_data, meta_mode,
+					img, 0, subsys_index) : NULL;
 
 			if (resource) {
-				KGI_DEBUG(2, "img resource %i: %s io %p meta %p"
-					, index, resource->name,
-					resource->meta_io, resource->meta);
+				KGI_DEBUG(2, "img resource %i: %s io %p meta "
+				    "%p", index, resource->name,
+				    resource->meta_io, resource->meta);
 				img[0].resource[index++] = resource;
 				subsys_index++;
 			} else {
@@ -412,16 +420,18 @@ kgim_display_check_mode(kgi_display_t *kgi_dpy,	kgi_timing_command_t cmd,
 	}
 }
 
-static void 
+static void
 kgim_display_set_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	images, void *dev_mode)
 {
-	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
-	kgim_display_mode_t *dpy_mode = dev_mode;
+	kgim_display_t *dpy;
+	kgim_display_mode_t *dpy_mode;
 	const kgim_meta_t *meta;
-	
+
 	KGI_DEBUG(2, "kgim_display_set_mode()");
 
+	dpy = (kgim_display_t *)kgi_dpy;
+	dpy_mode = dev_mode;
 #define	SUBSYSTEM_PREPARE_MODE(sys)					\
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
 		if (meta && meta->ModePrepare) {			\
@@ -460,16 +470,18 @@ kgim_display_set_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 #undef	SUBSYSTEM_ENTER_MODE
 }
 
-static void 
+static void
 kgim_display_unset_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 	images, void *dev_mode)
 {
-	kgim_display_t *dpy = (kgim_display_t *)kgi_dpy;
-	kgim_display_mode_t *dpy_mode = dev_mode;
+	kgim_display_t *dpy;
+	kgim_display_mode_t *dpy_mode;
 	const kgim_meta_t *meta;
 
 	KGI_DEBUG(2, "kgim_display_unset_mode()");
 
+	dpy = (kgim_display_t *)kgi_dpy;
+	dpy_mode = dev_mode;
 #define	SUBSYSTEM_LEAVE_MODE(sys)					\
 		meta = dpy->subsystem[KGIM_SUBSYSTEM_##sys].meta_lang;	\
 		if (meta && meta->ModeLeave) {				\
@@ -488,7 +500,7 @@ kgim_display_unset_mode(kgi_display_t *kgi_dpy, kgi_image_mode_t *img, kgi_u_t
 #undef	SUBSYSTEM_LEAVE_MODE
 }
 
-static kgi_error_t 
+static kgi_error_t
 kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 {
 	const kgim_meta_t *meta = dpy->subsystem[system].meta_lang;
@@ -506,13 +518,11 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 
 	KGI_DEBUG(2, "Initializing subsystem %i", system);
 
-	meta_data = meta->data_size ?
-		kgim_alloc(meta->data_size) : NULL;
-	meta_io = meta->io_size ?
-		kgim_alloc(meta->io_size) : NULL;
+	meta_data = meta->data_size ? kgim_alloc(meta->data_size) : NULL;
+	meta_io = meta->io_size ? kgim_alloc(meta->io_size) : NULL;
 
 	if ((meta->data_size && (meta_data == NULL)) ||
-		(meta->io_size && (meta_io == NULL))) {
+	    (meta->io_size && (meta_io == NULL))) {
 		KGI_ERROR("Failed to allocate meta data and I/O context");
 		kgim_free(meta_io);
 		meta_io = NULL;
@@ -522,14 +532,17 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 		return (-ENOMEM);
 	}
 
-	/* 
-	 * Clear the area. KGI assumes a pointer is NULL or valid. If the 
+	/*
+	 * Clear the area. KGI assumes a pointer is NULL or valid. If the
 	 * meta blocks aren't filled with zeroes, an invalid pointer can have
 	 * any value.
 	 */
-	if (meta->data_size) kgim_memset(meta_data, 0, meta->data_size);
-	if (meta->io_size)   kgim_memset(meta_io, 0, meta->io_size);
-	
+	if (meta->data_size)
+		kgim_memset(meta_data, 0, meta->data_size);
+
+	if (meta->io_size)
+		kgim_memset(meta_io, 0, meta->io_size);
+
 	if ((meta->io_size == 0) && (KGIM_SUBSYSTEM_chipset != system)) {
 		KGI_ASSERT(meta_io == NULL);
 
@@ -540,7 +553,7 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 
 	KGI_DEBUG(2, "meta->InitModule = %p", meta->InitModule);
 
-	if (meta->InitModule) { 
+	if (meta->InitModule) {
 		error = meta->InitModule(meta_data, meta_io, &(dpy->options));
 
 		if (error) {
@@ -564,12 +577,11 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	}
 
 	KGI_DEBUG(2, "meta->Init = %p", meta->Init);
-	KGI_DEBUG(2, "meta_data[%i]=%p meta_io[%i]=%p",
+	KGI_DEBUG(2, "meta_data[%zd]=%p meta_io[%zd]=%p",
 		meta->data_size, meta_data, meta->io_size, meta_io);
 
 	if (meta->Init) {
 		error = meta->Init(meta_data, meta_io, &(dpy->options));
-
 		if (error) {
 			KGI_ERROR("Failed to initialize device (%.8x)", error);
 
@@ -598,25 +610,27 @@ kgim_display_subsystem_init(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	dpy->kgi.mode_size += KGIM_ALIGN(meta->mode_size);
 
 	KGI_DEBUG(2, "Subsystem %i initialized.", system);
- 
+
 	return (KGI_EOK);
 }
 
-static void 
+static void
 kgim_display_subsystem_done(kgim_display_t *dpy, kgim_subsystem_type_t system)
 {
 	const kgim_meta_t *meta = dpy->subsystem[system].meta_lang;
-	void *meta_data   = dpy->subsystem[system].meta_data;
-	void *meta_io     = dpy->subsystem[system].meta_io;
+	void *meta_data;
+	void *meta_io;
 
 	KGI_DEBUG(2, "kgim_display_subsystem_done()");
 
+	meta_data = dpy->subsystem[system].meta_data;
+	meta_io = dpy->subsystem[system].meta_io;
 	if (meta->Done)
 		meta->Done(meta_data, meta_io, &(dpy->options));
 
 	if (meta->DoneModule)
 		meta->DoneModule(meta_data, meta_io, &(dpy->options));
-	
+
 	if (meta->io_size) {
 		kgim_free(meta_io);
 		meta_io = NULL;
@@ -628,7 +642,7 @@ kgim_display_subsystem_done(kgim_display_t *dpy, kgim_subsystem_type_t system)
 	dpy->kgi.mode_size -= KGIM_ALIGN(meta->mode_size);
 }
 
-kgi_error_t 
+kgi_error_t
 kgim_display_init(kgim_display_t *dpy)
 {
 	kgi_error_t error;
@@ -638,28 +652,32 @@ kgim_display_init(kgim_display_t *dpy)
 	dpy->kgi.mode_size = KGIM_ALIGN(sizeof(kgim_display_mode_t));
 
 	KGI_DEBUG(4, "Initializing chipset subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_chipset))) {
+	error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_chipset);
+	if (error) {
 		KGI_ERROR("Failed (%.8x) to initialize chipset.", error);
 		goto chipset;
 	}
 	KGI_DEBUG(4, "Chipset subsystem initialized.");
 
 	KGI_DEBUG(4, "Initializing ramdac subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_ramdac))) {
+	error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_ramdac);
+	if (error) {
 		KGI_ERROR("Failed (%.8x) to initialize ramdac.", error);
 		goto ramdac;
 	}
 	KGI_DEBUG(4, "Ramdac subsystem initialized.");
 
 	KGI_DEBUG(4, "Initializing clock subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_clock))) {
+	error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_clock);
+	if (error) {
 		KGI_ERROR("Failed (%.8x) to initialize clock", error);
 		goto clock;
 	}
 	KGI_DEBUG(4, "Clock subsystem initialized.");
 
 	KGI_DEBUG(4, "Initializing monitor subsystem....");
-	if ((error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_monitor))) {
+	error = kgim_display_subsystem_init(dpy, KGIM_SUBSYSTEM_monitor);
+	if (error) {
 		KGI_ERROR("Failed (%.8x) to initialize monitor.", error);
 		goto monitor;
 	}
@@ -673,8 +691,8 @@ kgim_display_init(kgim_display_t *dpy)
 	dpy->kgi.SetMode	= kgim_display_set_mode;
 	dpy->kgi.UnsetMode	= kgim_display_unset_mode;
 
-	if ((error = kgi_register_display(&(dpy->kgi),
-		dpy->options.misc->display))) {
+	error = kgi_register_display(&(dpy->kgi), dpy->options.misc->display);
+	if (error) {
 		KGI_ERROR("Failed (%d) to register display.", error);
 		goto display;
 	}
@@ -683,7 +701,7 @@ kgim_display_init(kgim_display_t *dpy)
 		dpy->kgi.vendor, dpy->kgi.model, dpy->kgi.id, dpy);
 	return (KGI_EOK);
 
-	/* 
+	/*
 	 * If there was some error during startup, we still have to
 	 * shut down properly.
 	 */
@@ -699,9 +717,10 @@ chipset:
 	return (error);
 }
 
-void 
+void
 kgim_display_done(kgim_display_t *dpy)
 {
+
 	KGI_DEBUG(2, "kgim_display_done()");
 
 	kgi_unregister_display(&dpy->kgi);
@@ -715,6 +734,7 @@ kgim_display_done(kgim_display_t *dpy)
 static int
 kgim_modevent(module_t mode, int type, void *unused)
 {
+
 	switch (type) {
 	case MOD_LOAD: /* Fall thru. */
 	case MOD_UNLOAD: /* Fall thru. */

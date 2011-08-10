@@ -54,21 +54,21 @@ struct scroller {
  * At the declaration, propose the backdoor for early initialization,
  * when malloc is not yet ready.
  */
-#define DECLARE_SCROLLER(name,driver,meta_type)					\
-	static meta_type console_meta;						\
-	static struct scroller console_scroller;				\
-	static struct kobj_ops scroller_ops;					\
-	void name##_configure(kgi_console_t *cons)				\
-	{									\
-	kobj_class_compile_static((kobj_class_t)&driver, &scroller_ops);	\
-	kobj_init((kobj_t)&console_scroller, (kobj_class_t)&driver);		\
-	console_scroller.meta = &console_meta;					\
-	console_scroller.cons = cons;						\
-	if (cons)								\
-		cons->scroller = &console_scroller;				\
-	kgc_scroller_register(&driver, 0, 1);					\
-	kgc_scroller_register(&driver, 2, 1);					\
-	kgc_scroller_alloc(0, &console_scroller);				\
+#define DECLARE_SCROLLER(name,driver,meta_type)				     \
+	static meta_type console_meta;					     \
+	static struct scroller console_scroller;			     \
+	static struct kobj_ops scroller_ops;				     \
+	void name##_configure(kgi_console_t *cons) {			     \
+		kobj_class_compile_static((kobj_class_t)&driver,	     \
+					   &scroller_ops);		     \
+		kobj_init((kobj_t)&console_scroller, (kobj_class_t)&driver); \
+		console_scroller.meta = &console_meta;			     \
+		console_scroller.cons = cons;				     \
+		if (cons)						     \
+			cons->scroller = &console_scroller;		     \
+		kgc_scroller_register(&driver, 0, 1);			     \
+		kgc_scroller_register(&driver, 2, 1);			     \
+		kgc_scroller_alloc(0, &console_scroller);		     \
 	}
 
 /*

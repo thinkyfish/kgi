@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,11 +46,11 @@ __FBSDID("$FreeBSD$");
  * Accelerator resource mappings
  */
 
-static void 
+static void
 graph_accel_removepages(vm_area_t vma, graph_accel_buffer_t *buf, int free)
 {
 	vm_page_t m;
-	
+
 	/*
 	 * Remove the current buffer from the process memory if free is TRUE.
 	 * Any thread then hitting these pages will pagefault.
@@ -81,14 +81,14 @@ graph_accel_removepages(vm_area_t vma, graph_accel_buffer_t *buf, int free)
  * paddr the result is the physical address of the "device" obtained
  * from the ooffset given.
  */
-static int 
+static int
 graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
-		vm_paddr_t *paddr, int prot)
+		   vm_paddr_t *paddr, int prot)
 {
 	graph_accel_mapping_t *map;
 	kgi_accel_t *accel;
 	unsigned long nstart, nend;
-	graph_accel_buffer_t *buf = NULL;
+	graph_accel_buffer_t *buf;
 
 	map = (graph_accel_mapping_t *)VM(private_data);
 	if (map == NULL) {
@@ -101,7 +101,7 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	KGI_ASSERT(accel->type == KGI_RT_ACCELERATOR);
 
 	KGI_DEBUG(3, "accel_nopage @%.8x, vma %p, %x", (kgi_u32_t)ooffset,
-			  vma, prot);
+		  vma, prot);
 
 	/*
 	 * The page ooffset must be in the current buffer (no exec)
@@ -109,7 +109,7 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	 */
 	if (ooffset < map->buf_offset)
 		return (-1);
-	
+
 	if (ooffset < (map->buf_offset + map->buf_size))
 		goto pagefound;
 
@@ -117,7 +117,7 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	 * Compute the start/end offsets of the buffer next to the
 	 * current one.
 	 */
-	nstart = (map->buf_offset + map->buf_size) & map->buf_mask;
+	nstart = (map->buf_offset + map->buf_size) &map->buf_mask;
 	nend = nstart + map->buf_size;
 	if (((nstart <= ooffset) && (ooffset < nend)) == 0) {
 		KGI_DEBUG(1, "ooffset %.8lx not in %.8lx-%.8lx for next buffer",
@@ -143,16 +143,16 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	}
 
 	KGI_ASSERT(buf->execution.state == KGI_AS_FILL);
-	KGI_DEBUG(3, "exec buffer %.8x", buf->aperture.phys);
+	KGI_DEBUG(3, "exec buffer %.8lx", buf->aperture.phys);
 
 	kgi_mutex_lock(&buf->mtx);
 
 	/* Remove all pages of this buffer = VM_PROT_NONE */
 	graph_accel_removepages(vma, buf, 1 /* yes, free */);
-	
+
 	/* Start "execution" of the buffer */
-	buf->execution.size = 
-		(ooffset == nstart) ? map->buf_size : (ooffset - nstart);
+	buf->execution.size = (ooffset == nstart) ? map->buf_size :
+		(ooffset - nstart);
 
 	accel->Exec(accel, (kgi_accel_buffer_t *)buf);
 
@@ -165,14 +165,14 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	 * We are sure it is idle since we have waited for it.
 	 * See above.
 	 */
-	KGI_ASSERT(KGI_AS_IDLE == buf->execution.state);
+	KGI_ASSERT(buf->execution.state == KGI_AS_IDLE);
 	buf->execution.state = KGI_AS_FILL;
 
 	map->buf_offset = nstart;
-	
+
 	kgi_mutex_unlock(&buf->next->mtx);
 
- pagefound:
+pagefound:
 	/* Attach the page to the buffer */
 	TAILQ_INSERT_TAIL(&buf->memq, m, kgiq);
 	*paddr = buf->aperture.phys + (ooffset - map->buf_offset);
@@ -180,31 +180,30 @@ graph_accel_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	return (0);
 }
 
-static void 
+static void
 graph_accel_close(vm_area_t vma)
 {
 	graph_accel_mapping_t *map;
 	kgi_accel_t *accel;
-	graph_accel_buffer_t *buf = NULL;
+	graph_accel_buffer_t *buf;
 
-	map = (graph_accel_mapping_t *)VM(private_data);	
-	if (map == NULL) 
+	map = (graph_accel_mapping_t *)VM(private_data);
+	if (map == NULL)
 		return;
 
 	accel = (kgi_accel_t *)map->resource;
 	KGI_ASSERT(map->vma == vma);
 
 	accel = (kgi_accel_t *)map->resource;
-	KGI_ASSERT(KGI_RT_ACCELERATOR == accel->type);
+	KGI_ASSERT(accel->type == KGI_RT_ACCELERATOR);
 
 	KGI_DEBUG(1, "accel_unmap vma %p, map %p", vma, map);
 
-	/* 
+	/*
 	 * Search executable buffers among all its buffers.
 	 */
 	buf = (graph_accel_buffer_t *)map->buf_current->next;
-	while ((buf->execution.next == NULL) &&
-	       (buf != map->buf_current)) {
+	while ((buf->execution.next == NULL) && (buf != map->buf_current)) {
 		buf = (graph_accel_buffer_t *)buf->next;
 	}
 
@@ -230,15 +229,15 @@ graph_accel_close(vm_area_t vma)
 	KGI_ASSERT(buf->next);
 	do {
 		kgi_accel_buffer_t *next = buf->next;
-		
+
 		/*
 		 * Remove the pages from the buf list, but keep
 		 * them unfreed yet (already done?)
 		 */
 		graph_accel_removepages(vma, buf, 0 /* don't free */);
 
-		KGI_DEBUG(1, "freeing %.8x with order %i",
-				  buf->aperture.virt, map->buf_order);
+		KGI_DEBUG(1, "freeing %.8lx with order %i",
+			  buf->aperture.virt, map->buf_order);
 
 		/* Free the contiguous memory of the HW mapping */
 		kgi_cfree((void *)buf->aperture.virt, SIZ(map->buf_order));
@@ -268,7 +267,7 @@ graph_accel_close(vm_area_t vma)
 }
 
 /* XXX lock? */
-static void 
+static void
 graph_accel_unmap(vm_area_t vma)
 {
 	graph_accel_mapping_t *map;
@@ -301,18 +300,20 @@ static struct vm_operations_struct graph_accel_vmops =
 /*
  * The area to be mapped is subdivided into buffers
  */
-int 
+int
 graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
-		graph_mapping_t **the_map)
+		 graph_mapping_t **the_map)
 {
-	kgi_accel_t *accel = (kgi_accel_t *)mmap_setup->resource;
+	kgi_accel_t *accel;
 	unsigned long min_order, max_order, priority, order, buffers, i;
 	graph_accel_buffer_t *buf[16];
-	kgi_accel_context_t *context = NULL;
-	graph_accel_mapping_t *map = NULL;
+	kgi_accel_context_t *context;
+	graph_accel_mapping_t *map;
 
-	KGI_DEBUG(1, "mapping buffer %.8x to vma %p",
-			  map->buf_current->aperture.phys, vma);
+	/* XXX */
+	map = NULL;
+	KGI_DEBUG(1, "mapping buffer %.8lx to vma %p",
+		  map->buf_current->aperture.phys, vma);
 
 	min_order = mmap_setup->request.private.accel.min_order;
 	order = max_order = mmap_setup->request.private.accel.max_order;
@@ -328,7 +329,7 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	if (min_order > max_order) {
 		KGI_ERROR("invalid buffer size range (min %li, max %li)",
- 				  min_order, max_order);
+ 			  min_order, max_order);
 		return (KGI_EINVAL);
 	}
 
@@ -339,9 +340,11 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	 *
 	 * allocate mapping and init accelerator context
 	 */
-	if ((context = kgi_kmalloc(accel->context_size)) == NULL) {
+	accel = (kgi_accel_t *)mmap_setup->resource;
+	context = kgi_kmalloc(accel->context_size);
+	if (context == NULL) {
 		KGI_ERROR("failed to allocate accelerator context");
-		goto no_memory; 
+		goto no_memory;
 	}
 	memset(context, 0, accel->context_size);
 
@@ -355,7 +358,9 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	/* allocate buffer info */
 	KGI_TRACE(1, memset(buf, 0, sizeof(buf)));
 	for (i = 0; i < buffers; i++) {
-		/* Reserve the amount of memory including the graph_accel stuff. */
+		/*
+		 * Reserve the amount of memory including the graph_accel stuff.
+		 */
 		buf[i] = kgi_kmalloc(sizeof(graph_accel_buffer_t));
 		if (buf[i]) {
 			memset(buf[i], 0, sizeof(*buf[i]));
@@ -373,24 +378,25 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 	 */
 	do {
 		for (i = 0; buf[i]->aperture.virt && (i < buffers); i++) {
-			KGI_DEBUG(1, "freeing %i with order %li",
+			KGI_DEBUG(1, "freeing %lu with order %li",
 				buf[i]->aperture.virt, order + 1);
-			kgi_cfree((void *)buf[i]->aperture.virt, 
+			kgi_cfree((void *)buf[i]->aperture.virt,
 				SIZ(order + 1));
 		}
 
 		KGI_DEBUG(1, "trying %i byte buffers.", SIZ(order));
 		for (i = 0; i < buffers; i++) {
-			buf[i]->aperture.virt = 
+			buf[i]->aperture.virt =
 				(kgi_virt_addr_t)kgi_cmalloc(SIZ(order));
-			if (!buf[i]->aperture.virt) 
+			if (buf[i]->aperture.virt == (kgi_virt_addr_t)NULL)
 				break;
-			
-			KGI_DEBUG(1, "allocated %i with order %li",
+
+			KGI_DEBUG(1, "allocated %lu with order %li",
 				buf[i]->aperture.virt, order);
 		}
 
 	} while ((i != buffers) && (--order >= min_order));
+
 	if (i != buffers) {
 		KGI_ERROR("failed to allocate DMA buffers.");
 		goto no_memory;
@@ -398,8 +404,9 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	/* arrange buffers in circular list and attach to mapping. */
 	for (i = 0; i < buffers; i++) {
-		buf[i]->next = 
-		  (kgi_accel_buffer_t *)buf[((i + 1) < buffers) ? (i + 1) : 0];
+		buf[i]->next =
+			(kgi_accel_buffer_t *)buf[((i + 1) < buffers) ?
+				(i + 1) : 0];
 		buf[i]->priority = priority;
 		buf[i]->context  = context;
 
@@ -414,10 +421,12 @@ graph_accel_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 		TAILQ_INIT(&buf[i]->memq);
 	}
 
-	if ((map = kgi_kmalloc(sizeof(*map))) == NULL) {
+	map = kgi_kmalloc(sizeof(*map));
+	if (map == NULL) {
 		KGI_ERROR("failed to allocate accel map.");
 		goto no_memory;
 	}
+
 	memset(map, 0, sizeof(*map));
 
 	map->buf_current = buf[0];
@@ -444,7 +453,7 @@ no_memory:
 	order++;
 	for (i = 0; buf[i] && (i < buffers); i++) {
 		if (buf[i]->aperture.virt) {
-			KGI_DEBUG(1, "freeing %.8x with order %li",
+			KGI_DEBUG(1, "freeing %.8lx with order %li",
 				buf[i]->aperture.virt, order);
 			kgi_cfree((void *)buf[i]->aperture.virt, SIZ(order));
 		}

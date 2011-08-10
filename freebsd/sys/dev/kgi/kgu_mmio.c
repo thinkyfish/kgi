@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,7 +58,7 @@ __FBSDID("$FreeBSD$");
  * paddr the result is the physical address of the "device" obtained
  * from the ooffset given.
  */
-static int 
+static int
 graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	  vm_paddr_t *paddr, int prot)
 {
@@ -66,10 +66,10 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	kgi_mmio_region_t *mmio;
 	kgi_u32_t offset;
 
- Retry:
+retry:
 	kgi_mutex_lock(&kgi_lock);
 
-	map = (graph_mmio_mapping_t *) vma->vm_private_data;
+	map = (graph_mmio_mapping_t *)vma->vm_private_data;
 	if (map == NULL) {
 		KGI_ERROR("invalid (cloned ?) vma %p, sending signal", vma);
 		panic("don't know how to signal...");	/* XXX */
@@ -78,27 +78,28 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 	mmio = (kgi_mmio_region_t *)map->resource;
 	KGI_ASSERT((mmio->type & KGI_RT_MASK) == KGI_RT_MMIO);
 
-	if (!ooffset) {
-		KGI_DEBUG(3, "mmio_nopage @%.8x, vma %p, %x", 
-			ooffset, vma, prot);
+	if (ooffset == 0) {
+		KGI_DEBUG(3, "mmio_nopage @%.8lx, vma %p, %x", ooffset, vma,
+		    prot);
 	}
+
 	if (map->device->kgi.flags & KGI_DF_FOCUSED) {
 		switch(map->type) {
-			/*
-			 * Linear memory mapped linear. The physical address
-			 * returned for the ooffset given as argument is the
-			 * physical base address of the memory + the ooffset
-			 * in bytes
-			 */
+		/*
+		 * Linear memory mapped linear. The physical address
+		 * returned for the ooffset given as argument is the
+		 * physical base address of the memory + the ooffset
+		 * in bytes
+		 */
 		case GRAPH_MM_LINEAR_LINEAR:
 			map->offset = offset = 0;
 			*paddr = mmio->win.phys + ooffset;
 			break;
-			/*
-			 * Paged memory mapped linear. The physical address
-			 * returned is the physical base address + the offset
-			 * withing the HW window
-			 */
+		/*
+		 * Paged memory mapped linear. The physical address
+		 * returned is the physical base address + the offset
+		 * withing the HW window
+		 */
 		case GRAPH_MM_PAGED_LINEAR:
 			offset = ooffset / mmio->win.size;
 			map->offset = ooffset % mmio->win.size;
@@ -111,10 +112,10 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 			panic("don't know how to signal...");
 		}
 
-		if (!ooffset)
-			KGI_DEBUG(3, "mmio_nopage @%.8x, remap vma %p, "
-				  "to '%s' phys %x, offset %x",
-				ooffset, map->vma, mmio->name, *paddr, offset);
+		if (ooffset == 0)
+			KGI_DEBUG(3, "mmio_nopage @%.8lx, remap vma %p, "
+			    "to '%s' phys %lx, offset %x",
+			    ooffset, map->vma, mmio->name, *paddr, offset);
 
 		/*
 		 * Check if we have to move the HW window. If we have,
@@ -124,9 +125,9 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 			/* XXX Not tested */
 			graph_unmap_resource((graph_mapping_t *) map);
 
-			if (mmio->SetOffset) 
+			if (mmio->SetOffset)
 				mmio->SetOffset(mmio, offset);
-			else 
+			else
 				mmio->offset = offset;
 		}
 
@@ -141,8 +142,8 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
 		 * device is not focused --> block it
 		 */
 		msleep(map->device, &kgi_lock.mutex, PDROP | PVM, "mmiosleep",
-			 0);
-		goto Retry;
+			0);
+		goto retry;
 	}
 }
 
@@ -152,9 +153,10 @@ graph_mmio_nopage(vm_area_t vma, vm_page_t m, vm_offset_t ooffset,
  * unmapping. This is ensured in mm/mmap.c. We only have to remove our
  * local mapping state info because the page tables are fixed in mm/mmap.c.
  */
-static void 
+static void
 graph_mmio_close(vm_area_t vma)
 {
+
 	/* Remove / free pages of the VM area */
 	kgi_pager_remove_all(vma);
 
@@ -166,9 +168,10 @@ graph_mmio_close(vm_area_t vma)
  * Unmap the MMIO map. No more access shall be permitted to
  * this map.
  */
-static void 
+static void
 graph_mmio_unmap(vm_area_t vma)
 {
+
 	/* Just remove all the pages of the map */
 	kgi_pager_remove_all(vma);
 }
@@ -181,27 +184,27 @@ static struct vm_operations_struct graph_mmio_vmops =
 	.unmap   =	graph_mmio_unmap,
 };
 
-int 
+int
 graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
-	  graph_mapping_t **the_map)
+		graph_mapping_t **the_map)
 {
-	kgi_mmio_region_t *mmio = (kgi_mmio_region_t *)mmap_setup->resource;
-	graph_mmio_mapping_t *map = NULL;
-	vm_ooffset_t size = vma->vm_size;
+	kgi_mmio_region_t *mmio;
+	graph_mmio_mapping_t *map;
+	vm_ooffset_t size;
 
+	mmio = (kgi_mmio_region_t *)mmap_setup->resource;
 	KGI_DEBUG(1, "mapping mmio '%s' to vma %p", mmio->name, vma);
 
 	KGI_ASSERT(0 == (mmio->size % mmio->win.size));
 	KGI_ASSERT(mmio->size >= mmio->win.size);
 
-	if ((mmio->win.size & PAGE_MASK) ||
-	    (size > mmio->size) ||
+	size = vma->vm_size;
+	if ((mmio->win.size & PAGE_MASK) || (size > mmio->size) ||
 	    ((mmio->win.size == mmio->size) && (mmio->size % size)) ||
 	    ((mmio->win.size != mmio->size) && (size < mmio->size) &&
-	     (mmio->win.size != size))) {
-
+	    (mmio->win.size != size))) {
 		KGI_ERROR("mmap size %i, but region size %i, win.size %i",
-			  (int)size, (int)mmio->size, (int)mmio->win.size);
+		    (int)size, (int)mmio->size, (int)mmio->win.size);
 		return (KGI_EINVAL);
 	}
 
@@ -210,18 +213,18 @@ graph_mmio_mmap(vm_area_t vma, graph_mmap_setup_t *mmap_setup,
 
 	/* XXX warning determine protection flags here! */
 
-	if ((map = kgi_kmalloc(sizeof(*map))) == NULL) {
+	map = kgi_kmalloc(sizeof(*map));
+	if (map == NULL) {
 		KGI_ERROR("failed to allocate mmio map");
 		return (KGI_ENOMEM);
 	}
 	memset(map, 0, sizeof(*map));
 
 	map->prot = VM_PROT_READ | VM_PROT_WRITE; /* XXX | PROT_SHARED */;
-	map->type = (mmio->win.size == mmio->size) /* linear region? */
-		? ((size == mmio->size)
-			? GRAPH_MM_LINEAR_LINEAR : GRAPH_MM_PAGED_LINEAR)
-		: ((size == mmio->size)
-			? GRAPH_MM_LINEAR_PAGED  : GRAPH_MM_PAGED_PAGED);
+	map->type = (mmio->win.size == mmio->size) /* linear region? */ ?
+		((size == mmio->size) ? GRAPH_MM_LINEAR_LINEAR :
+			GRAPH_MM_PAGED_LINEAR) : ((size == mmio->size) ?
+			GRAPH_MM_LINEAR_PAGED : GRAPH_MM_PAGED_PAGED);
 
 	vma->vm_ops = &graph_mmio_vmops;
 

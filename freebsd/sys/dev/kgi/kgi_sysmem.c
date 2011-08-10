@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -107,14 +107,14 @@ kgi_kmalloc(__kgi_size_t size)
 	void *ptr;
 
 	ptr = malloc(size, M_KGI, M_NOWAIT);
-	KGI_DEBUG(3, "Allocating %p (%d)", (void *)ptr, size);
+	KGI_DEBUG(3, "Allocating %p (%zd)", (void *)ptr, size);
 	return (ptr);
 }
 
 /*
  * Release kernel memory of type M_KGI.
  */
-void 
+void
 kgi_kfree(const void *ptr)
 {
 
@@ -135,7 +135,7 @@ kgi_cmalloc(__kgi_size_t size)
 /*
  * Release a contiguous memory.
  */
-void 
+void
 kgi_cfree(const void *ptr, __kgi_size_t size)
 {
 

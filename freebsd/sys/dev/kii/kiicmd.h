@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,8 +24,8 @@
  * KII command definitions
  */
 
-#ifndef _KII_COMMAND_H_
-#define	_KII_COMMAND_H_
+#ifndef _KII_KIICMD_H_
+#define	_KII_KIICMD_H_
 
 /*
  * Null command data. No input, no output.
@@ -71,11 +71,15 @@ typedef struct {
 KIIC_UNION(mapper, get_keymap_info);
 
 typedef struct {
-	kii_u_t	keymap, keymin, keymax;
+	kii_u_t	keymap;
+	kii_u_t keymin;
+	kii_u_t keymax;
 } kiic_mapper_get_keymap_request_t, kiic_mapper_set_keymap_result_t;
 
 typedef struct {
-	kii_u_t	keymap, keymin, keymax;
+	kii_u_t		keymap;
+	kii_u_t		keymin;
+	kii_u_t		keymax;
 	kii_unicode_t	map[256];
 } kiic_mapper_get_keymap_result_t, kiic_mapper_set_keymap_request_t;
 
@@ -111,14 +115,17 @@ KIIC_UNION(mapper, get_unit);
 	KIIC_##type##_##command = _IO(KIIC_##type##_COMMAND >> 8, code)
 
 #define KIIC_IOR(type, command, callback, code) \
-	KIIC_##type##_##command = _IOR(KIIC_##type##_COMMAND >> 8, code, kiic_##callback##_result_t)
+	KIIC_##type##_##command = _IOR(KIIC_##type##_COMMAND >> 8,	  \
+					code, kiic_##callback##_result_t)
 
 #define KIIC_IOW(type, command, callback, code) \
-	KIIC_##type##_##command = _IOW(KIIC_##type##_COMMAND >> 8, code, kiic_##callback##_request_t)
+	KIIC_##type##_##command = _IOW(KIIC_##type##_COMMAND >> 8,	  \
+					code, kiic_##callback##_request_t)
 
 #define KIIC_IOWR(type, command, callback, code) \
-	KIIC_##type##_##command = _IOWR(KIIC_##type##_COMMAND >> 8, code, kiic_##callback##_union_t)
-	
+	KIIC_##type##_##command = _IOWR(KIIC_##type##_COMMAND >> 8,	  \
+					code, kiic_##callback##_union_t)
+
 
 typedef enum {
 	KIIC_MAPPER_COMMAND	= 0x00000000,	/* ext. mapper commands	*/
@@ -140,4 +147,4 @@ typedef enum {
 #define	KIIC_READ(cmd)		((cmd) & IOC_OUT)
 #define	KIIC_WRITE(cmd)		((cmd) & IOC_IN)
 
-#endif /* _KII_COMMAND_H_ */
+#endif /* !_KII_KIICMD_H_ */

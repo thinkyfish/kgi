@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,8 @@
 #ifndef _KGC_ISORNDR_H_
 #define	_KGC_ISORNDR_H_
 
-/* console fonts
+/*
+ * console fonts
  *
  * The console fonts have (at maximum) 256 font positions as this can
  * (hopefully) be done or emulated on all displays. To support ISO10646 as
@@ -67,6 +68,6 @@ typedef struct {
 	kgi_u8_t	*data;		/* font data			*/
 } kgi_console_font_t;
 
-extern kgi_console_font_t *	default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
+extern kgi_console_font_t * default_font[CONFIG_KGII_MAX_NR_DEFFONTS];
 
 #endif	/* _KGC_ISORNDR_H_ */

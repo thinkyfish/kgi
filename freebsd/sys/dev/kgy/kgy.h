@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,8 +24,8 @@
  * KGI vidsw interface display driver.
  */
 
-#ifndef _KGI_KGY_H_
-#define _KGI_KGY_H_
+#ifndef _KGY_KGY_H_
+#define _KGY_KGY_H_
 
 #define BIT_REVERSE(byte)		\
 	((((byte) & 0x01) << 7) |	\
@@ -46,7 +46,7 @@ typedef struct {
 typedef struct dpysw_display_s {
 	kgi_display_t dpy;		/* Must remain on top of struct. */
 
-	video_adapter_t *adp;	
+	video_adapter_t *adp;
 	kgi_mode_t mode;
 
 	/* Fonts. */
@@ -96,4 +96,4 @@ extern void dpysw_show_font(kgi_text16_t *text16, kgi_u_t page);
 extern void dpysw_put_text16(kgi_text16_t *text16, kgi_u_t offset,
 		const kgi_u16_t *text, kgi_u_t count);
 
-#endif /* _KGI_KGY_H_ */
+#endif /* !_KGY_KGY_H_ */

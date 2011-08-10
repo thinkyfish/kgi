@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,41 +53,42 @@ __FBSDID("$FreeBSD$");
  * Color mode attribute to pixel value mapping. We care of the foreground
  * and background colors. The rest is just best effort.
  */
-kgi_u_t 
+kgi_u_t
 kgirndr_atop_color(render_t r, kgi_u_t attr)
 {
 #ifdef KGC_RENDER_16BITS
-	register kgi_u_t val = (attr &KGI_CA_REVERSE) ?
-			(((attr &0x0007) << 16)  | ((attr &0x0700) << 8)) : 
-			(((attr &0x0007) << 20) | (attr &0x0700));
+	register kgi_u_t val = (attr & KGI_CA_REVERSE) ?
+				(((attr & 0x0007) << 16) |
+				((attr & 0x0700) << 8)) :
+				(((attr & 0x0007) << 20) | (attr & 0x0700));
 #else
- 	register kgi_u_t val = (attr &KGI_CA_REVERSE) ?
- 			(((attr &0x0007) << 8)  | ((attr &0x0700) << 4)) : 
- 			(((attr &0x0007) << 12) | (attr &0x0700));	
+ 	register kgi_u_t val = (attr & KGI_CA_REVERSE) ?
+				(((attr & 0x0007) << 8) |
+				((attr & 0x0700) << 4)) :
+				(((attr & 0x0007) << 12) | (attr & 0x0700));
 #endif
 
-
-	if (attr &KGI_CA_BLINK) 
+	if (attr & KGI_CA_BLINK)
 		val |= 0x8000;
 
-	if (attr &KGI_CA_BOLD) 
+	if (attr & KGI_CA_BOLD)
 		val |= 0x0800;
 
 	return (val);
 }
 
-kgi_u_t 
+kgi_u_t
 kgirndr_ptoa_color(render_t r, kgi_u_t val)
 {
 
 #ifdef KGC_RENDER_16BITS
-	return (((val &0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
-			((val &0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL) |
-			((val &0x7000) >> 20) | (val &0x0F00));
+	return (((val & 0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
+		((val & 0x0800) ? KGI_CA_BOLD : KGI_CA_NORMAL) |
+		((val & 0x7000) >> 20) | (val & 0x0F00));
 #else
-	return (((val &0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
-			((val &0x0800) ? KGI_CA_BOLD  : KGI_CA_NORMAL) |
-			((val &0x7000) >> 12) | (val &0x0F00));
+	return (((val & 0x8000) ? KGI_CA_BLINK : KGI_CA_NORMAL) |
+		((val & 0x0800) ? KGI_CA_BOLD : KGI_CA_NORMAL) |
+		((val & 0x7000) >> 12) | (val & 0x0F00));
 #endif
 }
 
@@ -95,32 +96,34 @@ kgirndr_ptoa_color(render_t r, kgi_u_t val)
  * monochrome attribute mapping. We care about the attributes possible
  * and ignore colors.
  */
-kgi_u_t 
+kgi_u_t
 kgirndr_atop_mono(kgi_u_t attr)
 {
 	/* MDA can't do reverse underline :-( */
-	register kgi_u_t val = (attr & KGI_CA_UNDERLINE) ? 0x0100 :		
+	register kgi_u_t val = (attr & KGI_CA_UNDERLINE) ? 0x0100 :
 			((attr & KGI_CA_REVERSE) ? 0x7000 : 0x0700);
 
-	if (attr &KGI_CA_BLINK) 
+	if (attr & KGI_CA_BLINK)
 		val |= 0x8000;
 
-	if (attr &KGI_CA_BOLD) 
+	if (attr & KGI_CA_BOLD)
 		val |= 0x0800;
 
 	return (val);
 }
 
-kgi_u_t 
+kgi_u_t
 kgirndr_ptoa_mono(render_t r, kgi_u_t val)
 {
-	register kgi_u_t attr = ((val & 0x7700) == 0x0100) ? KGI_CA_UNDERLINE :
-			(val & 0x7000) ? KGI_CA_REVERSE : KGI_CA_NORMAL;
+	register kgi_u_t attr = ((val & 0x7700) == 0x0100) ?
+				KGI_CA_UNDERLINE :
+				(val & 0x7000) ?
+				KGI_CA_REVERSE : KGI_CA_NORMAL;
 
-	if (val &0x8000) 
+	if (val & 0x8000)
 		attr |= KGI_CA_BLINK;
 
-	if (val &0x0800) 
+	if (val & 0x0800)
 		attr |= KGI_CA_BOLD;
 
 	return (attr);
@@ -142,8 +145,8 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 		break;
 	case KGI_RT_CURSOR_CONTROL:
 		marker = (kgi_marker_t *)resource;
-		if ((NULL == render->cur) ||
-		    (render->cur->Undo && (NULL == marker->Undo))) {
+		if ((render->cur == NULL) ||
+			(render->cur->Undo && (NULL == marker->Undo))) {
 			KGI_DEBUG(2, "cursor: %s", resource->name);
 			render->cur = marker;
 		}
@@ -151,7 +154,7 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 	case KGI_RT_POINTER_CONTROL:
 		marker = (kgi_marker_t *)resource;
 		if ((render->ptr == NULL) ||
-		    (render->ptr->Undo && (marker->Undo == NULL))) {
+			(render->ptr->Undo && (marker->Undo == NULL))) {
 			KGI_DEBUG(2, "pointer: %s", resource->name);
 			render->ptr = marker;
 		}
@@ -170,18 +173,17 @@ kgirndr_parse_resource(kgirndr_meta *render, kgi_resource_t *resource)
 	}
 
 	return;
-} 
+}
 
-kgi_error_t 
+kgi_error_t
 kgirndr_init(render_t r)
 {
 	kgirndr_meta *render;
 	kgi_resource_t *resource;
 	kgi_u_t	index;
 
+	/* Parse global resources. */
 	render = kgc_render_meta(r);
-
-	/* Parse global resources */
 	for (index = 0; index < __KGI_MAX_NR_IMAGE_RESOURCES; index ++) {
 		if ((resource = render->kgi.mode->resource[index]))
 			kgirndr_parse_resource(render, resource);
@@ -199,7 +201,7 @@ kgirndr_init(render_t r)
 	return (KGI_EOK);
 }
 
-void 
+void
 kgirndr_hide_gadgets(render_t r)
 {
 	kgirndr_meta *render;
@@ -220,7 +222,7 @@ kgirndr_hide_gadgets(render_t r)
 	}
 }
 
-void 
+void
 kgirndr_undo_gadgets(render_t r)
 {
 	kgirndr_meta *render;
@@ -239,12 +241,12 @@ kgirndr_undo_gadgets(render_t r)
 	}
 }
 
-void 
+void
 kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 {
 	kgirndr_meta *render;
 	kgi_console_t *cons;
-	
+
 	render = kgc_render_meta(r);
 	cons = kgc_render_cons(r);
 
@@ -268,16 +270,16 @@ kgirndr_show_gadgets(render_t r, kgi_u_t x, kgi_u_t y, kgi_u_t offset)
 }
 
 #ifdef notyet
-void 
+void
 kgirndr_unmap(render_t r)
 {
 	kgirndr_meta *render;
-	 
+
 	render = kgc_render_meta(r);
 	render->flags &= ~KGI_RF_NEEDS_UPDATE;
 }
 
-void 
+void
 kgirndr_map(render_t r)
 {
 	kgirndr_meta *render;
@@ -288,32 +290,32 @@ kgirndr_map(render_t r)
 
 	if (render->ilut) {
 		if (render->ilut->Set) {
-			(render->ilut->Set)(render->ilut, NULL, 
-				    0, 256, KGI_AM_COLORS, (kgi_u16_t *)&render->palette);
+			(render->ilut->Set)(render->ilut, NULL, 0, 256,
+				KGI_AM_COLORS, (kgi_u16_t *)&render->palette);
 		}
 		if (render->ilut->Select)
 			(render->ilut->Select)(render->ilut, 0);
 	}
-	
+
 	render = kgc_render_meta(r);
  	cons = kgc_render_cons(r);
 
 	if (render->tlut) {
 		if (render->tlut->Set) {
-			(render->tlut->Set)(render->tlut, 0, 
+			(render->tlut->Set)(render->tlut, 0,
 				0, render->font->info->positions - 1,
 				render->font->data);
 		}
-		if (render->tlut->Select) 
+		if (render->tlut->Select)
 			(render->tlut->Select)(render->tlut, 0);
 	}
-	if (render->ptr && 
+	if (render->ptr &&
 		(render->ptr->modes & KGI_MM_3COLOR) &&
 		(render->ptr->size.x == 64 && render->ptr->size.y == 64)) {
 		(render->ptr->SetMode)(render->ptr, KGI_MM_3COLOR);
-		(render->ptr->SetShape)(render->ptr, 0, 
-			0, 0, default_ptr_64x64, default_ptr_color);
-		if (render->ptr->Select) 
+		(render->ptr->SetShape)(render->ptr, 0, 0, 0, default_ptr_64x64,
+					default_ptr_color);
+		if (render->ptr->Select)
 			(render->ptr->Select)(render->ptr, 0);
 	}
 }

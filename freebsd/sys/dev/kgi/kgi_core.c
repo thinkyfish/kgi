@@ -8,10 +8,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -54,30 +54,28 @@ kgi_u8_t display_map[CONFIG_KGII_MAX_NR_DEVICES];
 
 MALLOC_DEFINE(M_KGI, "kgi", "KGI data structures");
 
-static kgi_device_t	*kgidevice[KGI_MAX_NR_DEVICES];
+static kgi_device_t 	*kgidevice[KGI_MAX_NR_DEVICES];
 static kgi_display_t 	*kgidpy[KGI_MAX_NR_DISPLAYS];
 
 /*
  * Display handling.
  */
-kgi_error_t 
+kgi_error_t
 kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *data)
 {
 
-	if (!(dev->flags & KGI_DF_FOCUSED)) {
+	if ((dev->flags & KGI_DF_FOCUSED) == 0) {
 		KGI_ERROR("Protocol error.");
 		return (KGI_EPROTO);
 	}
-	if (!KGI_VALID_DISPLAY_ID(dev->dpy_id) ||
-		(kgidpy[dev->dpy_id]) == NULL) {
+	if (KGI_VALID_DISPLAY_ID(dev->dpy_id) == 0 ||
+	    (kgidpy[dev->dpy_id]) == 0) {
 		KGI_DEBUG(1, "No valid display device.");
 		return (KGI_ENODEV);
 	}
 	KGI_ASSERT((cmd & KGIC_TYPE_MASK) == KGIC_DISPLAY_COMMAND);
-	return ((kgidpy[dev->dpy_id]->Command == NULL)
-		? -ENXIO
-		: (kgidpy[dev->dpy_id]->Command)
-		  (kgidpy[dev->dpy_id], cmd, data));
+	return ((kgidpy[dev->dpy_id]->Command == NULL) ? -ENXIO :
+	    (kgidpy[dev->dpy_id]->Command)(kgidpy[dev->dpy_id], cmd, data));
 }
 
 /*
@@ -85,7 +83,7 @@ kgidev_display_command(kgi_device_t *dev, kgi_u_t cmd, void *data)
  * the mode can be done. NOTE: <cmd> must be either KGI_TC_PROPOSE or
  * KGI_TC_CHECK. <dpy> and <mode> must be valid.
  */
-static kgi_error_t 
+static kgi_error_t
 kgidpy_check_mode(kgi_display_t *dpy, kgi_mode_t *m, kgi_timing_command_t cmd)
 {
 	kgi_error_t err;
@@ -96,16 +94,15 @@ kgidpy_check_mode(kgi_display_t *dpy, kgi_mode_t *m, kgi_timing_command_t cmd)
 
 	if (m->dev_mode == NULL && dpy->mode_size) {
 		m->dev_mode = kgi_kmalloc(dpy->mode_size);
-		if (m->dev_mode == NULL) {			
+		if (m->dev_mode == NULL) {
 			KGI_ERROR("Out of memory.");
 			return (KGI_ENOMEM);
 		}
 		m->flags |= KGI_MF_ALLOCATED;
 	}
 
-	err = (dpy->CheckMode)(dpy, cmd,
-			m->img, m->images, m->dev_mode,
-			m->resource, __KGI_MAX_NR_RESOURCES);
+	err = (dpy->CheckMode)(dpy, cmd, m->img, m->images, m->dev_mode,
+		m->resource, __KGI_MAX_NR_RESOURCES);
 
 	if (err != KGI_EOK) {
 		if (m->flags & KGI_MF_ALLOCATED) {
@@ -116,7 +113,7 @@ kgidpy_check_mode(kgi_display_t *dpy, kgi_mode_t *m, kgi_timing_command_t cmd)
 	}
 #if 0
 	for (i = 0; i < __KGI_MAX_NR_RESOURCES; i++) {
-		if (m->resource[i] && 
+		if (m->resource[i] &&
 			(m->resource[i]->type == KGI_RT_ACCELERATOR)) {
 			kgi_accel_t *accel = (kgi_accel_t *) m->resource[i];
 			kgi_queue_head_t *idle;
@@ -132,7 +129,7 @@ kgidpy_check_mode(kgi_display_t *dpy, kgi_mode_t *m, kgi_timing_command_t cmd)
 	return (KGI_EOK);
 }
 
-static void 
+static void
 kgidpy_release_mode(kgi_display_t *dpy, kgi_mode_t *m)
 {
 
@@ -140,7 +137,7 @@ kgidpy_release_mode(kgi_display_t *dpy, kgi_mode_t *m)
 	kgi_u_t i;
 
 	for (i = 0; i < __KGI_MAX_NR_RESOURCES; i++) {
-		if (m->resource[i] && 
+		if (m->resource[i] &&
 			(m->resource[i]->type == KGI_RT_ACCELERATOR)) {
 			kgi_accel_t *accel = (kgi_accel_t *) m->resource[i];
 			kgi_kfree(accel->idle);
@@ -160,9 +157,8 @@ kgidpy_release_mode(kgi_display_t *dpy, kgi_mode_t *m)
 		}
 	}
 }
-	
 
-static void 
+static void
 kgidpy_set_mode(kgi_display_t *dpy, kgi_mode_t *m)
 {
 
@@ -173,7 +169,7 @@ kgidpy_set_mode(kgi_display_t *dpy, kgi_mode_t *m)
 	(dpy->SetMode)(dpy, m->img, m->images, m->dev_mode);
 }
 
-static void 
+static void
 kgidpy_unset_mode(kgi_display_t *dpy, kgi_mode_t *m)
 {
 
@@ -181,14 +177,14 @@ kgidpy_unset_mode(kgi_display_t *dpy, kgi_mode_t *m)
 	KGI_ASSERT(m);
 	KGI_ASSERT(dpy->mode_size ? m->dev_mode != NULL : 1);
 
-	if (dpy->UnsetMode) 
+	if (dpy->UnsetMode)
 		(dpy->UnsetMode)(dpy, m->img, m->images, m->dev_mode);
 }
 
 /*
  * Device handling.
  */
-kgi_error_t 
+kgi_error_t
 kgi_register_device(kgi_device_t *dev, kgi_u_t index)
 {
 	kgi_s_t err;
@@ -199,22 +195,21 @@ kgi_register_device(kgi_device_t *dev, kgi_u_t index)
 		KGI_ERROR("Invalid arguments %p, %i", dev, index);
 		return (KGI_EINVAL);
 	}
-	dev->id = (dev->flags & KGI_DF_CONSOLE) ?
-			index : index + KGI_MAX_NR_CONSOLES;
+	dev->id = (dev->flags & KGI_DF_CONSOLE) ? index :
+		index + KGI_MAX_NR_CONSOLES;
 
 	KGI_ASSERT(sizeof(console_map) == sizeof(graphic_map));
 	map = (dev->flags & KGI_DF_CONSOLE) ? console_map[0] : graphic_map[0];
 	index = 0;
-	while ((index < sizeof(console_map)) && (map[index] != dev->id)) 
+	while ((index < sizeof(console_map)) && (map[index] != dev->id))
 		index++;
-	
+
 	focus   = index / KGI_MAX_NR_CONSOLES;
 	console = index % KGI_MAX_NR_CONSOLES;
 	if ((KGI_VALID_FOCUS_ID(focus) == 0 && KGI_VALID_CONSOLE_ID(console) &&
-		KGI_VALID_DEVICE_ID(map[index]) && (map[index] == dev->id))) {
-			KGI_ERROR("No %s device allowed (dev %i)",
-			(dev->flags & KGI_DF_CONSOLE) ? "console" : "graphic",
-			dev->id);
+	    KGI_VALID_DEVICE_ID(map[index]) && (map[index] == dev->id))) {
+		KGI_ERROR("No %s device allowed (dev %i)",
+		(dev->flags & KGI_DF_CONSOLE) ? "console" : "graphic", dev->id);
 		dev->id = KGI_INVALID_DEVICE;
 		return (KGI_ENODEV);
 	}
@@ -245,7 +240,7 @@ kgi_register_device(kgi_device_t *dev, kgi_u_t index)
 		return (KGI_EINVAL);
 	}
 
-	if (!(dev->flags & KGI_DF_CONSOLE)) {
+	if ((dev->flags & KGI_DF_CONSOLE) == 0) {
 		kgi_display_t *dpy = kgidpy[dev->dpy_id];
 
 		while (dpy) {
@@ -261,18 +256,18 @@ kgi_register_device(kgi_device_t *dev, kgi_u_t index)
 	return (KGI_EOK);
 }
 
-void 
+void
 kgi_unregister_device(kgi_device_t *dev)
 {
 
 	KGI_ASSERT(dev);
 	KGI_ASSERT(KGI_VALID_DEVICE_ID(dev->id));
 	KGI_ASSERT(dev == kgidevice[dev->id]);
-	KGI_ASSERT(! (dev->flags & KGI_DF_FOCUSED));
+	KGI_ASSERT((dev->flags & KGI_DF_FOCUSED) == 0);
 
-	if (!(dev->flags & KGI_DF_CONSOLE)) {
+	if ((dev->flags & KGI_DF_CONSOLE) == 0) {
 		kgi_display_t *dpy = kgidpy[dev->dpy_id];
-		
+
 		while (dpy) {
 			(dpy->DecRefcount)(dpy);
 			dpy->graphic--;
@@ -293,20 +288,22 @@ kgi_unregister_device(kgi_device_t *dev)
  * Checking of non CONSOLE devices is not allowed. All attached devices must
  * be consoles.
  */
-static kgi_error_t 
+static kgi_error_t
 kgi_check_device_mode(kgi_display_t *dpy, kgi_s_t id)
 {
-	kgi_error_t error = KGI_ENODEV;
-	kgi_device_t *dev = kgidevice[id];
+	kgi_error_t error;
+	kgi_device_t *dev;
 	kgi_mode_t mode;
 	kgi_u_t i;
 
 	KGI_ASSERT(KGI_VALID_DEVICE_ID(id));
 
+	dev = kgidevice[id];
 	if (dev == NULL)
 		return (KGI_EOK);
 
 	/* Refuse to reattach a device not in console mode. */
+	error = KGI_ENODEV;
 	if (dev->flags & KGI_DF_CONSOLE) {
 		bzero(&mode, sizeof(mode));
 
@@ -337,20 +334,22 @@ kgi_check_device_mode(kgi_display_t *dpy, kgi_s_t id)
  * Shall only be called once the device mode has been checked. The previous
  * display mode is freed here.
  */
-static void 
+static void
 kgi_reattach_device(kgi_display_t *dpy, kgi_s_t id)
 {
 	kgi_event_t event;
 	kgi_error_t error;
-	kgi_device_t *dev = kgidevice[id];
-	int was_focused = 0;
+	kgi_device_t *dev;
+	int was_focused;
 
 	KGI_ASSERT(KGI_VALID_DEVICE_ID(id));
 
+	dev = kgidevice[id];
 	if (dev == NULL)
 		return;
 
 	/* Refuse to reattach a device not in console mode. */
+	was_focused = 0;
 	if (dev->flags & KGI_DF_CONSOLE) {
 		KGI_DEBUG(2, "Reattaching device %i", id);
 
@@ -365,23 +364,23 @@ kgi_reattach_device(kgi_display_t *dpy, kgi_s_t id)
 
 		/* Allocate the new display mode, supposed to be ok. */
 		error = kgidpy_check_mode(dpy, dev->mode, KGI_TC_PROPOSE);
-		if (error != KGI_EOK) {	
-			KGI_ERROR("Failed to reattach device %i (%d)", 
+		if (error != KGI_EOK) {
+			KGI_ERROR("Failed to reattach device %i (%d)",
 				  id, error);
-		}	
+		}
 		/* Notify the device of the display change. */
 		event.notice.command = KGI_EVENT_NOTICE_NEW_DISPLAY;
-		
+
 		/* Send the event before remapping the device. */
-		if (kgidevice[id]->HandleEvent) 
-			kgidevice[id]->HandleEvent(kgidevice[id], &event);		
+		if (kgidevice[id]->HandleEvent)
+			kgidevice[id]->HandleEvent(kgidevice[id], &event);
 
 		if (was_focused)
 			kgi_map_device(id);
 	}
 }
 
-static inline kgi_u_t 
+static inline kgi_u_t
 kgi_can_do_console(kgi_display_t *dpy)
 {
 	kgi_mode_t mode;
@@ -401,14 +400,14 @@ kgi_can_do_console(kgi_display_t *dpy)
 	return ((err == KGI_EOK) ? (mode.img[0].flags & KGI_IF_TEXT16) : 0);
 }
 
-static inline kgi_u_t 
+static inline kgi_u_t
 kgi_must_do_console(kgi_display_t *dpy)
 {
 	kgi_u_t i;
 
 	for (i = 0; i < KGI_MAX_NR_DEVICES; i++) {
 		if ((display_map[i] == dpy->id) && kgidevice[i] &&
-			(kgidevice[i]->flags & KGI_DF_TEXT16)) {
+		    (kgidevice[i]->flags & KGI_DF_TEXT16)) {
 			return (1);
 		}
 	}
@@ -419,32 +418,32 @@ kgi_must_do_console(kgi_display_t *dpy)
  * Register <dpy> under <id>. If <id> is negative, we search for the first
  * free one.
  */
-kgi_error_t 
+kgi_error_t
 kgi_register_display(kgi_display_t *dpy, kgi_u_t id)
 {
 	kgi_display_t *prev;
-	kgi_error_t error = KGI_EOK;
+	kgi_error_t error;
 	kgi_u_t i;
 
-	KGI_DEBUG(2, "Registering %s %s display with id %i", 
+	KGI_DEBUG(2, "Registering %s %s display with id %i",
 		dpy->vendor, dpy->model, id);
 
-	if (!KGI_VALID_DISPLAY_ID(id)) {
-		for (id = 0; (id < KGI_MAX_NR_DISPLAYS) && kgidpy[id]; id++) 
-			; /* nothing */
-		if (KGI_MAX_NR_DISPLAYS <= id) 
+	if (KGI_VALID_DISPLAY_ID(id) == 0) {
+		for (id = 0; (id < KGI_MAX_NR_DISPLAYS) && kgidpy[id]; id++)
+			; /* Nothing. */
+		if (id > KGI_MAX_NR_DISPLAYS)
 			return (KGI_ENOMEM);
-		
+
 		KGI_DEBUG(2, "Auto-assigned new id %i", id);
 	}
 
-	if (!KGI_VALID_DISPLAY_ID(id) || dpy == NULL ||
-		(kgidpy[id] && kgidpy[id]->graphic)) {
+	if (KGI_VALID_DISPLAY_ID(id) == 0 || dpy == NULL ||
+	    (kgidpy[id] && kgidpy[id]->graphic)) {
 		KGI_ERROR("Can't replace display %i", id);
 		return (KGI_EINVAL);
 	}
 
-	if (kgi_must_do_console(dpy) && !kgi_can_do_console(dpy)) {
+	if (kgi_must_do_console(dpy) && kgi_can_do_console(dpy) == 0) {
 		KGI_DEBUG(1, "New display has too but can't do console.");
 		kgidpy[id] = dpy->prev;
 		dpy->prev = NULL;
@@ -452,11 +451,13 @@ kgi_register_display(kgi_display_t *dpy, kgi_u_t id)
 		return (KGI_EINVAL);
 	}
 
+	error = KGI_EOK;
 	/* Check mode for each device registered. */
 	for (i = 0; i < KGI_MAX_NR_DEVICES; i++) {
 		if (display_map[i] == id) {
 			/* If can't set device mode, fail. */
-			if ((error = kgi_check_device_mode(dpy, i)))
+			error = kgi_check_device_mode(dpy, i);
+			if (error)
 				return (KGI_EINVAL);
 		}
 	}
@@ -489,9 +490,9 @@ kgi_register_display(kgi_display_t *dpy, kgi_u_t id)
 	return (error);
 }
 
-void 
+void
 kgi_unregister_display(kgi_display_t *dpy)
-{ 
+{
 	kgi_display_t *prev;
 	kgi_u_t i;
 
@@ -514,33 +515,35 @@ kgi_unregister_display(kgi_display_t *dpy)
 		prev = prev->prev;
 	}
 
-	KGI_NOTICE("Display %i: %s %s unregistered.", dpy->id,
-		dpy->vendor, dpy->model);
-	dpy->id   = KGI_INVALID_DISPLAY;
+	KGI_NOTICE("Display %i: %s %s unregistered.", dpy->id, dpy->vendor,
+		dpy->model);
+	dpy->id = KGI_INVALID_DISPLAY;
 	dpy->prev = NULL;
 }
-	
-kgi_error_t 
+
+kgi_error_t
 kgi_unmap_device(kgi_u_t dev_id)
 {
 	kgi_device_t *dev;
 	kgi_display_t *dpy;
+	kgi_error_t err;
 
-	if (!(KGI_VALID_DEVICE_ID(dev_id) && kgidevice[dev_id] &&
-		KGI_VALID_DISPLAY_ID(display_map[dev_id]) &&
-		(dpy = kgidpy[display_map[dev_id]]))) {
-		KGI_DEBUG(3, "No target or display, no unmap done.");
+	dpy = kgidpy[display_map[dev_id]];
+	if ((KGI_VALID_DEVICE_ID(dev_id) && kgidevice[dev_id] &&
+	    KGI_VALID_DISPLAY_ID(display_map[dev_id]) && (dpy)) == 0) {
+		KGI_DEBUG(3, "No target or display to unmap.");
 		return (KGI_EINVAL);
 	}
 
-	if ((dev = dpy->focus) == NULL)
+	if (dpy->focus == NULL)
 		return (KGI_EOK);
 
+	dev = dpy->focus;
 	KGI_DEBUG(3, "Unmapping device %i from display %i", dev->id, dpy->id);
 
 	if (dev->UnmapDevice) {
-		kgi_error_t err;
-		if ((err = dev->UnmapDevice(dev))) 
+		err = dev->UnmapDevice(dev);
+		if (err)
 			return (err);
 	}
 
@@ -552,19 +555,22 @@ kgi_unmap_device(kgi_u_t dev_id)
 	return (KGI_EOK);
 }
 
-void 
+void
 kgi_map_device(kgi_u_t dev_id)
 {
 	kgi_device_t *dev;
 	kgi_display_t *dpy;
 
-	if (!(KGI_VALID_DEVICE_ID(dev_id) && (dev = kgidevice[dev_id]) &&
-		KGI_VALID_DISPLAY_ID(display_map[dev_id]) &&
-		(dpy = kgidpy[display_map[dev_id]]))) {
-		KGI_DEBUG(3, "No target or display for device %i, no map done.", 		
-			dev_id);
+	if ((KGI_VALID_DEVICE_ID(dev_id) &&
+	    KGI_VALID_DISPLAY_ID(display_map[dev_id])) == 0) {
+		KGI_DEBUG(3, "No target or display for device %i, no map done.",
+			  dev_id);
 		return;
 	}
+
+	dev = kgidevice[dev_id];
+	dpy = kgidpy[display_map[dev_id]];
+
 	KGI_ASSERT(dpy->focus == NULL);
 
 	KGI_DEBUG(3, "Mapping device %i on display %i", dev->id, dpy->id);
@@ -574,8 +580,8 @@ kgi_map_device(kgi_u_t dev_id)
 
 	kgidpy_set_mode(dpy, dev->mode);
 
-	if (dev->MapDevice) 
-		(dev->MapDevice)(dev);	
+	if (dev->MapDevice)
+		(dev->MapDevice)(dev);
 }
 
 kgi_device_t *
@@ -588,7 +594,7 @@ kgi_current_focus(kgi_u_t dpy_id)
 	return kgidpy[dpy_id]->focus;
 }
 
-kgi_u_t 
+kgi_u_t
 kgi_current_devid(kgi_u_t dpy_id)
 {
 
@@ -601,12 +607,12 @@ kgi_current_devid(kgi_u_t dpy_id)
 	return (kgidpy[dpy_id]->focus->id);
 }
 
-kgi_error_t 
+kgi_error_t
 kgi_display_registered(kgi_u_t dpy_id)
 {
 
-	return ((KGI_VALID_DISPLAY_ID(dpy_id) && kgidpy[dpy_id]) 
-		? KGI_EOK : KGI_ENODEV);
+	return ((KGI_VALID_DISPLAY_ID(dpy_id) && kgidpy[dpy_id]) ? KGI_EOK :
+		 KGI_ENODEV);
 }
 
 /*
@@ -616,48 +622,43 @@ kgi_display_registered(kgi_u_t dpy_id)
  * especially PCI-scanning, kgi_kmalloc*() services. We first
  * initialize global variables and then get the services running.
  */
-static void 
+static void
 kgi_init_maps(kgi_u_t nr_displays, kgi_u_t nr_focuses)
 {
-	kgi_u_t display = 0, device;
+	kgi_u_t console, device, display, focus;
+
+	display = 0;
 	for (device = 0; device < CONFIG_KGII_MAX_NR_CONSOLES; device++) {
-		kgi_u_t focus = 
-			device / 
-			(CONFIG_KGII_MAX_NR_CONSOLES / 
-			 CONFIG_KGII_MAX_NR_FOCUSES);
-		kgi_u_t console =
-			device % 
-			(CONFIG_KGII_MAX_NR_CONSOLES /
-			 CONFIG_KGII_MAX_NR_FOCUSES);
-		if (!(KGI_VALID_FOCUS_ID(focus) && 
-			KGI_VALID_CONSOLE_ID(console)))
+		focus = device / (CONFIG_KGII_MAX_NR_CONSOLES /
+				  CONFIG_KGII_MAX_NR_FOCUSES);
+		console = device % (CONFIG_KGII_MAX_NR_CONSOLES /
+				    CONFIG_KGII_MAX_NR_FOCUSES);
+		if ((KGI_VALID_FOCUS_ID(focus) &&
+		    KGI_VALID_CONSOLE_ID(console)) == 0)
 			continue;
-		
-		KGI_DEBUG(4, "Mapping device %i on focus %i, " 
-				  "display %i, console %i",
-				  device, focus, display, console);
+
+		KGI_DEBUG(4, "Mapping device %i on focus %i, display %i, "
+			  "console %i", device, focus, display, console);
 
 		console_map[focus][console] = device;
 		graphic_map[focus][console] = device +
 			CONFIG_KGII_MAX_NR_CONSOLES;
 
-		focus_map[device] = 
-			focus_map[device +
-			CONFIG_KGII_MAX_NR_CONSOLES] = focus;
+		focus_map[device] =
+		    focus_map[device + CONFIG_KGII_MAX_NR_CONSOLES] = focus;
 
-		display_map[device] = 
-			display_map[device + CONFIG_KGII_MAX_NR_CONSOLES] =
-			display;
+		display_map[device] =
+		    display_map[device + CONFIG_KGII_MAX_NR_CONSOLES] = display;
 
 		if ((device % CONFIG_KGII_MAX_NR_FOCUSES) ==
-			CONFIG_KGII_MAX_NR_FOCUSES - 1) {
+		    CONFIG_KGII_MAX_NR_FOCUSES - 1) {
 			if (nr_displays > nr_focuses) {
 				display++;
 				nr_displays--;
 			}
 		}
 		if (console == (CONFIG_KGII_MAX_NR_CONSOLES /
-			CONFIG_KGII_MAX_NR_FOCUSES) - 1) {
+		    CONFIG_KGII_MAX_NR_FOCUSES) - 1) {
 			nr_focuses--;
 			nr_displays--;
 			display++;
@@ -665,11 +666,12 @@ kgi_init_maps(kgi_u_t nr_displays, kgi_u_t nr_focuses)
 	}
 }
 
-kgi_u_t 
+kgi_u_t
 kgi_attr_bits(const kgi_u8_t *bpa)
 {
-	kgi_u_t bits = 0;
-	
+	kgi_u_t bits;
+
+	bits = 0;
 	if (bpa) {
 		while (*bpa) {
 			bits += *(bpa++);
@@ -682,7 +684,7 @@ kgi_attr_bits(const kgi_u8_t *bpa)
 /*
  * Initialize the KGI system if not already performed.
  */
-void 
+void
 kgi_init(void)
 {
 	kgi_u_t nr_displays, nr_focuses;
@@ -690,7 +692,7 @@ kgi_init(void)
 	KGI_DEBUG(3, "Initializing KGI.");
 	kii_configure(0);
 
-	if (!initialized) {			
+	if (!initialized) {
 		memset(display_map, 0xFF, sizeof(display_map));
 		memset(focus_map,   0xFF, sizeof(focus_map));
 		memset(console_map, 0xFF, sizeof(console_map));
@@ -700,13 +702,13 @@ kgi_init(void)
 		memset(kgidevice, 0, sizeof(kgi_device_t));
 
 		nr_displays = 0;
-		
+
 		nr_displays += dpy_null_init(nr_displays, CONFIG_KGI_DISPLAYS);
 		KGI_DEBUG(1, "%i displays initialized.", nr_displays);
-		
+
 		nr_focuses = 0;
 		/* XXX	nr_focuses  = focus_init(); */
-		
+
 		kgi_init_maps(nr_displays, nr_focuses);
 
 		kgi_mutex_init(&kgi_lock, "KGI Giant lock.");

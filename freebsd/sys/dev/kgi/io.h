@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
 #define _KGI_IO_H_
 
 /*
- * Explanations on I/O regions can be found in the system layer 
+ * Explanations on I/O regions can be found in the system layer
  * documentation.
  */
 
@@ -44,22 +44,20 @@
  */
 #ifdef __KGI_SYS_IO_HAS_PCICFG
 
-
 #ifdef KGI_SYS_NEED_i64
 typedef __kgi_u64_t	pcicfg_vaddr_t;	/* the virtual address type	*/
 #define PCICFG_64_NULL ((pcicfg_vaddr_t) 0xFFFFFFFFFFFFFFFF)
 #define PCICFG_NULL PCICFG_64_NULL
 #else
 typedef __kgi_u32_t	pcicfg_vaddr_t;	/* the virtual address type	*/
-#define	PCICFG_32_NULL ((pcicfg_vaddr_t) 0xFFFF0000)	/* an invalid virtual address	*/
+#define	PCICFG_32_NULL			/* an invalid virtual address   */ \
+	((pcicfg_vaddr_t) 0xFFFF0000)
 #define PCICFG_NULL PCICFG_32_NULL
 #endif
 
-#define	PCICFG_VADDR(bus, slot, fn)	\
-	!((bus+1 > 0) || (slot+1 > 0) || (fn+1 > 0))			\
-	? PCICFG_NULL							\
-	: ( (pcicfg_vaddr_t)						\
-		((((bus) & 0xFF) << 24) | (PCI_DEVFN((slot),(fn)) << 16)) )
+#define	PCICFG_VADDR(bus, slot, fn) !((bus + 1 > 0) || (slot + 1 > 0) ||    \
+		(fn + 1 > 0)) ? PCICFG_NULL : ((pcicfg_vaddr_t)	    	    \
+		((((bus) & 0xFF) << 24) | (PCI_DEVFN((slot), (fn)) << 16)))
 
 #define	PCICFG_BUS(vaddr)	(((vaddr) >> 24) & 0xFF)
 #define	PCICFG_DEV(vaddr)	PCI_SLOT(((vaddr) >> 16) & 0xFF)
@@ -78,15 +76,18 @@ extern int pcicfg_remove_device(device_t dev);
 
 extern void pcicfg_claim_device(pcicfg_vaddr_t addr);
 extern void pcicfg_free_device(pcicfg_vaddr_t addr);
-extern int pcicfg_find_device(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures);
-extern int pcicfg_find_subsystem(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures);
-extern int pcicfg_find_class(pcicfg_vaddr_t *addr, const __kgi_u32_t *signatures);
+extern int pcicfg_find_device(pcicfg_vaddr_t *addr,
+		const __kgi_u32_t *signatures);
+extern int pcicfg_find_subsystem(pcicfg_vaddr_t *addr,
+		const __kgi_u32_t *signatures);
+extern int pcicfg_find_class(pcicfg_vaddr_t *addr,
+		const __kgi_u32_t *signatures);
 
-extern __kgi_u8_t  pcicfg_in8 (const pcicfg_vaddr_t vaddr);
+extern __kgi_u8_t  pcicfg_in8(const pcicfg_vaddr_t vaddr);
 extern __kgi_u16_t pcicfg_in16(const pcicfg_vaddr_t vaddr);
 extern __kgi_u32_t pcicfg_in32(const pcicfg_vaddr_t vaddr);
 
-extern void pcicfg_out8 (const __kgi_u8_t  val, const pcicfg_vaddr_t vaddr);
+extern void pcicfg_out8(const __kgi_u8_t  val, const pcicfg_vaddr_t vaddr);
 extern void pcicfg_out16(const __kgi_u16_t val, const pcicfg_vaddr_t vaddr);
 extern void pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr);
 
@@ -95,39 +96,38 @@ extern void pcicfg_out32(const __kgi_u32_t val, const pcicfg_vaddr_t vaddr);
 		pcicfg_in32(reg);		\
 		pcicfg_out32((value), reg)
 
-#endif /* #ifdef __KGI_SYS_IO_HAS_PCICFG	*/
-
+#endif /* !__KGI_SYS_IO_HAS_PCICFG */
 
 #ifdef __KGI_SYS_IO_HAS_BUS
 
 typedef enum {
-    KGI_BUS_UNKNOWN = 0,
-    KGI_BUS_PCI = 1,
-    KGI_BUS_ISA = 2,
-    KGI_BUS_LAST = 2
+	KGI_BUS_UNKNOWN = 0,
+	KGI_BUS_PCI 	= 1,
+	KGI_BUS_ISA 	= 2,
+	KGI_BUS_LAST 	= 2
 } kgi_bustype_t;
 
 /* Generic bus data */
 typedef struct {
-    kgi_bustype_t type;
+	kgi_bustype_t type;
 } *kgi_busdev_t;
 
 /* PCI bus data */
 typedef struct {
-    kgi_bustype_t type;
-    pcicfg_vaddr_t pcicfg;
+	kgi_bustype_t type;
+	pcicfg_vaddr_t pcicfg;
 } kgi_pcidev_t;
 
 /* ISA bus data */
 typedef struct {
-    kgi_bustype_t type;
-    void *dev;
+	kgi_bustype_t type;
+	void *dev;
 } kgi_isadev_t;
 
-#endif	/* #ifdef __KGI_SYS_IO_HAS_BUS	*/
+#endif /* !__KGI_SYS_IO_HAS_BUS */
 
 #define __KGI_SYS_IO(x)	\
-typedef struct {									\
+typedef struct {							  \
 	kgi_busdev_t 	busdev;		/* Bus specific data            */\
 	pcicfg_vaddr_t	device;		/* (PCI) device this belongs to	*/\
 	x##_vaddr_t	base_virt;	/* virtual base address		*/\
@@ -138,7 +138,6 @@ typedef struct {									\
 	x##_paddr_t	decode;		/* decoded I/O address lines	*/\
 	__kgi_u32_t	rid;		/* region unique id for device  */\
 	const __kgi_ascii_t *name;	/* name of the region		*/\
-									\
 } x##_region_t;								\
 extern int	   x##_check_region (x##_region_t *r);			\
 extern x##_vaddr_t x##_claim_region (x##_region_t *r);			\
@@ -157,10 +156,12 @@ extern void x##_ins8  (const x##_vaddr_t addr, void *buf, __kgi_size_t cnt);\
 extern void x##_ins16 (const x##_vaddr_t addr, void *buf, __kgi_size_t cnt);\
 extern void x##_ins32 (const x##_vaddr_t addr, void *buf, __kgi_size_t cnt);\
 									\
-extern void x##_outs8  (const x##_vaddr_t addr, const void *buf, __kgi_size_t cnt);\
-extern void x##_outs16 (const x##_vaddr_t addr, const void *buf, __kgi_size_t cnt);\
-extern void x##_outs32 (const x##_vaddr_t addr, const void *buf, __kgi_size_t cnt);\
-  
+extern void x##_outs8  (const x##_vaddr_t addr, const void *buf,	\
+			__kgi_size_t cnt);				\
+extern void x##_outs16 (const x##_vaddr_t addr, const void *buf,	\
+			__kgi_size_t cnt);				\
+extern void x##_outs32 (const x##_vaddr_t addr, const void *buf,	\
+			__kgi_size_t cnt);				\
 
 
 /*
@@ -172,7 +173,6 @@ extern void x##_outs32 (const x##_vaddr_t addr, const void *buf, __kgi_size_t cn
  */
 #ifdef __KGI_SYS_IO_HAS_IO
 
-
 #define	IO_NULL	((io_vaddr_t) 0)	/* an invalid virtual address	*/
 #define	IO_DECODE_ALL ((io_paddr_t) -1UL) /* all lines being decoded	*/
 
@@ -182,7 +182,7 @@ typedef __kgi_u_t	io_baddr_t;	/* the bus address type		*/
 
 __KGI_SYS_IO(io)
 
-#endif	/* #ifdef __KGI_SYS_IO_HAS_IO */
+#endif /* !__KGI_SYS_IO_HAS_IO */
 
 /*
  * memory I/O space
@@ -204,18 +204,17 @@ typedef	__kgi_bus_addr_t  mem_baddr_t;	/* the bus address type		*/
 
 __KGI_SYS_IO(mem)
 
-
-extern void mem_put8 (const mem_vaddr_t dst, const void *buf, __kgi_size_t cnt);
+extern void mem_put8(const mem_vaddr_t dst, const void *buf, __kgi_size_t cnt);
 extern void mem_put16(const mem_vaddr_t dst, const void *buf, __kgi_size_t cnt);
 extern void mem_put32(const mem_vaddr_t dst, const void *buf, __kgi_size_t cnt);
 
-extern void mem_get8 (void *buf, const mem_vaddr_t src, __kgi_size_t cnt);
+extern void mem_get8(void *buf, const mem_vaddr_t src, __kgi_size_t cnt);
 extern void mem_get16(void *buf, const mem_vaddr_t src, __kgi_size_t cnt);
 extern void mem_get32(void *buf, const mem_vaddr_t src, __kgi_size_t cnt);
 
-#endif	/* #ifdef __KGI_SYS_IO_HAS_MEM */
+#endif /* !__KGI_SYS_IO_HAS_MEM */
 
-/* 
+/*
  * irq handling
  *
  * use similar to io regions.
@@ -229,35 +228,36 @@ typedef __kgi_u_t	irq_mask_t;
 
 typedef enum {
 	IF_SHARED_IRQ	= 0x00000001,	/* line is shared */
-	IF_RANDOM_IRQ	= 0x00000010	/* line used as random source */	
+	IF_RANDOM_IRQ	= 0x00000010	/* line used as random source */
 } irq_flags_t;
 
 typedef struct irq_system_s irq_system_t; /* system dependent data */
 typedef int irq_handler_fn(void *meta, void *meta_io, irq_system_t *system);
 
 typedef struct {
-	pcicfg_vaddr_t		device;	/* (PCI) device this belongs to	*/
-	irq_flags_t		flags;	/* properties			*/
-	const __kgi_ascii_t	*name;	/* name of the line		*/
-	__kgi_u_t		line;	/* requested IRQ line		*/
-	__kgi_u32_t		rid;	/* region unique id for device  */
-	void	*meta;			/* handler meta data		*/
-	void	*meta_io;		/* handler meta I/O data	*/
-	irq_handler_fn	*High, *Low;	/* high/low priority handlers	*/
+	pcicfg_vaddr_t		device;   /* (PCI) device this belongs to */
+	irq_flags_t		flags;	  /* properties			  */
+	const __kgi_ascii_t	*name;	  /* name of the line		  */
+	__kgi_u_t		line;	  /* requested IRQ line		  */
+	__kgi_u32_t		rid; 	  /* region unique id for device  */
+	void			*meta;    /* handler meta data		  */
+	void			*meta_io; /* handler meta I/O data	  */
+	irq_handler_fn	*High;	 	  /* high priority handlers	  */
+	irq_handler_fn  *Low;  		  /* low priority handlers   	  */
 } irq_line_t;
 
 /*
  * These may be OS dependent, and have to be supplied by the OS/kernel
  * layer. As they aren't performance critical either, a call doesn't hurt.
  */
-extern __kgi_error_t  irq_claim_line(irq_line_t *irq);
+extern __kgi_error_t irq_claim_line(irq_line_t *irq);
 extern void irq_free_line(irq_line_t *irq);
 
-#endif /* #ifdef __KGI_SYS_IO_HAS_IRQ	*/
+#endif /* !__KGI_SYS_IO_HAS_IRQ	*/
 
 #undef	__KGI_SYS_IO_HAS_PCICFG
 #undef	__KGI_SYS_IO_HAS_IO
 #undef	__KGI_SYS_IO_HAS_MEM
 #undef	__KGI_SYS_IO_HAS_IRQ
 
-#endif /* _KGI_IO_H_ */
+#endif /* !_KGI_IO_H_ */

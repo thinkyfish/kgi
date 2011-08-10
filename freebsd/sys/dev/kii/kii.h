@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
  */
 
 /*
- * KII manager interface definitions.
+ * KII interface definitions.
  */
 
 #ifndef _KII_KII_H_
@@ -33,12 +33,16 @@
 
 KGI_SYS_DECLARE_INTEGRAL_TYPES(kii)
 
-typedef struct { 
-	kii_s_t x, y;
+typedef struct {
+	kii_s_t x;
+	kii_s_t y;
 } kii_scoord_t;
 
 typedef struct {
-	kii_u8_t major, minor, patch, extra;
+	kii_u8_t major;
+	kii_u8_t minor;
+	kii_u8_t patch;
+	kii_u8_t extra;
 } kii_version_t;
 
 #include <dev/kii/kiierr.h>
@@ -49,27 +53,21 @@ typedef struct {
 
 typedef enum {
 	KII_IC_NULL = 0,
-
 	KII_IC_KEYBOARD = 0,		/* Character input devices.	*/
-		KII_IT_KEYBOARD,	/* A simple keyboard.		*/
-		KII_IT_VOICE,		/* Voice recognition. 		*/
-
+	KII_IT_KEYBOARD,		/* A simple keyboard.		*/
+	KII_IT_VOICE,			/* Voice recognition. 		*/
 	KII_IC_2DPOINTER = 0x10000000,	/* Simple 2D pointing devices.	*/
-		KII_IT_MOUSE,		/* All kinds of mice.		*/
-		KII_IT_TRACKBALL,	/* A mouse on it's back. ;-)	*/
-		KII_IT_DIGITIZER,	/* Digitizer boards with pen.	*/
-		KII_IT_LIGHTPEN,	/* Are there any left?		*/
-		KII_IT_JOYSTICK,	/* The thing used for gaming.	*/
-
+	KII_IT_MOUSE,			/* All kinds of mice.		*/
+	KII_IT_TRACKBALL,		/* A mouse on it's back. ;-)	*/
+	KII_IT_DIGITIZER,		/* Digitizer boards with pen.	*/
+	KII_IT_LIGHTPEN,		/* Are there any left?		*/
+	KII_IT_JOYSTICK,		/* The thing used for gaming.	*/
 	KII_IC_3DPOINTER = 0x20000000,	/* 3D pointing devices.	 	*/
-		KII_IT_3DMOUSE,
-
+	KII_IT_3DMOUSE,
 	KII_IC_CONTROLLER = 0x30000000,	/* Any other stuff.		*/
-		KII_IT_DATAGLOVE,
-		KII_IT_VR_HELMET,
-
+	KII_IT_DATAGLOVE,
+	KII_IT_VR_HELMET,
 	KII_IC_KEYPAD = 0x40000000,	/* Character input but no kbd.	*/
-
 	KII_IC_MASK = 0x70000000	/* Mask to get class.		*/
 } kii_type_t;
 
@@ -78,27 +76,21 @@ typedef enum {
 	KII_EV_COMMAND,
 	KII_EV_BROADCAST,
 	KII_EV_DEVICE_INFO,
-
 	KII_EV_RAW_DATA,
-
 	KII_EV_KEY_PRESS,
 	KII_EV_KEY_RELEASE,
 	KII_EV_KEY_REPEAT,
 	KII_EV_KEY_STATE,
-
 	KII_EV_PTR_RELATIVE,
 	KII_EV_PTR_ABSOLUTE,
 	KII_EV_PTR_BUTTON_PRESS,
 	KII_EV_PTR_BUTTON_RELEASE,
 	KII_EV_PTR_STATE,
-
 	KII_EV_VAL_RELATIVE,
 	KII_EV_VAL_ABSOLUTE,
 	KII_EV_VAL_STATE,
-
 	KII_EV_LAST
 } kii_event_type_t;
-
 
 typedef enum {
 	KII_KBD_KEYMAP0		= 0x00000000,
@@ -114,12 +106,10 @@ typedef enum {
 	KII_KBD_AUTO_RATE	= 0x00000108,
 	KII_KBD_AUTO_DELAY	= 0x00000109,
 	KII_KBD_LEDS		= 0x0000010A,
-
 	KII_PTR_BUTTON0		= 0x00000110,
 	KII_PTR_ACCEL_MUL	= 0x00000120,
 	KII_PTR_ACCEL_DIV	= 0x00000121,
 	KII_PTR_ACCEL_TRESHOLD	= 0x00000122,
-
 	KII_LAST
 } kii_enum_t;
 
@@ -129,37 +119,34 @@ typedef enum {
 	KII_EM_COMMAND			= (1 << KII_EV_COMMAND),
 	KII_EM_BROADCAST		= (1 << KII_EV_BROADCAST),
 	KII_EM_DEVICE_INFO		= (1 << KII_EV_DEVICE_INFO),
-
 	KII_EM_RAW_DATA			= (1 << KII_EV_RAW_DATA),
-
 	KII_EM_KEY_PRESS		= (1 << KII_EV_KEY_PRESS),
 	KII_EM_KEY_RELEASE		= (1 << KII_EV_KEY_RELEASE),
 	KII_EM_KEY_REPEAT		= (1 << KII_EV_KEY_REPEAT),
 	KII_EM_KEY_STATE		= (1 << KII_EV_KEY_STATE),
-
 	KII_EM_PTR_RELATIVE		= (1 << KII_EV_PTR_RELATIVE),
 	KII_EM_PTR_ABSOLUTE		= (1 << KII_EV_PTR_ABSOLUTE),
 	KII_EM_PTR_BUTTON_PRESS		= (1 << KII_EV_PTR_BUTTON_PRESS),
 	KII_EM_PTR_BUTTON_RELEASE	= (1 << KII_EV_PTR_BUTTON_RELEASE),
 	KII_EM_PTR_STATE		= (1 << KII_EV_PTR_STATE),
-
 	KII_EM_VAL_RELATIVE		= (1 << KII_EV_VAL_RELATIVE),
 	KII_EM_VAL_ABSOLUTE		= (1 << KII_EV_VAL_ABSOLUTE),
 	KII_EM_VAL_STATE		= (1 << KII_EV_VAL_STATE),
-
-	KII_EM_KEY	= KII_EM_KEY_PRESS | KII_EM_KEY_RELEASE |
-		KII_EM_KEY_REPEAT,
-	KII_EM_KEYBOARD	= KII_EM_KEY | KII_EM_KEY_STATE,
-
-	KII_EM_PTR_MOVE	= KII_EM_PTR_RELATIVE | KII_EM_PTR_ABSOLUTE,
-	KII_EM_PTR_BUTTON = KII_EM_PTR_BUTTON_PRESS | KII_EM_PTR_BUTTON_RELEASE,
-	KII_EM_POINTER	= KII_EM_PTR_MOVE | KII_EM_PTR_BUTTON | 
-		KII_EM_PTR_STATE,
-
-	KII_EM_VALUATOR	= KII_EM_VAL_RELATIVE | KII_EM_VAL_ABSOLUTE |
-		KII_EM_VAL_STATE,
-
-	KII_EM_ALL	= ((1 << KII_EV_LAST) - 1) & ~KII_EM_NOTHING
+	KII_EM_KEY			= KII_EM_KEY_PRESS |
+					    KII_EM_KEY_RELEASE |
+					    KII_EM_KEY_REPEAT,
+	KII_EM_KEYBOARD			= KII_EM_KEY | KII_EM_KEY_STATE,
+	KII_EM_PTR_MOVE			= KII_EM_PTR_RELATIVE |
+					    KII_EM_PTR_ABSOLUTE,
+	KII_EM_PTR_BUTTON 		= KII_EM_PTR_BUTTON_PRESS |
+					    KII_EM_PTR_BUTTON_RELEASE,
+	KII_EM_POINTER			= KII_EM_PTR_MOVE | KII_EM_PTR_BUTTON |
+					    KII_EM_PTR_STATE,
+	KII_EM_VALUATOR			= KII_EM_VAL_RELATIVE |
+					    KII_EM_VAL_ABSOLUTE |
+					    KII_EM_VAL_STATE,
+	KII_EM_ALL			= ((1 << KII_EV_LAST) - 1) &
+					    ~KII_EM_NOTHING
 } kii_event_mask_t;
 
 
@@ -180,12 +167,9 @@ typedef enum {
 					 KII_IS_LOCKED_MODIFIER(sym) || \
 					 KII_IS_STICKY_MODIFIER(sym))
 
-
-
-
 /*
  * The event structs.
- * 
+ *
  *  NOTE We depend on __KII_MODIFIER_DATA being declared _directly_ after
  * __KII_COMMON_DATA.
  */
@@ -206,7 +190,7 @@ typedef enum {
 /*
  * This information is reported with all events. Use the <any> field
  * in a kii_event structure to access these fields.
- */ 
+ */
 typedef struct {
 	__KII_COMMON_DATA;
 } kii_any_event_t;
@@ -228,12 +212,12 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-	kii_u8_t	data[255 - sizeof(kii_any_event_t)];
+	kii_u8_t data[255 - sizeof(kii_any_event_t)];
 } kii_raw_event_t;
 
 /*
  * Key events should be used to report events obtained from keys
- * and other switches. 
+ * and other switches.
  */
 typedef struct {
 	__KII_COMMON_DATA;
@@ -248,14 +232,15 @@ typedef struct {
  */
 typedef struct {
 	__KII_COMMON_DATA;
-	__KII_MODIFIER_DATA;		/* Current state of modifiers. */
-	kii_s32_t	x, y;		/* Absolute/relative position. */
+	__KII_MODIFIER_DATA;		/* Current state of modifiers. 	*/
+	kii_s32_t	x;		/* Absolute/relative position. 	*/
+	kii_s32_t	y;		/* Absolute/relative position. 	*/
 	kii_s32_t	wheel;		/* Absolute/relative wheel.	*/
-	kii_u32_t	dummy[2];	/* Reserved (future extensions)	*/ 
+	kii_u32_t	dummy[2];	/* Reserved (future extensions)	*/
 } kii_pmove_event_t;
 
 /*
- * Button events are sent to report a change in pointer button state: 
+ * Button events are sent to report a change in pointer button state:
  * Bit#0 = primary button (usually left)
  * Bit#1 = secondary button (usually right)
  * Bit#2 = tertiary buttin (usually middle)
@@ -317,14 +302,11 @@ struct kii_input_s {
 	kii_u_t			id;	/* Unique input device ID.	*/
 	kii_event_mask_t	events;	/* Event types generated.	*/
 	kii_event_mask_t	report;	/* Events to report.		*/
-
 	kii_ascii_t vendor[KII_MAX_VENDOR_STRING]; /* Who built this device. */
-	kii_ascii_t model[KII_MAX_MODEL_STRING];   /* What model. */		
-
+	kii_ascii_t model[KII_MAX_MODEL_STRING];   /* What model. */
 	int	(*Command)(kii_input_t *, kii_u_t cmd, void *);
 	int	(*Poll)(kii_input_t *);
 	void	(*Parse)(kii_input_t *, kii_event_t *, int);
-
 	kii_private_t	priv;
 };
 
@@ -345,7 +327,7 @@ typedef struct {
 	kii_u_t	fn_str_size;	/* Size of function key string buffer.	*/
 	kii_ascii_t **fn_str;	/* ptr to arr of ptrs to strings.	*/
 	kii_u_t	keymin, keymax;	/* Min/Max key values accepted.		*/
-	kii_u_t	keymap_size;	/* Size of keymap array.	 	*/	
+	kii_u_t	keymap_size;	/* Size of keymap array.	 	*/
 	kii_unicode_t **keymap;	/* The keymaps.				*/
 	kii_u_t	combine_size;
 	kii_dead_combination_t *combine;
@@ -358,7 +340,7 @@ typedef enum {
 	KII_FF_LED_FLAGS		= 0x000000FF,
 	KII_FF_HAS_POINTER		= 0x00000100,
 	KII_FF_PROCESS_BH		= 0x00000200,
-	KII_FF_SYSTEM_REQUEST	= 0x00000400
+	KII_FF_SYSTEM_REQUEST		= 0x00000400
 } kii_focus_flags_t;
 
 typedef enum {
@@ -380,17 +362,14 @@ struct kii_device_s {
 	kii_device_flags_t	flags;
 	kii_event_mask_t	event_mask;
 	kii_private_t		priv;
-
-	void	(*MapDevice)(kii_device_t *);
-	kii_s_t	(*UnmapDevice)(kii_device_t *);
-
-	void (*HandleEvent)(kii_device_t *, kii_event_t *);
-
-	kii_scoord_t	ptr;
-	kii_scoord_t	ptr_min;
-	kii_scoord_t	ptr_max;
-	kii_private_t	spawnpid;
-	kii_private_t	spawnsig;
+	void			(*MapDevice)(kii_device_t *);
+	kii_s_t			(*UnmapDevice)(kii_device_t *);
+	void 			(*HandleEvent)(kii_device_t *, kii_event_t *);
+	kii_scoord_t		ptr;
+	kii_scoord_t 		ptr_min;
+	kii_scoord_t		ptr_max;
+	kii_private_t		spawnpid;
+	kii_private_t		spawnsig;
 };
 
 typedef struct {
@@ -400,7 +379,7 @@ typedef struct {
 	kii_u_t		last_console;	/* Last device focused on.	*/
 	kii_u_t		want_console;	/* Device to focus on.		*/
 	kii_input_t	*inputs;	/* Input devices.		*/
-	__KII_MODIFIER_DATA;		/* Modifier information.	*/	
+	__KII_MODIFIER_DATA;		/* Modifier information.	*/
 	kii_u_t		down_mod[16];	/* Modifier counters.		*/
 	kii_keymap_t	kmap;		/* Key map info.		*/
 	kii_focus_flags_t flags;	/* Focus-global flags.		*/
@@ -418,10 +397,10 @@ typedef struct {
 } kii_focus_t;
 
 typedef enum {
-	KII_SYNC_LED_FLAGS    = 0x00000001,
-	KII_SYNC_PTR_POSITION = 0x00000002,
-	KII_SYNC_PTR_WINDOW	  = 0x00000004,
-	KII_SYNC_PTR_BUTTONS  = 0x00000008
+	KII_SYNC_LED_FLAGS	 = 0x00000001,
+	KII_SYNC_PTR_POSITION    = 0x00000002,
+	KII_SYNC_PTR_WINDOW 	 = 0x00000004,
+	KII_SYNC_PTR_BUTTONS 	 = 0x00000008
 } kii_sync_flags_t;
 
 extern kii_device_t *kiidevice[KII_MAX_NR_DEVICES];
@@ -435,7 +414,7 @@ extern void kii_handle_input(kii_event_t *event);
 extern void kii_action(kii_focus_t *f, kii_event_t *event);
 extern void kii_put_event(kii_focus_t *f, kii_event_t *event);
 
-extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev, 
+extern kii_error_t kii_register_input(kii_u_t focus, kii_input_t *dev,
 		int reset);
 extern void kii_unregister_input(kii_input_t *dev);
 
@@ -460,17 +439,17 @@ extern void kii_poll_device(kii_u_t dev_id, kii_event_t *event);
 extern const kii_ascii_t *kiidev_get_fnstring(kii_device_t *dev, kii_u_t key);
 extern kii_focus_t *kiidev_focus(kii_s_t dev_id);
 extern void kiidev_sync(kii_device_t *dev, kii_sync_flags_t what);
-extern void kiidev_set_pointer_window(kii_device_t *dev, 
+extern void kiidev_set_pointer_window(kii_device_t *dev,
 		kii_s_t minx, kii_s_t maxx, kii_s_t miny, kii_s_t maxy);
 
-extern kii_unicode_t keymap_get_keysym(kii_keymap_t *k, kii_u_t shift, 
+extern kii_unicode_t keymap_get_keysym(kii_keymap_t *k, kii_u_t shift,
 		kii_u_t key);
-extern kii_s_t keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key, 
+extern kii_s_t keymap_set_keysym(kii_keymap_t *k, kii_u_t shift, kii_u_t key,
 		kii_unicode_t sym);
-extern kii_s_t keymap_set_default(kii_u_t shift, kii_u_t key, 
+extern kii_s_t keymap_set_default(kii_u_t shift, kii_u_t key,
 		kii_unicode_t sym);
 extern const kii_ascii_t *keymap_get_fnstring(kii_keymap_t *k, kii_u_t key);
-extern kii_error_t keymap_set_fnstring(kii_keymap_t *k, kii_u_t key, 
+extern kii_error_t keymap_set_fnstring(kii_keymap_t *k, kii_u_t key,
 		const kii_ascii_t *s);
 
 extern kii_keymap_t default_kii_keymap;
@@ -481,8 +460,8 @@ extern kii_unicode_t keymap_combine_dead(kii_keymap_t *k,
 extern kii_s_t keymap_set_default_keysym(kii_u_t shift, kii_u_t key,
 		kii_unicode_t sym);
 
-#endif /* _KERNEL */
+#endif /* !_KERNEL */
 
 #include <dev/kii/kiicmd.h>
 
-#endif /* _KII_KII_H_ */
+#endif /* !_KII_KII_H_ */

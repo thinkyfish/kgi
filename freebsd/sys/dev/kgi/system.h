@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and permit to persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESSED OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,11 +52,9 @@ typedef struct {
 typedef void *wait_queue_head_t;
 
 #else /* _KERNEL */
-
 #include <unistd.h>
 #include <stdint.h>
-
-#endif /* ! _KERNEL */
+#endif
 
 #include <dev/kgi/compiler.h>
 
@@ -66,18 +64,15 @@ typedef void *wait_queue_head_t;
 #include <dev/kgi/types.h>
 
 #ifdef KGI_SYS_NEED_USER
-
 extern __kgi_u32_t kgi_copy_to_user(void *to, const void *from, __kgi_u32_t n);
-extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from, 
-	__kgi_u32_t n);
+extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from,
+		   __kgi_u32_t n);
 
 #define put_user(x,ptr) kgi_copy_to_user(&x, ptr, sizeof(*ptr))
 #define get_user(x,ptr) kgi_copy_from_user(&x, ptr, sizeof(*ptr))
-
-#endif /* KGI_SYS_NEED_USER */
+#endif
 
 #ifdef KGI_SYS_NEED_VM
-
 #include <vm/vm.h>
 #include <vm/vm_param.h>
 #include <vm/vm_page.h>
@@ -91,18 +86,16 @@ extern __kgi_u32_t kgi_copy_from_user(void *to, const void *from,
 extern __kgi_virt_addr_t kgi_map_buffer(__kgi_phys_addr_t paddr,
 		 __kgi_size_t size);
 extern void kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size);
-
-#endif /* KGI_SYS_NEED_VM */
+#endif
 
 #ifdef KGI_SYS_NEED_IO
-
 #define	__KGI_SYS_IO_HAS_PCICFG
 #define	__KGI_SYS_IO_HAS_BUS
 #define	__KGI_SYS_IO_HAS_IO
 #define	__KGI_SYS_IO_HAS_MEM
 #define	__KGI_SYS_IO_HAS_IRQ
 
-/* 
+/*
  * XXX I don't think all this stuff has to be there
  * XXX I'd rather put it in the system specific directory of graphic drivers.
  */
@@ -110,11 +103,9 @@ extern void kgi_unmap_buffer(__kgi_virt_addr_t vaddr, __kgi_size_t size);
 #include <sys/bus.h>
 #include <dev/kgi/io.h>
 #include <dev/kgi/pci.h>
-
-#endif /* KGI_SYS_NEED_IO */
+#endif
 
 #ifdef KGI_SYS_NEED_ATOMIC
-
 #include <machine/atomic.h>
 
 typedef __kgi_u32_t kgi_atomic_t;
@@ -127,21 +118,17 @@ extern void kgi_clear_bit(int b, volatile void *p);
 extern void kgi_set_bit(int b, volatile void *p);
 extern int kgi_test_bit(int b, volatile void *p);
 extern int kgi_find_first_zero_bit(volatile void *p, int max);
-
-#endif /* KGI_SYS_NEED_ATOMIC */
+#endif
 
 #define kgi_udelay(d) DELAY((int)d)
 #define kgi_nanosleep(x) kgi_udelay(2)
 
 #ifdef KGI_SYS_NEED_PROC
-
 #define kgi_wakeup(p) wakeup(p)
 extern struct proc *kgiproc;
-
-#endif /* KGI_SYS_NEED_PROC */
+#endif
 
 #ifdef KGI_SYS_NEED_MALLOC
-
 #include <sys/malloc.h>
 
 MALLOC_DECLARE(M_KGI);
@@ -153,20 +140,19 @@ extern void kgi_cfree(const void *ptr, __kgi_size_t size);
 
 #define kgim_alloc kgi_kmalloc
 #define kgim_free kgi_kfree
-
-#endif /* KGI_SYS_NEED_MALLOC */
+#endif
 
 #ifdef KGI_SYS_NEED_MUTEX
-
 extern void kgi_mutex_init(kgi_mutex_t *mtx, const char *name);
 extern void kgi_mutex_done(kgi_mutex_t *mtx);
 
 #define kgi_mutex_lock(mtx) do { mtx_lock(&(mtx)->mutex); } while (0)
 #define kgi_mutex_unlock(mtx) do { mtx_unlock(&(mtx)->mutex); } while (0)
-#define kgi_mutex_assert(mtx,type) do { mtx_assert(&(mtx)->mutex, type); } while (0)
+#define kgi_mutex_assert(mtx ,type) do { mtx_assert(&(mtx)->mutex, type); } \
+					while (0)
 
 extern void kgi_mutex_wait(kgi_mutex_t *mtx);
-extern void kgi_mutex_signal(kgi_mutex_t *mtx, 
+extern void kgi_mutex_signal(kgi_mutex_t *mtx,
 		int unblock_all /* TRUE or FALSE */);
 
 #define KGI_MUTEX_OWNED		MA_OWNED
@@ -176,8 +162,7 @@ extern void kgi_mutex_signal(kgi_mutex_t *mtx,
 
 /* KGI Giant lock. */
 extern kgi_mutex_t kgi_lock;
+#endif /* !KGI_SYS_NEED_MUTEX */
 
-#endif /* KGI_SYS_NEED_MUTEX */
-
-#endif	/* _KGI_SYSTEM_H_ */
+#endif /* !_KGI_SYSTEM_H_ */
 

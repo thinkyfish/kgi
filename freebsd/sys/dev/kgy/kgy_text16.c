@@ -94,7 +94,8 @@ dpysw_put_text16(kgi_text16_t *text16, kgi_u_t offset, const kgi_u16_t *text,
 	  kgi_u_t count)
 {
 	register kgi_u16_t *fb = text16->meta_io;
+
 	KGI_ASSERT(offset < 4096);
 	KGI_ASSERT(offset + count < 4096);
-	mem_put16((mem_vaddr_t) (fb + offset), text, count);
+	mem_put16((mem_vaddr_t)(fb + offset), text, count);
 }
